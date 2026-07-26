@@ -1,0 +1,16 @@
+flow_id: application-status
+strings:
+  # Detail card (one application) — stage/hint resolve via $enum_label.
+  detail.header:  '🚗 Application APP-{ref}'
+  detail.name:    '• Name: {name}'
+  detail.region:  '• Region: {region}'
+  detail.vehicle: '• Vehicle: {vehicle}'
+  detail.stage:   '• Status: {stage}'
+  detail.updated: '• Last update: {when}'
+  refresh_button: 'Refresh status'
+  lookup_failed:  'Something went wrong looking up your application — please try again in a moment.'
+
+  # Application picker (two or more — rare, dedupe keeps it to one)
+  list.header: 'Your applications 🚗'
+  list.body:   'You have {count} applications on file — pick one to see its status:'
+  list.cta:    'Choose an application'

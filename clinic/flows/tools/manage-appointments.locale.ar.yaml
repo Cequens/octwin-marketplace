@@ -1,0 +1,44 @@
+flow_id: manage-appointments
+
+strings:
+  list_header:  'مواعيدك'
+  list_body:    'عندك {count} موعد. اختر واحد لإدارته.'
+  list_cta:     'المواعيد'
+  upcoming:     '🟢 قادم'
+  past:         '✓ سابق'
+  none:         'مفيش عندك مواعيد دلوقتي. تحب تحجز؟'
+
+  detail.doctor:   'الطبيب: {doctor}'
+  detail.slot:     'الموعد: {slot}'
+  detail.branch:   'الفرع: {branch}'
+  detail.for_whom: 'الكشف لـ: {who}'
+
+  button.reschedule: 'تغيير الموعد 🔄'
+  button.cancel:     'إلغاء ❌'
+  button.rate:       'تقييم ⭐'
+
+  not_found: 'مش لاقيين الموعد ده.'
+  confirmed: '✅ تم تأكيد موعدك. شكراً!'
+  cancelled: '❌ تم إلغاء موعدك. لو حبيت تحجز تاني قولّي.'
+
+  # Cancel confirmation (approve/decline card shown before the appointment is cancelled).
+  cancel_confirm.header: 'تأكيد الإلغاء'
+  cancel_confirm.body:   'متأكد إنك عايز تلغي الموعد ده؟'
+  cancel_confirm.yes:    'نعم، إلغاء ❌'
+  cancel_confirm.keep:   'رجوع'
+  cancel_kept:           'تمام، سيبنا الموعد زي ما هو. ✅'
+
+  rate_header: 'قيّم زيارتك'
+  rate_cta:    'التقييم'
+  # The invite has to live in the rendered body: a render halts the turn, so the
+  # agent gets no chance to add a line of its own after it.
+  rated:         'شكراً لتقييمك ({stars}⭐)! 🙏 لو تحب تكتب رأيك في الزيارة اكتبه في رسالة، وده اختياري.'
+  comment_saved: 'وصلنا رأيك، شكراً ليك! 🙏'
+  rate_first:    'قيّم الزيارة بالنجوم الأول، وبعدها اكتب رأيك.'
+
+  reschedule_header: '🗓️ اختر موعد جديد'
+  reschedule_cta:    'المواعيد المتاحة'
+  no_slots:          'مفيش مواعيد متاحة قريبة للطبيب ده. جرّب لاحقاً.'
+  rescheduled:       '🔄 تم تغيير موعدك. هنفكّرك قبل الموعد الجديد.'
+  reschedule_failed: 'للأسف معرفناش نغيّر الموعد (الموعد الجديد اتحجز؟). جرّب موعد تاني.'
+  reminder_text:     '⏰ تذكير بموعدك القادم في العيادة.'

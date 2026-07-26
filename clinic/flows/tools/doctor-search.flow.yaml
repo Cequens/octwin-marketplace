@@ -1,0 +1,106 @@
+# doctor-search — discovery over the `doctor` XRM entity (record_search, fuzzy +
+# Arabic-aware). Browse/search doctors as a carousel (filterable by branch +
+# insurance); or show one doctor's detail card (record_get). Each card's button
+# hands off to book-appointment. Pure YAML — no pack DB.
+
+flow_id:     doctor-search
+version:     1
+description: |-
+  Find a doctor and start a booking. Put ANY word the patient TYPES — a doctor
+  name OR a specialty (جلدية، باطنة، أطفال) OR a symptom — in `query` (matched
+  fuzzily against doctor names + specialties). `branch` takes a branch record id
+  (from a previous result), `tpa` an insurance name to filter by. Pass `doctor_id`
+  to show one doctor's card (answers "does Dr X accept GlobeMed?").
+
+input:
+  query:     { type: string, optional: true, describe: 'Free text the patient typed: a doctor name OR a specialty word (e.g. "جلدية"=dermatology, "باطنة"=internal medicine) OR a symptom. ALL typed search terms go here — matched fuzzily (Arabic-aware) against doctor names AND specialties.' }
+  branch:    { type: string, optional: true, describe: 'A branch record id from a previous result — filters to that location. Never typed text.' }
+  tpa:       { type: string, optional: true, describe: 'Insurance company name to filter by (e.g. GlobeMed, Bupa). Free text (a name, not an id).' }
+  doctor_id: { type: string, optional: true, describe: 'A doctor record id from a previous doctor-search result — shows that one doctor''s detail card. Never a typed name (use `query`).' }
+  limit:     { type: number, optional: true, integer: true, min: 1, max: 10 }
+
+entry:
+  - else: true
+    goto: route
+
+steps:
+  route:
+    - branch:
+        - when: '$input.doctor_id != null'
+          then: [ { goto: show_detail } ]
+        - default: true
+          then: [ { goto: run_search } ]
+
+  # ── Single doctor detail ────────────────────────────────────────────────
+  show_detail:
+    - do: record_get
+      args: { entity: doctor, record_id: '$input.doctor_id', expand: [branch] }
+      bind: doc
+      outputs:
+        ok:        [{ goto: render_detail }]
+        not_found: [{ goto: not_found }]
+        failed:    [{ end: failed }]
+
+  render_detail:
+    # Journey: the patient viewed one doctor's detail → consideration stage.
+    - track: { event: viewed_doctor, timeline: true }
+    - render:
+        render_intent: carousel
+        body: '{$t("doctor-search.detail_body")}'
+        items: '[$doc]'
+        item_template:
+          image_url: '$coalesce($item.fields.photo, "")'
+          # Branch name resolves from the expand refs map ($doc.refs) — no snapshot field.
+          body: '$lines($compact([$item.fields.name, $lines($compact([$coalesce($item.fields.title, null), $item.fields.specialty, $coalesce($doc.refs[$item.fields.branch].fields.name, null)]), " · "), $coalesce($item.fields.bio, null), $coalesce($item.fields.rating_count, 0) > 0 ? $t("doctor-search.card.rating", { rating: $item.fields.rating, count: $item.fields.rating_count }) : null, $item.fields.accepted_tpas != null ? $t("doctor-search.card.tpas", { tpas: $item.fields.accepted_tpas }) : $t("doctor-search.card.no_tpas")]), "\n")'
+          buttons:
+            - { title: '{$t("doctor-search.button.book")}', on_select: { invoke: book-appointment, with: { doctor_id: '$item.id' } } }
+      memory_note: 'Doctor detail: {$doc.fields.name} (accepts: {$coalesce($doc.fields.accepted_tpas, "-")})'
+    - end: applied
+
+  not_found:
+    - render:
+        render_intent: text_card
+        body: '{$t("doctor-search.not_found")}'
+    - end: applied
+
+  # ── Fuzzy search → carousel ─────────────────────────────────────────────
+  run_search:
+    # Compose an optional facet filter AST (branch record ref / insurer). Null → no filter.
+    - assign:
+        conds: '$compact([$input.branch != null ? { field: "branch", op: "eq", value: $input.branch } : null, $input.tpa != null ? { field: "accepted_tpas", op: "contains", value: $input.tpa } : null])'
+        where_ast: '$length($conds) > 0 ? { all: $conds } : null'
+    - do: record_search
+      args:
+        entity: doctor
+        query:  '$coalesce($input.query, "")'
+        where:  '$where_ast'
+        limit:  '$coalesce($input.limit, 10)'
+        expand: [branch]
+      bind: ds
+      outputs:
+        ok:     [{ goto: render_results }]
+        empty:  [{ goto: no_results }]
+        failed: [{ end: failed }]
+
+  render_results:
+    # Journey: the patient searched for a doctor → consideration stage.
+    - track: { event: searched, timeline: true }
+    - render:
+        render_intent: carousel
+        body: '{$t("doctor-search.results_body", { count: $length($ds.rows) })}'
+        items: '$ds.rows'
+        item_template:
+          image_url: '$coalesce($item.fields.photo, "")'
+          # Branch name resolves from the expand refs map ($ds.refs) — no snapshot field.
+          body: '$lines($compact([$item.fields.name, $lines($compact([$coalesce($item.fields.title, null), $item.fields.specialty, $coalesce($ds.refs[$item.fields.branch].fields.name, null)]), " · "), $coalesce($item.fields.rating_count, 0) > 0 ? $t("doctor-search.card.rating", { rating: $item.fields.rating, count: $item.fields.rating_count }) : null, $item.fields.accepted_tpas != null ? $t("doctor-search.card.tpas", { tpas: $item.fields.accepted_tpas }) : null]), "\n")'
+          buttons:
+            - { title: '{$t("doctor-search.button.book")}', on_select: { invoke: book-appointment, with: { doctor_id: '$item.id' } } }
+      memory_note: 'Doctor search: {$length($ds.rows)} result(s)'
+    - end: applied
+
+  no_results:
+    - render:
+        render_intent: text_card
+        body: '{$t("doctor-search.empty")}'
+      memory_note: 'Doctor search: no results'
+    - end: applied

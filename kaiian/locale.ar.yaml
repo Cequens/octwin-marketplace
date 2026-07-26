@@ -1,0 +1,59 @@
+# kaiian — pack-wide Arabic strings (shared across flows). Case-type + region
+# labels follow the `$enum_label` convention `<pack>.<category>.<value>` —
+# `kaiian.cases.<type>` (issue-type labels) and `kaiian.region.<value>` (captain
+# operating regions). Both the collect pickers (`values: + enum:`) and the
+# progress/preview echoes (`$enum_label`) resolve through these single-source keys.
+pack_id: kaiian
+strings:
+  field_picker_footer:     'اختر من القائمة 👆'
+
+  # Case-type labels (category `cases`)
+  cases.extra_charge:      'شكوى خصم زائد'
+  cases.general_complaint: 'شكوى عامة على سائق'
+  cases.unpaid_fare:       'أجرة غير مدفوعة'
+  cases.account_block:     'إيقاف حساب'
+  cases.vehicle_change:    'تغيير مركبة'
+
+  # Captain operating regions (category `region`) — the routing key
+  region.central:          'المنطقة الوسطى'
+  region.western:          'المنطقة الغربية'
+  region.eastern:          'المنطقة الشرقية'
+  region.northern:         'المنطقة الشمالية'
+  region.southern:         'المنطقة الجنوبية'
+
+  # Case status labels (category `status`) — the casework workflow states
+  status.open:             'قيد المراجعة'
+  status.in_progress:      'قيد المعالجة'
+  status.awaiting_customer: 'بانتظار ردّك'
+  status.resolved:          'تم الحل'
+  status.closed:            'مغلق'
+  status.reopened:          'أُعيد فتحه'
+
+  # Decision/outcome labels (category `decision`) — shown in ticket status
+  decision.approve_refund:    'تمت الموافقة على استرداد المبلغ'
+  decision.unblock:           'تم فك الحظر عن الحساب'
+  decision.resolve:           'تم الحل'
+  decision.reject:            'تم رفض الطلب'
+  decision.request_more_info: 'مطلوب منك معلومات إضافية'
+  decision.escalate:          'تمت تصعيد الطلب'
+
+  # Vehicle types (category `vehicle`) — captain-application intake
+  vehicle.sedan:     'سيدان'
+  vehicle.suv:       'دفع رباعي'
+  vehicle.motorbike: 'دراجة نارية'
+
+  # Captain-application pipeline stages (category `stage`, xrm.yaml pipeline)
+  stage.applied:       'تم استلام الطلب'
+  stage.docs_check:    'مراجعة المستندات'
+  stage.vehicle_check: 'فحص المركبة'
+  stage.training:      'التدريب'
+  stage.active:        'كابتن نشط'
+  stage.rejected:      'لم تتم الموافقة'
+
+  # Per-stage explainer shown under the status (category `stage_hint`)
+  stage_hint.applied:       'استلمنا طلبك وهو في قائمة المراجعة.'
+  stage_hint.docs_check:    'فريقنا يراجع مستنداتك — قد نتواصل معك إذا نقص شيء.'
+  stage_hint.vehicle_check: 'الخطوة القادمة: فحص المركبة في مركز منطقتك.'
+  stage_hint.training:      'تم حجزك في التدريب التعريفي — بنرسل لك الجدول قريباً.'
+  stage_hint.active:        'حسابك ككابتن نشط — أهلاً بك معنا!'
+  stage_hint.rejected:      'للأسف لم تتم الموافقة على الطلب هذه المرة.'

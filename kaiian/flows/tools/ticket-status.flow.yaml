@@ -1,0 +1,112 @@
+# ticket-status — the user's existing support case(s), presented INTERACTIVELY.
+# Reads natively from casework via `case_list` (scoped to the current contact):
+#   • 0 cases  → `answer:` (the agent warmly offers to open one — nothing to show)
+#   • 1 case   → a detail card directly (skip the one-row list)
+#   • tapped   → the tapped case's detail card (rows re-invoke $self with case_id)
+#   • ≥2 cases → a `list_picker` of tickets (ref + status); tap → detail
+# An `awaiting_customer` detail card additionally offers a **Reply** button that
+# taps into `reply-to-case` with this case_id — the deterministic reply entry
+# point (the free-text path via `memory.awaiting` still works too).
+# Status + outcome labels resolve via `$enum_label` (kaiian.status.<value> /
+# kaiian.decision.<action>) — deterministic, not agent prose. READ tool: it
+# collects nothing, so no `[interactive Tool]` marker.
+
+flow_id:     ticket-status
+version:     1
+description: |-
+  Show the user's existing support case(s) and their live status — call whenever
+  they ask about a complaint they already filed ("شو صار في شكواي؟", "any update
+  on my ticket?"). Renders an interactive list/detail; no free-text inputs. Never
+  state a case's status from memory — call this every time. For a captain
+  APPLICATION's stage use `application-status` instead.
+
+input:
+  # Set when a list row is tapped (routes straight to that ticket's detail).
+  case_id: { type: string, optional: true }
+
+entry:
+  - else: true
+    goto: lookup
+
+steps:
+  lookup:
+    # Bare bind: `$cases` is the rows array on ok, `[]` on empty. A DB failure is
+    # unexpected and throws → the platform error-net nudges the agent.
+    - do: case_list
+      bind: cases
+    - if: '$length($cases) == 0'
+      then:
+        # No cases: brief-only answer — the agent composes the offer to open one.
+        - answer:
+            instructions: 'The user has no support case on file. Tell them nothing is registered yet, warmly and in their language, and offer to open a new complaint (they can just describe the issue).'
+    # A specific ticket tapped, OR exactly one on file → show its detail directly.
+    - assign:
+        selected: '$state.case_id != null ? $filter($cases, { id: $state.case_id })[0] : ($length($cases) == 1 ? $cases[0] : null)'
+    - if: '$selected != null'
+      then:
+        - goto: detail
+    - goto: list
+
+  # One ticket's detail card. Status + outcome are label-mapped, not free prose.
+  detail:
+    - assign:
+        ref:          '$partial(case_ref, { n: $selected.case_number })'
+        opened_line:  '$t("ticket-status.detail.opened", { when: $format_relative_date($selected.created_at, $coalesce($conversation.lang, "ar")) })'
+        # `request_more_info` is a REQUEST that sets awaiting_customer, not a
+        # resolution — its display is owned by `needed_line` (awaiting-only). Only
+        # real outcomes (resolve/reject/approve_refund/unblock/…) show here, so a
+        # replied-to case (back to in_progress, decision still request_more_info)
+        # no longer renders a stale "Outcome: more info needed" line.
+        outcome_line: '$selected.decision_action != null && $selected.decision_action != "request_more_info" ? $t("ticket-status.detail.outcome", { outcome: $enum_label($selected.decision_action, "decision", $selected.decision_action) }) : null'
+        # When the 2nd-line team asked for more info, surface EXACTLY what they
+        # requested (the `what` param of the request_more_info decision) so the
+        # agent relays the real ask instead of guessing.
+        needed_line:  '$selected.status == "awaiting_customer" && $selected.decision_params != null && $selected.decision_params.what != null ? $t("ticket-status.detail.needed", { what: $selected.decision_params.what }) : null'
+        body_text:    '$lines($compact([$t("ticket-status.detail.header", { ref: $ref }), $t("ticket-status.detail.type", { type: $enum_label($selected.type, "cases", "") }), $t("ticket-status.detail.status", { status: $enum_label($selected.status, "status", $selected.status) }), $opened_line, $outcome_line, $needed_line]), "\n")'
+    # Awaiting the customer → add a Reply button that taps straight into
+    # reply-to-case with this case_id (the tool then asks for the reply text).
+    # The memory_note still carries the exact ask so the free-text path works too.
+    - if: '$selected.status == "awaiting_customer"'
+      then:
+        - render:
+            render_intent: detail_card
+            body: '$body_text'
+            buttons:
+              - { title: '{$t("ticket-status.back_button")}',  on_select: { invoke: $self, with: { case_id: '$selected.id' } } }
+              - { title: '{$t("ticket-status.reply_button")}', on_select: { invoke: 'reply-to-case', with: { case_id: '$selected.id' } } }
+          memory_note: '{$t("ticket-status.memory.awaiting", { case_id: $selected.id, what: $coalesce($selected.decision_params.what, "") })}'
+          data: { case_id: '$selected.id', status: '$selected.status' }
+        - end: applied
+    # Any other status → the card with just a Refresh button.
+    - render:
+        render_intent: detail_card
+        body: '$body_text'
+        buttons:
+          # Refresh THIS ticket (re-invoke with the same case_id), not go to the list.
+          - { title: '{$t("ticket-status.back_button")}', on_select: { invoke: $self, with: { case_id: '$selected.id' } } }
+      memory_note: '{$t("ticket-status.memory.shown", { ref: $ref, case_id: $selected.id, status: $selected.status })}'
+      data: { case_id: '$selected.id', status: '$selected.status' }
+    - end: applied
+
+  # ≥2 tickets → a picker. Each row taps back into $self with its case_id.
+  list:
+    - render:
+        render_intent: list_picker
+        header: '{$t("ticket-status.list.header")}'
+        body:   '{$t("ticket-status.list.body", { count: $length($cases) })}'
+        footer: '{$t("ticket-status.list.footer")}'
+        cta:    '{$t("ticket-status.list.cta")}'
+        items:  []
+        sections:
+          - items:
+              for_each: '$cases'
+              as: c
+              template:
+                title:       '{$partial(case_ref, { n: $c.case_number })} — {$enum_label($c.type, "cases", "")}'
+                description: '{$enum_label($c.status, "status", $c.status)}'
+                on_select:
+                  invoke: $self
+                  with: { case_id: '$c.id' }
+      memory_note: 'Listed {$length($cases)} tickets for the user to pick from.'
+      data: { count: '$length($cases)', cases: '$cases' }
+    - end: applied

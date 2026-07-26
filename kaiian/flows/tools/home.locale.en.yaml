@@ -1,0 +1,15 @@
+flow_id: home
+strings:
+  greeting_default: 'Welcome to Kaiian support 👋 How can I help you?'
+
+  card_header:  'Kaiian Support'
+  status_open:  '🎫 Your open tickets: {count}'
+  card_footer:  'Pick from the list 👆'
+  list_button:  'Options'
+
+  row_report_title: 'Report an issue'
+  row_report_desc:  'Overcharge, complaint about a driver, or a captain issue'
+  row_status_title: 'My ticket status'
+  row_status_desc:  'Track a ticket you already opened'
+
+  memory_note: 'Showed the Kaiian support menu (open tickets: {count}).'

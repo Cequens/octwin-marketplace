@@ -1,0 +1,25 @@
+# home — the shop hub. Pure-render list_picker with tap routing (no `do:`).
+flow_id:     home
+version:     1
+description: Main menu of the shop. Call on a greeting or when the shopper wants to navigate.
+
+input:
+  message: { type: string, optional: true, describe: 'Optional free-text note from the shopper.' }
+
+entry:
+  - else: true
+    goto: show
+
+steps:
+  show:
+    - render:
+        render_intent: list_picker
+        header: 'Welcome to the shop'
+        body:   'What would you like to do?'
+        cta:    'Choose'
+        items:
+          - { title: 'Browse products', description: 'See what we have', on_select: { invoke: 'shop' } }
+          - { title: 'View cart',       description: 'Your items so far', on_select: { invoke: 'cart', with: { action: view } } }
+          - { title: 'My orders',       description: 'Track, cancel, or edit an order', on_select: { invoke: 'orders', with: { action: list } } }
+      memory_note: 'Showed the shop home menu.'
+    - end: applied

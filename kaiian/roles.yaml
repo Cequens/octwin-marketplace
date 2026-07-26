@@ -1,0 +1,54 @@
+# Domain roles a tenant admin can assign (Console → Team → Roles), consumed by the
+# platform rbac module (RbacRegistry). The platform-standard trio — agent /
+# supervisor / read_only — is merged in automatically; declare a role here only
+# when the domain needs something the generic trio can't say.
+#
+# A grant is `<domain>.<subject>: { <verb>: <scope> }`:
+#   • domains/subjects come from the securable-domain catalog — `record.<entity>`
+#     (this pack's xrm.yaml entities + the platform system entities like `case`),
+#     `automation.job` / `automation.campaign`, `journey`;
+#   • verbs are the fixed platform set (view create update note transition assign act archive);
+#   • scopes are own | team | queue | all (a list = union);
+#   • `act` may allowlist specific action keys — a case's dispositions (cases.yaml)
+#     or an entity's worklist actions.
+#
+# `queue` scope resolves against the queues BOUND AT ASSIGNMENT (or `queues:` below
+# as the default) — so ONE regional_agent role serves every region team: bind the
+# Western team's assignment to ops_western, the Central team's to ops_central.
+
+roles:
+  regional_agent:
+    description: >-
+      Handles captain cases (unpaid fares, account blocks, vehicle changes) for the
+      region queues bound to their assignment, plus anything assigned to them or
+      their team. Can approve refunds and unblock accounts, and reassign within reach.
+    grants:
+      record.case:
+        view:       [queue, team]
+        note:       [queue, team]
+        transition: [queue, team]
+        assign:     [queue, team]
+        act:        { scope: [queue, team], actions: [approve_refund, unblock, resolve, reject, request_more_info, escalate] }
+
+  customer_support:
+    description: >-
+      Resolves customer complaints and extra-charge refunds in the customer-support
+      queue. Can approve a refund, but never touches captain cases in the region queues.
+    queues: [customer_ops]
+    grants:
+      record.case:
+        view:       queue
+        note:       queue
+        transition: queue
+        act:        { scope: queue, actions: [approve_refund, resolve, reject, request_more_info, escalate] }
+
+  onboarding_reviewer:
+    description: >-
+      Reviews captain applications end-to-end — documents, driving license and
+      vehicle checks — and moves them through the onboarding funnel. No access to cases.
+    grants:
+      record.captain_application:
+        view:       all
+        update:     all
+        note:       all
+        transition: all

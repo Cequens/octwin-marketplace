@@ -1,0 +1,9 @@
+# Pack-level slash-command declarations. The platform's default
+# `systemCommand` matches inbound text against these entries before
+# normal agent dispatch. Mirrors real-estate's — `/clear` closes the
+# current conversation so the tester can start a fresh booking flow.
+
+- match:    '/clear'
+  action:   close_conversation
+  reply: 'تم مسح المحادثة ✅ تقدر تبدأ من جديد.'
+  source:   '/clear'

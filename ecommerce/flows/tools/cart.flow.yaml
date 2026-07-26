@@ -1,0 +1,195 @@
+# cart — add / view / checkout. Composes the platform cart_* + order_* +
+# payment_request primitives; contact_id is the shopper's platform contact.
+#
+# Checkout is ALWAYS confirm-then-submit, and payment is offered only if the
+# workspace can actually take it — no pack env decides this:
+#   1. "Checkout" shows a review card; nothing is written yet. The shopper commits
+#      with an explicit "Confirm order" tap, which re-invokes with confirmed: true.
+#   2. The confirmed run submits the cart (→ an order), then asks payment_request to
+#      open the payment rail.
+#   3. `ok`   → the workspace has a payment gateway (a platform PaymentAdapter
+#              driver, e.g. Stripe): the shopper gets its hosted checkout URL, the
+#              order sits at payment_status pending, and the gateway's webhook
+#              reconciles it to captured.
+#      `empty` → no gateway configured: nothing was charged and the order was left
+#              alone, so it confirms pay-on-delivery (fulfilled from the console).
+#      `failed` → same pay-on-delivery confirmation rather than stranding the order.
+# The store never renders a pay link it can't honour — the retired
+# CHECKOUT_BASE_URL env + its fabricated "<base>?ref=<order>" link are gone; a
+# tenant PSP belongs behind a PaymentAdapter driver, which lands on the `ok` path.
+flow_id:     cart
+version:     1
+description: 'Manage the cart — action add (with product_id, optional qty), view, or checkout.'
+
+input:
+  action:     { type: enum, enum: [add, view, remove, set_qty, checkout], optional: true, describe: 'add | view | remove | set_qty | checkout (default view).' }
+  product_id: { type: string, optional: true, describe: 'Product retailer_id — required for add / remove / set_qty.' }
+  qty:        { type: number, optional: true, describe: 'Quantity (add defaults to 1; set_qty requires it — 0 removes the line).' }
+  confirmed:  { type: boolean, optional: true, describe: 'Pass true only when the shopper explicitly confirmed placing the order (the Confirm tap sets it).' }
+
+entry:
+  - else: true
+    goto: route
+
+steps:
+  route:
+    - dispatch:
+        key: '$coalesce($input.action, "view")'
+        cases:
+          add:      [ { goto: add_item } ]
+          view:     [ { goto: show_cart } ]
+          remove:   [ { goto: remove_item } ]
+          set_qty:  [ { goto: set_item_qty } ]
+          checkout: [ { goto: do_checkout } ]
+
+  remove_item:
+    - do: cart_remove
+      args: { contact_id: '$contact.id', retailer_id: '$input.product_id' }
+      bind: cart
+      outputs:
+        ok:      [ { goto: render_cart } ]
+        invalid: []   # item not in cart → agent gets the reason + retries
+        failed:  [ { render: { render_intent: text_card, body: 'Could not update your cart right now.' } }, { end: failed } ]
+
+  set_item_qty:
+    - do: cart_update_qty
+      args: { contact_id: '$contact.id', retailer_id: '$input.product_id', qty: '$input.qty' }
+      bind: cart
+      outputs:
+        ok:      [ { goto: render_cart } ]
+        invalid: []   # item not in cart → agent gets the reason + retries
+        failed:  [ { render: { render_intent: text_card, body: 'Could not update your cart right now.' } }, { end: failed } ]
+
+  add_item:
+    - do: cart_add
+      args: { contact_id: '$contact.id', product_id: '$input.product_id', qty: '$coalesce($input.qty, 1)' }
+      bind: cart
+      outputs:
+        # Journey: an item was added → cart stage + added_to_cart goal.
+        ok:      [ { track: { event: added_to_cart, timeline: true } }, { goto: render_cart } ]
+        invalid: []   # unknown SKU → agent gets the reason + retries
+        failed:  [ { render: { render_intent: text_card, body: 'Could not add that item right now.' } }, { end: failed } ]
+
+  show_cart:
+    - do: cart_view
+      args: { contact_id: '$contact.id' }
+      bind: cart
+      outputs:
+        ok:     [ { goto: render_cart } ]
+        failed: [ { render: { render_intent: text_card, body: 'Could not load your cart right now.' } }, { end: failed } ]
+
+  render_cart:
+    - if: '$cart.empty'
+      then:
+        - render: { render_intent: text_card, body: 'Your cart is empty. Browse products to add something!' }
+        - end: applied
+    - render:
+        render_intent: detail_card
+        header: 'Your cart'
+        body:   '$summarize_items($cart.items, "{quantity}× {title} — {line_total}", { separator: "\n" })'
+        footer: 'Subtotal: {$cart.subtotal}'
+        buttons:
+          - { title: 'Checkout',      on_select: { invoke: 'cart', with: { action: checkout } } }
+          - { title: 'Keep shopping', on_select: { invoke: 'shop' } }
+      memory_note: 'Cart has {$cart.count} item(s), subtotal {$cart.subtotal}.'
+    - end: applied
+
+  do_checkout:
+    # Journey: the shopper entered checkout → checkout stage. (Idempotent/monotonic:
+    # the pay-on-delivery path re-invokes this with confirmed:true — same stage, no new run.)
+    - track: { event: started_checkout, timeline: true }
+    # Always require the explicit Confirm tap before an order exists — no accidental
+    # orders. Whether payment is then offered is the gateway's answer, not an env's.
+    - if: '$input.confirmed == true'
+      goto: submit_order
+    - goto: load_confirm_view
+
+  # Pre-submit review: nothing is written yet — the shopper commits via the
+  # Confirm tap, which re-invokes checkout with confirmed: true.
+  load_confirm_view:
+    - do: cart_view
+      args: { contact_id: '$contact.id' }
+      bind: cart
+      outputs:
+        ok:     [ { goto: render_confirm_gate } ]
+        failed: [ { render: { render_intent: text_card, body: 'Could not load your cart right now.' } }, { end: failed } ]
+
+  render_confirm_gate:
+    - if: '$cart.empty'
+      then:
+        - render: { render_intent: text_card, body: 'Your cart is empty — nothing to check out yet.' }
+        - end: applied
+    - render:
+        render_intent: detail_card
+        header: 'Confirm your order'
+        body:   '$summarize_items($cart.items, "{quantity}× {title} — {line_total}", { separator: "\n" })'
+        # No payment promise here — whether the next step is a card checkout or
+        # pay-on-delivery is only known after the order exists (see build_payment).
+        footer: 'Total: {$cart.subtotal}'
+        buttons:
+          - { title: 'Confirm order',  on_select: { invoke: 'cart', with: { action: checkout, confirmed: true } } }
+          - { title: 'Edit cart',      on_select: { invoke: 'cart', with: { action: view } } }
+          - { title: 'Keep shopping',  on_select: { invoke: 'shop' } }
+      memory_note: 'Order NOT placed yet — showed a confirm-order review ({$cart.count} item(s), subtotal {$cart.subtotal}); awaiting the Confirm tap.'
+    - end: applied
+
+  submit_order:
+    - do: cart_submit
+      args: { contact_id: '$contact.id' }
+      bind: order
+      outputs:
+        ok:
+          # Journey: the order was placed → purchased stage + purchase goal.
+          # value = the order total (major units), so goal_value_sum = booked revenue.
+          # One point covers both the gateway-checkout and pay-on-delivery branches.
+          - track: { event: order_placed, value: '$order.total_minor / 100', timeline: true }
+          - goto: build_payment
+        failed: [ { render: { render_intent: text_card, body: 'Checkout failed — your cart may be empty.' } }, { end: failed } ]
+
+  # OPEN the payment rail. A configured gateway creates a real hosted checkout
+  # session (order → payment_status: pending + the gateway ref stored; its webhook
+  # later reconciles to captured). `empty` means this workspace has no gateway —
+  # nothing was charged and the order was left untouched — and a `failed` rail still
+  # confirms the order rather than stranding a submitted cart; both land on
+  # pay-on-delivery.
+  build_payment:
+    - do: payment_request
+      args: { reference_id: '$order.reference_id' }
+      bind: pay
+      outputs:
+        ok:     [ { goto: render_checkout } ]
+        empty:  [ { goto: render_confirmation } ]
+        failed: [ { goto: render_confirmation } ]
+
+  render_checkout:
+    - render:
+        render_intent:  order_details
+        reference_id:   '$order.reference_id'
+        body:           'Review order #{$order.record_number} and pay.'
+        currency:       '$coalesce($order.currency, "USD")'
+        items:          '$map($order.items, { name: $item.name, quantity: $item.quantity, amount: $format_money($item.amount_minor / 100, $coalesce($order.currency, "USD")), amount_minor: $item.amount_minor })'
+        subtotal:       '$format_money($order.subtotal_minor / 100, $coalesce($order.currency, "USD"))'
+        subtotal_minor: '$order.subtotal_minor'
+        total:          '$format_money($order.total_minor / 100, $coalesce($order.currency, "USD"))'
+        total_minor:    '$order.total_minor'
+        # Reached only via the `ok` port, so a real gateway session exists — the
+        # secure-payment promise is always true here.
+        pay_label:      'Pay securely now'
+        payment_url:    '$pay.payment_url'
+      memory_note: 'Opened a secure {$pay.provider} checkout for order #{$order.record_number} (payment_status now pending) — the shopper pays on the gateway page and its webhook confirms the payment.'
+    - end: applied
+
+  render_confirmation:
+    - render:
+        render_intent:  order_details
+        reference_id:   '$order.reference_id'
+        body:           'Order #{$order.record_number} placed! We are getting it ready — you will pay on delivery.'
+        footer:         'Ask me for your order status any time.'
+        currency:       '$coalesce($order.currency, "USD")'
+        items:          '$map($order.items, { name: $item.name, quantity: $item.quantity, amount: $format_money($item.amount_minor / 100, $coalesce($order.currency, "USD")), amount_minor: $item.amount_minor })'
+        subtotal:       '$format_money($order.subtotal_minor / 100, $coalesce($order.currency, "USD"))'
+        subtotal_minor: '$order.subtotal_minor'
+        total:          '$format_money($order.total_minor / 100, $coalesce($order.currency, "USD"))'
+        total_minor:    '$order.total_minor'
+      memory_note: 'Placed order #{$order.record_number} ({$order.total_minor} minor units) — no payment step; pay on delivery.'
+    - end: applied

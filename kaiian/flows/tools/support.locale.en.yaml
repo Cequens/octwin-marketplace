@@ -1,0 +1,43 @@
+flow_id: support
+strings:
+  label.issue_type:    'Request type'
+  label.mobile:        'Mobile number'
+  label.description:   'Issue details'
+  label.extra_details: 'Extra details'
+  label.evidence_photo: 'Send a photo as evidence (a screenshot / receipt / photo — optional)'
+  skip_evidence:        'Skip — no photo'
+  label.region:        'Operating region'
+
+  # issue_type picker (labels from pack-level kaiian.cases.<value> via $enum_label)
+  field_header.issue_type: 'What do you need help with?'
+  field_cta.issue_type:    'Choose'
+  section.passenger:       'Passenger issues'
+  section.captain:         'Captain issues'
+
+  # region picker (labels from pack-level kaiian.region.<value> via $enum_label)
+  field_header.region:     'Which region do you operate in?'
+  field_cta.region:        'Choose region'
+
+  invalid_mobile: 'That number doesn''t look right — please send your full mobile number.'
+
+  progress.header:      '📋 Your request so far:'
+  progress.issue:       '• Type: {issue}'
+  progress.mobile:      '• Mobile: {mobile}'
+  progress.description: '• Issue: {description}'
+  progress.region:      '• Region: {region}'
+
+  approve_header:       'Please review your request before we submit it 👇'
+  approve_confirm:      'Confirm & open ticket ✅'
+  approve_cancel:       'Cancel ❌'
+  preview.header:       'Request details:'
+  preview.issue:        '• Type: {issue}'
+  preview.mobile:       '• Mobile: {mobile}'
+  preview.description:  '• Issue: {description}'
+  preview.extra:        '• Extra details: {extra}'
+  preview.evidence:     '• Evidence photo: ✅ attached'
+  preview.region:       '• Region: {region}'
+
+  evidence_caption: 'Evidence attached by the customer at intake'
+  opened:       'Your request {ref} is open ✅ Our team will contact you within {sla} hours on your number. Thanks for your patience 🙏'
+  open_failed:  'We hit a small glitch logging that — please try again in a moment, and let me know if it persists.'
+  aborted:      'No problem, I''ve cancelled the request. I''m here if you change your mind or need anything else 🙌'

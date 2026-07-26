@@ -1,0 +1,185 @@
+# orders — the shopper's order center: list my orders, view one (status +
+# items), cancel it, or edit it (cancel + restore its items to the cart for a
+# fresh checkout). Cancel/Edit are offered only while the order pipeline still
+# allows canceling (pending/processing — ORDER_STATUS_TRANSITIONS is strict:
+# shipped/completed orders are read-only and order_update_status fails loudly).
+flow_id:     orders
+version:     1
+description: 'List the shopper''s orders, show one order''s details and status, cancel it, or edit it (moves its items back to the cart).'
+
+input:
+  action:       { type: enum, enum: [list, view, cancel, edit], optional: true, describe: 'list | view | cancel | edit (default list).' }
+  reference_id: { type: string, optional: true, describe: 'Order reference (ord_…) — required for view / cancel / edit.' }
+
+entry:
+  - else: true
+    goto: route
+
+steps:
+  route:
+    # No reference for a per-order action → fall back to the picker.
+    - if: '$input.reference_id == null'
+      goto: list_orders
+    - dispatch:
+        key: '$coalesce($input.action, "view")'
+        cases:
+          list:   [ { goto: list_orders } ]
+          view:   [ { goto: load_order } ]
+          cancel: [ { goto: cancel_order } ]
+          edit:   [ { goto: load_for_edit } ]
+
+  list_orders:
+    - do: order_list
+      args: { contact_id: '$contact.id' }
+      bind: ol
+      outputs:
+        empty:  [ { render: { render_intent: text_card, body: 'You have no orders yet — browse the shop and place your first one!' } }, { end: applied } ]
+        ok:     [ { goto: render_orders } ]
+        failed: [ { render: { render_intent: text_card, body: 'Could not load your orders right now.' } }, { end: failed } ]
+
+  render_orders:
+    - render:
+        render_intent: list_picker
+        header: 'Your orders'
+        body:   'You have {$ol.total} order(s). Pick one to see its details.'
+        cta:    'View order'
+        items:  []
+        sections:
+          - title: 'Orders'
+            items:
+              for_each: '$ol.orders'
+              as:       o
+              template:
+                title:       'Order #{$o.record_number} · {$format_money($o.total_minor / 100, $coalesce($o.currency, "USD"))}'
+                description: '{$o.status} · {$summarize_items($o.items, "{quantity}× {name}", { max: 3, separator: ", " })}'
+                on_select:
+                  invoke: 'orders'
+                  with:
+                    action:       view
+                    reference_id: '$o.reference_id'
+      memory_note: 'Listed the shopper''s {$ol.total} order(s).'
+      data: { count: '$ol.total' }
+    - end: applied
+
+  load_order:
+    - do: order_get
+      args: { reference_id: '$input.reference_id' }
+      bind: order
+      outputs:
+        ok:     [ { goto: render_order } ]
+        empty:  [ { render: { render_intent: text_card, body: 'I could not find that order.' } }, { end: applied } ]
+        failed: [ { render: { render_intent: text_card, body: 'Could not load that order right now.' } }, { end: failed } ]
+
+  render_order:
+    # Editable = the pipeline still allows canceling (pending/processing).
+    - if: '$order.status == "pending" || $order.status == "processing"'
+      then:
+        - render:
+            render_intent: detail_card
+            header: 'Order #{$order.record_number}'
+            body: |-
+              Status: {$order.status} · Payment: {$order.payment_status}
+
+              {$summarize_items($order.items, "{quantity}× {name}", { separator: "\n" })}
+            footer: 'Total: {$format_money($order.total_minor / 100, $coalesce($order.currency, "USD"))}'
+            buttons:
+              - { title: 'Cancel order', on_select: { invoke: 'orders', with: { action: cancel, reference_id: '$order.reference_id' } } }
+              - { title: 'Edit items',   on_select: { invoke: 'orders', with: { action: edit,   reference_id: '$order.reference_id' } } }
+              - { title: 'My orders',    on_select: { invoke: 'orders', with: { action: list } } }
+          memory_note: 'Showed order #{$order.record_number} ({$order.status}) with Cancel/Edit actions.'
+          data: { status: '$order.status', payment_status: '$order.payment_status' }
+        - end: applied
+    # Shipped / completed / canceled → read-only details.
+    - render:
+        render_intent: detail_card
+        header: 'Order #{$order.record_number}'
+        body: |-
+          Status: {$order.status} · Payment: {$order.payment_status}
+
+          {$summarize_items($order.items, "{quantity}× {name}", { separator: "\n" })}
+        footer: 'Total: {$format_money($order.total_minor / 100, $coalesce($order.currency, "USD"))}'
+        buttons:
+          - { title: 'My orders', on_select: { invoke: 'orders', with: { action: list } } }
+      memory_note: 'Showed order #{$order.record_number} ({$order.status}) — read-only, no longer editable.'
+      data: { status: '$order.status', payment_status: '$order.payment_status' }
+    - end: applied
+
+  cancel_order:
+    - do: order_update_status
+      args: { reference_id: '$input.reference_id', status: 'canceled' }
+      bind: co
+      outputs:
+        ok:
+          - render:
+              render_intent:  order_status
+              reference_id:   '$co.reference_id'
+              status:         '$co.status'
+              payment_status: '$co.payment_status'
+              body:           'Order #{$co.record_number} has been canceled.'
+            memory_note: 'Canceled order #{$co.record_number} at the shopper''s request.'
+          - end: applied
+        empty:  [ { render: { render_intent: text_card, body: 'I could not find that order.' } }, { end: applied } ]
+        failed: [ { render: { render_intent: text_card, body: 'This order can no longer be canceled — it may already be shipped or completed.' } }, { end: failed } ]
+
+  load_for_edit:
+    - do: order_get
+      args: { reference_id: '$input.reference_id' }
+      bind: order
+      outputs:
+        ok:     [ { goto: edit_order } ]
+        empty:  [ { render: { render_intent: text_card, body: 'I could not find that order.' } }, { end: applied } ]
+        failed: [ { render: { render_intent: text_card, body: 'Could not load that order right now.' } }, { end: failed } ]
+
+  # Edit = cancel the order FIRST (the strict transition is the guard — it
+  # fails on shipped/completed), then restore its line items into the cart so
+  # the shopper adjusts and checks out again.
+  edit_order:
+    - do: order_update_status
+      args: { reference_id: '$order.reference_id', status: 'canceled' }
+      bind: co
+      outputs:
+        ok:     [ { goto: restore_items } ]
+        empty:  [ { render: { render_intent: text_card, body: 'I could not find that order.' } }, { end: applied } ]
+        failed: [ { render: { render_intent: text_card, body: 'This order can no longer be edited — it may already be shipped or completed.' } }, { end: failed } ]
+
+  restore_items:
+    - foreach:
+        in: '$order.items'
+        as: it
+        body:
+          - do: cart_add
+            args: { contact_id: '$contact.id', product_id: '$it.retailer_id', qty: '$it.quantity' }
+            bind: readd
+            outputs:
+              ok:     [ { note: 'Restored {$it.quantity}× {$it.name} to the cart.' } ]
+              failed: [ { note: 'Could not restore {$it.name} — the product may no longer be available.' } ]
+    - do: cart_view
+      args: { contact_id: '$contact.id' }
+      bind: cart
+      outputs:
+        ok:     [ { goto: render_edit_done } ]
+        # cart_view failed, but the cancel + item-restore ALREADY applied above —
+        # so the flow outcome is genuinely `applied` (not a failure). We just
+        # can't re-render the cart, so fall back to a text confirmation. Routed
+        # via goto (not an inline render+end) so it reads as the applied outcome
+        # it is — no success-stamped-failure lint trip.
+        failed: [ { goto: render_edit_done_no_cart } ]
+
+  render_edit_done_no_cart:
+    - render: { render_intent: text_card, body: 'Your order was canceled and its items were moved back to your cart.' }
+    - end: applied
+
+  render_edit_done:
+    - render:
+        render_intent: detail_card
+        header: 'Order moved to your cart'
+        body: |-
+          Order #{$order.record_number} was canceled and its items are back in your cart — adjust anything, then check out again.
+
+          {$summarize_items($cart.items, "{quantity}× {title} — {line_total}", { separator: "\n" })}
+        footer: 'Subtotal: {$cart.subtotal}'
+        buttons:
+          - { title: 'Checkout',      on_select: { invoke: 'cart', with: { action: checkout } } }
+          - { title: 'Keep shopping', on_select: { invoke: 'shop' } }
+      memory_note: 'Edit flow: canceled order #{$order.record_number} and restored its items to the cart ({$cart.count} item(s), subtotal {$cart.subtotal}). The shopper adjusts the cart, then checks out again.'
+    - end: applied

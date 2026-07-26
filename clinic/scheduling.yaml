@@ -1,0 +1,50 @@
+# Scheduling declaration for the clinic pack — makes the `doctor` XRM entity a
+# bookable resource. Availability rules/exceptions + the slot ledger live on the
+# platform DB (no pack DB); a booking is the `booking` XRM system entity.
+#
+# Doctors carry their own `timezone` field (from xrm.yaml), so no timezone_from
+# is needed — the engine reads it, falling back to this default.
+
+timezone: Africa/Cairo
+
+resources:
+  doctor:
+    slot:      { default_minutes: 20, default_capacity: 1, window_days: 7 }
+    # Reminder offsets before slot_start (seconds). book-appointment computes the
+    # absolute send_at from these and hands each to schedule_notify.
+    reminders:
+      - { key: t24, seconds: 86400 }
+      - { key: t2,  seconds: 7200 }
+
+booking:
+  entity: booking
+
+# Demo availability for the seeded doctors (matched by name — the xrm.yaml demo
+# seeds the doctor records first). Seeded at provision under the `seed` flag;
+# idempotent (skips a doctor that already has rules).
+#
+# Each rule tags the BRANCH it runs at on `meta` — a doctor works different
+# branches on different days (e.g. منى خالد: Mon @ Nasr City, Sat @ Maadi). The
+# `@nasr`/`@maadi` aliases resolve to the seeded branch record ids at seed time;
+# `branch_label` is the display snapshot the slot picker shows.
+demo:
+  availability:
+    - resource_match: { entity: doctor, field: name, value: 'أحمد سمير' }
+      rules:
+        - { dow: 0, start: '16:00', end: '20:00', slot_minutes: 20, capacity: 1, meta: { branch: '@nasr',  branch_label: 'فرع مدينة نصر' } }
+        - { dow: 2, start: '16:00', end: '20:00', slot_minutes: 20, capacity: 1, meta: { branch: '@maadi', branch_label: 'فرع المعادي' } }
+        - { dow: 4, start: '16:00', end: '20:00', slot_minutes: 20, capacity: 1, meta: { branch: '@nasr',  branch_label: 'فرع مدينة نصر' } }
+    - resource_match: { entity: doctor, field: name, value: 'منى خالد' }
+      rules:
+        - { dow: 6, start: '10:00', end: '14:00', slot_minutes: 15, capacity: 2, meta: { branch: '@maadi', branch_label: 'فرع المعادي' } }
+        - { dow: 1, start: '10:00', end: '14:00', slot_minutes: 15, capacity: 2, meta: { branch: '@nasr',  branch_label: 'فرع مدينة نصر' } }
+    - resource_match: { entity: doctor, field: name, value: 'هشام علي' }
+      rules:
+        - { dow: 0, start: '18:00', end: '22:00', slot_minutes: 30, capacity: 1, meta: { branch: '@maadi', branch_label: 'فرع المعادي' } }
+        - { dow: 3, start: '18:00', end: '22:00', slot_minutes: 30, capacity: 1, meta: { branch: '@maadi', branch_label: 'فرع المعادي' } }
+    - resource_match: { entity: doctor, field: name, value: 'سارة محمود' }
+      rules:
+        - { dow: 2, start: '12:00', end: '16:00', slot_minutes: 20, capacity: 1, meta: { branch: '@maadi', branch_label: 'فرع المعادي' } }
+    - resource_match: { entity: doctor, field: name, value: 'كريم عادل' }
+      rules:
+        - { dow: 4, start: '17:00', end: '21:00', slot_minutes: 20, capacity: 1, meta: { branch: '@nasr', branch_label: 'فرع مدينة نصر' } }

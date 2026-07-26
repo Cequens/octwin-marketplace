@@ -1,0 +1,21 @@
+flow_id: ticket-status
+strings:
+  # Detail card (one ticket) — status/type/outcome resolve via $enum_label.
+  detail.header:  '🎫 طلب رقم {ref}'
+  detail.type:    '• النوع: {type}'
+  detail.status:  '• الحالة: {status}'
+  detail.opened:  '• فُتح: {when}'
+  detail.outcome: '• النتيجة: {outcome}'
+  detail.needed:  '• المطلوب منك: {what}'
+  back_button:    'تحديث الحالة'
+  reply_button:   'رد على الفريق'
+
+  # Next-turn briefs (memory_note) — carry the case_id so a reply can be captured.
+  memory.awaiting: 'الطلب (case_id={case_id}) بانتظار معلومات من العميل: {what}. لو أرسل العميل المعلومة المطلوبة، استدعِ reply-to-case بهذا الـ case_id ورسالته — لا تدّعِ أبداً أنك أرسلتها بدون استدعاء الأداة.'
+  memory.shown:    'عرضت تفاصيل الطلب {ref} (case_id={case_id}) — الحالة {status}.'
+
+  # Ticket picker (two or more tickets)
+  list.header: 'طلباتك 🎫'
+  list.body:   'عندك {count} طلبات مسجّلة — اختر واحد تشوف تفاصيله:'
+  list.footer: 'اختر من القائمة 👆'
+  list.cta:    'اختر طلب'

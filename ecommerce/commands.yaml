@@ -1,0 +1,8 @@
+# Pack-level slash-command declarations. The platform's default `systemCommand`
+# matches inbound text against these before normal agent dispatch. `/clear`
+# closes the current conversation so a tester can start a fresh shopping session.
+
+- match:    '/clear'
+  action:   close_conversation
+  reply: 'Conversation cleared ✅ You can start a fresh shopping session.'
+  source:   '/clear'

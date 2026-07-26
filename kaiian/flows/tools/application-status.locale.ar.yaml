@@ -1,0 +1,16 @@
+flow_id: application-status
+strings:
+  # بطاقة التفاصيل (طلب واحد) — المرحلة والشرح عبر $enum_label
+  detail.header:  '🚗 الطلب APP-{ref}'
+  detail.name:    '• الاسم: {name}'
+  detail.region:  '• المنطقة: {region}'
+  detail.vehicle: '• المركبة: {vehicle}'
+  detail.stage:   '• الحالة: {stage}'
+  detail.updated: '• آخر تحديث: {when}'
+  refresh_button: 'تحديث الحالة'
+  lookup_failed:  'صار خطأ أثناء البحث عن طلبك — جرّب مرة ثانية بعد شوي.'
+
+  # قائمة الطلبات (نادراً — التكرار ممنوع بالجوال)
+  list.header: 'طلباتك 🚗'
+  list.body:   'عندك {count} طلبات مسجلة — اختر واحداً لعرض حالته:'
+  list.cta:    'اختر طلباً'

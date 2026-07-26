@@ -1,0 +1,85 @@
+# ecommerce — Meta-commerce demo pack.
+#
+# Proves the platform commerce stack end-to-end: catalog discovery
+# (product_search / catalog_*), product render intents (product_card /
+# product_list / catalog_link), the cart/order capability (cart_* / order_*),
+# checkout (order_details / order_status), and order management (list / view /
+# cancel / edit). The catalog is PLATFORM-owned (the `commerce` schema on the
+# served DB) — this pack holds NO product tables; it composes the platform
+# commerce primitives in pure YAML.
+#
+# Channel-blind: the same flows render WhatsApp SPM/MPM/cart/checkout AND the
+# byte-faithful widget simulation on web.
+
+id:          ecommerce
+version:     1.0.0
+description: 'Meta-commerce demo — catalog, product cards, cart, and checkout on WhatsApp + web.'
+
+# Marketplace presentation — how this pack appears in the console catalog a
+# tenant browses. Optional: with no `listing:` the console falls back to `id` +
+# `description`. `category` is a closed enum (see manifestYamlSchema).
+listing:
+  title:    'Storefront'
+  tagline:  'Catalogue, cart and checkout on WhatsApp, with Meta commerce sync'
+  category: retail
+  author:   { name: 'Octwin', url: 'https://octwin.ai' }
+
+supported_channels: [whatsapp, web]
+# NO data-store: the platform `commerce` schema (catalog + cart) now lives on the
+# control-plane platform DB (migration 061), so this pack owns no DB and installs
+# with no data-store prompt. `embedding`: product_search embeds the query.
+# `storage`: product images via the media service.
+required_adapters:  [messaging, embedding, storage]
+
+default_settings:
+  locale: en
+
+# No pack env: the store takes payment online iff the WORKSPACE has a payment
+# gateway (a platform PaymentAdapter driver, e.g. Stripe). `payment_request` answers
+# that per checkout — `ok` = a hosted card checkout, `empty` = pay-on-delivery — so
+# nothing here decides it. The retired CHECKOUT_BASE_URL env was a URL-shaped
+# feature flag whose fabricated "<base>?ref=<order>" link the platform never served.
+
+default_conversation_context:
+  channel_contact_handle: { type: string, describe: 'Speaker channel handle (whatsapp E.164, web session id, …).' }
+  lang:                   { type: enum, enum: [en, ar, bilingual], default: en }
+
+# Demo catalog seed (platform-owned `product` entity). Author-time:
+# `npm run seed:gen ecommerce` AI-generates product images + writes
+# `catalog.seed.json` (products + baked embeddings) from `catalog.seed.ts`.
+# Provision-time (seed flag) + the console "Seed demo data" action upload the
+# images and upsert the products — no model calls at provision.
+commerce_catalog_seed:
+  data:       db/seeders/catalog.seed.json
+  assets_dir: db/seeders/assets
+
+flows:
+  - home          # entry hub (list_picker → tap-route to shop / cart)
+  - shop          # product_search / catalog_list → product_list
+  - product       # catalog_get → product_card + recommend_related
+  - cart          # cart_* dispatch (add / view / checkout) → confirm-tap → submit → gateway checkout if the workspace has one, else pay-on-delivery
+  - orders        # order_list/order_get → my-orders picker · details · cancel · edit (items back to cart)
+
+agents:
+  - id:                shop
+    display_name:      'Shop Assistant'
+    default_model:     'openrouter/google/gemini-3.1-flash-lite-preview'
+    default_config:
+      temperature: 0.3
+      max_steps:   8
+    include_platform_protocol: true
+    tools:
+      - home
+      - shop
+      - product
+      - cart
+      - orders
+    instructions:
+      - file: prompts/identity.md
+    working_memory:
+      populate: |-
+        # Shopper
+        - Channel: {{channel.kind}}
+        - Name: {{channel.display_name}}
+        - Language: {{channel.lang}}
+        - Handle: {{channel.from}}

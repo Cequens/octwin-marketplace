@@ -1,0 +1,44 @@
+# shop — catalog discovery. Embeds the query + hybrid-searches the platform
+# catalog, then renders an INTERACTIVE product carousel: each card has an
+# "Add to cart" tap (→ cart) and a "Details" tap (→ product). Carousel works on
+# both WhatsApp (native card carousel) and the web widget (tappable buttons).
+flow_id:     shop
+version:     1
+description: Search or browse the catalog. Pass the shopper's free-text need as `query`; pass `category` when named.
+
+input:
+  query:    { type: string, optional: true, describe: 'Free-text of what the shopper wants (e.g. "blue summer dress under 500").' }
+  category: { type: string, optional: true, describe: 'Category filter when the shopper names one.' }
+
+entry:
+  - else: true
+    goto: search
+
+steps:
+  search:
+    - do: product_search
+      args: { query: '$input.query', category: '$input.category', limit: 8 }
+      bind: results
+      outputs:
+        ok:
+          # Journey: a catalog search returned results → browsing stage.
+          - track: { event: searched, timeline: true }
+          - render:
+              render_intent: carousel
+              body: 'Here is what I found — tap a product to add it or see details.'
+              placeholder_url: 'https://placehold.co/600x600/png?text=Product'
+              items: '$results'
+              item_template:
+                image_url: '$item.image_url'
+                body: '$lines([$item.title, $item.price])'
+                buttons:
+                  - { title: '🛒 Add to cart', on_select: { invoke: cart,    with: { action: add, product_id: '$item.retailer_id' } } }
+                  - { title: 'Details',        on_select: { invoke: product, with: { product_id: '$item.retailer_id' } } }
+            memory_note: 'Showed {$length($results)} products for the search.'
+          - end: applied
+        empty:
+          - render: { render_intent: text_card, body: 'I could not find anything matching that. Want me to broaden the search?' }
+          - end: applied
+        failed:
+          - render: { render_intent: text_card, body: 'Search is unavailable right now — please try again in a moment.' }
+          - end: failed

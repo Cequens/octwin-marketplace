@@ -1,0 +1,8 @@
+flow_id: reply-to-case
+strings:
+  label.message:      'your reply to the team'
+  label.attachment:   'a photo or screenshot (optional)'
+  skip_attachment:    'No attachment'
+  attachment_caption: 'Attached by the customer with their reply'
+  sent:   'Done — your information reached the team and was added to the case ✅ They''ll continue the review and get back to you. Anything else?'
+  failed: 'We hit a small glitch adding your information to the case — please try again in a moment, and let me know if it persists.'

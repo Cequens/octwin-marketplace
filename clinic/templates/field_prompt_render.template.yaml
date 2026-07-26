@@ -1,0 +1,33 @@
+# field_prompt_render — shared field_prompt render for a collect-field PICKER.
+# Spliced inline into a collect field's prompt by the `options:` desugar; the
+# collect engine prepends the progress card + owns suspend/resume (no pause here).
+# Reads the runtime $fp_header/$fp_body/$fp_cta/$fp_field/$ps_sections the desugar
+# assigned. `$self` resumes the flow when an option is tapped. (Copied from
+# real-estate; clinic footer key.)
+template_id: field_prompt_render
+description: Shared field_prompt render for a collect-field picker (inline; engine suspends + prepends progress; renderer resolves to a list_picker).
+
+body:
+  - render:
+      render_intent: field_prompt
+      field:  '{$fp_field}'
+      header: '{$fp_header}'
+      body:   '{$fp_body}'
+      footer: '{$t("clinic.field_picker_footer")}'
+      cta:    '{$fp_cta}'
+      items:  []
+      sections:
+        for_each: '$ps_sections'
+        as:       section
+        template:
+          title: '$section.title'
+          items:
+            for_each: '$section.options'
+            as:       option
+            template:
+              title:       '$option.label_ar'
+              description: '$option.description'
+              on_select:
+                resume: '$self'
+                with: '$option.selection'
+    memory_note: 'Asking the patient to choose "{$fp_field}" via a picker'

@@ -1,0 +1,86 @@
+# kaiian — Kaiian (كيان) / Waslini (وصلني) ride-hailing customer support.
+#
+# A role-aware AI intake bot backed by the platform CASEWORK module: the agent
+# infers passenger vs captain from context, collects only the fields a scenario
+# needs, opens a case (routed to the right team/region), and lets a 2nd-line
+# human resolve it — with the AI as the sole voice to the customer (mediated).
+#
+# Published to an artifact at boot (`publishInRepoPacks`) — pure YAML, no register.ts.
+# The same pack is provisioned to two projects (Kaiian + Waslini) with per-
+# project branding; the logic is identical.
+
+id:          kaiian
+version:     1.0.0
+description: 'Kaiian/Waslini ride-hailing customer support — role-aware AI intake + mediated human casework.'
+
+# Marketplace presentation — how this pack appears in the console catalog a
+# tenant browses. Optional: with no `listing:` the console falls back to `id` +
+# `description`. `category` is a closed enum (see manifestYamlSchema).
+listing:
+  title:    'Ride-hailing Support'
+  tagline:  'Role-aware intake for passengers and captains, with human casework'
+  category: logistics
+  author:   { name: 'Octwin', url: 'https://octwin.ai' }
+
+supported_channels: [whatsapp, web]
+# case_* are platform builtins (no adapter needed); messaging delivers replies.
+required_adapters:  [messaging]
+
+default_settings:
+  locale: ar
+
+# Inbound pre-processing — transcribe voice notes so a passenger/captain can
+# describe an issue by voice and the agent reads the text (the `support` flow's
+# free-text fields, e.g. تفاصيل المشكلة, then fill from it). Platform-owned STT;
+# the pack supplies only the Saudi-dialect ack + the per-item note format.
+inbound_preprocessing:
+  voicenote:
+    mode: transcribe
+    ack: '🎤 وصلتنا الرسالة الصوتية، نفرّغها لك الحين...'
+    prompt: 'Saudi Arabic ride-hailing customer-support voice note.'
+    note_template: |-
+      $transcript != null ? "🎤 رسالة صوتية ({$media_ref}): {$transcript}" : "🎤 رسالة صوتية ({$media_ref}) — تعذّر تفريغ الصوت"
+
+env:
+  # Per-project ticket-reference prefix. Casework mints a per-project sequential
+  # number; the flow renders the customer-facing ref as `<PREFIX>-<number>`, so
+  # the Kaiian project sets KAI and the Waslini project sets WAS (one pack, two
+  # projects). Read in flow YAML via `$env.REFERENCE_PREFIX`.
+  REFERENCE_PREFIX:
+    required: false
+    expose:   true
+    describe: 'Customer-facing ticket-reference prefix (e.g. KAI / WAS).'
+
+# Agent-callable flow tools. Each maps to flows/tools/<id>.flow.yaml.
+flows:
+  - home
+  - support
+  - ticket-status
+  - reply-to-case
+  # Captain-onboarding pipeline (xrm.yaml `captain_application` records).
+  - become-captain
+  - application-status
+
+agents:
+  - id:                support
+    display_name:      'Kaiian Support'
+    default_model:     'openrouter/google/gemini-3.1-flash-lite-preview'
+    include_platform_protocol: true
+    tools:
+      - home
+      - support
+      - ticket-status
+      - reply-to-case
+      - become-captain
+      - application-status
+    instructions:
+      - file: prompts/identity.md
+      - file: prompts/guardrails.md
+    # No working_memory block — deliberate. Declaring one makes Mastra inject
+    # the updateWorkingMemory tool + a "call it every turn" instruction: an
+    # extra LLM generation on most informative turns, and small models parrot
+    # the <working_memory_data> envelope into user-visible replies. Session
+    # identity (name/lang/phone) reaches the model via the platform's
+    # first-turn [ctx: …] header instead; tools read it from requestContext.
+    default_memory:
+      lastMessages: 20

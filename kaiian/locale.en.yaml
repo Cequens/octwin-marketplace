@@ -1,0 +1,59 @@
+# kaiian — pack-wide English strings (shared across flows). Case-type + region
+# labels follow the `$enum_label` convention `<pack>.<category>.<value>` —
+# `kaiian.cases.<type>` (issue-type labels) and `kaiian.region.<value>` (captain
+# operating regions). Both the collect pickers (`values: + enum:`) and the
+# progress/preview echoes (`$enum_label`) resolve through these single-source keys.
+pack_id: kaiian
+strings:
+  field_picker_footer:     'Pick from the list 👆'
+
+  # Case-type labels (category `cases`)
+  cases.extra_charge:      'Extra-charge dispute'
+  cases.general_complaint: 'General complaint against a driver'
+  cases.unpaid_fare:       'Unpaid fare'
+  cases.account_block:     'Account block'
+  cases.vehicle_change:    'Vehicle change'
+
+  # Captain operating regions (category `region`) — the routing key
+  region.central:          'Central'
+  region.western:          'Western'
+  region.eastern:          'Eastern'
+  region.northern:         'Northern'
+  region.southern:         'Southern'
+
+  # Case status labels (category `status`) — the casework workflow states
+  status.open:              'Under review'
+  status.in_progress:       'In progress'
+  status.awaiting_customer: 'Awaiting your reply'
+  status.resolved:          'Resolved'
+  status.closed:            'Closed'
+  status.reopened:          'Reopened'
+
+  # Decision/outcome labels (category `decision`) — shown in ticket status
+  decision.approve_refund:    'Refund approved'
+  decision.unblock:           'Account unblocked'
+  decision.resolve:           'Resolved'
+  decision.reject:            'Request declined'
+  decision.request_more_info: 'More information needed from you'
+  decision.escalate:          'Escalated'
+
+  # Vehicle types (category `vehicle`) — captain-application intake
+  vehicle.sedan:     'Sedan'
+  vehicle.suv:       'SUV'
+  vehicle.motorbike: 'Motorbike'
+
+  # Captain-application pipeline stages (category `stage`, xrm.yaml pipeline)
+  stage.applied:       'Application received'
+  stage.docs_check:    'Documents under review'
+  stage.vehicle_check: 'Vehicle inspection'
+  stage.training:      'Training'
+  stage.active:        'Active captain'
+  stage.rejected:      'Not approved'
+
+  # Per-stage explainer shown under the status (category `stage_hint`)
+  stage_hint.applied:       'We received your application and it is in the review queue.'
+  stage_hint.docs_check:    'Our team is reviewing your documents — we may contact you if anything is missing.'
+  stage_hint.vehicle_check: 'Next step: vehicle inspection at your regional center.'
+  stage_hint.training:      'You are booked for onboarding training — we will share the schedule shortly.'
+  stage_hint.active:        'Your captain account is active — welcome aboard!'
+  stage_hint.rejected:      'Unfortunately the application was not approved this time.'

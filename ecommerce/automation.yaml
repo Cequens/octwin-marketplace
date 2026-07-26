@@ -1,0 +1,29 @@
+# Standing automation jobs for the ecommerce pack — abandoned-cart recovery.
+# Consumed by the platform automation engine (AutomationRegistry); upserted into
+# each project's automation_jobs at provision (idempotent by `key`). The ticker
+# runs them when AUTOMATION_SCHEDULER_ENABLED is on. Zero XRM schema needed — both
+# jobs read the platform `cart` system entity + its declared auto_transition.
+
+jobs:
+  # Nudge shoppers whose cart has sat `open` and idle for a day — one message per
+  # shopper per 48h window (cooldown), fanned out through reminders.
+  - key: cart_recovery_nudge
+    kind: segment
+    entity: cart
+    interval_seconds: 3600
+    config:
+      where:
+        all:
+          - { stage: open }
+          - { not: { updated_within_days: 1 } }
+      action:
+        type: notify
+        message: "You left items in your cart 🛒 — want to finish checking out?"
+        cooldown_hours: 48
+
+  # Abandon carts left `open` past the cart entity's 48h idle auto_transition —
+  # so the recovery segment above stops matching them and the funnel stays clean.
+  - key: cart_auto_abandon
+    kind: stale_records
+    entity: cart
+    interval_seconds: 3600

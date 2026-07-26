@@ -1,0 +1,21 @@
+# Surveys declaration for the clinic pack — the post-visit feedback questionnaire.
+# Responses are `survey_response` XRM records (no pack table). Both answers are
+# collected by manage-appointments: the stars arrive from a tap, the comment from
+# the next free-text turn (a second survey_submit upserts onto the same response).
+#
+# The star rating rolls up into the doctor record's `rating` + `rating_count` via
+# `record_aggregate` over the response's `doctor` field (the rollup dimension the
+# pack adds in xrm.yaml — see the survey_response extension there), which doctor
+# search (record_search rank_by: rating) then orders on.
+
+surveys:
+  visit_feedback:
+    label:   { en: 'Visit feedback', ar: 'تقييم الزيارة' }
+    # subject_ref is the BOOKING record id — submitSurvey upserts on
+    # (survey_key, subject_ref), so one appointment yields exactly one response
+    # and a re-rating replaces it rather than stacking a duplicate.
+    subject: booking
+    questions:
+      - { key: stars,   type: rating, scale: 5, required: true, label: { en: 'Rating', ar: 'التقييم' } }
+      - { key: comment, type: text, label: { en: 'Comment', ar: 'ملاحظة' } }
+    score: stars

@@ -1,0 +1,94 @@
+# application-status — the applicant's captain application(s), presented
+# INTERACTIVELY. Reads natively from xrm via `record_list` (scoped to the
+# current contact, INCLUDING terminal stages — an approved/rejected applicant
+# asking "what happened?" must still see the outcome):
+#   • 0 records → `answer:` (the agent warmly offers become-captain)
+#   • 1 record  → a detail card directly (dedupe_by keeps it to one in practice)
+#   • tapped    → the tapped record's detail (rows re-invoke $self with record_id)
+#   • ≥2        → a `list_picker` fallback
+# Stage labels + per-stage explainers resolve via `$enum_label`
+# (kaiian.stage.<value> / kaiian.stage_hint.<value>) — deterministic, not agent
+# prose. Stage ADVANCEMENT is operator-side (the console pipeline control);
+# this tool is the customer-facing read. READ tool: no `[interactive Tool]` marker.
+
+flow_id:     application-status
+version:     1
+description: |-
+  Show the user's captain application and its live pipeline stage (documents
+  review, vehicle check, training, active). Call whenever an applicant asks about
+  their application ("وش صار في طلبي؟", "am I approved yet?"). Renders an
+  interactive card; no free-text inputs. Never state the stage from memory — call
+  this every time. Different from `ticket-status` (support complaints).
+
+input:
+  # Set when a list row / refresh button is tapped.
+  record_id: { type: string, optional: true }
+
+entry:
+  - else: true
+    goto: lookup
+
+steps:
+  lookup:
+    # active_only false — terminal (active/rejected) applications must remain
+    # visible to their applicant.
+    - do: record_list
+      args: { entity: captain_application, active_only: false, limit: 5 }
+      bind: apps
+      outputs:
+        ok:     [ { goto: resolve } ]
+        empty:  [ { goto: no_application } ]
+        failed: [ { end: { status: failed, body: '{$t("application-status.lookup_failed")}' } } ]
+
+  resolve:
+    - assign:
+        selected: '$state.record_id != null ? $filter($apps.rows, { id: $state.record_id })[0] : ($length($apps.rows) == 1 ? $apps.rows[0] : null)'
+    - if: '$selected != null'
+      then:
+        - goto: detail
+    - goto: list
+
+  no_application:
+    # No application: brief-only answer — the agent composes the offer.
+    - answer:
+        instructions: 'The user has no captain application on file. Tell them nothing is registered yet, warmly and in their language, and offer to start one (they can just say they want to become a captain — the become-captain tool takes it from there).'
+
+  # One application's detail card. Stage + explainer are label-mapped, not prose.
+  detail:
+    - assign:
+        stage_line: '$t("application-status.detail.stage", { stage: $enum_label($selected.stage, "stage", $selected.stage) })'
+        hint_line:  '$enum_label($selected.stage, "stage_hint", "")'
+        opened_line: '$t("application-status.detail.updated", { when: $format_relative_date($selected.updated_at, $coalesce($conversation.lang, "ar")) })'
+    - render:
+        render_intent: detail_card
+        body: '$lines($compact([$t("application-status.detail.header", { ref: $selected.record_number }), $t("application-status.detail.name", { name: $selected.title }), $t("application-status.detail.region", { region: $enum_label($selected.fields.region, "region", "") }), $t("application-status.detail.vehicle", { vehicle: $enum_label($selected.fields.vehicle_type, "vehicle", "") }), $stage_line, $hint_line != "" ? $hint_line : null, $opened_line]), "\n")'
+        buttons:
+          # Refresh THIS application (re-invoke with the same record_id).
+          - { title: '{$t("application-status.refresh_button")}', on_select: { invoke: $self, with: { record_id: '$selected.id' } } }
+      # Carry the record_id + stage so the agent can narrate follow-ups without
+      # re-listing (and update details via become-captain when asked).
+      memory_note: 'Showed captain application APP-{$selected.record_number} (record_id {$selected.id}, stage {$selected.stage}). To change its details, call become-captain (it updates by mobile); never state the stage from memory — re-call application-status.'
+      data: { record_id: '$selected.id', stage: '$selected.stage' }
+    - end: applied
+
+  # ≥2 applications (rare — dedupe keeps it to one) → a picker.
+  list:
+    - render:
+        render_intent: list_picker
+        header: '{$t("application-status.list.header")}'
+        body:   '{$t("application-status.list.body", { count: $length($apps.rows) })}'
+        cta:    '{$t("application-status.list.cta")}'
+        items:  []
+        sections:
+          - items:
+              for_each: '$apps.rows'
+              as: a
+              template:
+                title:       'APP-{$a.record_number} — {$a.title}'
+                description: '{$enum_label($a.stage, "stage", $a.stage)}'
+                on_select:
+                  invoke: $self
+                  with: { record_id: '$a.id' }
+      memory_note: 'Listed {$length($apps.rows)} captain applications for the user to pick from.'
+      data: { count: '$length($apps.rows)' }
+    - end: applied

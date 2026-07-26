@@ -1,0 +1,52 @@
+# branches — clinic locations directory over the `branch` XRM entity. Lists the
+# active branches (record_list) with address + phone; tapping a branch jumps into
+# doctor-search filtered to that branch record id. Pure YAML — no pack DB.
+
+flow_id:     branches
+version:     1
+description: |-
+  [interactive] List the clinic's branches with their address and phone. Call when
+  the patient asks where you are, for locations / addresses / directions, or wants
+  to pick a branch. Tapping a branch starts a doctor search at that location.
+
+input:
+  message: { type: string, optional: true, describe: 'Optional note from the patient.' }
+
+entry:
+  - else: true
+    goto: load
+
+steps:
+  load:
+    - do: record_list
+      args: { entity: branch, all: true, active_only: false, sort: record_number, limit: 25 }
+      bind: branches
+      outputs:
+        ok:     [{ goto: render }]
+        empty:  [{ goto: none }]
+        failed: [{ end: failed }]
+
+  render:
+    # Journey: the patient browsed branch locations → discovery stage.
+    - track: { event: browsed, timeline: true }
+    - render:
+        render_intent: list_picker
+        header: '{$t("branches.header")}'
+        body:   '{$t("branches.body")}'
+        cta:    '{$t("branches.cta")}'
+        items: '$branches.rows'
+        item_template:
+          title:       '$item.fields.name'
+          description: '$lines($compact([$coalesce($item.fields.address, null), $item.fields.phone != null ? $t("branches.phone", { phone: $item.fields.phone }) : null]), " · ")'
+          on_select:
+            invoke: doctor-search
+            with: { branch: '$item.id' }
+      memory_note: 'Listed {$length($branches.rows)} branch(es)'
+    - end: applied
+
+  none:
+    - render:
+        render_intent: text_card
+        body: '{$t("branches.empty")}'
+      memory_note: 'No branches to list'
+    - end: applied

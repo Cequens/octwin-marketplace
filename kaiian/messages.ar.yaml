@@ -1,0 +1,16 @@
+# kaiian — platform-emitted envelope copy (Arabic).
+errors:
+  failed:
+    failure: { body: 'عذراً، صار خطأ غير متوقع. جرّب مرة ثانية.' }
+  unhandled_tool_error:
+    failure: { body: 'عذراً، صار خطأ غير متوقع. جرّب مرة ثانية بعد لحظة. 🙏' }
+
+agents:
+  support:
+    agentDisabled:    'خدمة الدعم غير متاحة مؤقتاً. جرّب بعد شوي. 🙏'
+    transientError:   'عذراً، صار خطأ مؤقت. جرّب مرة ثانية بعد لحظة. 🙏'
+    workflowExpired:  'عذراً، انتهت الجلسة. نبدأ من جديد.'
+    workflowError:    'عذراً، صار خطأ أثناء إكمال العملية. جرّب مرة ثانية.'
+    workflowDisabled: 'هذه الخدمة غير مفعّلة حالياً.'
+    toolDisabled:     'هذه الخدمة غير مفعّلة حالياً.'
+    directTapError:   'عذراً، صار خطأ. جرّب مرة ثانية.'

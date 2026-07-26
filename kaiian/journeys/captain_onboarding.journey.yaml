@@ -1,0 +1,43 @@
+# captain_onboarding — the driver-acquisition funnel: started → details_complete → applied.
+#
+# The chat-observable half of captain acquisition. Emitted by `track:` markers in
+# become-captain.flow.yaml:
+#   • collect_fields (top)      → application_started            (advances_to started)
+#   • collect.complete          → application_details_completed  (advances_to details_complete)
+#   • save_application ok        → application_submitted          (applied; completes application_submitted)
+#
+# HANDOFF: the terminal stage `applied` is deliberately named to match the first
+# stage of the `captain_application` XRM pipeline (xrm.yaml). This funnel owns
+# started → details_complete → applied; the deeper docs_check → vehicle_check →
+# training → active|rejected stages are OPERATOR-driven on the record's own
+# pipeline (console) and are not chat-observable, so they are never track-emitted.
+#
+# Ids are unique across the pack's journeys, so `track:` infers journey:
+# captain_onboarding automatically.
+
+id: captain_onboarding
+label: { en: "Captain onboarding", ar: "انضمام الكباتن" }
+
+# A re-applicant who finished a run (submitted) opens a NEW run when they start
+# again — so a captain who re-applies after a rejection is a fresh funnel, not a
+# contact stuck at "applied" forever. Monotonic within a run means repeated
+# `application_started` emits during multi-turn gap collection stay ONE run.
+# A half-finished application idle for 14 days resets to a fresh run.
+lifecycle:
+  reentry:         after_exit
+  terminal:        { goal: application_submitted }
+  cooldown_days:   30
+  idle_reset_days: 14
+
+stages:
+  - { id: started,          order: 1, label: { en: "Started",          ar: "بدأ الطلب" } }
+  - { id: details_complete, order: 2, label: { en: "Details complete", ar: "اكتملت البيانات" } }
+  - { id: applied,          order: 3, label: { en: "Applied",          ar: "تم التقديم" } }
+
+goals:
+  - { id: application_submitted, stage: applied, label: { en: "Application submitted", ar: "تم تقديم الطلب" } }
+
+events:
+  - { name: application_started,           advances_to: started,          label: { en: "Started application", ar: "بدأ الطلب" } }
+  - { name: application_details_completed, advances_to: details_complete, label: { en: "Completed details",   ar: "أكمل البيانات" } }
+  - { name: application_submitted,         advances_to: applied, completes: application_submitted, label: { en: "Submitted application", ar: "قدّم الطلب" } }

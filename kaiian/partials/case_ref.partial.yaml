@@ -1,0 +1,18 @@
+# case_ref — the customer-facing ticket reference, single-sourced.
+#
+# Casework mints a per-project sequential `case_number`; the pack composes the
+# display reference `<REFERENCE_PREFIX>-<number>` (KAI-42 / WAS-17, per-project
+# env) with a `TKT` fallback for unprovisioned projects. Every flow that shows
+# a ref calls `$partial(case_ref, { n: ... })` instead of re-typing the
+# coalesce+concat expression (formerly repeated across support / ticket-status).
+#
+# `$env` is inherited from the calling flow's context (partial bodies see the
+# parent vars; params shadow on collision).
+
+partial_id: case_ref
+description: 'Customer-facing ticket ref: `<REFERENCE_PREFIX ?? TKT>-<case_number>`.'
+
+params:
+  n: { type: number, required: true, describe: 'The case_number (from case_open / case_list rows).' }
+
+body: '$coalesce($env.REFERENCE_PREFIX, "TKT") + "-" + $n'

@@ -1,0 +1,40 @@
+# product — one product's detail card (SPM on WhatsApp, rich card on web).
+flow_id:     product
+version:     1
+description: Show a single product's detail card. Call with the product's `product_id` (retailer_id / SKU).
+
+input:
+  product_id: { type: string, describe: 'The product retailer_id / SKU.' }
+
+entry:
+  - else: true
+    goto: show
+
+steps:
+  show:
+    - do: catalog_get
+      args: { retailer_id: '$input.product_id' }
+      bind: p
+      outputs:
+        ok:
+          # Journey: a product detail card was shown → product_viewed stage + goal.
+          - track: { event: viewed_product, timeline: true }
+          - render:
+              render_intent: product_card
+              retailer_id: '$p.retailer_id'
+              title:       '$p.title'
+              price:       '$p.price'
+              image_url:   '$p.image_url'
+              description: '$p.description'
+              body:        'Here are the details.'
+              buttons:
+                - { title: '🛒 Add to cart', on_select: { invoke: cart, with: { action: add, product_id: '$p.retailer_id' } } }
+                - { title: 'Keep shopping',  on_select: { invoke: shop } }
+            memory_note: 'Showed product {$p.title}.'
+          - end: applied
+        empty:
+          - render: { render_intent: text_card, body: 'That product is not available.' }
+          - end: applied
+        failed:
+          - render: { render_intent: text_card, body: 'Could not load that product right now.' }
+          - end: failed

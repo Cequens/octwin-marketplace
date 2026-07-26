@@ -1,0 +1,85 @@
+# reply-to-case — attach the customer's reply / extra info to an existing case
+# (the customer→case leg of the mediated loop). Wraps the `case_reply` primitive:
+# it appends the message to the case timeline (the 2nd-line team sees it) and, if
+# the case was awaiting the customer, moves it back to `in_progress`.
+#
+# TWO entry points, ONE flow — and it MUST stay agent-visible (never `internal`):
+# capturing the reply needs a collect-gap that resumes on a later free-text turn,
+# and gap-resume is agent-mediated (the agent re-calls this tool with
+# `workflow_run_id` — agent-protocol §2). Both entries share the same collect:
+#   • agent-direct — the customer types the info after seeing an awaiting card;
+#     the agent calls with `message` pre-filled → collect completes → records.
+#   • Reply button — ticket-status' awaiting card taps in with `case_id` only →
+#     collect asks for the message → agent re-calls with it → records.
+# `case_id`/`message`/`attachment` are read from `$state`: the interpreter's
+# universal turn-start merge (`state = {…state, …input}`, index.ts §mergeTurnInput)
+# folds each into state on whatever turn it arrives, so the button's first-turn
+# `case_id` survives the gap and the resume-turn's `message`/`attachment` land too.
+# The `attachment` is an OPTIONAL `type: media` collect field OFFERED with a Skip
+# after the text (mirrors become-captain's `vehicle_photo`): the composer's 📷 lets
+# the customer add a screenshot/photo, or Skip. Folded per agent-protocol §Media —
+# a photo the customer already sent with their reply auto-adopts (no offer).
+
+flow_id:     reply-to-case
+version:     1
+description: |-
+  [interactive Tool] Record a customer's reply / extra info onto an EXISTING open
+  case they already have — one whose `case_id` you got from `ticket-status`. Pass
+  that `case_id`; pass `message` if the customer already gave the info, else the
+  tool asks for it (and offers an optional photo). This is the ONLY way their reply
+  reaches the team — never claim you relayed it without calling this tool.
+
+input:
+  case_id: { type: string, describe: 'The EXISTING case id to attach the reply to — its case_id from ticket-status context.' }
+  message: { type: string, optional: true, describe: 'The customer''s reply, verbatim. Pre-fill when they already gave it; omit and the tool asks.' }
+
+entry:
+  - else: true
+    goto: collect_reply
+
+steps:
+  # Ask for the reply text unless the agent already passed it, then OFFER an
+  # optional photo. A button tap arrives with only `case_id`, so the text emits a
+  # gap; an agent-direct call with `message` set (and any photo auto-adopted)
+  # falls straight through to `record`.
+  collect_reply:
+    - collect:
+        gap_instructions: 'Ask the customer to type the exact info the team needs, one short question in friendly Saudi white dialect. Re-call reply-to-case with their message.'
+        fields:
+          - field: message
+            label:    '$t("reply-to-case.label.message")'
+            describe: 'The customer''s information / reply, verbatim.'
+          # Optional evidence — a screenshot / photo (a document is photographed,
+          # per the pack convention). Offered with a Skip after the text; never
+          # blocks. Attached to the case after the reply is recorded.
+          - field: attachment
+            type:       media
+            media_kind: image
+            required:   false
+            label:      '$t("reply-to-case.label.attachment")'
+            skip_title: '$t("reply-to-case.skip_attachment")'
+        complete: [ { goto: record } ]
+
+  record:
+    - do: case_reply
+      args:
+        case_id: '$state.case_id'
+        message: '$state.message'
+      bind: replied
+      outputs:
+        ok:
+          # Attach an accompanying document/photo (if the customer sent one) to
+          # the case — surfaces in the console Attachments card + timeline.
+          # Fire-and-forget: a link failure must not fail the recorded reply.
+          # `!= ""` too: a skipped offer leaves the agent's blank ref in state.
+          - if: '$coalesce($state.attachment, "") != ""'
+            then:
+              - do: case_attach
+                args:
+                  case_id:  '$state.case_id'
+                  media_id: '$state.attachment'
+                  caption:  '{$t("reply-to-case.attachment_caption")}'
+                detach: true
+          - end: { status: applied, body: '{$t("reply-to-case.sent")}' }
+        failed:
+          - end: { status: failed, body: '{$t("reply-to-case.failed")}' }

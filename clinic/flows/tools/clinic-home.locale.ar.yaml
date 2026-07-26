@@ -1,0 +1,14 @@
+flow_id: clinic-home
+
+strings:
+  header:              'أهلاً بك في العيادة 👋'
+  body_default:        'أقدر أساعدك تلاقي دكتور وتحجز موعد. اختر من القائمة 👇'
+  body_with_upcoming:  'عندك {count} موعد قادم. تحب تعمل إيه؟ 👇'
+  cta:                 'الخدمات'
+
+  action.find:     'ابحث عن دكتور 🔍'
+  action.book:     'احجز موعد 📅'
+  action.manage:   'مواعيدي 🗓️'
+  action.branches: 'فروعنا وعناويننا 📍'
+
+  memory_note:    'Showed clinic home menu'

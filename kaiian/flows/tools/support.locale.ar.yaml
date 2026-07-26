@@ -1,0 +1,48 @@
+flow_id: support
+strings:
+  # Field labels (progress + gap prompts)
+  label.issue_type:    'نوع الطلب'
+  label.mobile:        'رقم الجوال'
+  label.description:   'تفاصيل المشكلة'
+  label.extra_details: 'تفاصيل إضافية'
+  label.evidence_photo: 'أرسل صورة كإثبات (لقطة شاشة / إيصال / صورة — اختياري)'
+  skip_evidence:        'تخطّي — لا يوجد صورة'
+  label.region:        'منطقة التشغيل'
+
+  # issue_type picker (labels from pack-level kaiian.cases.<value> via $enum_label)
+  field_header.issue_type: 'وش نوع طلبك؟'
+  field_cta.issue_type:    'اختر'
+  section.passenger:       'مشاكل الركاب'
+  section.captain:         'مشاكل الكباتن'
+
+  # region picker (labels from pack-level kaiian.region.<value> via $enum_label)
+  field_header.region:     'في أي منطقة تشتغل؟'
+  field_cta.region:        'اختر المنطقة'
+
+  # Validation
+  invalid_mobile: 'الرقم ما يبين صحيح — أرسل رقم جوالك بالكامل من فضلك.'
+
+  # Running progress card
+  progress.header:      '📋 طلبك لين الحين:'
+  progress.issue:       '• النوع: {issue}'
+  progress.mobile:      '• الجوال: {mobile}'
+  progress.description: '• المشكلة: {description}'
+  progress.region:      '• المنطقة: {region}'
+
+  # Review-before-open card
+  approve_header:       'راجع تفاصيل طلبك قبل ما نرسله 👇'
+  approve_confirm:      'تأكيد وفتح الطلب ✅'
+  approve_cancel:       'إلغاء ❌'
+  preview.header:       'تفاصيل الطلب:'
+  preview.issue:        '• النوع: {issue}'
+  preview.mobile:       '• الجوال: {mobile}'
+  preview.description:  '• المشكلة: {description}'
+  preview.extra:        '• تفاصيل إضافية: {extra}'
+  preview.evidence:     '• صورة الإثبات: ✅ مرفقة'
+  preview.region:       '• المنطقة: {region}'
+
+  evidence_caption: 'إثبات أرفقه العميل عند فتح الطلب'
+  # Post-open confirmation (ref + SLA)
+  opened:       'تم فتح طلبك برقم {ref} ✅ فريقنا بيتواصل معك خلال {sla} ساعة على رقمك. شكراً لصبرك 🙏'
+  open_failed:  'صار عندنا خلل بسيط بالتسجيل، جرّب مرة ثانية بعد شوي ولو استمر أبلغني.'
+  aborted:      'تمام، ألغيت الطلب. لو غيّرت رأيك أو احتجت أي شيء ثاني أنا موجود 🙌'

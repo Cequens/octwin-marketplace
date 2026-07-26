@@ -1,0 +1,112 @@
+# clinic — the minimal reference pack. COPY THIS to start a new pack
+# (`npx tsx scripts/pack-scaffold <your-id>` does the copy + rename for you).
+#
+# A pack is declared entirely by this one file. The platform auto-discovers
+# any `src/packs/<id>/manifest.yaml` at boot (`publishInRepoPacks`) and
+# wires the agent + flows in — no per-pack glue, no register.ts.
+#
+# Schema authority: src/platform/core/manifest/schema.ts (manifestYamlSchema,
+# `.strict()` — unknown keys are rejected). Required: id, version (string),
+# description.
+
+id:          clinic
+version:     1.0.0
+description: 'Outpatient appointment reservation for clinics & hospital outpatient clinics — Arabic-first, WhatsApp + web.'
+
+# Marketplace presentation — how this pack appears in the console catalog a
+# tenant browses. Optional: with no `listing:` the console falls back to `id` +
+# `description`. `category` is a closed enum (see manifestYamlSchema).
+listing:
+  title:    'Clinic Appointments'
+  tagline:  'Arabic-first outpatient booking — doctors, slots and reminders'
+  category: healthcare
+  author:   { name: 'Octwin', url: 'https://octwin.ai' }
+  # Pack-root-relative markdown, rendered on the marketplace detail pages. NOT the folder's
+  # own README.md — that one is authoring notes for whoever edits this pack; this is the
+  # product description a buyer reads, so it is a separate file on purpose.
+  readme:   'README-listing.md'
+
+# Channels + platform capabilities. NO data-store: this pack owns no DB —
+# doctors/branches are XRM reference records, appointments the `booking` XRM
+# system entity, availability/slots the platform scheduling engine, feedback the
+# surveys layer, identity the platform contact. `vision` stays for inbound
+# medical-document image intake. Bookable/searchable capability is declared in
+# the sibling xrm.yaml / scheduling.yaml / surveys.yaml.
+supported_channels: [whatsapp, web]
+required_adapters:  [messaging, vision]
+# Default locale for platform-emitted copy + this pack's `$t()` lookups.
+default_settings:
+  locale: ar
+
+# Agent-callable flow tools. Each id maps to `flows/tools/<id>.flow.yaml`.
+flows:
+  - clinic-home
+  - doctor-search
+  - book-appointment
+  - manage-appointments
+  - branches
+
+# Inbound media pre-processing (platform services; no flow). The agent reads the
+# combined pre_turn_briefing and pre-fills book-appointment (reason / insurance_tpa
+# / media_refs). Logistics only — the vision prompt classifies + transcribes, it
+# does NOT diagnose.
+inbound_preprocessing:
+  image:
+    enabled: true
+    ack: '📄 وصلت الصورة، جاري قراءتها...'
+    prompt: |-
+      You are a medical-records intake assistant for a clinic booking bot. Classify each image and extract structured fields. Do NOT diagnose, interpret results, or give medical advice — transcribe and classify ONLY.
+
+      Respond with JSON only (no markdown) — an object with an `images` array holding EXACTLY ONE entry per input image, IN ORDER:
+      {
+        "images": [
+          {
+            "media_ref": "<copy the MEDIA- ref for this image, in order>",
+            "doc_type": "insurance_card" | "lab_requisition" | "report" | "prescription" | "other",
+            "tpa": "<insurance company / TPA name if an insurance card (e.g. GlobeMed, Bupa, MetLife, NextCare), else null>",
+            "member_id": "<insurance member/policy number, or null>",
+            "valid_until": "<YYYY-MM-DD if shown, else null>",
+            "referring_doctor": "<for a lab requisition/referral, the referring doctor, else null>",
+            "summary_ar": "<one short Arabic line describing the document, for the doctor>",
+            "extracted_text": "<all visible text verbatim, original language, or null>"
+          }
+        ]
+      }
+      Return entries in the SAME ORDER as provided; copy each entry's media_ref from the list.
+    note_template: |-
+      $lines($compact([
+        "📄 مستند ({$media_ref}) — النوع: {$doc_type ?? 'غير محدد'}",
+        $tpa != null         ? "شركة التأمين: {$tpa}" : null,
+        $member_id != null   ? "رقم العضوية: {$member_id}" : null,
+        $valid_until != null ? "سارٍ حتى: {$valid_until}" : null,
+        $referring_doctor != null ? "محوّل من: {$referring_doctor}" : null,
+        $summary_ar != null  ? "ملخص: {$summary_ar}" : null
+      ]))
+  voicenote:
+    mode: transcribe
+    ack: '🎤 وصلت الرسالة الصوتية، جاري تفريغها...'
+    prompt: 'Egyptian Arabic medical appointment voice note.'
+    note_template: |-
+      $transcript != null ? "🎤 رسالة صوتية ({$media_ref}): {$transcript}" : "🎤 رسالة صوتية ({$media_ref}) — تعذّر التفريغ"
+
+# One agent. The platform's universal agent protocol is auto-appended by
+# `createPackAgents` — `instructions:` carries only pack-supplied parts.
+agents:
+  - id:                reception
+    display_name:      'Clinic Reception'
+    # `openrouter/` prefix routes via OpenRouter. Operators override the
+    # model per-project from the console.
+    default_model:     'openrouter/google/gemini-3.1-flash-lite-preview'
+    # Flow tools this agent can call (subset of `flows:` above).
+    tools:
+      - clinic-home
+      - doctor-search
+      - book-appointment
+      - manage-appointments
+      - branches
+    include_platform_protocol: true
+    # Instruction parts, joined with '\n\n'. `file:` paths are pack-root
+    # relative; `.md` files may use built-in placeholders like {{pack.id}}.
+    instructions:
+      - file: prompts/identity.md
+      - file: prompts/current-date.md   # {{date.*}} — substituted PER TURN (live date)

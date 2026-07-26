@@ -1,0 +1,46 @@
+# Worklist declaration for Kaiian/Waslini — how the `case` XRM system entity is
+# worked (queues + routing + decision actions + SLA). Consumed by the platform
+# worklist engine (WorklistRegistry). The CASEWORK PRESET merges the standard
+# decision set (resolve / reject / request_more_info / escalate) into every case
+# type at registration, so only the CUSTOM actions are declared here.
+#
+# Customer track → customer_ops queue (no region). Captain track → region queues
+# by the `route_by: region` convention (region value → ops_<region>).
+# (Replaced the retired cases.yaml grammar — a case is now an XRM record worked
+# through this generic engine; queue/SLA/assignee live on xrm_records columns.)
+
+queues:
+  - { key: customer_ops, name: 'Customer Support' }
+  - { key: ops_central,  name: 'Central Region' }
+  - { key: ops_western,  name: 'Western Region' }
+  - { key: ops_eastern,  name: 'Eastern Region' }
+  - { key: ops_northern, name: 'Northern Region' }
+  - { key: ops_southern, name: 'Southern Region' }
+
+work:
+  case:
+    type_field: case_type          # the case sub-type discriminator (per-type routing/actions/sla)
+    # Custom decision actions beyond the standard preset. `label` (localized) is the
+    # human name shown in the console + relayed to the customer; `params` are typed so
+    # the console renders the right input (e.g. a NUMBER field for the refund amount);
+    # `relay: true` pushes the decision to the customer. The standard set
+    # (resolve/reject/request_more_info/escalate) is merged in per type automatically.
+    actions:
+      approve_refund:
+        label:  { ar: 'الموافقة على استرداد المبلغ', en: 'Approve refund' }
+        params: [{ name: amount, type: number, required: true, label: 'Refund amount (SAR)' }]
+        relay:  true
+      unblock:
+        label:  { ar: 'فك الحظر عن الحساب', en: 'Unblock account' }
+        params: []
+        relay:  true
+    types:
+      # ── Customer track (no region) ──
+      extra_charge:      { queue: customer_ops, priority: high, actions: [approve_refund], sla: { resolve_within_hours: 4 } }
+      general_complaint: { queue: customer_ops, sla: { resolve_within_hours: 24 } }
+
+      # ── Captain track (region-routed; customer_ops is the safety net if a case
+      #     ever opens without a region — belt-and-braces, the picker enforces it) ──
+      unpaid_fare:       { route_by: region, fallback: customer_ops, priority: high, actions: [approve_refund], sla: { resolve_within_hours: 4 } }
+      account_block:     { route_by: region, fallback: customer_ops, actions: [unblock], sla: { resolve_within_hours: 8 } }
+      vehicle_change:    { route_by: region, fallback: customer_ops, sla: { resolve_within_hours: 24 } }

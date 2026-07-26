@@ -1,0 +1,141 @@
+# support — the single support-intake tool for BOTH tracks (passenger + captain).
+# Structured intake via the platform `collect:` engine: issue_type (a sectioned
+# picker — passenger issues vs captain issues) → mobile → description → extra
+# details → (captain only) operating region. The issue-type enums are disjoint,
+# so the TRACK is derivable from `issue_type` — no separate role input. Routing
+# lives per-type in `cases.yaml` (passenger types → static `customer_ops`;
+# captain types → `route_by: region` → `ops_<region>`), so `case_open` routes
+# from the type alone. The region field is asked ONLY for captain issues via a
+# `when:` gate. Reviews the ticket (approve_apply) before opening, then confirms
+# the reference + SLA.
+#
+# The tool OWNS collection once called (per the platform "tool takes over the
+# flow" principle): the agent infers `issue_type` + passes any field stated this
+# turn; the engine collects the rest one-at-a-time, never re-asking.
+
+flow_id:     support
+version:     1
+description: |-
+  [interactive Tool] Open a support case — for a PASSENGER (`extra_charge`,
+  `general_complaint`) OR a CAPTAIN (`vehicle_change`, `account_block`,
+  `unpaid_fare`). Infer `issue_type` and pass any field the user already stated;
+  the tool collects the rest (a captain's region only when needed), previews for
+  confirmation, opens the case, and returns a reference + SLA. The `issue_type`
+  implies the role — don't ask "passenger or captain?". For an EXISTING case's
+  status use `ticket-status`.
+
+input:
+  # issue_type is a picker collect-field the agent usually pre-fills (inferred
+  # from the message). Its value selects the track: extra_charge/general_complaint
+  # = passenger (customer_ops); vehicle_change/account_block/unpaid_fare = captain
+  # (region-routed). mobile/description/extra_details are free-text collect fields.
+  issue_type: { type: enum, enum: [extra_charge, general_complaint, vehicle_change, account_block, unpaid_fare], optional: true, describe: 'Infer from the message: extra_charge (overcharge/billing dispute) or general_complaint (passenger); vehicle_change / account_block / unpaid_fare (captain). Pre-fill it; if unclear, omit and the tool shows a picker.' }
+  region:     { type: enum, enum: [central, western, eastern, northern, southern], optional: true, describe: 'Captain operating region — the routing key (case → ops_<region>). Only relevant for captain issues; pre-fill only if the captain already stated it, else the tool asks.' }
+
+entry:
+  - else: true
+    goto: collect_fields
+
+steps:
+  collect_fields:
+    - collect:
+        # Running preview prepended to every prompt (collected so far). Region
+        # line appears only once a region is set (captain track).
+        progress: '$lines($compact([$t("support.progress.header"), $state.issue_type != null ? $t("support.progress.issue", { issue: $enum_label($state.issue_type, "cases", "") }) : null, $state.mobile != null ? $t("support.progress.mobile", { mobile: $state.mobile }) : null, $state.description != null ? $t("support.progress.description", { description: $state.description }) : null, $state.region != null ? $t("support.progress.region", { region: $enum_label($state.region, "region", "") }) : null]), "\n")'
+        gap_instructions: 'Ask the user for the next detail ({$collect_field_label}), one short question at a time, in friendly Saudi white dialect. Re-call support once they answer.'
+        fields:
+          # Sectioned picker — passenger issues vs captain issues. The agent
+          # usually pre-fills issue_type; else the user picks from the two groups.
+          - field: issue_type
+            label: '$t("support.label.issue_type")'
+            options:
+              header: support.field_header.issue_type
+              cta:    support.field_cta.issue_type
+              sections:
+                - { title: support.section.passenger, enum: cases, values: [extra_charge, general_complaint] }
+                - { title: support.section.captain,   enum: cases, values: [vehicle_change, account_block, unpaid_fare] }
+          # Free-text (agent composes the ask via gap_instructions). Light validation.
+          - field: mobile
+            label:    '$t("support.label.mobile")'
+            describe: 'The user''s registered mobile number, as free text.'
+            validate:
+              when:  '$state.mobile != null && $length($state.mobile) < 8'
+              error: '$t("support.invalid_mobile")'
+          - field: description
+            label:    '$t("support.label.description")'
+            describe: 'A short description of the issue, in the user''s own words.'
+          # Optional extra details — never blocks (the "extra description").
+          - field: extra_details
+            required: false
+            label:    '$t("support.label.extra_details")'
+            describe: 'Any extra details the user wants to add (optional).'
+          # Optional evidence photo (a screenshot / receipt / damage photo) — an
+          # upload ask; enrichment, never blocks. Folded from the ref the user
+          # sends (agent-protocol §Media); attached to the case after it opens.
+          - field: evidence_photo
+            type:       media
+            media_kind: image
+            required:   false
+            label:      '$t("support.label.evidence_photo")'
+            skip_title: '$t("support.skip_evidence")'
+          # Region — the captain routing key. Asked ONLY for captain issue
+          # types, derived LIVE from worklist.yaml (`route_by: region` case types)
+          # so adding a captain type never needs this gate edited.
+          - field: region
+            when:  '$in($state.issue_type, $work_types("case", "region"))'
+            label: '$t("support.label.region")'
+            options:
+              header: support.field_header.region
+              cta:    support.field_cta.region
+              enum:   region
+              values: [central, western, eastern, northern, southern]
+        complete: [ { goto: confirm } ]
+
+  # Review the assembled ticket before opening — confirm / cancel / edit.
+  confirm:
+    - assign:
+        preview_body: '$lines($compact([$t("support.preview.header"), $t("support.preview.issue", { issue: $enum_label($state.issue_type, "cases", "") }), $t("support.preview.mobile", { mobile: $state.mobile }), $t("support.preview.description", { description: $state.description }), $state.extra_details != null ? $t("support.preview.extra", { extra: $state.extra_details }) : null, $state.evidence_photo != null ? $t("support.preview.evidence") : null, $state.region != null ? $t("support.preview.region", { region: $enum_label($state.region, "region", "") }) : null]), "\n")'
+    - use: approve_apply
+      with:
+        preview:       '$preview_body'
+        header:        '{$t("support.approve_header")}'
+        # $t-resolved per session locale at render time (the template's
+        # defaults are Arabic-only).
+        confirm_title: '{$t("support.approve_confirm")}'
+        cancel_title:  '{$t("support.approve_cancel")}'
+        apply:         open_case
+        abort:         aborted
+        on_other:      collect_fields
+
+  open_case:
+    - do: case_open
+      args:
+        type:   '$state.issue_type'
+        fields:
+          mobile:        '$state.mobile'
+          description:   '$state.description'
+          extra_details: '$state.extra_details'
+          region:        '$state.region'
+      bind: opened
+      outputs:
+        ok:
+          # Attach the evidence photo (if the user sent one) to the new case —
+          # surfaces in the console's Attachments card + case timeline. Fire-and-
+          # forget: a link failure must never fail an already-opened ticket.
+          - if: '$state.evidence_photo != null'
+            then:
+              - do: case_attach
+                args:
+                  case_id:  '$opened.case_id'
+                  media_id: '$state.evidence_photo'
+                  caption:  '{$t("support.evidence_caption")}'
+                detach: true
+          - assign: { ref: '$partial(case_ref, { n: $opened.case_number })' }
+          - end:
+              status: applied
+              body:   '{$t("support.opened", { ref: $ref, sla: $opened.sla_hours })}'
+        failed:
+          - end: { status: failed, body: '{$t("support.open_failed")}' }
+
+  aborted:
+    - end: { status: aborted, body: '{$t("support.aborted")}' }

@@ -1,0 +1,26 @@
+# clinic — platform-emitted envelope copy (Arabic).
+#
+# Two blocks, both auto-loaded by definePack (lang from default_settings.locale):
+#   • errors:  copy the PLATFORM emits on failure paths (tool throw, workflow
+#              plumbing). Optional, but worth having so users never sit in
+#              silence. Schema: src/platform/core/manifest/messages.ts.
+#   • agents:  per-agent loop copy, keyed by the manifest agent id. OPTIONAL —
+#              the platform ships default copy; resolveMessages merges this block
+#              (whole or partial) over it at turn start. Shown here as an example.
+
+errors:
+  failed:
+    failure: { body: 'عذراً، حدث خطأ غير متوقع. حاول مرة أخرى.' }
+  unhandled_tool_error:
+    failure: { body: 'عذراً، حدث خطأ غير متوقع. حاول مرة أخرى بعد لحظة. 🙏' }
+
+# Per-agent envelope copy — keyed by manifest agent id (`reception`).
+agents:
+  reception:
+    agentDisabled:    'الخدمة الذكية غير متاحة مؤقتاً. حاول مرة أخرى لاحقاً. 🙏'
+    transientError:   'عذراً، حدث خطأ مؤقت. حاول مرة أخرى بعد لحظة. 🙏'
+    workflowExpired:  'عذراً، انتهت الجلسة. ابدأ من جديد.'
+    workflowError:    'عذراً، حدث خطأ أثناء استكمال العملية. حاول مرة أخرى.'
+    workflowDisabled: 'هذه الميزة غير مفعّلة في الوقت الحالي.'
+    toolDisabled:     'هذه الميزة غير مفعّلة في الوقت الحالي.'
+    directTapError:   'عذراً، حدث خطأ. حاول مرة أخرى.'

@@ -1,0 +1,23 @@
+# ecommerce — platform-emitted envelope copy (English).
+#
+#   • errors:  copy the PLATFORM emits on failure paths (optional).
+#   • agents:  per-agent loop copy, keyed by manifest agent id. OPTIONAL — the
+#              platform ships generic default copy (resolveMessages), so this
+#              block (and each of its 7 fields) overrides only the wording you
+#              want to customize. A pack with no agents block still runs.
+
+errors:
+  failed:
+    failure: { body: 'Sorry, something went wrong. Please try again.' }
+  unhandled_tool_error:
+    failure: { body: 'Sorry, an unexpected error occurred. Please try again in a moment. 🙏' }
+
+agents:
+  shop:
+    agentDisabled:    'The shop assistant is temporarily unavailable. Please try again later. 🙏'
+    transientError:   'Sorry, a temporary error occurred. Please try again in a moment. 🙏'
+    workflowExpired:  'Sorry, the session expired. Let''s start over.'
+    workflowError:    'Sorry, something went wrong completing that. Please try again.'
+    workflowDisabled: 'That feature isn''t enabled right now.'
+    toolDisabled:     'That feature isn''t enabled right now.'
+    directTapError:   'Sorry, something went wrong. Please try again.'

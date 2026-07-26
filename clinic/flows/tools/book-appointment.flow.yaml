@@ -1,0 +1,208 @@
+# book-appointment — the booking collect engine, over the platform scheduling +
+# XRM record modules (no pack DB). A `collect:` node gathers doctor → slot →
+# for-whom (self/dependent) → reason → insurance, prepends a running progress
+# card, then `use: approve_apply` confirms and `booking_reserve` writes the
+# `booking` XRM record + schedules the T-24h/T-2h reminders. Pure YAML.
+
+flow_id:     book-appointment
+version:     1
+description: |-
+  [interactive] Book an outpatient appointment. Call when the patient wants to book.
+  Pass `doctor_id` (a doctor record id from doctor-search) when known; else the tool
+  shows a doctor picker. Pre-fill `reason_ar` / `insurance_tpa` / `media_refs` from a
+  voice note or document the patient sent (per the media briefing).
+
+input:
+  doctor_id:  { type: string, optional: true, describe: 'Chosen doctor record id from a doctor-search result — never a typed name. If the patient only named a doctor, call doctor-search first and let them pick.' }
+  media_refs: { type: array, items: { type: string }, optional: true, describe: 'MEDIA- refs of documents the patient sent for this visit.' }
+  # reason_ar / insurance_tpa are free-text collect fields (below), auto-exposed
+  # in the inputSchema with their `describe:`.
+
+entry:
+  - else: true
+    goto: collect_fields
+
+steps:
+  collect_fields:
+    - collect:
+        # Accumulator is `$state` (the universal turn-merge folds this turn's $input in).
+        before_each:
+          # Resolve the chosen doctor's label for the progress card + preview.
+          # Re-runs each iteration (cheap; record_get is one indexed read).
+          - assign: { doctor_label: null }
+          - if: '$state.doctor_id != null'
+            then:
+              - do: record_get
+                args: { entity: doctor, record_id: '$state.doctor_id' }
+                bind: doc
+              - if: '$doc.fields != null'
+                then:
+                  - assign: { doctor_label: '$coalesce($doc.fields.name, $state.doctor_label)' }
+                else:
+                  # The passed doctor_id doesn't resolve to a real doctor — a stale id, or
+                  # one the agent hallucinated instead of reusing a doctor-search result.
+                  # Drop it so the doctor picker (field below, `when: doctor_id == null`)
+                  # re-engages this turn, rather than proceeding to the slot fetch — which
+                  # would call slot_list with a dead resource id and crash the whole tool
+                  # (bare `fetch:` bind surfaces slot_list's `failed` port by throwing —
+                  # see docs/BACKLOG.md "Collect-engine `options.fetch` has no failure-port
+                  # handling" for the general gap this per-flow guard stubs around).
+                  - assign: { state: '$merge($state, { doctor_id: null })' }
+        progress: '$lines($compact([$t("book-appointment.progress.header"), $doctor_label != null ? $t("book-appointment.progress.doctor", { doctor: $doctor_label }) : null, $state.slot_label != null ? $t("book-appointment.progress.slot", { slot: $state.slot_label }) : null, $state.for_whom != null ? $t("book-appointment.progress.for_whom", { who: ($state.for_whom == "dependent" ? $coalesce($state.dependent_name, $t("book-appointment.for_whom.dependent")) : $t("book-appointment.for_whom.self")) }) : null]), "\n")'
+        gap_instructions: 'Ask the patient for the next missing detail ({$collect_field}), one at a time, in Egyptian Arabic. Re-call book-appointment once they answer. Do NOT give medical advice.'
+        fields:
+          # Doctor picker — only when no doctor was pre-chosen. Browses top doctors
+          # (record_search with an empty query → ranked by rating); the selection
+          # stashes the doctor label for the cards.
+          - field: doctor_id
+            when: '$state.doctor_id == null'
+            label: '$t("book-appointment.label.doctor")'
+            options:
+              header: book-appointment.field_header.doctor
+              cta:    book-appointment.field_cta.doctor
+              fetch:  { do: record_search, args: { entity: doctor, query: '' }, bind: docs }
+              rows:   '$docs.rows'
+              map:    { value: '$item.id', label: '$item.fields.name', description: '$item.fields.specialty', selection: { doctor_label: '$item.fields.name' } }
+              auto_resolve: true
+          # Slot picker — from the scheduling engine; selection stashes the human label.
+          # A doctor may work different branches on different days, so each slot carries
+          # its rule's branch on `meta` (branch_label for display, branch = the record id).
+          # The label + slot_label fold the branch in ("2026-07-18 — 10:00 — فرع المعادي")
+          # so it shows everywhere the slot does; `branch_id` becomes the booking's branch ref.
+          - field: slot_start
+            label: '$t("book-appointment.label.slot")'
+            options:
+              header: book-appointment.field_header.slot
+              cta:    book-appointment.field_cta.slot
+              fetch:  { do: slot_list, args: { resource_record_id: '$state.doctor_id' }, bind: slots }
+              rows:   '$slots'
+              map:    { value: '$item.slot_start', label: '$lines($compact([$item.local_date, $item.local_time, $item.meta.branch_label]), " — ")', selection: { slot_minutes: '$item.slot_minutes', slot_label: '$lines($compact([$item.local_date, $item.local_time, $item.meta.branch_label]), " — ")', branch_id: '$item.meta.branch' } }
+          # Who the visit is for.
+          - field: for_whom
+            label: '$t("book-appointment.label.for_whom")'
+            options:
+              header: book-appointment.field_header.for_whom
+              cta:    book-appointment.field_cta.for_whom
+              items:
+                - { value: self,      label: book-appointment.for_whom.self }
+                - { value: dependent, label: book-appointment.for_whom.dependent }
+          # Dependent name — only on the dependent path; free-text.
+          - field: dependent_name
+            when: '$state.for_whom == "dependent"'
+            label: '$t("book-appointment.label.dependent_name")'
+            describe: "The dependent's full name — only when the visit is for a family member (for_whom = dependent), captured as free text from the patient."
+          # Enrichment — never blocks; collected if the agent pre-filled it.
+          - field: reason_ar
+            required: false
+            label:    '$t("book-appointment.label.reason")'
+            describe: 'Reason for visit / symptoms (may be pre-filled from a voice note). Logistics only.'
+          - field: insurance_tpa
+            required: false
+            label:    '$t("book-appointment.label.insurance")'
+            describe: 'Insurance company (TPA), e.g. GlobeMed — may be pre-filled from an insurance-card photo.'
+        complete: [ { goto: confirm_booking } ]
+
+  confirm_booking:
+    - assign:
+        preview_body: '$lines($compact([$t("book-appointment.preview.header"), $t("book-appointment.preview.doctor", { doctor: $coalesce($doctor_label, "-") }), $t("book-appointment.preview.slot", { slot: $coalesce($state.slot_label, "-") }), $t("book-appointment.preview.for_whom", { who: ($state.for_whom == "dependent" ? $coalesce($state.dependent_name, $t("book-appointment.for_whom.dependent")) : $t("book-appointment.for_whom.self")) }), $state.reason_ar != null ? $t("book-appointment.preview.reason", { reason: $state.reason_ar }) : null, $state.insurance_tpa != null ? $t("book-appointment.preview.insurance", { tpa: $state.insurance_tpa }) : null]), "\n")'
+    - use: approve_apply
+      with:
+        preview:       '$preview_body'
+        header:        '{$t("book-appointment.approve_header")}'
+        footer:        '{$t("book-appointment.approve_footer")}'
+        confirm_title: 'تأكيد الحجز ✅'
+        cancel_title:  'إلغاء ❌'
+        apply:         commit_booking
+        abort:         aborted
+        on_other:      collect_fields
+
+  commit_booking:
+    # New dependent (dependent path) → an XRM record linked to the contact.
+    - assign: { dependent_id: null }
+    - if: '$state.for_whom == "dependent" && $state.dependent_name != null'
+      then:
+        - do: record_save
+          args: { entity: dependent, fields: { name: '$state.dependent_name', relation: '$coalesce($state.dependent_relation, null)' } }
+          bind: dep
+        - assign: { dependent_id: '$dep.record_id' }
+    # Capture-only insurance policy (contact-scoped record).
+    - if: '$state.insurance_tpa != null'
+      then:
+        - do: record_save
+          args: { entity: insurance_policy, fields: { tpa: '$state.insurance_tpa' } }
+          detach: true
+    # Reserve the slot + write the booking record (capacity-checked, race-free).
+    - do: booking_reserve
+      args:
+        resource_record_id: '$state.doctor_id'
+        slot_start:         '$state.slot_start'
+        slot_minutes:       '$state.slot_minutes'
+        fields:
+          reason:        '$state.reason_ar'
+          insurance_tpa: '$state.insurance_tpa'
+          for_whom:      '$coalesce($state.for_whom, "self")'
+          dependent:     '$dependent_id'
+          branch:        '$state.branch_id'
+          doctor_label:  '$doctor_label'
+          slot_label:    '$state.slot_label'
+      bind: appt
+      outputs:
+        ok:           [{ goto: booked }]
+        full:         [{ goto: slot_taken }]
+        invalid_slot: [{ goto: slot_taken }]
+        failed:       [{ end: failed }]
+
+  booked:
+    # Journey: the appointment was reserved → booked stage + appointment_booked
+    # goal (the conversion). Reached only via booking_reserve ok, never full/invalid.
+    - track: { event: appointment_booked, timeline: true }
+    # Reminders — T-24h + T-2h (from the scheduling reminder offsets), each with
+    # Confirm/Reschedule/Cancel taps; dedupe by appointment + reminder key.
+    - if: '$length($coalesce($appt.reminders, [])) > 0'
+      then:
+        - do: schedule_notify
+          args:
+            to: { contact_id: '$contact.id' }
+            send_at: '$appt.reminders[0].send_at'
+            dedupe_key: 'clinic:appt:{$appt.record_id}:{$appt.reminders[0].key}'
+            memory_note: 'Appointment reminder ({$appt.reminders[0].key})'
+            intent:
+              render_intent: detail_card
+              body: '{$t("book-appointment.reminder.body", { doctor: $coalesce($doctor_label, ""), slot: $coalesce($state.slot_label, "") })}'
+              buttons:
+                - { title: '{$t("book-appointment.reminder.confirm")}',    on_select: { invoke: manage-appointments, with: { action: confirm,    appointment_id: '$appt.record_id' } } }
+                - { title: '{$t("book-appointment.reminder.reschedule")}', on_select: { invoke: manage-appointments, with: { action: reschedule, appointment_id: '$appt.record_id' } } }
+                - { title: '{$t("book-appointment.reminder.cancel")}',     on_select: { invoke: manage-appointments, with: { action: cancel,     appointment_id: '$appt.record_id' } } }
+          detach: true
+    - if: '$length($coalesce($appt.reminders, [])) > 1'
+      then:
+        - do: schedule_notify
+          args:
+            to: { contact_id: '$contact.id' }
+            send_at: '$appt.reminders[1].send_at'
+            dedupe_key: 'clinic:appt:{$appt.record_id}:{$appt.reminders[1].key}'
+            memory_note: 'Appointment reminder ({$appt.reminders[1].key})'
+            intent:
+              render_intent: detail_card
+              body: '{$t("book-appointment.reminder.body", { doctor: $coalesce($doctor_label, ""), slot: $coalesce($state.slot_label, "") })}'
+              buttons:
+                - { title: '{$t("book-appointment.reminder.confirm")}',    on_select: { invoke: manage-appointments, with: { action: confirm,    appointment_id: '$appt.record_id' } } }
+                - { title: '{$t("book-appointment.reminder.reschedule")}', on_select: { invoke: manage-appointments, with: { action: reschedule, appointment_id: '$appt.record_id' } } }
+                - { title: '{$t("book-appointment.reminder.cancel")}',     on_select: { invoke: manage-appointments, with: { action: cancel,     appointment_id: '$appt.record_id' } } }
+          detach: true
+    - render:
+        render_intent: text_card
+        body: '{$t("book-appointment.success", { doctor: $coalesce($doctor_label, ""), slot: $coalesce($state.slot_label, "") })}'
+      memory_note: 'Booked appointment {$appt.record_id}'
+      data: { appointment_id: '$appt.record_id' }
+    - end: applied
+
+  slot_taken:
+    - render:
+        render_intent: text_card
+        body: '{$t("book-appointment.slot_taken")}'
+      memory_note: 'Booking — slot just taken'
+    - end: aborted
+
+  aborted:
+    - end: { status: aborted, body: '{$t("book-appointment.aborted")}' }

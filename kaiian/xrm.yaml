@@ -1,0 +1,94 @@
+# XRM declaration for the kaiian pack — consumed by the platform XRM module
+# (XrmRegistry). Convention-first, like cases.yaml: an entity is a handful of
+# one-liner fields; pipeline/segment defaults come from the platform.
+#
+# `captain_application` is the CAPTAIN ACQUISITION pipeline — a driver applying
+# to join, progressing applied → docs_check → vehicle_check → training →
+# active/rejected. It complements (does not overlap) the pack's casework:
+# casework = inbound TICKETS (a problem to resolve, queue-routed,
+# disposition-closed); XRM = PIPELINES (a relationship progressing through
+# stages). The `region` options are the same region set case routing uses
+# (`route_by: region` → `ops_<region>`), so ops sees one coherent region model.
+
+entities:
+  captain_application:
+    label: { en: 'Captain application', ar: 'طلب انضمام كابتن' }
+    # Display sections for the console record view (ordered). Each field opts into
+    # a section via its `group:`; the sections mirror WHERE the data came from —
+    # asked in chat (application), OCR'd off the license, OCR'd off the vehicle
+    # registration. Display-only (no effect on storage/validation).
+    field_groups:
+      - { key: application, label: { en: 'Application',          ar: 'الطلب' } }
+      - { key: license,     label: { en: 'Driving license',      ar: 'رخصة القيادة' } }
+      - { key: vehicle,     label: { en: 'Vehicle registration', ar: 'استمارة المركبة' } }
+    fields:
+      # ── Application (asked in chat) ──────────────────────────────────────────
+      name:         { type: text,   required: true, group: application, label: { en: 'Name',         ar: 'الاسم' } }   # title_field defaults to `name`
+      mobile:       { type: text,   required: true, group: application, label: { en: 'Mobile',       ar: 'الجوال' } }
+      region:       { type: select, required: true, group: application, label: { en: 'Region',       ar: 'المنطقة' }, options: [central, western, eastern, northern, southern] }
+      vehicle_type: { type: select, required: true, group: application, label: { en: 'Vehicle type', ar: 'نوع المركبة' }, options: [sedan, suv, motorbike] }
+      notes:        { type: textarea,               group: application, label: { en: 'Notes',        ar: 'ملاحظات' } }
+
+      # ── Driving license (OCR'd from `license_photo`) — all optional enrichment.
+      # Stored as text: OCR values must never be able to fail the strict record_save
+      # (dates are the ISO string the model emits; the console has no date formatter).
+      id_number:           { group: license, label: { en: 'ID number',      ar: 'رقم الهوية' } }
+      license_type:        { group: license, label: { en: 'License type',   ar: 'نوع الرخصة' } }
+      license_issue_date:  { group: license, label: { en: 'Issue date',     ar: 'تاريخ الإصدار' } }
+      date_of_birth:       { group: license, label: { en: 'Date of birth',  ar: 'تاريخ الميلاد' } }
+      nationality:         { group: license, label: { en: 'Nationality',    ar: 'الجنسية' } }
+      license_expiry_date: { group: license, label: { en: 'License expiry', ar: 'انتهاء الرخصة' } }
+      blood_type:          { group: license, label: { en: 'Blood type',     ar: 'فصيلة الدم' } }
+      # A MEDIA- ref; the console renders a thumbnail. Required — captured up front.
+      license_photo:       { type: image, required: true, group: license, label: { en: 'License photo', ar: 'صورة الرخصة' } }
+
+      # ── Vehicle registration (OCR'd from `vehicle_registration_photo`) — optional.
+      plate_no:                  { group: vehicle, label: { en: 'Plate number',        ar: 'رقم اللوحة' } }
+      vehicle_make:              { group: vehicle, label: { en: 'Make',                ar: 'الصنع' } }
+      vehicle_model:             { group: vehicle, label: { en: 'Model',               ar: 'الطراز' } }
+      vehicle_model_year:        { group: vehicle, label: { en: 'Model year',          ar: 'سنة الصنع' } }
+      vehicle_color:             { group: vehicle, label: { en: 'Color',               ar: 'اللون' } }
+      vehicle_vin:               { group: vehicle, label: { en: 'VIN',                 ar: 'رقم الهيكل' } }
+      registration_type:         { group: vehicle, label: { en: 'Registration type',  ar: 'نوع التسجيل' } }
+      registration_expiry_date:  { group: vehicle, label: { en: 'Registration expiry', ar: 'انتهاء الاستمارة' } }
+      vehicle_weight_kg:         { group: vehicle, label: { en: 'Weight (kg)',         ar: 'الوزن (كجم)' } }
+      vehicle_capacity:          { group: vehicle, label: { en: 'Capacity',           ar: 'عدد الركاب' } }
+      vehicle_owner:             { group: vehicle, label: { en: 'Owner',              ar: 'المالك' } }
+      vehicle_owner_id:          { group: vehicle, label: { en: 'Owner ID',           ar: 'هوية المالك' } }
+      authorized_driver:         { group: vehicle, label: { en: 'Authorized driver',    ar: 'السائق المعتمد' } }
+      authorized_driver_id:      { group: vehicle, label: { en: 'Authorized driver ID', ar: 'هوية السائق' } }
+      sequence_no:               { group: vehicle, label: { en: 'Sequence no',        ar: 'الرقم التسلسلي' } }
+      # Uploaded images — a MEDIA- ref each; the console shows a thumbnail, ops
+      # reviews them in the `docs_check` stage. Both optional (captured
+      # opportunistically); the registration photo is the OCR source for this group.
+      vehicle_registration_photo: { type: image, group: vehicle, label: { en: 'Registration photo', ar: 'صورة الاستمارة' } }
+      vehicle_photo:              { type: image, group: vehicle, label: { en: 'Vehicle photo',      ar: 'صورة المركبة' } }
+    pipeline:
+      stages:   [applied, docs_check, vehicle_check, training, active, rejected]
+      terminal: [active, rejected]
+      # Strict — onboarding is a gated funnel; skipping a gate is rejected
+      # (record_stage answers `not_allowed` with the legal next steps).
+      transitions:
+        applied:       [docs_check, rejected]
+        docs_check:    [vehicle_check, rejected]
+        vehicle_check: [training, rejected]
+        training:      [active, rejected]
+    list: [region, vehicle_type]
+    # A returning applicant UPDATES their application (record_save `match:`),
+    # never duplicates it.
+    dedupe_by: mobile
+
+segments:
+  # Applications stuck mid-funnel with no activity for a week — the ops
+  # re-engagement list.
+  stalled_applications:
+    entity: captain_application
+    label: { en: 'Stalled 7d+', ar: 'طلبات متوقفة' }
+    where:
+      all:
+        - { stage_in: [applied, docs_check, vehicle_check, training] }
+        - { not: { updated_within_days: 7 } }
+  ready_for_training:
+    entity: captain_application
+    label: { en: 'Ready for training', ar: 'جاهز للتدريب' }
+    where: { stage: training }

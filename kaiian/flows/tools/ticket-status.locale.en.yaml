@@ -1,0 +1,21 @@
+flow_id: ticket-status
+strings:
+  # Detail card (one ticket) — status/type/outcome resolve via $enum_label.
+  detail.header:  '🎫 Ticket {ref}'
+  detail.type:    '• Type: {type}'
+  detail.status:  '• Status: {status}'
+  detail.opened:  '• Opened: {when}'
+  detail.outcome: '• Outcome: {outcome}'
+  detail.needed:  '• Needed from you: {what}'
+  back_button:    'Refresh status'
+  reply_button:   'Reply to the team'
+
+  # Next-turn briefs (memory_note) — carry the case_id so a reply can be captured.
+  memory.awaiting: 'This case (case_id={case_id}) is awaiting info from the customer: {what}. If the customer sends the requested info, call reply-to-case with this case_id + their message — never claim you relayed it without calling the tool.'
+  memory.shown:    'Showed ticket {ref} (case_id={case_id}) detail — status {status}.'
+
+  # Ticket picker (two or more tickets)
+  list.header: 'Your tickets 🎫'
+  list.body:   'You have {count} tickets on file — pick one to see its details:'
+  list.footer: 'Pick from the list 👆'
+  list.cta:    'Choose a ticket'

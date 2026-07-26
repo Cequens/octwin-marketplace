@@ -1,0 +1,13 @@
+# clinic — pack-wide Arabic strings.
+#
+# Entries here are shared across ALL flows in this pack (cross-flow labels,
+# common error messages, status verbs). Flow-specific strings live in
+# `flows/tools/<flow>.locale.ar.yaml`. Reference these via `$t("clinic.<key>")`
+# — every key is namespaced (pack-level keys by `pack_id` = `clinic`; flow-level
+# keys by `flow_id`). A BARE `$t("<key>")` does not resolve: the resolver
+# requires a `<namespace>.<key>` form and returns the raw key otherwise.
+
+pack_id: clinic
+strings:
+  # Shared footer under every option-picker (the collect field_prompt_render).
+  field_picker_footer: 'اختر من القائمة، أو اكتب لو محتاج حاجة تانية.'

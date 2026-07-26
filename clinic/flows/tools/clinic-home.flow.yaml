@@ -1,0 +1,30 @@
+# clinic-home — entry menu. Greets, shows the upcoming-appointment count, and
+# offers the three actions (find a doctor / book / manage). Pure YAML.
+
+flow_id:     clinic-home
+version:     1
+description: Welcome / main menu. Call for a greeting, "start", or unclear intent.
+
+input:
+  message: { type: string, optional: true, describe: 'Optional note from the user.' }
+
+entry:
+  - else: true
+    goto: render_menu
+
+steps:
+  render_menu:
+    # Journey: the patient opened the main menu → discovery stage.
+    - track: { event: browsed, timeline: true }
+    - render:
+        render_intent: list_picker
+        header: '{$t("clinic-home.header")}'
+        body: '{$t("clinic-home.body_default")}'
+        cta: '{$t("clinic-home.cta")}'
+        items:
+          - { title: '{$t("clinic-home.action.find")}',     on_select: { invoke: doctor-search,       with: {} } }
+          - { title: '{$t("clinic-home.action.book")}',     on_select: { invoke: book-appointment,    with: {} } }
+          - { title: '{$t("clinic-home.action.manage")}',   on_select: { invoke: manage-appointments, with: {} } }
+          - { title: '{$t("clinic-home.action.branches")}', on_select: { invoke: branches,            with: {} } }
+      memory_note: '{$t("clinic-home.memory_note")}'
+    - end: applied

@@ -1,0 +1,15 @@
+flow_id: doctor-search
+
+strings:
+  detail_body:    'تفاصيل الطبيب 👇'
+  results_body:   'لقينا {count} طبيب مناسب 👇 اختار للحجز.'
+  empty:          'مفيش أطباء مطابقين للبحث حالياً. جرّب تخصص أو فرع تاني.'
+  not_found:      'مش لاقيين الطبيب ده. ممكن تختار من نتائج البحث؟'
+
+  # Carousel card lines
+  card.rating:    '⭐ {rating} ({count} تقييم)'
+  card.fee:       '💵 الكشف: {fee} جنيه'
+  card.tpas:      '🩺 تأمين مقبول: {tpas}'
+  card.no_tpas:   '🩺 بدون تأمين تعاقدي — الدفع نقدي'
+
+  button.book:    'احجز 📅'

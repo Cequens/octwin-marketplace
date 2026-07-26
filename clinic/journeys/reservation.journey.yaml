@@ -1,0 +1,49 @@
+# reservation — the patient booking funnel: discovery → consideration → booked → confirmed → attended.
+#
+# Emitted by `track:` markers in the tool flows:
+#   • clinic-home/render_menu       → browsed              (advances_to discovery)
+#   • branches/render               → browsed              (advances_to discovery)
+#   • doctor-search/render_results  → searched             (advances_to consideration)
+#   • doctor-search/render_detail   → viewed_doctor        (advances_to consideration)
+#   • book-appointment/booked ok    → appointment_booked   (booked; completes appointment_booked — the conversion)
+#   • manage-appointments/confirmed_done → appointment_confirmed (advances_to confirmed)
+#   • manage-appointments/do_rate   → visit_rated          (attended; completes visit_completed)
+#
+# The funnel is the chat-observable view alongside the `booking` XRM pipeline
+# (requested→confirmed→checked_in→completed…, operator-driven). The terminal is
+# the patient-facing `visit_rated` (post-visit survey), the last chat-observable
+# milestone. Ids are unique across the pack, so `track:` infers journey:
+# reservation automatically.
+
+id: reservation
+label: { en: "Reservation", ar: "الحجز" }
+
+# Patients re-book over time. `anytime` opens a fresh run on a new discovery entry
+# past the 7-day cooldown — so a returning patient is a new funnel rather than
+# reusing an old, possibly-never-rated run (many patients never rate, so a
+# completion-gated re-entry would strand re-bookers on a stuck run). A funnel idle
+# for 60 days resets regardless.
+lifecycle:
+  reentry:         anytime
+  terminal:        { goal: visit_completed }
+  cooldown_days:   7
+  idle_reset_days: 60
+
+stages:
+  - { id: discovery,     order: 1, label: { en: "Discovery",     ar: "الاستكشاف" } }
+  - { id: consideration, order: 2, label: { en: "Consideration", ar: "الاهتمام" } }
+  - { id: booked,        order: 3, label: { en: "Booked",        ar: "تم الحجز" } }
+  - { id: confirmed,     order: 4, label: { en: "Confirmed",     ar: "مؤكَّد" } }
+  - { id: attended,      order: 5, label: { en: "Attended",      ar: "تمت الزيارة" } }
+
+goals:
+  - { id: appointment_booked, stage: booked,   label: { en: "Appointment booked", ar: "تم حجز الموعد" } }
+  - { id: visit_completed,    stage: attended, label: { en: "Visit completed",    ar: "اكتملت الزيارة" } }
+
+events:
+  - { name: browsed,               advances_to: discovery,     label: { en: "Browsed", ar: "تصفّح" } }
+  - { name: searched,              advances_to: consideration, label: { en: "Searched a doctor", ar: "بحث عن طبيب" } }
+  - { name: viewed_doctor,         advances_to: consideration, label: { en: "Viewed a doctor",  ar: "عاين طبيبًا" } }
+  - { name: appointment_booked,    advances_to: booked,    completes: appointment_booked, label: { en: "Booked", ar: "حجز" } }
+  - { name: appointment_confirmed, advances_to: confirmed, label: { en: "Confirmed", ar: "أكّد" } }
+  - { name: visit_rated,           advances_to: attended,  completes: visit_completed, label: { en: "Rated the visit", ar: "قيّم الزيارة" } }

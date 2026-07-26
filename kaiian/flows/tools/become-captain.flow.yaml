@@ -1,0 +1,296 @@
+# become-captain — captain-onboarding intake, backed by the platform XRM module.
+# DOCUMENT-FIRST intake via ONE `collect:` node with TWO OCR sources:
+#   • `license_photo` (required, first) — its `on_collect` hook OCRs the driving
+#     license and prefills the whole license block (name, id_number, license_type,
+#     issue/expiry dates, DOB, nationality, blood_type).
+#   • `vehicle_registration_photo` (optional, offered) — its `on_collect` OCRs the
+#     vehicle registration (استمارة) and prefills the whole vehicle block (plate,
+#     make/model/year/color, VIN, owner/driver + ids, weight, capacity, …).
+# Because `on_collect` runs in the seam AFTER the field fills but BEFORE the engine
+# picks the next field, any prefilled required field (name, id_number) is satisfied
+# and silently skipped this same turn. Everything else the docs DON'T carry (mobile,
+# region, vehicle_type) is asked one-at-a-time. Reviews the application (approve_apply)
+# before saving, then `record_save` with `match:` on the mobile — a returning applicant
+# UPDATES their record (dedupe_by), never duplicates. A fresh app opens a 48h ops task.
+#
+# OCR is fill-if-empty (`??`) so a value the agent already stated is never clobbered.
+# Extracted fields are persisted as XRM `text` (see xrm.yaml) — the vision prompt asks
+# for every value as a STRING so a numeric field can't fail the strict record_save.
+# Every extraction failure (no vision adapter, unreadable card, vanished media) is a
+# GRACEFUL SKIP — an empty `outputs:` port inside the hook is a no-op, so the field
+# stays null and (if required) gets asked normally. Onboarding never blocks on OCR.
+#
+# The tool OWNS collection once called (per the platform "tool takes over the
+# flow" principle): the agent passes any field stated this turn; the engine
+# collects the rest one-at-a-time, never re-asking.
+
+flow_id:     become-captain
+version:     1
+description: |-
+  [interactive Tool] Register (or update) a CAPTAIN APPLICATION — a driver
+  applying to join. Call the moment someone asks to become a captain / drive with
+  us ("أبغى أشتغل كابتن", "how do I join as a driver?"). Pass any field the user
+  stated; the tool collects the rest (it OCRs the license/registration photos to
+  prefill), previews for confirmation, saves, and returns a reference. Re-applying
+  with the same mobile UPDATES the record. For an EXISTING application's status
+  use `application-status`.
+
+input:
+  name:         { type: string, optional: true }
+  mobile:       { type: string, optional: true }
+  region:       { type: enum, enum: [central, western, eastern, northern, southern], optional: true, describe: 'Operating region — pre-fill only if the applicant already stated it, else the tool asks.' }
+  vehicle_type: { type: enum, enum: [sedan, suv, motorbike], optional: true }
+  id_number:    { type: string, optional: true, describe: 'National / iqama ID number (the license''s NO.), as free text.' }
+  plate_no:     { type: string, optional: true, describe: 'Vehicle plate number (optional — enrichment, never ask twice).' }
+
+entry:
+  - else: true
+    goto: collect_fields
+
+steps:
+  collect_fields:
+    # Journey: the applicant began the intake → started stage.
+    - track: { event: application_started, timeline: true }
+    - collect:
+        # Running preview prepended to every prompt (collected so far — includes
+        # anything the license OCR prefilled, so the applicant sees what we read).
+        progress: '$lines($compact([$t("become-captain.progress.header"), $state.name != null ? $t("become-captain.progress.name", { name: $state.name }) : null, $state.mobile != null ? $t("become-captain.progress.mobile", { mobile: $state.mobile }) : null, $state.region != null ? $t("become-captain.progress.region", { region: $enum_label($state.region, "region", "") }) : null, $state.vehicle_type != null ? $t("become-captain.progress.vehicle", { vehicle: $enum_label($state.vehicle_type, "vehicle", "") }) : null, $state.id_number != null ? $t("become-captain.progress.license", { license: $state.id_number }) : null, $state.license_photo != null ? $t("become-captain.progress.license_photo") : null]), "\n")'
+        gap_instructions: 'Ask the applicant for the next detail ({$collect_field_label}), one short question at a time, in friendly Saudi white dialect. Re-call become-captain once they answer.'
+        fields:
+          # Driving-license PHOTO FIRST — the one document we need anyway. Its
+          # `on_collect` hook OCRs the image the instant it lands (get_media →
+          # analyze_image) and PREFILLS the whole LICENSE block (fill-if-empty via
+          # `??`); the required ones (name, id_number) are then satisfied + skipped
+          # this same turn. The engine synthesizes a 📷 gap + folds the ref the
+          # applicant sends into $state.license_photo (agent-protocol §Media).
+          - field: license_photo
+            type:       media
+            media_kind: image
+            label:      '$t("become-captain.label.license_photo")'
+            on_collect:
+              - do: get_media
+                args: { media_id: '$state.license_photo' }
+                bind: license_media
+                outputs:
+                  found:
+                    - do: analyze_image
+                      args:
+                        image:     '$license_media.url'
+                        mime_type: '$license_media.mime_type'
+                        json:      true
+                        prompt: |-
+                          This is a Kingdom of Saudi Arabia driving license. Read it and
+                          return ONLY a JSON object with these keys. Use null for any field
+                          you cannot read confidently. Return EVERY value as a STRING (wrap
+                          numbers in quotes). Format dates as YYYY-MM-DD.
+                          {"name_ar": "<full name in Arabic>", "name_en": "<full name in Latin letters>", "id_number": "<ID Number / رقم الهوية, digits only>", "license_type": "<License Type / نوع الرخصة, e.g. Private>", "issue_date": "<Issue Date>", "date_of_birth": "<Date of Birth>", "nationality": "<Nationality, in English>", "expiry_date": "<Expiry Date>", "blood_type": "<Blood Type, e.g. A+>"}
+                      bind: ocr
+                      outputs:
+                        # Guard the field access — a non-JSON model reply binds $ocr.json = null.
+                        ok:
+                          - if: '$ocr.json != null'
+                            then:
+                              - assign:
+                                  state.name:                '$state.name ?? $ocr.json.name_ar ?? $ocr.json.name_en'
+                                  state.id_number:           '$state.id_number ?? $ocr.json.id_number'
+                                  state.license_type:        '$state.license_type ?? $ocr.json.license_type'
+                                  state.license_issue_date:  '$state.license_issue_date ?? $ocr.json.issue_date'
+                                  state.date_of_birth:       '$state.date_of_birth ?? $ocr.json.date_of_birth'
+                                  state.nationality:         '$state.nationality ?? $ocr.json.nationality'
+                                  state.license_expiry_date: '$state.license_expiry_date ?? $ocr.json.expiry_date'
+                                  state.blood_type:          '$state.blood_type ?? $ocr.json.blood_type'
+                              # Persist the raw OCR onto the media asset so the console
+                              # media page shows it (metadata.analysis). Fire-and-forget
+                              # in hook mode — both ports are no-ops.
+                              - do: set_media_metadata
+                                args:
+                                  media_id: '$state.license_photo'
+                                  patch: { analysis: { source: driving_license, fields: '$ocr.json' } }
+                                outputs: { ok: [], failed: [] }
+                        failed: []   # unreadable / no vision adapter → keep collecting (hook no-op)
+                  not_found: []      # media vanished → keep collecting (hook no-op)
+          - field: name
+            label:    '$t("become-captain.label.name")'
+            describe: 'The applicant''s full name, as free text.'
+          - field: mobile
+            label:    '$t("become-captain.label.mobile")'
+            describe: 'The applicant''s mobile number, as free text.'
+            validate:
+              when:  '$state.mobile != null && $length($state.mobile) < 8'
+              error: '$t("become-captain.invalid_mobile")'
+          - field: region
+            label: '$t("become-captain.label.region")'
+            options:
+              header: become-captain.field_header.region
+              cta:    become-captain.field_cta.region
+              enum:   region
+              values: [central, western, eastern, northern, southern]
+          - field: vehicle_type
+            label: '$t("become-captain.label.vehicle")'
+            options:
+              header: become-captain.field_header.vehicle
+              cta:    become-captain.field_cta.vehicle
+              enum:   vehicle
+              values: [sedan, suv, motorbike]
+          # ID number — the license's NO. (national/iqama id). Prefilled by the
+          # license OCR above; asked as free text only if OCR didn't read it.
+          - field: id_number
+            label:    '$t("become-captain.label.license")'
+            describe: 'The national / iqama ID number (the license''s NO.), as free text.'
+          # Optional plate number — enrichment (also OCR'd from the registration), never blocks.
+          - field: plate_no
+            required: false
+            label:    '$t("become-captain.label.plate")'
+            describe: 'The vehicle plate number (optional).'
+          # Optional VEHICLE REGISTRATION photo — offered with a Skip. Its `on_collect`
+          # OCRs the استمارة and prefills the whole vehicle block (make/model/year/color,
+          # VIN, owner/driver + ids, weight, capacity, sequence, registration expiry).
+          # Same graceful-skip contract as the license hook.
+          - field: vehicle_registration_photo
+            type:       media
+            media_kind: image
+            required:   false
+            label:      '$t("become-captain.label.vehicle_registration_photo")'
+            skip_title: '$t("become-captain.skip_vehicle_registration_photo")'
+            on_collect:
+              - do: get_media
+                args: { media_id: '$state.vehicle_registration_photo' }
+                bind: reg_media
+                outputs:
+                  found:
+                    - do: analyze_image
+                      args:
+                        image:     '$reg_media.url'
+                        mime_type: '$reg_media.mime_type'
+                        json:      true
+                        prompt: |-
+                          This is a Kingdom of Saudi Arabia vehicle registration (استمارة). Read it
+                          and return ONLY a JSON object with these keys. Use null for any field you
+                          cannot read confidently. Return EVERY value as a STRING (wrap numbers in
+                          quotes). Format dates as YYYY-MM-DD.
+                          {"plate_no": "<Plate Number, Latin>", "make": "<Make, in English>", "model": "<Model, in English>", "model_year": "<Model Year>", "color": "<Major Color, in English>", "vin": "<Vehicle ID Number / VIN>", "registration_type": "<Registration Type>", "expiry_date": "<Expiry Date>", "weight_kg": "<Weight in kg, digits only>", "capacity": "<Capacity / seats>", "owner": "<Vehicle Owner>", "owner_id": "<Vehicle Owner's ID>", "authorized_driver": "<Authorized Driver>", "authorized_driver_id": "<Authorized Driver's ID>", "sequence_no": "<Sequence No>"}
+                      bind: ocr
+                      outputs:
+                        ok:
+                          - if: '$ocr.json != null'
+                            then:
+                              - assign:
+                                  state.plate_no:                 '$state.plate_no ?? $ocr.json.plate_no'
+                                  state.vehicle_make:             '$state.vehicle_make ?? $ocr.json.make'
+                                  state.vehicle_model:            '$state.vehicle_model ?? $ocr.json.model'
+                                  state.vehicle_model_year:       '$state.vehicle_model_year ?? $ocr.json.model_year'
+                                  state.vehicle_color:            '$state.vehicle_color ?? $ocr.json.color'
+                                  state.vehicle_vin:              '$state.vehicle_vin ?? $ocr.json.vin'
+                                  state.registration_type:        '$state.registration_type ?? $ocr.json.registration_type'
+                                  state.registration_expiry_date: '$state.registration_expiry_date ?? $ocr.json.expiry_date'
+                                  state.vehicle_weight_kg:        '$state.vehicle_weight_kg ?? $ocr.json.weight_kg'
+                                  state.vehicle_capacity:         '$state.vehicle_capacity ?? $ocr.json.capacity'
+                                  state.vehicle_owner:            '$state.vehicle_owner ?? $ocr.json.owner'
+                                  state.vehicle_owner_id:         '$state.vehicle_owner_id ?? $ocr.json.owner_id'
+                                  state.authorized_driver:        '$state.authorized_driver ?? $ocr.json.authorized_driver'
+                                  state.authorized_driver_id:     '$state.authorized_driver_id ?? $ocr.json.authorized_driver_id'
+                                  state.sequence_no:              '$state.sequence_no ?? $ocr.json.sequence_no'
+                              # Persist raw OCR onto the registration asset (console media page shows it).
+                              - do: set_media_metadata
+                                args:
+                                  media_id: '$state.vehicle_registration_photo'
+                                  patch: { analysis: { source: vehicle_registration, fields: '$ocr.json' } }
+                                outputs: { ok: [], failed: [] }
+                        failed: []   # unreadable / no vision adapter → keep collecting (hook no-op)
+                  not_found: []      # media vanished → keep collecting (hook no-op)
+          # Optional vehicle photo (the car itself) — enrichment; folded if sent,
+          # never blocks. A single upload can't leak into another photo field: one
+          # collect node = one auto-adopt pass that consumes each ref in field order.
+          - field: vehicle_photo
+            type:       media
+            media_kind: image
+            required:   false
+            label:      '$t("become-captain.label.vehicle_photo")'
+            skip_title: '$t("become-captain.skip_vehicle_photo")'
+        # Journey: all required details gathered → details_complete stage.
+        complete: [ { track: { event: application_details_completed, timeline: true } }, { goto: confirm } ]
+
+  # Review the assembled application before saving — confirm / cancel / edit.
+  confirm:
+    - assign:
+        # Full review card — every field we successfully collected, grouped by
+        # source (application / license / vehicle) so the applicant can verify what
+        # we read off their documents before submitting. Only PRESENT fields show
+        # ($compact drops the nulls); a section header shows only when its section
+        # has at least one field. Same grouping the console record view uses.
+        preview_body: '$lines($compact([$t("become-captain.preview.header"), $t("become-captain.preview.name", { name: $state.name }), $t("become-captain.preview.mobile", { mobile: $state.mobile }), $t("become-captain.preview.region", { region: $enum_label($state.region, "region", "") }), $t("become-captain.preview.vehicle", { vehicle: $enum_label($state.vehicle_type, "vehicle", "") }), $t("become-captain.preview.section_license"), $state.id_number != null ? $t("become-captain.preview.license", { license: $state.id_number }) : null, $state.license_type != null ? $t("become-captain.preview.license_type", { value: $state.license_type }) : null, $state.license_issue_date != null ? $t("become-captain.preview.issue_date", { value: $state.license_issue_date }) : null, $state.date_of_birth != null ? $t("become-captain.preview.dob", { value: $state.date_of_birth }) : null, $state.nationality != null ? $t("become-captain.preview.nationality", { value: $state.nationality }) : null, $state.license_expiry_date != null ? $t("become-captain.preview.license_expiry", { value: $state.license_expiry_date }) : null, $state.blood_type != null ? $t("become-captain.preview.blood_type", { value: $state.blood_type }) : null, $state.license_photo != null ? $t("become-captain.preview.license_photo") : null, ($state.vehicle_registration_photo != null || $state.plate_no != null || $state.vehicle_make != null) ? $t("become-captain.preview.section_vehicle") : null, $state.plate_no != null ? $t("become-captain.preview.plate", { plate: $state.plate_no }) : null, $state.vehicle_make != null ? $t("become-captain.preview.make", { make: $state.vehicle_make, model: $coalesce($state.vehicle_model, "") }) : null, $state.vehicle_model_year != null ? $t("become-captain.preview.model_year", { value: $state.vehicle_model_year }) : null, $state.vehicle_color != null ? $t("become-captain.preview.color", { value: $state.vehicle_color }) : null, $state.vehicle_vin != null ? $t("become-captain.preview.vin", { value: $state.vehicle_vin }) : null, $state.registration_type != null ? $t("become-captain.preview.reg_type", { value: $state.registration_type }) : null, $state.registration_expiry_date != null ? $t("become-captain.preview.reg_expiry", { value: $state.registration_expiry_date }) : null, $state.vehicle_weight_kg != null ? $t("become-captain.preview.weight", { value: $state.vehicle_weight_kg }) : null, $state.vehicle_capacity != null ? $t("become-captain.preview.capacity", { value: $state.vehicle_capacity }) : null, $state.vehicle_owner != null ? $t("become-captain.preview.owner", { value: $state.vehicle_owner }) : null, $state.vehicle_owner_id != null ? $t("become-captain.preview.owner_id", { value: $state.vehicle_owner_id }) : null, $state.authorized_driver != null ? $t("become-captain.preview.driver", { value: $state.authorized_driver }) : null, $state.authorized_driver_id != null ? $t("become-captain.preview.driver_id", { value: $state.authorized_driver_id }) : null, $state.sequence_no != null ? $t("become-captain.preview.sequence", { value: $state.sequence_no }) : null, $state.vehicle_registration_photo != null ? $t("become-captain.preview.registration_photo") : null, $state.vehicle_photo != null ? $t("become-captain.preview.vehicle_photo") : null]), "\n")'
+    - use: approve_apply
+      with:
+        preview:       '$preview_body'
+        header:        '{$t("become-captain.approve_header")}'
+        confirm_title: '{$t("become-captain.approve_confirm")}'
+        cancel_title:  '{$t("become-captain.approve_cancel")}'
+        apply:         save_application
+        abort:         aborted
+        on_other:      collect_fields
+
+  save_application:
+    # Dedupe upsert on the mobile (the entity's dedupe_by): a returning
+    # applicant updates their record; a new mobile creates APP-<n>.
+    - do: record_save
+      args:
+        entity: captain_application
+        match:  { value: '$state.mobile' }
+        fields:
+          # Application (asked in chat)
+          name:          '$state.name'
+          mobile:        '$state.mobile'
+          region:        '$state.region'
+          vehicle_type:  '$state.vehicle_type'
+          # Driving license (OCR'd from license_photo)
+          id_number:           '$state.id_number'
+          license_type:        '$state.license_type'
+          license_issue_date:  '$state.license_issue_date'
+          date_of_birth:       '$state.date_of_birth'
+          nationality:         '$state.nationality'
+          license_expiry_date: '$state.license_expiry_date'
+          blood_type:          '$state.blood_type'
+          license_photo:       '$state.license_photo'
+          # Vehicle registration (OCR'd from vehicle_registration_photo)
+          plate_no:                   '$state.plate_no'
+          vehicle_make:               '$state.vehicle_make'
+          vehicle_model:              '$state.vehicle_model'
+          vehicle_model_year:         '$state.vehicle_model_year'
+          vehicle_color:              '$state.vehicle_color'
+          vehicle_vin:                '$state.vehicle_vin'
+          registration_type:          '$state.registration_type'
+          registration_expiry_date:   '$state.registration_expiry_date'
+          vehicle_weight_kg:          '$state.vehicle_weight_kg'
+          vehicle_capacity:           '$state.vehicle_capacity'
+          vehicle_owner:              '$state.vehicle_owner'
+          vehicle_owner_id:           '$state.vehicle_owner_id'
+          authorized_driver:          '$state.authorized_driver'
+          authorized_driver_id:       '$state.authorized_driver_id'
+          sequence_no:                '$state.sequence_no'
+          vehicle_registration_photo: '$state.vehicle_registration_photo'
+          vehicle_photo:              '$state.vehicle_photo'
+      bind: saved
+      outputs:
+        ok:
+          # Fresh application → open the 48h ops review task on the record.
+          # (An update re-surfaces via the record's activity, not a new task.)
+          - if: '$saved.created'
+            then:
+              - do: task_open
+                args:
+                  title:        'Review captain application APP-{$saved.record_number}'
+                  record_id:    '$saved.record_id'
+                  due_in_hours: 48
+                bind: review_task
+          # Journey: the application was submitted → applied stage (the conversion).
+          # Both the created + updated paths flow through here (the record exists).
+          - track: { event: application_submitted, timeline: true }
+          - end:
+              status: applied
+              body:   '{$saved.created ? $t("become-captain.saved", { ref: $saved.record_number }) : $t("become-captain.updated", { ref: $saved.record_number })}'
+        invalid: []   # per-field validation → agent gets the reason and re-asks
+        failed:
+          - end: { status: failed, body: '{$t("become-captain.save_failed")}' }
+
+  aborted:
+    - end: { status: aborted, body: '{$t("become-captain.aborted")}' }

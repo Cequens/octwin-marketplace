@@ -1,0 +1,16 @@
+# kaiian — platform-emitted envelope copy (English).
+errors:
+  failed:
+    failure: { body: 'Sorry, an unexpected error occurred. Please try again.' }
+  unhandled_tool_error:
+    failure: { body: 'Sorry, an unexpected error occurred. Please try again in a moment. 🙏' }
+
+agents:
+  support:
+    agentDisabled:    'Support is temporarily unavailable. Please try again later. 🙏'
+    transientError:   'Sorry, a temporary error occurred. Please try again in a moment. 🙏'
+    workflowExpired:  'Sorry, the session expired. Let us start again.'
+    workflowError:    'Sorry, something went wrong completing that. Please try again.'
+    workflowDisabled: 'This feature is not enabled right now.'
+    toolDisabled:     'This feature is not enabled right now.'
+    directTapError:   'Sorry, something went wrong. Please try again.'

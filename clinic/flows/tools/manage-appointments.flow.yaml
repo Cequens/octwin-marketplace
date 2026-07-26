@@ -1,0 +1,400 @@
+# manage-appointments — list / detail / confirm / reschedule / cancel / rate over
+# the `booking` XRM system entity + the platform scheduling engine. Also the
+# target of the reminder card taps (action=confirm/reschedule/cancel). Pure YAML.
+
+flow_id:     manage-appointments
+version:     1
+description: |-
+  [interactive] View, confirm, reschedule, cancel, or rate the patient's
+  appointments. Call with no args to list them; with `appointment_id` to open one;
+  reminder buttons call it with `action` (confirm/reschedule/cancel).
+
+input:
+  appointment_id: { type: string, optional: true, describe: 'Target booking record id from the patient''s appointment list — never typed. Omit it to show the list so the patient can pick.' }
+  action:         { type: string, optional: true, describe: 'One of: confirm | reschedule | cancel | rate.' }
+  new_slot_start: { type: string, optional: true, describe: 'Internal — resume token from the reschedule slot picker.' }
+  slot_minutes:   { type: number, optional: true, integer: true, describe: 'Internal — slot length carried with new_slot_start.' }
+  stars:          { type: number, optional: true, integer: true, min: 1, max: 5, describe: 'Internal — rating carried from the stars picker.' }
+  comment:        { type: string, optional: true, describe: "The patient's own words about the visit, captured verbatim from their reply after they picked a star rating. Only for action=rate_comment." }
+
+entry:
+  - if: '$input.action == "confirm"'
+    goto: do_confirm
+  - if: '$input.action == "cancel"'
+    goto: do_cancel
+  - if: '$input.action == "rate" && $input.stars != null'
+    goto: do_rate
+  - if: '$input.action == "rate_comment" && $input.comment != null'
+    goto: do_rate_comment
+  - if: '$input.action == "rate"'
+    goto: ask_rating
+  - if: '$input.action == "reschedule" && $input.new_slot_start != null'
+    goto: do_reschedule
+  - if: '$input.action == "reschedule"'
+    goto: start_reschedule
+  - if: '$input.appointment_id != null'
+    goto: show_detail
+  - else: true
+    goto: show_list
+
+steps:
+  # ── List (contact-scoped bookings, active + past) ─────────────────────────
+  show_list:
+    - do: record_list
+      args: { entity: booking, active_only: false, sort: updated_at, limit: 30 }
+      bind: appts
+      outputs:
+        ok:     [{ goto: render_list }]
+        empty:  [{ goto: no_appts }]
+        failed: [{ end: failed }]
+
+  render_list:
+    - render:
+        render_intent: list_picker
+        header: '{$t("manage-appointments.list_header")}'
+        body:   '{$t("manage-appointments.list_body", { count: $length($appts.rows) })}'
+        cta:    '{$t("manage-appointments.list_cta")}'
+        items: '$appts.rows'
+        item_template:
+          title:       '{$coalesce($item.fields.doctor_label, "-")} — {$coalesce($item.fields.slot_label, "-")}'
+          description: '$in($item.stage, ["completed", "cancelled", "no_show"]) ? $t("manage-appointments.past") : $t("manage-appointments.upcoming")'
+          on_select:
+            invoke: manage-appointments
+            with: { appointment_id: '$item.id' }
+      memory_note: 'Listed {$length($appts.rows)} appointment(s)'
+    - end: applied
+
+  no_appts:
+    - render:
+        render_intent: text_card
+        body: '{$t("manage-appointments.none")}'
+    - end: applied
+
+  # ── Detail card with actions ──────────────────────────────────────────────
+  show_detail:
+    - do: record_get
+      args: { entity: booking, record_id: '$input.appointment_id' }
+      bind: appt
+      outputs:
+        ok:        [{ goto: render_detail }]
+        not_found: [{ goto: not_found }]
+        failed:    [{ end: failed }]
+
+  render_detail:
+    - render:
+        render_intent: detail_card
+        body: '$lines($compact([$t("manage-appointments.detail.doctor", { doctor: $coalesce($appt.fields.doctor_label, "-") }), $t("manage-appointments.detail.slot", { slot: $coalesce($appt.fields.slot_label, "-") }), $appt.fields.for_whom == "dependent" ? $t("manage-appointments.detail.for_whom", { who: $coalesce($appt.fields.dependent, "-") }) : null]), "\n")'
+        buttons:
+          - { title: '{$t("manage-appointments.button.reschedule")}', on_select: { invoke: manage-appointments, with: { action: reschedule, appointment_id: '$appt.id' } } }
+          - { title: '{$t("manage-appointments.button.cancel")}',     on_select: { invoke: manage-appointments, with: { action: cancel,     appointment_id: '$appt.id' } } }
+          - { title: '{$t("manage-appointments.button.rate")}',       on_select: { invoke: manage-appointments, with: { action: rate,       appointment_id: '$appt.id' } } }
+      memory_note: 'Appointment detail {$appt.id} ({$appt.stage})'
+    - end: applied
+
+  not_found:
+    - render:
+        render_intent: text_card
+        body: '{$t("manage-appointments.not_found")}'
+    - end: applied
+
+  # ── Confirm ───────────────────────────────────────────────────────────────
+  do_confirm:
+    - do: record_stage
+      args: { record_id: '$input.appointment_id', to: confirmed }
+      outputs:
+        ok:          [{ goto: confirmed_done }]
+        not_allowed: [{ goto: confirmed_done }]
+        not_found:   [{ goto: not_found }]
+        failed:      [{ end: failed }]
+
+  confirmed_done:
+    # Journey: the patient confirmed the appointment → confirmed stage.
+    - track: { event: appointment_confirmed, timeline: true }
+    - render:
+        render_intent: text_card
+        body: '{$t("manage-appointments.confirmed")}'
+      memory_note: 'Confirmed appointment {$input.appointment_id}'
+    - end: applied
+
+  # ── Cancel — confirm first, then release the seat + revoke both reminders ──
+  do_cancel:
+    - do: record_get
+      args: { entity: booking, record_id: '$input.appointment_id' }
+      bind: appt
+      outputs:
+        ok:        [{ goto: confirm_cancel }]
+        not_found: [{ goto: not_found }]
+        failed:    [{ end: failed }]
+
+  confirm_cancel:
+    - use: approve_apply
+      with:
+        preview: '$lines($compact([$t("manage-appointments.cancel_confirm.body"), $t("manage-appointments.detail.doctor", { doctor: $coalesce($appt.fields.doctor_label, "-") }), $t("manage-appointments.detail.slot", { slot: $coalesce($appt.fields.slot_label, "-") })]), "\n")'
+        header:  '{$t("manage-appointments.cancel_confirm.header")}'
+        confirm_title: '{$t("manage-appointments.cancel_confirm.yes")}'
+        cancel_title:  '{$t("manage-appointments.cancel_confirm.keep")}'
+        apply: apply_cancel
+        abort_render: { render_intent: text_card, body: '{$t("manage-appointments.cancel_kept")}' }
+        memory_note: 'Confirm-cancel for {$state.appointment_id}'
+
+  apply_cancel:
+    - do: booking_cancel
+      args: { record_id: '$state.appointment_id' }
+      outputs:
+        ok:              [{ goto: cancel_done }]
+        not_cancellable: [{ goto: cancel_done }]
+        failed:          [{ end: failed }]
+
+  cancel_done:
+    # Revoke both pending reminders (flips them to 'cancelled' → never delivered).
+    - do: cancel_scheduled
+      args: { dedupe_key: 'clinic:appt:{$state.appointment_id}:t24' }
+      detach: true
+    - do: cancel_scheduled
+      args: { dedupe_key: 'clinic:appt:{$state.appointment_id}:t2' }
+      detach: true
+    - render:
+        render_intent: text_card
+        body: '{$t("manage-appointments.cancelled")}'
+      memory_note: 'Cancelled appointment {$state.appointment_id}'
+    - end: applied
+
+  # ── Rate (survey_submit → survey_response XRM record) ──────────────────────
+  ask_rating:
+    - render:
+        render_intent: list_picker
+        header: '{$t("manage-appointments.rate_header")}'
+        cta:    '{$t("manage-appointments.rate_cta")}'
+        items:
+          - { title: '⭐',          on_select: { invoke: manage-appointments, with: { action: rate, appointment_id: '$input.appointment_id', stars: 1 } } }
+          - { title: '⭐⭐',         on_select: { invoke: manage-appointments, with: { action: rate, appointment_id: '$input.appointment_id', stars: 2 } } }
+          - { title: '⭐⭐⭐',        on_select: { invoke: manage-appointments, with: { action: rate, appointment_id: '$input.appointment_id', stars: 3 } } }
+          - { title: '⭐⭐⭐⭐',       on_select: { invoke: manage-appointments, with: { action: rate, appointment_id: '$input.appointment_id', stars: 4 } } }
+          - { title: '⭐⭐⭐⭐⭐',      on_select: { invoke: manage-appointments, with: { action: rate, appointment_id: '$input.appointment_id', stars: 5 } } }
+      memory_note: 'Asking for a rating of {$input.appointment_id}'
+    - end: applied
+
+  do_rate:
+    # The rated DOCTOR comes off the booking: survey_submit keys the response on the
+    # APPOINTMENT (upsert on subject_ref), so the rollup dimension has to be stamped
+    # separately — see the survey_response extension in xrm.yaml.
+    - do: record_get
+      args: { entity: booking, record_id: '$input.appointment_id' }
+      bind: rated_appt
+      outputs:
+        ok:        [{ goto: submit_rating }]
+        not_found: [{ goto: not_found }]
+        failed:    [{ end: failed }]
+
+  submit_rating:
+    # Bound (not detached) — the rollup needs the response id, and a rating the
+    # patient can see acknowledged has to be one that actually persisted.
+    - do: survey_submit
+      args: { survey: visit_feedback, answers: { stars: '$input.stars' }, subject_ref: '$input.appointment_id' }
+      bind: resp
+      outputs:
+        ok:     [{ goto: stamp_rated_doctor }]
+        failed: [{ end: failed }]
+
+  stamp_rated_doctor:
+    # Shallow per-key patch — `answers`/`score`/contact stay as submitted.
+    - do: record_save
+      args:
+        entity:    survey_response
+        record_id: '$resp.record_id'
+        fields:    { doctor: '$rated_appt.fields.resource_id' }
+      outputs:
+        ok:      [{ goto: recompute_doctor_avg }]
+        # The response IS recorded either way; without the dimension the rollup
+        # would just miss this one, so thank the patient and skip it.
+        invalid: [{ goto: rating_thanks }]
+        failed:  [{ goto: rating_thanks }]
+
+  recompute_doctor_avg:
+    - do: record_aggregate
+      args:
+        entity: survey_response
+        op:     avg
+        field:  score
+        where:  { all: [{ field: doctor, op: eq, value: '$rated_appt.fields.resource_id' }] }
+      bind: avg_score
+      outputs:
+        ok:     [{ goto: recompute_doctor_count }]
+        failed: [{ goto: rating_thanks }]
+
+  recompute_doctor_count:
+    - do: record_aggregate
+      args:
+        entity: survey_response
+        op:     count
+        where:  { all: [{ field: doctor, op: eq, value: '$rated_appt.fields.resource_id' }] }
+      bind: rating_n
+      outputs:
+        ok:     [{ goto: write_doctor_rating }]
+        failed: [{ goto: rating_thanks }]
+
+  write_doctor_rating:
+    # `rating` is what doctor search ranks on (record_search rank_by: rating), so
+    # the ordering patients see is now derived from their own ratings.
+    - do: record_save
+      args:
+        entity:    doctor
+        record_id: '$rated_appt.fields.resource_id'
+        fields:
+          rating:       '$round($coalesce($avg_score.value, 0), 1)'
+          rating_count: '$coalesce($rating_n.value, 0)'
+      outputs:
+        ok:      [{ goto: rating_thanks }]
+        invalid: [{ goto: rating_thanks }]
+        failed:  [{ goto: rating_thanks }]
+
+  rating_thanks:
+    # Journey: the patient rated the visit → attended stage + visit_completed goal (terminal).
+    - track: { event: visit_rated, timeline: true }
+    - render:
+        render_intent: text_card
+        body: '{$t("manage-appointments.rated", { stars: $input.stars })}'
+      memory_note: |-
+        Rated appointment {$input.appointment_id}: {$input.stars}★, and asked for an optional
+        comment. If the patient's next message says anything about the visit, call
+        manage-appointments with action=rate_comment, appointment_id={$input.appointment_id}
+        and comment set to their words verbatim. If they decline or change the subject, drop it.
+    - end: applied
+
+  # ── The comment (second answer, arrives as free text on a later turn) ──────
+  # survey_submit upserts on (survey_key, subject_ref), so submitting again with
+  # both answers updates the SAME response rather than adding one. `stars` is
+  # required, so read it back off the existing row instead of asking twice.
+  do_rate_comment:
+    - do: record_list
+      args:
+        entity: survey_response
+        where:
+          all:
+            - { field: survey_key,  op: eq, value: visit_feedback }
+            - { field: subject_ref, op: eq, value: '$input.appointment_id' }
+        limit: 1
+      bind: prior
+      outputs:
+        ok:     [{ goto: submit_comment }]
+        empty:  [{ goto: rate_first }]
+        failed: [{ end: failed }]
+
+  submit_comment:
+    - do: survey_submit
+      args:
+        survey:      visit_feedback
+        subject_ref: '$input.appointment_id'
+        answers:
+          stars:   '$prior.rows[0].fields.answers.stars'
+          comment: '$input.comment'
+      outputs:
+        ok:     [{ goto: comment_saved }]
+        failed: [{ end: failed }]
+
+  comment_saved:
+    - render:
+        render_intent: text_card
+        body: '{$t("manage-appointments.comment_saved")}'
+      memory_note: 'Saved the visit comment for {$input.appointment_id}'
+    - end: applied
+
+  rate_first:
+    - render:
+        render_intent: text_card
+        body: '{$t("manage-appointments.rate_first")}'
+      memory_note: 'No rating on {$input.appointment_id} yet — comment not saved'
+    - end: applied
+
+  # ── Reschedule (slot picker → swap reminders) ─────────────────────────────
+  start_reschedule:
+    - do: record_get
+      args: { entity: booking, record_id: '$input.appointment_id' }
+      bind: appt
+      outputs:
+        ok:        [{ goto: render_reschedule_slots }]
+        not_found: [{ goto: not_found }]
+        failed:    [{ end: failed }]
+
+  render_reschedule_slots:
+    - do: slot_list
+      args: { resource_record_id: '$appt.fields.resource_id' }
+      bind: slots
+      outputs:
+        ok:     [{ goto: show_reschedule_picker }]
+        empty:  [{ goto: no_slots }]
+        failed: [{ end: failed }]
+
+  show_reschedule_picker:
+    - render:
+        render_intent: list_picker
+        header: '{$t("manage-appointments.reschedule_header")}'
+        cta:    '{$t("manage-appointments.reschedule_cta")}'
+        items: '$slots'
+        item_template:
+          title: '$lines([$item.local_date, $item.local_time], " — ")'
+          on_select:
+            resume: '$self'
+            with: { new_slot_start: '$item.slot_start', slot_minutes: '$item.slot_minutes' }
+      memory_note: 'Reschedule picker for {$state.appointment_id}'
+    - pause:
+        on_resume:
+          - goto: do_reschedule
+
+  no_slots:
+    - render:
+        render_intent: text_card
+        body: '{$t("manage-appointments.no_slots")}'
+    - end: applied
+
+  do_reschedule:
+    - do: booking_reschedule
+      args:
+        record_id:      '$state.appointment_id'
+        new_slot_start: '$input.new_slot_start'
+        slot_minutes:   '$input.slot_minutes'
+      bind: resched
+      outputs:
+        ok:           [{ goto: reschedule_done }]
+        full:         [{ goto: reschedule_failed }]
+        invalid_slot: [{ goto: reschedule_failed }]
+        failed:       [{ end: failed }]
+
+  reschedule_done:
+    # Same record id → same dedupe keys: revoke the old reminders, re-schedule new
+    # send_at instants under the same keys.
+    - do: cancel_scheduled
+      args: { dedupe_key: 'clinic:appt:{$state.appointment_id}:t24' }
+      detach: true
+    - do: cancel_scheduled
+      args: { dedupe_key: 'clinic:appt:{$state.appointment_id}:t2' }
+      detach: true
+    - if: '$length($coalesce($resched.reminders, [])) > 0'
+      then:
+        - do: schedule_notify
+          args:
+            to: { contact_id: '$contact.id' }
+            send_at: '$resched.reminders[0].send_at'
+            dedupe_key: 'clinic:appt:{$resched.record_id}:{$resched.reminders[0].key}'
+            intent: { render_intent: text_card, body: '{$t("manage-appointments.reminder_text")}' }
+          detach: true
+    - if: '$length($coalesce($resched.reminders, [])) > 1'
+      then:
+        - do: schedule_notify
+          args:
+            to: { contact_id: '$contact.id' }
+            send_at: '$resched.reminders[1].send_at'
+            dedupe_key: 'clinic:appt:{$resched.record_id}:{$resched.reminders[1].key}'
+            intent: { render_intent: text_card, body: '{$t("manage-appointments.reminder_text")}' }
+          detach: true
+    - render:
+        render_intent: text_card
+        body: '{$t("manage-appointments.rescheduled")}'
+      memory_note: 'Rescheduled {$state.appointment_id}'
+    - end: applied
+
+  reschedule_failed:
+    - render:
+        render_intent: text_card
+        body: '{$t("manage-appointments.reschedule_failed")}'
+    - end: aborted

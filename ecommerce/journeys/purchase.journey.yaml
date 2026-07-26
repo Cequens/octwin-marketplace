@@ -1,0 +1,44 @@
+# purchase — the shopper buy-side funnel: browsing → product_viewed → cart → checkout → purchased.
+#
+# Emitted by `track:` markers in the tool flows:
+#   • shop/search ok         → searched         (advances_to browsing)
+#   • product/show ok        → viewed_product   (advances_to product_viewed; completes product_viewed)
+#   • cart/add_item ok       → added_to_cart    (advances_to cart; completes added_to_cart)
+#   • cart/do_checkout       → started_checkout (advances_to checkout)
+#   • cart/submit_order ok   → order_placed     (advances_to purchased; completes purchase — value = order total)
+#
+# The `purchase` goal carries the order's booked revenue (value at emit time), so
+# goal_value_sum on the funnel = total sales attributed to this journey.
+# Ids are unique across the pack, so `track:` infers journey: purchase automatically.
+
+id: purchase
+label: { en: "Purchase", ar: "الشراء" }
+
+# Shoppers re-purchase: a completed run opens a NEW funnel on the next visit
+# (each purchase is its own funnel, not a contact stuck at "purchased"). A short
+# 1-day cooldown guards double-counting a single checkout; a cart left idle for
+# 2 days resets the funnel, mirroring the cart entity's 48h auto-abandon.
+lifecycle:
+  reentry:         after_exit
+  terminal:        { goal: purchase }
+  cooldown_days:   1
+  idle_reset_days: 2
+
+stages:
+  - { id: browsing,       order: 1, label: { en: "Browsing",       ar: "التصفح" } }
+  - { id: product_viewed, order: 2, label: { en: "Product viewed", ar: "معاينة منتج" } }
+  - { id: cart,           order: 3, label: { en: "In cart",        ar: "في السلة" } }
+  - { id: checkout,       order: 4, label: { en: "Checkout",       ar: "الدفع" } }
+  - { id: purchased,      order: 5, label: { en: "Purchased",      ar: "تم الشراء" } }
+
+goals:
+  - { id: product_viewed, stage: product_viewed, label: { en: "Product viewed", ar: "معاينة منتج" } }
+  - { id: added_to_cart,  stage: cart,           label: { en: "Added to cart",  ar: "أضاف للسلة" } }
+  - { id: purchase,       stage: purchased,      value: 0, label: { en: "Purchase", ar: "شراء" } }
+
+events:
+  - { name: searched,         advances_to: browsing,       label: { en: "Searched the catalog", ar: "بحث في المتجر" } }
+  - { name: viewed_product,   advances_to: product_viewed, completes: product_viewed, label: { en: "Viewed a product", ar: "عاين منتجًا" } }
+  - { name: added_to_cart,    advances_to: cart,           completes: added_to_cart,  label: { en: "Added to cart",   ar: "أضاف للسلة" } }
+  - { name: started_checkout, advances_to: checkout,       label: { en: "Started checkout", ar: "بدأ الدفع" } }
+  - { name: order_placed,     advances_to: purchased,      completes: purchase,       label: { en: "Placed an order", ar: "أتمّ الطلب" } }

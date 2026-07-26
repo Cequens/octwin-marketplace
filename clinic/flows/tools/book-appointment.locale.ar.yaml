@@ -1,0 +1,50 @@
+flow_id: book-appointment
+
+strings:
+  # Progress card (prepended to every prompt)
+  progress.header:    '📋 ملخص الحجز'
+  progress.doctor:    'الطبيب: {doctor}'
+  progress.slot:      'الموعد: {slot}'
+  progress.for_whom:  'الكشف لـ: {who}'
+
+  for_whom.self:      'نفسي'
+  for_whom.dependent: 'فرد من العائلة'
+
+  # Field labels (shown in the progress / missing list)
+  label.specialty:       'التخصص'
+  label.doctor:          'الطبيب'
+  label.slot:            'الموعد'
+  label.for_whom:        'الكشف لِمَن'
+  label.dependent_name:  'اسم فرد العائلة'
+  label.reason:          'سبب الزيارة'
+  label.insurance:       'التأمين'
+
+  # Picker headers / call-to-action labels
+  field_header.specialty: '🩺 اختر التخصص'
+  field_cta.specialty:    'التخصصات'
+  field_header.doctor:    '👨‍⚕️ اختر الطبيب'
+  field_cta.doctor:       'الأطباء'
+  field_header.slot:      '🗓️ اختر الموعد'
+  field_cta.slot:         'المواعيد المتاحة'
+  field_header.for_whom:  '👤 الكشف لِمَن؟'
+  field_cta.for_whom:     'اختر'
+
+  # Confirmation preview
+  preview.header:     '📋 تأكيد الحجز'
+  preview.doctor:     'الطبيب: {doctor}'
+  preview.slot:       'الموعد: {slot}'
+  preview.for_whom:   'الكشف لـ: {who}'
+  preview.reason:     'السبب: {reason}'
+  preview.insurance:  'التأمين: {tpa}'
+  approve_header:     'تأكيد الحجز'
+  approve_footer:     'راجع التفاصيل واضغط تأكيد.'
+
+  # Reminder card (delivered T-24h / T-2h)
+  reminder.body:        '⏰ تذكير بموعدك مع {doctor} يوم {slot}. تحب تعمل إيه؟'
+  reminder.confirm:     'تأكيد ✅'
+  reminder.reschedule:  'تغيير الموعد 🔄'
+  reminder.cancel:      'إلغاء ❌'
+
+  success:    '✅ تم تأكيد حجزك مع {doctor} يوم {slot}. هنفكّرك قبل الموعد.'
+  slot_taken: 'للأسف الموعد ده اتحجز للتو. تحب تختار موعد تاني؟'
+  aborted:    'تمام، ألغينا الحجز. لو حبيت تحجز تاني قولّي.'

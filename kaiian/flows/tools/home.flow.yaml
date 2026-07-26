@@ -1,0 +1,61 @@
+# home — the Kaiian/Waslini support main menu / navigation card.
+#
+# The flow_id `home` also exists in the real-estate pack — that's fine: flow-level
+# locale namespaces are pack-scoped (the locale map is keyed by pack), so each
+# pack's `home.*` strings resolve independently. (This flow was briefly named
+# `kaiian-home` to dodge the retired global-namespace collision.)
+#
+# Read-only. The agent may contribute ONE optional contextual greeting line; the
+# tool deterministic-fills the rest: the user's open-ticket count + two CTAs that
+# route to the other tools (`support`, `ticket-status`) via `on_select.invoke`.
+#
+# `case_list` (contact-scoped) gives the open-ticket count for context. A bare
+# bind yields the rows array on ok / `[]` on empty (ports-primitive contract);
+# a DB failure throws → the platform error-net nudges the agent.
+#
+# All copy lives in `home.locale.<lang>.yaml`. Tap ids are owned by the
+# target tools, so this flow declares no taps.
+
+flow_id: home
+version: 1
+description: |-
+  Kaiian/Waslini support menu — report an issue (opens a case) or check a
+  ticket's status. Call on a greeting, an unclear or off-topic message, or a
+  "what can you do?".
+
+input:
+  message:
+    type: string
+    optional: true
+    describe: |-
+      ONE short contextual line you compose for THIS user — greet by name, mirror
+      their tone. Optional.
+
+entry:
+  - else: true
+    goto: render_menu
+
+steps:
+  render_menu:
+    - do: case_list
+      bind: cases
+    - assign:
+        # Open = everything except the two terminal states (equality-filter math;
+        # the expr grammar has no "NOT IN").
+        open_count: '$length($cases) - $length($filter($cases, { status: "resolved" })) - $length($filter($cases, { status: "closed" }))'
+        greeting:   '$coalesce($input.message, $t("home.greeting_default"))'
+    - render:
+        render_intent: list_picker
+        header: '{$t("home.card_header")}'
+        body: |-
+          {$greeting}
+
+          {$t("home.status_open", { count: $open_count })}
+        footer: '{$t("home.card_footer")}'
+        cta:    '{$t("home.list_button")}'
+        items:
+          - { title: '{$t("home.row_report_title")}', description: '{$t("home.row_report_desc")}', on_select: { invoke: 'support' } }
+          - { title: '{$t("home.row_status_title")}', description: '{$t("home.row_status_desc")}', on_select: { invoke: 'ticket-status' } }
+      memory_note: '{$t("home.memory_note", { count: $open_count })}'
+      data: { open_count: '$open_count', total: '$length($cases)' }
+    - end: applied

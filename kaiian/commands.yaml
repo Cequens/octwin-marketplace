@@ -1,0 +1,16 @@
+# Pack-level slash-command declarations. The platform's default `systemCommand`
+# matches inbound text against these BEFORE agent dispatch (see
+# defaultSystemCommand). `/clear` resets the conversation so the user can start a
+# fresh support thread; `/help` is a reply-only pointer.
+#
+# action: `close_conversation` (reset the conversation) | `noop` (reply only).
+
+- match:    '/clear'
+  action:   close_conversation
+  reply: 'تم مسح المحادثة ✅ تقدر تبدأ من جديد — قول لي وش تحتاج.'
+  source:   '/clear'
+
+- match:    '/help'
+  action:   noop
+  reply: 'أنا مساعد دعم كيان/وصلني 🚗 أقدر أساعدك في شكاوى العملاء (خصم زائد، شكوى على سائق) أو طلبات الكباتن (تغيير مركبة، إيقاف حساب، أجرة غير مدفوعة). اكتب لي وش صار وأنا أكمل معك. لبدء محادثة جديدة أرسل /clear.'
+  source:   '/help'

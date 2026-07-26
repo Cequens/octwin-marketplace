@@ -1,0 +1,134 @@
+# XRM declaration for the clinic pack — consumed by the platform XRM module.
+# Replaces the pack's bespoke DB (providers/branches/specialties/doctors +
+# patients/dependents/appointments/…). Everything structured is now an XRM
+# record: shared catalog (branch, doctor — searchable) + per-contact records
+# (dependent, medical_document, insurance_policy) + the `booking` system entity.
+#
+# Identity is the platform contact (no `patients` table). Doctors/branches are
+# operator-managed reference records (console Records surface).
+
+entities:
+  # ── Shared catalog (reference records; searchable) ───────────────────────
+  branch:
+    label: { en: 'Branch', ar: 'فرع' }
+    fields:
+      name:     { type: text, required: true, label: { en: 'Name', ar: 'الاسم' } }
+      name_en:  { type: text, label: { en: 'Name (EN)', ar: 'الاسم بالإنجليزية' } }
+      address:  { type: textarea, label: { en: 'Address', ar: 'العنوان' } }
+      phone:    { type: text, label: { en: 'Phone', ar: 'الهاتف' } }
+      # IANA tz — drives local→UTC slot math (the scheduling engine reads it).
+      timezone: { type: text, label: { en: 'Timezone', ar: 'المنطقة الزمنية' }, default: 'Africa/Cairo' }
+    list: [address, phone]
+    search: { text: [name, name_en] }
+
+  doctor:
+    label: { en: 'Doctor', ar: 'طبيب' }
+    fields:
+      name:          { type: text, required: true, label: { en: 'Name', ar: 'الاسم' } }
+      title:         { type: text, label: { en: 'Title', ar: 'اللقب' } }        # استشاري / أخصائي
+      specialty:     { type: text, label: { en: 'Specialty', ar: 'التخصص' } }   # جلدية / باطنة … (searchable)
+      # A TRUE record ref — filters use it (`{ field: branch, op: eq }`) and
+      # renders resolve it via `expand: [branch]` (the refs map). The old
+      # `branch_id` text + `branch_label` display-snapshot pair was retired by
+      # relation expansion.
+      branch:        { type: record, entity: branch, label: { en: 'Branch', ar: 'الفرع' } }
+      timezone:      { type: text, label: { en: 'Timezone', ar: 'المنطقة الزمنية' }, default: 'Africa/Cairo' }
+      bio:           { type: textarea, label: { en: 'Bio', ar: 'نبذة' } }
+      photo:         { type: image, label: { en: 'Photo', ar: 'الصورة' } }
+      consult_fee:   { type: money, label: { en: 'Consultation fee', ar: 'الكشف' } }
+      accepted_tpas: { type: text, label: { en: 'Insurers', ar: 'التأمينات المقبولة' } }   # comma-separated
+      rating:        { type: number, label: { en: 'Rating', ar: 'التقييم' }, default: 0 }
+      rating_count:  { type: number, label: { en: 'Ratings', ar: 'عدد التقييمات' }, default: 0 }
+    list: [specialty, branch]
+    # Fuzzy Arabic search over the doctor name AND the specialty word — a typed
+    # "جلدية" returns dermatologists (generalizes the old doctor_search RPC).
+    # rank_by rating orders best-match-then-highest-rated.
+    search: { text: [name, specialty], rank_by: rating }
+
+  # ── Per-contact records (contact_id = the account holder) ────────────────
+  dependent:
+    label: { en: 'Dependent', ar: 'تابع' }
+    fields:
+      name:     { type: text, required: true, label: { en: 'Name', ar: 'الاسم' } }
+      dob:      { type: date, label: { en: 'Date of birth', ar: 'تاريخ الميلاد' } }
+      gender:   { type: select, options: [male, female], label: { en: 'Gender', ar: 'النوع' } }
+      relation: { type: text, label: { en: 'Relation', ar: 'صلة القرابة' } }
+    list: [relation]
+    dedupe_by: name
+
+  medical_document:
+    label: { en: 'Medical document', ar: 'مستند طبي' }
+    fields:
+      doc_type:  { type: select, options: [insurance_card, lab_requisition, report, prescription, other], label: { en: 'Type', ar: 'النوع' } }
+      media:     { type: image, label: { en: 'File', ar: 'الملف' } }
+      extracted: { type: json }
+      booking:   { type: record, entity: booking, label: { en: 'Visit', ar: 'الزيارة' } }
+    list: [doc_type]
+
+  insurance_policy:
+    label: { en: 'Insurance policy', ar: 'بوليصة تأمين' }
+    fields:
+      tpa:         { type: text, required: true, label: { en: 'Insurer', ar: 'شركة التأمين' } }
+      member_id:   { type: text, label: { en: 'Member id', ar: 'رقم العضوية' } }
+      valid_until: { type: date, label: { en: 'Valid until', ar: 'سارٍ حتى' } }
+    list: [tpa, member_id]
+
+  # ── The booking (extends the platform system entity) ─────────────────────
+  booking:
+    extends: system
+    label: { en: 'Appointment', ar: 'موعد' }
+    fields:
+      reason:        { type: textarea, label: { en: 'Reason', ar: 'سبب الزيارة' } }
+      insurance_tpa: { type: text, label: { en: 'Insurance', ar: 'التأمين' } }
+      for_whom:      { type: select, options: [self, dependent], label: { en: 'For', ar: 'الحجز لـ' } }
+      dependent:     { type: record, entity: dependent, label: { en: 'Dependent', ar: 'التابع' } }
+      # The branch this visit is at — a doctor may work different branches on
+      # different days, so it's the branch of the CHOSEN slot (from the rule's
+      # meta), not the doctor's home branch. Nullable (single-branch doctors).
+      branch:        { type: record, entity: branch, label: { en: 'Branch', ar: 'الفرع' } }
+      # snapshot labels (no cross-record join needed at read time)
+      doctor_label:  { type: text, label: { en: 'Doctor', ar: 'الطبيب' } }
+      slot_label:    { type: text, label: { en: 'Slot', ar: 'الموعد' } }
+
+  # ── The visit rating (extends the platform system entity) ────────────────
+  # `doctor` is the ROLLUP DIMENSION. `survey_submit` upserts one response per
+  # APPOINTMENT (subject_ref = the booking id, so a re-rating updates in place),
+  # which means the rated doctor can't be derived from the response alone —
+  # manage-appointments stamps it right after submitting. That single field is
+  # what lets `record_aggregate` average a doctor's scores (→ doctor.rating,
+  # which doctor search ranks on) and what groups the console's per-doctor
+  # response counts.
+  survey_response:
+    extends: system
+    fields:
+      doctor: { type: record, entity: doctor, label: { en: 'Doctor', ar: 'الطبيب' } }
+    list: [survey_key, score, doctor]
+
+segments:
+  # Upcoming (active-stage) bookings, for the console / ops.
+  upcoming_bookings:
+    entity: booking
+    label: { en: 'Upcoming', ar: 'القادمة' }
+    where: { all: [{ active: true }] }
+
+# Demo polyclinic — seeded at provision under the `seed` flag (console "Seed demo
+# data"). Records create in order; `@alias` resolves an earlier record's id, so a
+# doctor references its branch. Idempotent (upsert by name). Availability for these
+# doctors is seeded by scheduling.yaml `demo.availability` (matched by name).
+demo:
+  - entity: branch
+    as: nasr
+    fields: { name: 'فرع مدينة نصر', name_en: 'Nasr City', address: '٢٢ شارع عباس العقاد، مدينة نصر، القاهرة', phone: '0226701234', timezone: 'Africa/Cairo' }
+  - entity: branch
+    as: maadi
+    fields: { name: 'فرع المعادي', name_en: 'Maadi', address: '٨ شارع ٩، المعادي، القاهرة', phone: '0225201234', timezone: 'Africa/Cairo' }
+  - entity: doctor
+    fields: { name: 'أحمد سمير', title: 'استشاري', specialty: 'جلدية', branch: '@nasr', timezone: 'Africa/Cairo', bio: 'استشاري الأمراض الجلدية والتجميل.', accepted_tpas: 'GlobeMed، Bupa', rating: 4.6, rating_count: 21, photo: 'asset:ahmed-samir.jpg' }
+  - entity: doctor
+    fields: { name: 'منى خالد', title: 'أخصائي', specialty: 'أطفال', branch: '@nasr', timezone: 'Africa/Cairo', bio: 'أخصائية طب الأطفال وحديثي الولادة.', accepted_tpas: 'GlobeMed، MetLife', rating: 4.8, rating_count: 34, photo: 'asset:mona-khaled.jpg' }
+  - entity: doctor
+    fields: { name: 'هشام علي', title: 'استشاري', specialty: 'باطنة', branch: '@maadi', timezone: 'Africa/Cairo', bio: 'استشاري الباطنة العامة والجهاز الهضمي.', accepted_tpas: 'Bupa، NextCare', rating: 4.4, rating_count: 18, photo: 'asset:hesham-ali.jpg' }
+  - entity: doctor
+    fields: { name: 'سارة محمود', title: 'أخصائي', specialty: 'جلدية', branch: '@maadi', timezone: 'Africa/Cairo', bio: 'أخصائية الأمراض الجلدية والليزر.', accepted_tpas: 'GlobeMed', rating: 4.5, rating_count: 12, photo: 'asset:sara-mahmoud.jpg' }
+  - entity: doctor
+    fields: { name: 'كريم عادل', title: 'استشاري', specialty: 'عظام', branch: '@nasr', timezone: 'Africa/Cairo', bio: 'استشاري جراحة العظام والمفاصل.', accepted_tpas: 'MetLife، NextCare', rating: 4.7, rating_count: 27, photo: 'asset:karim-adel.jpg' }

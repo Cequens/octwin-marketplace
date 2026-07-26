@@ -1,0 +1,15 @@
+flow_id: home
+strings:
+  greeting_default: 'حيّاك الله في دعم كيان 👋 كيف أقدر أساعدك؟'
+
+  card_header:  'دعم كيان'
+  status_open:  '🎫 طلباتك المفتوحة: {count}'
+  card_footer:  'اختر من القائمة 👆'
+  list_button:  'الخيارات'
+
+  row_report_title: 'أبلغ عن مشكلة'
+  row_report_desc:  'خصم زائد، شكوى على سائق، أو مشكلة كابتن'
+  row_status_title: 'حالة طلباتي'
+  row_status_desc:  'تابع طلب سبق فتحته'
+
+  memory_note: 'عرضت قائمة دعم كيان (طلبات مفتوحة: {count}).'
