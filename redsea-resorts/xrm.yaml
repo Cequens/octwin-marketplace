@@ -1,0 +1,101 @@
+# XRM declaration for redsea-resorts.
+#
+#  • `resort`    — the properties (Hurghada, El Gouna, Marsa Alam …).
+#  • `room_type`  — the BOOKABLE RESOURCE. Its slot capacity is the room COUNT, which is
+#                  what makes overselling structurally impossible rather than a policy.
+#  • `stay`      — the reservation pipeline the resort measures.
+
+entities:
+  resort:
+    label: { en: 'Resort', ar: 'منتجع' }
+    fields:
+      name:        { type: text, required: true, label: { en: 'Name', ar: 'الاسم' } }
+      destination: { type: select, options: [hurghada, el_gouna, marsa_alam, sharm, dahab], label: { en: 'Destination', ar: 'الوجهة' } }
+      stars:       { type: number, label: { en: 'Stars', ar: 'التصنيف' } }
+      description: { type: textarea, label: { en: 'Description', ar: 'الوصف' } }
+      facilities:  { type: text, label: { en: 'Facilities', ar: 'المرافق' } }
+      photo:       { type: image, label: { en: 'Photo', ar: 'الصورة' } }
+      timezone:    { type: text, label: { en: 'Timezone', ar: 'المنطقة الزمنية' }, default: 'Africa/Cairo' }
+    list: [destination, stars]
+    search: { text: [name, facilities], semantic: [name, description] }
+    dedupe_by: name
+
+  room_type:
+    label: { en: 'Room type', ar: 'نوع الغرفة' }
+    fields:
+      name:          { type: text, required: true, label: { en: 'Name', ar: 'الاسم' } }
+      resort:        { type: record, entity: resort, label: { en: 'Resort', ar: 'المنتجع' } }
+      resort_label:  { type: text, label: { en: 'Resort', ar: 'المنتجع' } }
+      view:          { type: select, options: [sea, pool, garden, lagoon], label: { en: 'View', ar: 'الإطلالة' } }
+      max_adults:    { type: number, label: { en: 'Max adults', ar: 'أقصى عدد بالغين' } }
+      # The inventory count — mirrored into scheduling.yaml as slot capacity.
+      room_count:    { type: number, label: { en: 'Rooms of this type', ar: 'عدد الغرف' } }
+      nightly_bb:    { type: money, label: { en: 'Per night (B&B)', ar: 'الليلة (إفطار)' } }
+      nightly_hb:    { type: money, label: { en: 'Per night (half board)', ar: 'الليلة (نصف إقامة)' } }
+      nightly_ai:    { type: money, label: { en: 'Per night (all inclusive)', ar: 'الليلة (شامل)' } }
+      currency:      { type: text, label: { en: 'Currency', ar: 'العملة' }, default: 'EGP' }
+      photo:         { type: image, label: { en: 'Photo', ar: 'الصورة' } }
+      popularity:    { type: number, label: { en: 'Popularity', ar: 'الأكثر طلباً' }, default: 0 }
+    list: [resort_label, view, room_count, nightly_bb]
+    search: { text: [name, resort_label], semantic: [name], rank_by: popularity }
+    dedupe_by: name
+
+  stay:
+    label: { en: 'Stay', ar: 'إقامة' }
+    fields:
+      guest_name:     { type: text, label: { en: 'Guest', ar: 'اسم الضيف' } }
+      resort_label:   { type: text, label: { en: 'Resort', ar: 'المنتجع' } }
+      room_label:     { type: text, label: { en: 'Room', ar: 'الغرفة' } }
+      check_in_label: { type: text, label: { en: 'Check-in', ar: 'تاريخ الوصول' } }
+      nights:         { type: number, label: { en: 'Nights', ar: 'عدد الليالي' } }
+      adults:         { type: number, label: { en: 'Adults', ar: 'بالغون' } }
+      children:       { type: number, label: { en: 'Children', ar: 'أطفال' } }
+      board:          { type: select, options: [bb, hb, ai], label: { en: 'Board', ar: 'نظام الإقامة' } }
+      total:          { type: money, label: { en: 'Total', ar: 'الإجمالي' } }
+      deposit:        { type: money, label: { en: 'Deposit', ar: 'العربون' } }
+      currency:       { type: text, label: { en: 'Currency', ar: 'العملة' }, default: 'EGP' }
+      notes:          { type: textarea, label: { en: 'Notes', ar: 'ملاحظات' } }
+    list: [resort_label, room_label, nights, total]
+    pipeline:
+      stages:   [held, confirmed, checked_in, completed, cancelled, no_show]
+      initial:  held
+      terminal: [completed, cancelled, no_show]
+    milestones:
+      stay_held:      { label: { en: 'Held', ar: 'حجز مبدئي' },   stage: held }
+      stay_confirmed: { label: { en: 'Confirmed', ar: 'مؤكَّد' },   stage: confirmed }
+      stay_completed: { label: { en: 'Completed', ar: 'تمت' },     stage: completed, terminal: true }
+
+  booking:
+    extends: system
+    label: { en: 'Room night', ar: 'ليلة غرفة' }
+    fields:
+      room_label:   { type: text, label: { en: 'Room', ar: 'الغرفة' } }
+      resort_label: { type: text, label: { en: 'Resort', ar: 'المنتجع' } }
+      slot_label:   { type: text, label: { en: 'Arrival', ar: 'الوصول' } }
+      guest_name:   { type: text, label: { en: 'Guest', ar: 'الضيف' } }
+
+segments:
+  live_stays:
+    entity: stay
+    label: { en: 'Live bookings', ar: 'حجوزات قائمة' }
+    where: { all: [{ active: true }] }
+
+demo:
+  - entity: resort
+    as: gouna
+    fields: { name: 'منتجع الجونة لاجون', destination: el_gouna, stars: 5, description: 'منتجع على بحيرة الجونة مع شاطئ خاص ومراكز غوص. A lagoon-side resort in El Gouna with a private beach and dive centres.', facilities: 'شاطئ خاص · ٣ مسابح · سبا · نادي أطفال · غوص', timezone: 'Africa/Cairo', photo: 'generate:Photograph of a luxury Red Sea lagoon resort at golden hour, white low-rise buildings, turquoise water, palm trees and sun loungers, photorealistic, wide angle.' }
+  - entity: resort
+    as: hurghada
+    fields: { name: 'منتجع الغردقة ريف', destination: hurghada, stars: 4, description: 'منتجع عائلي على البحر مباشرة مع شعاب قريبة من الشاطئ. A family beachfront resort in Hurghada with reefs close to shore.', facilities: 'شاطئ رملي · مسبحان · أنشطة مائية · نادي أطفال', timezone: 'Africa/Cairo', photo: 'generate:Photograph of a family beach resort on the Red Sea in Hurghada, sandy beach with umbrellas, calm blue sea, low buildings behind, bright daylight, photorealistic.' }
+  - entity: resort
+    as: marsa
+    fields: { name: 'مرسى علم إكو ريزورت', destination: marsa_alam, stars: 4, description: 'منتجع بيئي هادئ مناسب للغوص ومشاهدة السلاحف. A quiet eco-resort in Marsa Alam for diving and turtle spotting.', facilities: 'شاطئ شعاب · مركز غوص · مطعم بحري', timezone: 'Africa/Cairo', photo: 'generate:Photograph of a quiet eco resort on the Red Sea coast at Marsa Alam, timber walkways over coral shore, desert mountains behind, clear water, photorealistic.' }
+
+  - entity: room_type
+    fields: { name: 'غرفة مزدوجة بإطلالة على البحر', resort: '@gouna', resort_label: 'منتجع الجونة لاجون', view: sea, max_adults: 2, room_count: 10, nightly_bb: 2400, nightly_hb: 2900, nightly_ai: 3600, currency: EGP, popularity: 5, photo: 'generate:Photograph of a bright hotel room with a king bed, white linen and an open balcony door showing turquoise sea, elegant minimal decor, photorealistic.' }
+  - entity: room_type
+    fields: { name: 'سويت عائلي بإطلالة على البحيرة', resort: '@gouna', resort_label: 'منتجع الجونة لاجون', view: lagoon, max_adults: 4, room_count: 4, nightly_bb: 4200, nightly_hb: 4900, nightly_ai: 5800, currency: EGP, popularity: 4, photo: 'generate:Photograph of a spacious family hotel suite with a separate living area and a balcony overlooking a calm lagoon, warm daylight, photorealistic.' }
+  - entity: room_type
+    fields: { name: 'غرفة مزدوجة بإطلالة على المسبح', resort: '@hurghada', resort_label: 'منتجع الغردقة ريف', view: pool, max_adults: 2, room_count: 14, nightly_bb: 1600, nightly_hb: 2000, nightly_ai: 2600, currency: EGP, popularity: 5, photo: 'generate:Photograph of a comfortable double hotel room with a balcony overlooking a resort swimming pool, palm trees, bright daylight, photorealistic.' }
+  - entity: room_type
+    fields: { name: 'شاليه حديقة', resort: '@marsa', resort_label: 'مرسى علم إكو ريزورت', view: garden, max_adults: 3, room_count: 6, nightly_bb: 1800, nightly_hb: 2200, nightly_ai: 2900, currency: EGP, popularity: 3, photo: 'generate:Photograph of a low stone eco-chalet with a shaded terrace and desert garden planting, Red Sea coast light, photorealistic.' }

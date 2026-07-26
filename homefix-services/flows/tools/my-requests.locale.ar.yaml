@@ -1,0 +1,6 @@
+flow_id: my-requests
+
+strings:
+  header:        '📋 طلباتك'
+  btn_new:       '🛠️ طلب جديد'
+  btn_services:  '🔧 الخدمات'

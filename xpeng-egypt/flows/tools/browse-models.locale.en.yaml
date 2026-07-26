@@ -1,0 +1,7 @@
+flow_id: browse-models
+
+strings:
+  intro: "Here's the XPENG lineup in Egypt 👇 Swipe through each model — tap for details or to book a test drive."
+  km:    'km'
+  from:  'from'
+  egp:   'EGP'

@@ -1,0 +1,21 @@
+flow_id: capture-lead
+
+strings:
+  gap: "Politely ask the customer for the requested detail in their language."
+
+  it_header:     'How can we help?'
+  it_body:       'Pick what you need and our sales team will reach out.'
+  it_cta:        'Choose'
+  it_quote:      '💬 Price quote'
+  it_info:       'ℹ️ More info'
+  it_test_drive: '📅 Test drive'
+  it_callback:   '📞 Call me back'
+
+  f_name:  'Your name?'
+  f_phone: 'Your phone number? (so sales can reach you)'
+  f_email: 'Your email? (optional)'
+
+  task_title: 'Follow up new lead: {name}'
+  task_body:  'Call the customer on {phone} within 24 hours.'
+
+  confirm: "Thanks {name} ✅ We've saved your details and our sales team will reach out shortly. Would you like to see the models or book a test drive?"

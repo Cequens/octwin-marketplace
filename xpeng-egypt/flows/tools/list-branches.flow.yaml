@@ -1,0 +1,41 @@
+flow_id:     list-branches
+version:     1
+description: |-
+  Show the XPeng Egypt showrooms (Sheikh Zayed, DUNE Mall, Mivida) with area,
+  address, opening hours and phone. Call when the customer asks where to find us
+  or where they can see/test a car.
+
+input: {}
+
+entry:
+  - else: true
+    goto: load
+
+steps:
+  load:
+    - do: record_list
+      args: { entity: branch, all: true }
+      bind: page
+      outputs:
+        ok:    [{ goto: show }]
+        empty: [{ goto: none }]
+        # failed → throws → error-net
+
+  show:
+    - if: '$length($page.rows) == 0'    # all:true returns ok+[] for 0 rows, not the empty port
+      goto: none
+    - render:
+        render_intent: carousel
+        body: '{$t("list-branches.intro")}'
+        items: '$page.rows'
+        item_template:
+          image_url: '$coalesce($item.fields.photo, "")'
+          body: "$lines([ '🏢 ' + $loc($item.fields.name), '📍 ' + $loc($item.fields.address), '🕒 ' + $loc($item.fields.hours), '📞 ' + $item.fields.phone ])"
+          buttons:
+            - { title: '{$t("xpeng-egypt.cta_test_drive")}', on_select: { invoke: book-test-drive, with: { branch_code: '$item.fields.code' } } }
+      memory_note: 'Showed {$page.total} showrooms.'
+    - end: applied
+
+  none:
+    - answer:
+        instructions: "Showroom info couldn't be loaded. Apologize briefly in the customer's language and offer to capture their details via capture-lead."

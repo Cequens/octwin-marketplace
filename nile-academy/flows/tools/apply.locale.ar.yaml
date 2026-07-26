@@ -1,0 +1,35 @@
+flow_id: apply
+
+strings:
+  progress.header:     '📝 طلب التحاق'
+  progress.programme:  '📚 البرنامج: {programme}'
+  progress.student:    '🧒 الطالب: {student}'
+
+  label.programme:  'البرنامج'
+  label.student:    'اسم الطالب'
+  label.entry_year: 'الصف المطلوب'
+  label.guardian:   'اسم ولي الأمر'
+  label.phone:      'رقم ولي الأمر'
+  label.previous:   'المدرسة السابقة'
+
+  field_header.programme:  '📚 أي برنامج؟'
+  field_cta.programme:     'البرامج'
+  field_header.entry_year: '📖 الصف المطلوب؟'
+  field_cta.entry_year:    'الصفوف'
+
+  year.kg1:  'روضة أولى (KG1)'
+  year.kg2:  'روضة ثانية (KG2)'
+  year.y1:   'الصف الأول'
+  year.y3:   'الصف الثالث'
+  year.y5:   'الصف الخامس'
+  year.y7:   'الصف السابع'
+  year.y9:   'الصف التاسع'
+
+  created_header:      '✅ تم إنشاء طلب الالتحاق'
+  created_ref:         '🧾 رقم الطلب: #{ref}'
+  created_programme:   '📚 البرنامج: {programme}'
+  created_docs:        '📎 ابعث صورة شهادة الميلاد وآخر شهادة درجات لاستكمال الملف.'
+  created_no_promise:  'ℹ️ القبول يحدده فريق القبول بعد المقابلة والتقييم — الطلب دلوقتي قيد الاستكمال.'
+  created_footer:      'أي تحديث على الطلب بيوصلك هنا.'
+  btn_tour:            '🏫 احجز زيارة'
+  btn_progs:           '📚 البرامج'

@@ -1,0 +1,15 @@
+# Pulled platform reference — NOT source, and deliberately never committed.
+# `octwin platform-kb pull` writes this from whatever platform you are pointed at, so a
+# committed copy is a snapshot that goes stale the moment the platform moves. The Octwin
+# Claude plugin ships no snapshot for the same reason: the KB is pulled, not bundled.
+.octwin/
+
+# Content-addressed staging the CLI writes while validating/deploying.
+.pack-bundles/
+
+node_modules/
+
+# Internal engineering feedback on the platform + CLI — a candid list of our own bugs,
+# gaps and workarounds, written for the platform team. Useful locally, not something to
+# publish under the company org on a public repo. Delete this line to include it.
+FEEDBACK.md

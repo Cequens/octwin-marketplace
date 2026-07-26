@@ -1,0 +1,205 @@
+flow_id:     book-test-drive
+version:     1
+description: |-
+  [interactive Tool] Book a real test drive at an XPeng showroom. Guides the
+  customer through picking a branch, an open time slot, and their contact details,
+  then reserves the slot. Pass model_code and/or branch_code if already known.
+
+input:
+  model_code:
+    type: enum
+    enum: [m03, p7, p7_plus, g6, g9, x9]
+    optional: true
+  branch_code:
+    type: enum
+    enum: [zayed, dune, mivida]
+    optional: true
+
+entry:
+  - else: true
+    goto: start
+
+steps:
+  # If a branch_code came in (e.g. from a showroom card), resolve it and skip the picker.
+  start:
+    - if: '$input.branch_code != null'
+      then:
+        - do: record_get
+          args:
+            entity: branch
+            match: { field: code, value: '$input.branch_code' }
+          bind: b0
+          outputs:
+            ok:        [{ goto: seed_branch }]
+            not_found: [{ goto: ask_branch }]
+            # failed → throws → error-net
+    - goto: ask_branch
+
+  seed_branch:
+    - assign:
+        'state.branch_id':    '$b0.id'
+        'state.branch_name':  '$loc($b0.fields.name)'
+        'state.branch_photo': '$b0.fields.photo'
+    - goto: pick_model
+
+  # ── 1) Branch picker ──
+  ask_branch:
+    - do: record_list
+      args: { entity: branch, all: true }
+      bind: br
+      outputs:
+        ok:    [{ goto: show_branches }]
+        empty: [{ goto: no_branches }]
+
+  show_branches:
+    - if: '$length($br.rows) == 0'      # all:true returns ok+[] for 0 rows, not the empty port
+      goto: no_branches
+    - render:
+        render_intent: carousel        # card shape (buttons[].on_select) — picker item_template.on_select throws on this build
+        body: '{$t("book-test-drive.b_body")}'
+        items: '$br.rows'
+        item_template:
+          image_url: '$coalesce($item.fields.photo, "")'
+          body: "$lines([ '🏢 ' + $loc($item.fields.name), '📍 ' + $loc($item.fields.area) ])"
+          buttons:
+            - { title: '{$t("book-test-drive.choose")}', on_select: { resume: '$self', with: { branch_id: '$item.id', branch_name: '$loc($item.fields.name)', branch_photo: '$item.fields.photo' } } }
+      memory_note: 'Asked the customer to pick a showroom.'
+    - pause:
+        on_resume:
+          - goto: pick_model
+
+  # ── 2) Model picker — same carousel pattern as the branch step. Skipped when a
+  #      model was already chosen (e.g. tapped from a model card). ──
+  pick_model:
+    - if: '$state.model_code != null'
+      goto: load_slots
+    - do: record_list
+      args: { entity: model, all: true, sort_by: { field: price_from, dir: asc } }
+      bind: mr
+      outputs:
+        ok:    [{ goto: show_models }]
+        empty: [{ goto: load_slots }]
+
+  show_models:
+    - if: '$length($mr.rows) == 0'
+      goto: load_slots
+    - render:
+        render_intent: carousel
+        body: '{$t("book-test-drive.m_body")}'
+        items: '$mr.rows'
+        item_template:
+          image_url: '$coalesce($item.fields.photo, "")'
+          body: '$lines(["🚗 " + $loc($item.fields.name), $loc($item.fields.tagline)])'
+          buttons:
+            - { title: '{$t("book-test-drive.choose")}', on_select: { resume: '$self', with: { model_code: '$item.fields.code', model_name: '$loc($item.fields.name)' } } }
+      memory_note: 'Asked the customer to pick a model to test drive.'
+    - pause:
+        on_resume:
+          - goto: load_slots
+
+  # ── 3) Slot picker (real open slots for the chosen branch) ──
+  load_slots:
+    - do: slot_list
+      args: { resource_record_id: '$state.branch_id', days: 14 }
+      bind: sl
+      outputs:
+        ok:    [{ goto: show_slots }]
+        empty: [{ goto: no_slots }]
+
+  show_slots:
+    - if: "$length($coalesce($sl.slots, $sl.rows, $sl)) == 0"
+      goto: no_slots
+    - render:
+        render_intent: carousel        # card shape — see show_branches note
+        body: '$t("book-test-drive.s_body", { branch: $state.branch_name })'
+        items: '$coalesce($sl.slots, $sl.rows, $sl)'
+        item_template:
+          body: '$lines(["🗓️ " + $enum_label($item.dow, "dow") + " " + $item.local_date + " — " + $item.local_time, "⏱️ " + $format_number($item.slot_minutes) + " " + $t("book-test-drive.min_label"), "✅ " + $format_number($item.remaining) + " " + $t("book-test-drive.spots_label"), "🏢 " + $state.branch_name])'
+          buttons:
+            - { title: '{$t("book-test-drive.choose")}', on_select: { resume: '$self', with: { slot_start: '$item.slot_start', slot_minutes: '$item.slot_minutes', slot_label: '{$item.local_date} — {$item.local_time}' } } }
+      memory_note: 'Showed open test-drive slots for {$state.branch_name}.'
+    - pause:
+        on_resume:
+          - goto: ask_contact
+
+  # ── 3) Contact details (free-text collect) ──
+  ask_contact:
+    - collect:
+        gap_instructions: '$t("book-test-drive.gap")'
+        fields:
+          - field: name
+            label: '$t("book-test-drive.f_name")'
+          - field: phone
+            label: '$t("book-test-drive.f_phone")'
+        complete: [{ goto: reserve }]
+
+  reserve:
+    - do: booking_reserve
+      args:
+        resource_record_id: '$state.branch_id'
+        slot_start:         '$state.slot_start'
+        slot_minutes:       '$coalesce($state.slot_minutes, 45)'
+        fields:
+          interested_model: '$state.model_code'
+          customer_name:    '$state.name'
+          customer_phone:   '$state.phone'
+      bind: booking
+      outputs:
+        ok:           [{ goto: reminders }]
+        full:         [{ goto: slot_taken }]
+        invalid_slot: [{ goto: slot_taken }]
+        # failed → throws → error-net
+
+  # Best-effort reminders (24h + 2h before). Detached: never blocks confirmation.
+  reminders:
+    - foreach:
+        in: '$coalesce($booking.reminders, [])'
+        as: r
+        body:
+          - do: schedule_notify
+            detach: true
+            args:
+              to:         { contact_id: '$contact.id' }
+              send_at:    '$r.send_at'
+              dedupe_key: '{$state.phone}-{$r.key}'
+              intent:
+                render_intent: text_card
+                body: '{$t("book-test-drive.reminder", { branch: $state.branch_name })}'
+    - goto: confirm
+
+  confirm:
+    - render:
+        render_intent: detail_card
+        header: '{$t("book-test-drive.c_title")}'
+        body: "$lines([ '✅ ' + $t('book-test-drive.confirmed_line'), '', '🏢 ' + $state.branch_name, '📅 ' + $coalesce($state.slot_label, $state.slot_start), '🚗 ' + $coalesce($state.model_name, $state.model_code, $t('book-test-drive.any_model')), '👤 ' + $state.name, '', '🔔 ' + $t('book-test-drive.reminder_note') ])"
+        buttons:
+          - { title: '{$t("xpeng-egypt.cta_browse")}', on_select: { invoke: browse-models } }
+      memory_note: 'Test drive booked at {$state.branch_name} for {$state.slot_start} ({$state.phone}).'
+    # Purchase funnel: strongest pre-sale signal — completed the test_drive_booked goal.
+    - track: { journey: purchase, event: booked_test_drive, metadata: { model: '$coalesce($state.model_code, "any")' } }
+    - if: "$coalesce($state.branch_photo, '') != ''"
+      then:
+        - do: send_message
+          detach: true
+          args:
+            to: '$conversation.channel_contact_handle'
+            intent:
+              render_intent: carousel
+              body: '{$t("book-test-drive.photo_caption", { branch: $state.branch_name })}'
+              items: '[$state.branch_photo]'
+              item_template:
+                image_url: '$item'
+                body: '{$state.branch_name}'
+    - end: applied
+
+  slot_taken:
+    - answer:
+        instructions: "The chosen test-drive slot is no longer available (just taken or full). Apologize briefly in the customer's language and invite them to book again to pick another time."
+
+  no_slots:
+    - answer:
+        instructions: "There are no open test-drive slots at this showroom right now. Apologize in the customer's language, suggest trying another branch, or offer to capture their details via capture-lead so sales can arrange a time."
+
+  no_branches:
+    - answer:
+        instructions: "Showrooms couldn't be loaded. Apologize briefly in the customer's language and offer to take their details via capture-lead."

@@ -1,0 +1,18 @@
+flow_id: after-sales
+
+strings:
+  card_header: '🛠️ After-sales & owner support'
+  card_body:   'How can we help you today?'
+  card_footer: 'You can type any request any time — or pick from the menu.'
+  cta:         'Choose'
+
+  # Live status line (shown only when non-zero).
+  status_open: '🎫 You have {count} open ticket(s)'
+
+  # Menu rows.
+  row_activate_title: '📱 Activate my XPeng App'
+  row_activate_desc:  'Verify ownership and activate your app account'
+  row_support_title:  '🛠️ Report an issue'
+  row_support_desc:   'Breakdown, charging or any other after-sales problem'
+  row_status_title:   '🎫 My tickets'
+  row_status_desc:    'Track — or act on — a ticket you already filed'

@@ -1,0 +1,66 @@
+flow_id:     open-support
+version:     1
+description: |-
+  [interactive Tool] Open an after-sales support ticket for a problem with a car the customer owns,
+  routing it to the right team with an SLA. Call when the customer reports a breakdown, a charging
+  problem, a fault, or any other after-sales issue. Pass `type` when it's obvious from what they said
+  (roadside_assistance = stranded/breakdown; charging_issue = charging/charger; other = anything else);
+  otherwise the tool asks. Pass `model_code` and `details` if already stated.
+  (For activating the XPeng App as an owner, use `activate-app` instead.)
+
+input:
+  type:
+    type: enum
+    enum: [roadside_assistance, charging_issue, other]
+    optional: true
+    describe: 'The kind of issue, if clear from the conversation. Leave empty to let the customer pick.'
+  model_code:
+    type: enum
+    enum: [m03, p7, p7_plus, g6, g9, x9]
+    optional: true
+  details: { type: string, optional: true, describe: 'The problem the customer described, if already stated.' }
+
+entry:
+  - else: true
+    goto: gather
+
+steps:
+  gather:
+    - collect:
+        gap_instructions: '$t("open-support.gap")'
+        fields:
+          - field: type                       # FIXED picker — only prompts when the agent didn't pass a type
+            options:
+              header: open-support.pick_header
+              body:   open-support.pick_body
+              cta:    open-support.pick_cta
+              sections:
+                - items:
+                    - { value: roadside_assistance, label: open-support.opt_roadside }
+                    - { value: charging_issue,      label: open-support.opt_charging }
+                    - { value: other,               label: open-support.opt_other }
+          - field: details
+            label: '$t("open-support.f_details")'
+          - field: phone
+            label: '$t("open-support.f_phone")'
+        complete: [{ goto: open }]
+
+  open:
+    - do: case_open
+      args:
+        type: '$state.type'
+        fields:
+          details: '$state.details'
+          phone:   '$state.phone'
+          model:   '$coalesce($state.model_code, "")'
+      bind: c
+      outputs:
+        ok: [{ goto: confirm }]
+        # failed → throws → error-net
+
+  confirm:
+    - render:
+        render_intent: text_card
+        body: '{$t("open-support.confirm", { ref: $c.case_number, sla: $coalesce($c.sla_hours, 48) })}'
+      memory_note: 'Opened after-sales ticket XP-{$c.case_number} (type {$state.type}, case_id {$c.case_id}).'
+    - end: applied

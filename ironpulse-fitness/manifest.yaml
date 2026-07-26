@@ -1,0 +1,56 @@
+# ironpulse-fitness — a fitness club on WhatsApp.
+#
+# Demonstrates MULTI-CAPACITY scheduling: a class is not a one-to-one appointment,
+# it is twenty seats in one slot, and the platform's capacity ledger is what keeps a
+# spin class from selling twenty-first place. Plus a membership pipeline with
+# milestones, a trainer roster with AI portraits, and a member's own timetable.
+# No pack DB, no code — pure YAML.
+
+id:          ironpulse-fitness
+version:     1.0.0
+description: 'Fitness club — class timetable with real seat capacity, personal-trainer sessions, membership enquiries and reminders.'
+
+listing:
+  title:    'IronPulse Fitness'
+  tagline:  'Class seats that really run out, PT sessions and membership in chat'
+  category: services
+  author:   { name: 'Octwin', url: 'https://octwin.ai' }
+  public:   true
+
+supported_channels: [whatsapp, web]
+required_adapters:  [messaging]
+
+default_settings:
+  locale: ar
+
+default_conversation_context:
+  lang: { type: enum, enum: [ar, en, bilingual], default: ar, describe: 'Reply language.' }
+
+flows:
+  - home
+  - classes
+  - book-class
+  - membership
+  - my-schedule
+
+inbound_preprocessing:
+  voicenote:
+    mode: transcribe
+    ack: '🎤 وصلت الرسالة الصوتية، جاري تفريغها...'
+    prompt: 'Arabic gym enquiry voice note — goal, preferred class, schedule.'
+    note_template: |-
+      $transcript != null ? "🎤 رسالة صوتية ({$media_ref}): {$transcript}" : "🎤 رسالة صوتية ({$media_ref}) — تعذّر التفريغ"
+
+agents:
+  - id:                frontdesk
+    display_name:      'IronPulse Front Desk'
+    default_model:     'openrouter/google/gemini-3.1-flash-lite-preview'
+    tools:
+      - home
+      - classes
+      - book-class
+      - membership
+      - my-schedule
+    include_platform_protocol: true
+    instructions:
+      - file: prompts/identity.md

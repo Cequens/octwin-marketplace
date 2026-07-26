@@ -1,0 +1,20 @@
+# glamour-salon — pack-wide Arabic strings.
+# `status.*` covers the `booking` system entity's stages, resolved via `$enum_label`.
+pack_id: glamour-salon
+strings:
+  field_picker_footer: 'اختاري من القائمة 👆'
+
+  status.requested:  'بانتظار التأكيد'
+  status.confirmed:  'مؤكَّد ✅'
+  status.checked_in: 'في الصالون'
+  status.completed:  'تمت الزيارة'
+  status.cancelled:  'ملغى'
+  status.no_show:    'لم يتم الحضور'
+
+  category.hair:     'شعر'
+  category.colour:   'صبغات وعلاجات'
+  category.nails:    'أظافر'
+  category.skincare: 'عناية بالبشرة'
+  category.spa:      'سبا'
+  category.makeup:   'مكياج'
+  category.bridal:   'عرائس'

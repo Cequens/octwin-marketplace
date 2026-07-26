@@ -1,0 +1,43 @@
+flow_id: mortgage-estimate
+
+strings:
+  progress.header:   '🧮 حاسبة التمويل'
+  progress.project:  '🏙️ المشروع: {project}'
+  progress.down:     '💵 الدفعة المقدمة: {pct}%'
+  progress.tenor:    '📆 المدة: {years} سنة'
+
+  label.project:     'المشروع'
+  label.down:        'الدفعة المقدمة'
+  label.tenor:       'مدة التمويل'
+  label.name:        'الاسم'
+  label.income:      'الدخل الشهري'
+
+  field_header.project: '🏙️ اختر المشروع'
+  field_cta.project:    'المشاريع'
+  field_header.down:    '💵 كم الدفعة المقدمة؟'
+  field_cta.down:       'اختر'
+  field_header.tenor:   '📆 مدة التمويل'
+  field_cta.tenor:      'اختر'
+
+  down.p10:  '10% دفعة مقدمة'
+  down.p20:  '20% دفعة مقدمة'
+  down.p30:  '30% دفعة مقدمة'
+  down.p50:  '50% دفعة مقدمة'
+
+  tenor.y5:  '5 سنوات'
+  tenor.y10: '10 سنوات'
+  tenor.y15: '15 سنة'
+  tenor.y20: '20 سنة'
+  tenor.y25: '25 سنة'
+
+  header:            '🧮 القسط الشهري التقديري'
+  line.project:      '🏙️ {project}'
+  line.price:        '🏷️ سعر الوحدة: {amount}'
+  line.down:         '💵 الدفعة المقدمة ({pct}%): {amount}'
+  line.financed:     '🏦 المبلغ المموَّل: {amount}'
+  line.tenor:        '📆 المدة: {years} سنة'
+  line.monthly:      '📌 القسط الشهري: {amount}'
+  disclaimer:        'ℹ️ رقم تقديري بمعدل مرابحة ثابت للاسترشاد فقط — الموافقة والسعر النهائي من الجهة الممولة.'
+  btn_viewing:       '🗓️ احجز معاينة'
+  btn_browse:        '🏙️ مشاريع أخرى'
+  lead_note:         'طلب تمويل: دفعة {pct}% على {years} سنة — قسط تقديري {monthly}.'

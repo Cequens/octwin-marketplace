@@ -1,0 +1,54 @@
+# xpeng-egypt — pack-wide Arabic strings (namespaced by pack_id).
+# Reference via $t("xpeng-egypt.<key>"). Keys are FLAT (dots allowed in the key).
+#
+# The cases.* / status.* / decision.* keys are REQUIRED by the casework locale
+# contract (boot-validated both directions against worklist.yaml + the `case`
+# entity pipeline). Do not add/remove one without matching the declaration.
+
+pack_id: xpeng-egypt
+strings:
+  brand: 'إكس بينج مصر'
+
+  # Shared iconed CTA labels — reused across flows so navigation feels like one system.
+  cta_browse:     '🚗 شوف الموديلات'
+  cta_quote:      '💬 اطلب عرض سعر'
+  cta_test_drive: '📅 احجز تجربة قيادة'
+  cta_branches:   '🏢 الفروع'
+  cta_details:    '🔎 التفاصيل'
+  cta_call:       '📞 اتصل بنا'
+
+  # Shared notes.
+  price_provisional: 'الأسعار استرشادية وتُأكَّد نهائيًا من فريق المبيعات.'
+
+  # Weekday names, indexed by slot dow (0=Sun … 6=Sat) via $enum_label(dow, "dow").
+  dow.0: 'الأحد'
+  dow.1: 'الإثنين'
+  dow.2: 'الثلاثاء'
+  dow.3: 'الأربعاء'
+  dow.4: 'الخميس'
+  dow.5: 'الجمعة'
+  dow.6: 'السبت'
+
+  # ── casework: case types (cases.<type>) — لازم تطابق worklist.yaml بالضبط ──
+  cases.app_owner_activation: 'تفعيل حساب تطبيق إكس بينج'
+  cases.roadside_assistance:  'مساعدة على الطريق'
+  cases.charging_issue:       'مشكلة في الشحن'
+  cases.other:                'مشكلة أخرى بعد البيع'
+
+  # ── casework: case statuses (status.<state>) — مراحل الحالة الثابتة ──
+  status.open:              'مفتوحة'
+  status.in_progress:       'قيد المعالجة'
+  status.awaiting_customer: 'في انتظار ردّك'
+  status.resolved:          'تم الحل'
+  status.closed:            'مغلقة'
+  status.reopened:          'أُعيد فتحها'
+
+  # ── casework: operator decisions relayed to the customer (decision.<action>) ──
+  # المجموعة القياسية (تُضاف تلقائيًا على كل نوع):
+  decision.resolve:           'تم حل مشكلتك ✅'
+  decision.reject:            'للأسف لم نتمكن من قبول هذا الطلب.'
+  decision.request_more_info: 'محتاجين منك معلومات إضافية لاستكمال الطلب.'
+  decision.escalate:          'تم تصعيد الحالة لفريق متخصص لمتابعتها.'
+  # قرارات مخصصة (معرّفة في worklist.yaml تحت work.case.actions):
+  decision.activate_account:  'تم تفعيل حساب تطبيق إكس بينج بتاعك ✅ تقدر تسجّل دخولك دلوقتي كمالك موثّق.'
+  decision.dispatch_roadside: 'فريق المساعدة على الطريق في الطريق إليك 🚗💨 من فضلك خليك جنب سيارتك في أمان.'

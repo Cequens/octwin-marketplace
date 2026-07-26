@@ -1,0 +1,92 @@
+# umrah-journeys — a Hajj & Umrah travel agency on WhatsApp.
+#
+# Demonstrates the CASEWORK / WORKLIST engine: a visa file becomes a durable,
+# queue-routed, SLA-tracked case that a human works in the console while the agent
+# remains the pilgrim's only voice. Plus `collect:` MEDIA-UPLOAD fields (passport
+# and photo, attached to the case as evidence), inbound document vision, an XRM
+# package catalog with AI-generated imagery, and a booking pipeline.
+# No pack DB, no code — pure YAML.
+
+id:          umrah-journeys
+version:     1.0.0
+description: 'Hajj & Umrah package agency — browse packages, book a group, and get a visa file opened and tracked by a real ops team.'
+
+listing:
+  title:    'Umrah Journeys'
+  tagline:  'Packages, group booking and a visa file that a human really works'
+  category: hospitality
+  author:   { name: 'Octwin', url: 'https://octwin.ai' }
+  public:   true
+
+supported_channels: [whatsapp, web]
+# `vision` reads passports and payment receipts; `storage` holds the uploads.
+required_adapters:  [messaging, vision, storage]
+
+default_settings:
+  locale: ar
+
+default_conversation_context:
+  lang: { type: enum, enum: [ar, en, bilingual], default: ar, describe: 'Reply language.' }
+
+flows:
+  - home
+  - packages
+  - package-detail
+  - book-package
+  - visa-file
+  - my-trip
+
+# A pilgrim photographs their passport instead of typing a number. The platform
+# reads it before the agent's turn, so the booking flow is pre-filled.
+inbound_preprocessing:
+  image:
+    enabled: true
+    ack: '📄 وصل المستند، جاري قراءته...'
+    prompt: |-
+      You are a travel-document intake assistant for a Hajj & Umrah agency. Classify each image and extract structured fields. Do NOT give visa or legal advice, and do NOT judge eligibility.
+
+      Respond with JSON only (no markdown) — an object with an `images` array holding EXACTLY ONE entry per input image, IN ORDER:
+      {
+        "images": [
+          {
+            "media_ref": "<copy the MEDIA- ref for this image, in order>",
+            "doc_type": "passport" | "national_id" | "photo" | "vaccination" | "payment_receipt" | "other",
+            "full_name": "<name as printed in Latin characters, else null>",
+            "passport_number": "<passport number if visible, else null>",
+            "nationality": "<nationality if shown, else null>",
+            "expiry_date": "<YYYY-MM-DD if shown, else null>",
+            "summary_ar": "<one short Arabic line describing the document>"
+          }
+        ]
+      }
+      Return entries in the SAME ORDER as provided; copy each entry's media_ref from the list.
+    note_template: |-
+      $lines($compact([
+        "📄 مستند ({$media_ref}) — النوع: {$doc_type ?? 'غير محدد'}",
+        $full_name != null       ? "الاسم: {$full_name}" : null,
+        $passport_number != null ? "رقم الجواز: {$passport_number}" : null,
+        $nationality != null     ? "الجنسية: {$nationality}" : null,
+        $expiry_date != null     ? "تاريخ الانتهاء: {$expiry_date}" : null,
+        $summary_ar != null      ? "ملخص: {$summary_ar}" : null
+      ]))
+  voicenote:
+    mode: transcribe
+    ack: '🎤 وصلت الرسالة الصوتية، جاري تفريغها...'
+    prompt: 'Arabic Hajj/Umrah enquiry voice note — travellers, dates, budget.'
+    note_template: |-
+      $transcript != null ? "🎤 رسالة صوتية ({$media_ref}): {$transcript}" : "🎤 رسالة صوتية ({$media_ref}) — تعذّر التفريغ"
+
+agents:
+  - id:                pilgrimage
+    display_name:      'Umrah Journeys Advisor'
+    default_model:     'openrouter/google/gemini-3.1-flash-lite-preview'
+    tools:
+      - home
+      - packages
+      - package-detail
+      - book-package
+      - visa-file
+      - my-trip
+    include_platform_protocol: true
+    instructions:
+      - file: prompts/identity.md

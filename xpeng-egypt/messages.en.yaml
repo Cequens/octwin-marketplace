@@ -1,0 +1,17 @@
+# xpeng-egypt — platform-emitted envelope copy (English). Sibling of messages.ar.yaml.
+
+errors:
+  failed:
+    failure: { body: 'Sorry, something went wrong. Please try again.' }
+  unhandled_tool_error:
+    failure: { body: 'Sorry, an unexpected error occurred. Please try again in a moment. 🙏' }
+
+agents:
+  assistant:
+    agentDisabled:    'The smart assistant is temporarily unavailable. Please try again later. 🙏'
+    transientError:   'Sorry, a temporary error occurred. Please try again in a moment. 🙏'
+    workflowExpired:  'Sorry, the session expired. Please start again.'
+    workflowError:    'Sorry, something went wrong while completing that. Please try again.'
+    workflowDisabled: 'This feature is currently disabled.'
+    toolDisabled:     'This feature is currently disabled.'
+    directTapError:   'Sorry, something went wrong. Please try again.'

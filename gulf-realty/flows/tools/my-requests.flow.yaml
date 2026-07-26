@@ -1,0 +1,67 @@
+# my-requests — the buyer's own record. Contact-scoped by default (no `all:`),
+# so it needs no identity plumbing: XRM already ties these records to the contact.
+
+flow_id:     my-requests
+version:     1
+description: |-
+  Show this buyer's own site viewings and enquiries. Call for "طلباتي", "معايناتي",
+  "my bookings", or when they ask what they already have with us.
+
+input:
+  message:
+    type:     string
+    optional: true
+    describe: 'Optional note from the buyer.'
+
+entry:
+  - else: true
+    goto: load
+
+steps:
+  load:
+    - do: record_list
+      args: { entity: booking, limit: 10, sort_by: { field: slot_label, dir: asc } }
+      bind: viewings
+      outputs:
+        ok:     [{ goto: load_leads }]
+        empty:  [{ goto: load_leads }]
+        failed: [{ goto: load_leads }]
+
+  load_leads:
+    - do: record_list
+      args: { entity: buyer_lead, limit: 10 }
+      bind: leads
+      outputs:
+        ok:     [{ goto: show }]
+        empty:  [{ goto: show }]
+        failed: [{ goto: show }]
+
+  show:
+    # Scalar per-row mappers — `$item` is bound per row and the result is a string.
+    - assign:
+        viewing_lines: '$map($coalesce($viewings.rows, []), $lines($compact(["🗓️ " + $item.record_number, $item.fields.slot_label, $item.fields.advisor_label, $enum_lookup($item.stage, { requested: $t("my-requests.stage.requested"), confirmed: $t("my-requests.stage.confirmed"), checked_in: $t("my-requests.stage.checked_in"), completed: $t("my-requests.stage.completed"), cancelled: $t("my-requests.stage.cancelled") }, $item.stage)]), " · "))'
+        lead_lines:    '$map($coalesce($leads.rows, []), $lines($compact(["📄 " + $item.record_number, $enum_lookup($item.stage, { new: $t("my-requests.lead.new"), qualified: $t("my-requests.lead.qualified"), viewing_booked: $t("my-requests.lead.viewing_booked"), offer_made: $t("my-requests.lead.offer_made"), reserved: $t("my-requests.lead.reserved"), lost: $t("my-requests.lead.lost") }, $item.stage)]), " · "))'
+    - assign:
+        n_viewings: '$length($coalesce($viewings.rows, []))'
+        n_leads:    '$length($coalesce($leads.rows, []))'
+    - if: '$n_viewings == 0 && $n_leads == 0'
+      then:
+        - goto: nothing
+    - render:
+        render_intent: detail_card
+        header: '{$t("my-requests.header")}'
+        body: '$lines($compact($concat(
+                 [$n_viewings > 0 ? $t("my-requests.viewings_header") : null],
+                 $viewing_lines,
+                 [$n_leads > 0 ? $t("my-requests.leads_header") : null],
+                 $lead_lines
+               )), "\n")'
+        buttons:
+          - { title: '{$t("my-requests.btn_book")}',   on_select: { invoke: book-viewing } }
+          - { title: '{$t("my-requests.btn_browse")}', on_select: { invoke: browse-projects } }
+      memory_note: 'Showed {$n_viewings} viewing(s) and {$n_leads} enquiry(ies) for this buyer.'
+    - end: applied
+
+  nothing:
+    - answer:
+        instructions: 'This buyer has no viewings or enquiries yet. Say so warmly in one line and offer to show the projects (browse-projects) or run a finance estimate.'

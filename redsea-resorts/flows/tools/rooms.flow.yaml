@@ -1,0 +1,73 @@
+# rooms — the room carousel. Board-basis rates are shown from the room record itself, so
+# the guest compares real prices rather than a "from" figure the resort never honours.
+
+flow_id:     rooms
+version:     1
+description: |-
+  Show the rooms with their real nightly rates. Call when the guest asks what you have,
+  asks a price, or names a destination or a view. Pass `destination` (hurghada, el_gouna,
+  marsa_alam, sharm, dahab) or `view` (sea, pool, garden, lagoon) when they named one.
+
+input:
+  destination:
+    type:     string
+    optional: true
+    describe: 'One of: hurghada, el_gouna, marsa_alam, sharm, dahab.'
+  view:
+    type:     string
+    optional: true
+    describe: 'One of: sea, pool, garden, lagoon.'
+
+entry:
+  - if:   '$input.view != null'
+    goto: load_view
+  - else: true
+    goto: load_all
+
+steps:
+  load_all:
+    - do: record_search
+      args: { entity: room_type, query: '', limit: 10 }
+      bind: page
+      outputs:
+        ok:     [{ goto: show }]
+        empty:  [{ goto: none }]
+        failed: [{ goto: unavailable }]
+
+  load_view:
+    - do: record_search
+      args:
+        entity: room_type
+        query:  ''
+        limit:  10
+        where:  { all: [{ field: view, op: eq, value: '$input.view' }] }
+      bind: page
+      outputs:
+        ok:     [{ goto: show }]
+        empty:  [{ goto: load_all }]
+        failed: [{ goto: unavailable }]
+
+  show:
+    - render:
+        render_intent: carousel
+        body:  '{$t("rooms.intro")}'
+        items: '$page.rows'
+        item_template:
+          image_url: '$coalesce($item.fields.photo, "")'
+          body: '$lines($compact([
+                   $item.fields.name,
+                   $item.fields.resort_label,
+                   $t("rooms.from", { price: $format_money_field($item.fields.nightly_bb, $coalesce($item.fields.currency, "EGP")) })
+                 ]), "\n")'
+          buttons:
+            - { title: '{$t("rooms.btn_book")}', on_select: { invoke: book-stay, with: { room_id: '$item.id' } } }
+      memory_note: 'Showed {$length($page.rows)} room type(s).'
+    - end: applied
+
+  none:
+    - answer:
+        instructions: 'No room matched. Say so in one line and offer the full list.'
+
+  unavailable:
+    - answer:
+        instructions: 'The room list could not be read. Apologise in one line and offer to try again shortly. NEVER quote a rate from memory.'

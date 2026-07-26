@@ -1,0 +1,129 @@
+# XRM declaration for smile-dental.
+#
+#  • `treatment` — the price list (reference, no pipeline ⇒ always listable).
+#  • `dentist`   — the bookable resource (see scheduling.yaml). `rating` is a
+#                  ROLLUP written back from the post-visit survey, and the picker
+#                  ranks on it (`search.rank_by`), so patient feedback really
+#                  changes what the next patient is offered.
+#  • `booking`   — the visit, widened from the platform system entity.
+#  • `survey_response` — widened with the rated `dentist`, the rollup dimension.
+
+entities:
+  treatment:
+    label: { en: 'Treatment', ar: 'إجراء' }
+    fields:
+      code:        { type: text, required: true, label: { en: 'Code', ar: 'الرمز' } }
+      name:        { type: text, required: true, label: { en: 'Name', ar: 'الاسم' } }
+      category:    { type: select, options: [preventive, restorative, cosmetic, orthodontic, surgical], label: { en: 'Category', ar: 'التصنيف' } }
+      description: { type: textarea, label: { en: 'Description', ar: 'الوصف' } }
+      duration_min: { type: number, label: { en: 'Duration (min)', ar: 'المدة (دقيقة)' } }
+      price_from:  { type: money, label: { en: 'From', ar: 'يبدأ من' } }
+      currency:    { type: text, label: { en: 'Currency', ar: 'العملة' }, default: 'AED' }
+      insured:     { type: boolean, label: { en: 'Usually covered', ar: 'يغطيه التأمين عادةً' } }
+    list: [category, duration_min, price_from]
+    search: { text: [name, description], semantic: [name, description] }
+    dedupe_by: code
+
+  dentist:
+    label: { en: 'Dentist', ar: 'طبيب أسنان' }
+    fields:
+      name:         { type: text, required: true, label: { en: 'Name', ar: 'الاسم' } }
+      title:        { type: text, label: { en: 'Title', ar: 'اللقب' } }
+      specialty:    { type: select, options: [general, orthodontics, periodontics, endodontics, pediatric, cosmetic], label: { en: 'Specialty', ar: 'التخصص' } }
+      languages:    { type: text, label: { en: 'Languages', ar: 'اللغات' } }
+      bio:          { type: textarea, label: { en: 'Bio', ar: 'نبذة' } }
+      photo:        { type: image, label: { en: 'Photo', ar: 'الصورة' } }
+      timezone:     { type: text, label: { en: 'Timezone', ar: 'المنطقة الزمنية' }, default: 'Asia/Dubai' }
+      # Written back by the survey rollup — never typed by hand.
+      rating:       { type: number, label: { en: 'Rating', ar: 'التقييم' }, default: 0 }
+      rating_count: { type: number, label: { en: 'Ratings', ar: 'عدد التقييمات' }, default: 0 }
+    list: [title, specialty, rating]
+    search: { text: [name, languages], rank_by: rating }
+    dedupe_by: name
+
+  booking:
+    extends: system
+    label: { en: 'Visit', ar: 'زيارة' }
+    fields:
+      treatment:       { type: record, entity: treatment, label: { en: 'Treatment', ar: 'الإجراء' } }
+      dentist:         { type: record, entity: dentist, label: { en: 'Dentist', ar: 'الطبيب' } }
+      treatment_label: { type: text, label: { en: 'Treatment', ar: 'الإجراء' } }
+      dentist_label:   { type: text, label: { en: 'Dentist', ar: 'الطبيب' } }
+      slot_label:      { type: text, label: { en: 'Slot', ar: 'الموعد' } }
+      complaint:       { type: textarea, label: { en: 'Complaint', ar: 'الشكوى' } }
+      insurer:         { type: text, label: { en: 'Insurer', ar: 'شركة التأمين' } }
+      member_id:       { type: text, label: { en: 'Member id', ar: 'رقم العضوية' } }
+
+  # The rated dentist cannot be derived from a response alone (the subject is the
+  # BOOKING), so my-visits stamps it right after submitting. That single field is
+  # what makes the per-dentist average computable.
+  survey_response:
+    extends: system
+    fields:
+      dentist: { type: record, entity: dentist, label: { en: 'Dentist', ar: 'الطبيب' } }
+    list: [survey_key, score, dentist]
+
+segments:
+  upcoming_visits:
+    entity: booking
+    label: { en: 'Upcoming', ar: 'الزيارات القادمة' }
+    where: { all: [{ active: true }] }
+
+demo:
+  - entity: treatment
+    fields: { code: 'CLEAN', name: 'تنظيف وتلميع الأسنان', category: preventive, description: 'إزالة الجير والتصبغات مع تلميع — جلسة واحدة. Scale and polish in a single visit.', duration_min: 30, price_from: 350, currency: AED, insured: true }
+  - entity: treatment
+    fields: { code: 'FILL', name: 'حشو تجميلي (كومبوزيت)', category: restorative, description: 'حشو أبيض بلون السن لعلاج التسوس. Tooth-coloured composite filling.', duration_min: 45, price_from: 450, currency: AED, insured: true }
+  - entity: treatment
+    fields: { code: 'ROOT', name: 'علاج جذور (عصب)', category: restorative, description: 'علاج قناة الجذر على جلستين مع حشو نهائي. Root-canal treatment over two sessions.', duration_min: 60, price_from: 1600, currency: AED, insured: true }
+  - entity: treatment
+    fields: { code: 'WHITE', name: 'تبييض بالليزر', category: cosmetic, description: 'تبييض في العيادة بجلسة واحدة، نتيجة فورية. In-clinic laser whitening, one session.', duration_min: 60, price_from: 1800, currency: AED, insured: false }
+  - entity: treatment
+    fields: { code: 'ALIGN', name: 'تقويم شفاف (Aligners)', category: orthodontic, description: 'خطة تقويم شفاف مع متابعة شهرية — تبدأ بجلسة تقييم وأشعة. Clear-aligner plan with monthly review; starts with an assessment.', duration_min: 45, price_from: 12000, currency: AED, insured: false }
+  - entity: treatment
+    fields: { code: 'IMPL', name: 'زراعة سن', category: surgical, description: 'زراعة بعنوان تيتانيوم مع تاج خلال ثلاثة أشهر. Titanium implant with a crown over three months.', duration_min: 90, price_from: 6500, currency: AED, insured: false }
+
+  - entity: dentist
+    fields:
+      name: 'د. ليلى منصور'
+      title: 'استشاري'
+      specialty: cosmetic
+      languages: 'العربية، الإنجليزية، الفرنسية'
+      bio: 'استشارية تجميل الأسنان والتبييض، خبرة ١٤ عاماً.'
+      timezone: 'Asia/Dubai'
+      rating: 4.8
+      rating_count: 46
+      photo: 'generate:Professional portrait of a female Middle Eastern dentist in white clinical scrubs, warm confident smile, bright modern dental clinic softly blurred behind, clean studio lighting.'
+  - entity: dentist
+    fields:
+      name: 'د. عمر الحداد'
+      title: 'أخصائي'
+      specialty: orthodontics
+      languages: 'العربية، الإنجليزية'
+      bio: 'أخصائي تقويم الأسنان والتقويم الشفاف.'
+      timezone: 'Asia/Dubai'
+      rating: 4.6
+      rating_count: 31
+      photo: 'generate:Professional portrait of a male Middle Eastern orthodontist in white clinical scrubs holding a clear dental aligner, modern clinic softly blurred behind, clean studio lighting.'
+  - entity: dentist
+    fields:
+      name: 'د. ريما القاسم'
+      title: 'أخصائي'
+      specialty: pediatric
+      languages: 'العربية، الإنجليزية'
+      bio: 'أخصائية أسنان الأطفال — تعامل لطيف مع الصغار.'
+      timezone: 'Asia/Dubai'
+      rating: 4.9
+      rating_count: 58
+      photo: 'generate:Professional portrait of a friendly female paediatric dentist in colourful clinical scrubs, cheerful child-friendly dental clinic softly blurred behind, warm lighting.'
+  - entity: dentist
+    fields:
+      name: 'د. سامي درويش'
+      title: 'استشاري'
+      specialty: endodontics
+      languages: 'العربية، الإنجليزية، الأوردية'
+      bio: 'استشاري علاج الجذور والجراحة اللبية.'
+      timezone: 'Asia/Dubai'
+      rating: 4.5
+      rating_count: 22
+      photo: 'generate:Professional portrait of a senior male dentist in white clinical scrubs with loupes around his neck, modern dental surgery softly blurred behind, clean lighting.'

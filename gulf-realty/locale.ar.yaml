@@ -1,0 +1,6 @@
+# gulf-realty — pack-wide Arabic strings shared across flows.
+pack_id: gulf-realty
+strings:
+  greeting: 'أهلاً بك في جلف ريالتي 🏙️ كيف أقدر أساعدك؟'
+  currency_aed: 'درهم'
+  currency_sar: 'ريال'

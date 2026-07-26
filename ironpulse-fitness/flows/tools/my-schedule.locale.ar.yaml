@@ -1,0 +1,11 @@
+flow_id: my-schedule
+
+strings:
+  header:         '🗓️ حصصك'
+  intro:          'اختر حصة لإلغاء حجزها:'
+  cta:            'حصصي'
+  row_title:      '🎟️ حجز #{ref}'
+  cancel_header:  '✅ تم إلغاء الحجز'
+  cancel_body:    'أُلغي حجزك وأصبح المقعد متاحاً لعضو آخر. تحت أمرك لو أردت موعداً غيره.'
+  btn_book:       '📅 احجز حصة'
+  btn_mine:       '🗓️ حصصي'

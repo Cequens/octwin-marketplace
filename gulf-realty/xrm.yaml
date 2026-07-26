@@ -1,0 +1,196 @@
+# XRM declaration for gulf-realty. Three shapes, each earning something:
+#
+#  • `development` / `unit_type`  — shared reference catalog (no pipeline ⇒ always
+#    listable), searchable by name/area, carrying an AI-generated hero image.
+#  • `advisor`                    — the bookable resource the scheduling engine
+#    expands availability for (see scheduling.yaml).
+#  • `buyer_lead`                 — a per-contact PIPELINE record. A pipeline is
+#    what earns funnel analytics (`octwin analytics buyer_lead`) and milestones.
+
+entities:
+  development:
+    label: { en: 'Development', ar: 'مشروع' }
+    fields:
+      name:          { type: text, required: true, label: { en: 'Name', ar: 'الاسم' } }
+      developer:     { type: text, label: { en: 'Developer', ar: 'المطوّر' } }
+      city:          { type: select, options: [dubai, abu_dhabi, riyadh, jeddah, sharjah, cairo], label: { en: 'City', ar: 'المدينة' } }
+      area:          { type: text, label: { en: 'Area', ar: 'المنطقة' } }
+      handover:      { type: text, label: { en: 'Handover', ar: 'التسليم' } }
+      payment_plan:  { type: text, label: { en: 'Payment plan', ar: 'خطة السداد' } }
+      from_price:    { type: money, label: { en: 'Starting price', ar: 'يبدأ من' } }
+      currency:      { type: text, label: { en: 'Currency', ar: 'العملة' }, default: 'AED' }
+      highlights:    { type: textarea, label: { en: 'Highlights', ar: 'أبرز الميزات' } }
+      hero:          { type: image, label: { en: 'Hero image', ar: 'الصورة' } }
+      rating:        { type: number, label: { en: 'Demand score', ar: 'مؤشر الطلب' }, default: 0 }
+    list: [developer, city, from_price]
+    search: { text: [name, area, developer], rank_by: rating }
+    dedupe_by: name
+
+  unit_type:
+    label: { en: 'Unit type', ar: 'نوع الوحدة' }
+    fields:
+      name:        { type: text, required: true, label: { en: 'Name', ar: 'الاسم' } }
+      development: { type: record, entity: development, label: { en: 'Development', ar: 'المشروع' } }
+      bedrooms:    { type: number, label: { en: 'Bedrooms', ar: 'غرف النوم' } }
+      area_sqft:   { type: number, label: { en: 'Area (sqft)', ar: 'المساحة (قدم²)' } }
+      price:       { type: money, label: { en: 'Price', ar: 'السعر' } }
+      currency:    { type: text, label: { en: 'Currency', ar: 'العملة' }, default: 'AED' }
+      view:        { type: text, label: { en: 'View', ar: 'الإطلالة' } }
+      photo:       { type: image, label: { en: 'Photo', ar: 'الصورة' } }
+    list: [development, bedrooms, price]
+    search: { text: [name, view] }
+    dedupe_by: name
+
+  advisor:
+    label: { en: 'Advisor', ar: 'مستشار عقاري' }
+    fields:
+      name:      { type: text, required: true, label: { en: 'Name', ar: 'الاسم' } }
+      title:     { type: text, label: { en: 'Title', ar: 'المسمى' } }
+      languages: { type: text, label: { en: 'Languages', ar: 'اللغات' } }
+      city:      { type: select, options: [dubai, abu_dhabi, riyadh, jeddah, sharjah, cairo], label: { en: 'City', ar: 'المدينة' } }
+      timezone:  { type: text, label: { en: 'Timezone', ar: 'المنطقة الزمنية' }, default: 'Asia/Dubai' }
+      photo:     { type: image, label: { en: 'Photo', ar: 'الصورة' } }
+      rating:    { type: number, label: { en: 'Rating', ar: 'التقييم' }, default: 0 }
+    list: [title, city, languages]
+    search: { text: [name, languages], rank_by: rating }
+    dedupe_by: name
+
+  # The commercial funnel. `record_milestone` marks the money moments; the
+  # console + `octwin analytics buyer_lead` chart conversion between stages.
+  buyer_lead:
+    label: { en: 'Buyer lead', ar: 'عميل محتمل' }
+    fields:
+      full_name:      { type: text, label: { en: 'Name', ar: 'الاسم' } }
+      budget:         { type: money, label: { en: 'Budget', ar: 'الميزانية' } }
+      bedrooms:       { type: number, label: { en: 'Bedrooms', ar: 'غرف النوم' } }
+      city:           { type: select, options: [dubai, abu_dhabi, riyadh, jeddah, sharjah, cairo], label: { en: 'City', ar: 'المدينة' } }
+      purpose:        { type: select, options: [end_use, investment], label: { en: 'Purpose', ar: 'الغرض' } }
+      finance:        { type: select, options: [cash, mortgage], label: { en: 'Finance', ar: 'التمويل' } }
+      development:    { type: record, entity: development, label: { en: 'Interested in', ar: 'المشروع' } }
+      monthly_income: { type: number, label: { en: 'Monthly income', ar: 'الدخل الشهري' } }
+      notes:          { type: textarea, label: { en: 'Notes', ar: 'ملاحظات' } }
+    list: [full_name, city, budget, finance]
+    pipeline:
+      stages:   [new, qualified, viewing_booked, offer_made, reserved, lost]
+      initial:  new
+      terminal: [reserved, lost]
+    milestones:
+      qualified_lead:  { label: { en: 'Qualified', ar: 'مؤهَّل' },      stage: qualified }
+      viewing_secured: { label: { en: 'Viewing booked', ar: 'حجز معاينة' }, stage: viewing_booked }
+      unit_reserved:   { label: { en: 'Unit reserved', ar: 'حجز وحدة' },  stage: reserved, terminal: true }
+
+  # The site viewing IS the platform booking entity, widened with the two
+  # display snapshots the confirmation card reads back.
+  booking:
+    extends: system
+    label: { en: 'Site viewing', ar: 'معاينة' }
+    fields:
+      development:   { type: record, entity: development, label: { en: 'Development', ar: 'المشروع' } }
+      advisor_label: { type: text, label: { en: 'Advisor', ar: 'المستشار' } }
+      slot_label:    { type: text, label: { en: 'Slot', ar: 'الموعد' } }
+      party_size:    { type: number, label: { en: 'Party size', ar: 'عدد الحضور' } }
+
+segments:
+  hot_leads:
+    entity: buyer_lead
+    label: { en: 'Hot leads', ar: 'عملاء ساخنون' }
+    where: { all: [{ active: true }] }
+
+# Demo catalog — seeded by `octwin deploy --seed`. `generate:` attaches an
+# AI-rendered hero image (media:generate scope); re-seeding reuses it.
+demo:
+  - entity: development
+    as: marina
+    fields:
+      name: 'Marina Horizon Residences'
+      developer: 'Emaar'
+      city: dubai
+      area: 'Dubai Marina'
+      handover: 'Q4 2027'
+      payment_plan: '20% down · 50% during construction · 30% on handover'
+      from_price: 1850000
+      currency: AED
+      highlights: 'إطلالة كاملة على المارينا · مسبح لا نهائي · صالة رياضية · قريب من المترو'
+      rating: 4.8
+      hero: 'generate:Architectural render of a luxury waterfront residential tower in Dubai Marina at golden hour, yachts in the foreground, glass facade, photorealistic, wide angle.'
+  - entity: development
+    as: saadiyat
+    fields:
+      name: 'Saadiyat Lagoon Villas'
+      developer: 'Aldar'
+      city: abu_dhabi
+      area: 'Saadiyat Island'
+      handover: 'Q2 2026'
+      payment_plan: '10% down · 60% during construction · 30% on handover'
+      from_price: 4200000
+      currency: AED
+      highlights: 'فلل على البحيرة · شاطئ خاص · حدائق واسعة · مدارس عالمية قريبة'
+      rating: 4.6
+      hero: 'generate:Architectural render of modern beachfront villas on Saadiyat Island Abu Dhabi, turquoise lagoon, palm trees, minimal white architecture, photorealistic, daylight.'
+  - entity: development
+    as: sedra
+    fields:
+      name: 'Sedra Riyadh Gardens'
+      developer: 'Roshn'
+      city: riyadh
+      area: 'North Riyadh'
+      handover: 'Q1 2027'
+      payment_plan: '5% down · مدعوم بالتمويل العقاري السكني'
+      from_price: 1450000
+      currency: SAR
+      highlights: 'مجتمع متكامل · مساجد ومدارس · ممشى ٤ كم · تصميم نجدي معاصر'
+      rating: 4.7
+      hero: 'generate:Architectural render of a contemporary Najdi-style residential community in Riyadh, sandstone facades, landscaped walkway, families strolling, warm daylight, photorealistic.'
+  - entity: development
+    as: jeddah_bay
+    fields:
+      name: 'Obhur Bay Waterfront'
+      developer: 'Emaar The Economic City'
+      city: jeddah
+      area: 'Obhur'
+      handover: 'Q3 2026'
+      payment_plan: '10% down · 40% during construction · 50% on handover'
+      from_price: 1980000
+      currency: SAR
+      highlights: 'واجهة بحرية · مرسى قوارب · أبراج سكنية بإطلالة على البحر الأحمر'
+      rating: 4.4
+      hero: 'generate:Architectural render of a Red Sea waterfront residential development in Jeddah, marina with small boats, low-rise apartments, sunset light, photorealistic.'
+
+  - entity: unit_type
+    fields: { name: '1BR Marina View', development: '@marina', bedrooms: 1, area_sqft: 780, price: 1850000, currency: AED, view: 'إطلالة على المارينا' }
+  - entity: unit_type
+    fields: { name: '2BR Marina Corner', development: '@marina', bedrooms: 2, area_sqft: 1240, price: 2790000, currency: AED, view: 'إطلالة زاوية على المارينا والبحر' }
+  - entity: unit_type
+    fields: { name: '4BR Lagoon Villa', development: '@saadiyat', bedrooms: 4, area_sqft: 4100, price: 4200000, currency: AED, view: 'إطلالة على البحيرة' }
+  - entity: unit_type
+    fields: { name: '3BR Townhouse', development: '@sedra', bedrooms: 3, area_sqft: 2150, price: 1450000, currency: SAR, view: 'حديقة خاصة' }
+  - entity: unit_type
+    fields: { name: '2BR Sea View', development: '@jeddah_bay', bedrooms: 2, area_sqft: 1320, price: 1980000, currency: SAR, view: 'إطلالة على البحر الأحمر' }
+
+  - entity: advisor
+    fields:
+      name: 'ريم الحسن'
+      title: 'مستشار عقاري أول'
+      languages: 'العربية، الإنجليزية'
+      city: dubai
+      timezone: 'Asia/Dubai'
+      rating: 4.9
+      photo: 'generate:Professional corporate headshot of a confident Emirati businesswoman in a modern navy blazer, neutral studio background, soft lighting.'
+  - entity: advisor
+    fields:
+      name: 'خالد المطيري'
+      title: 'مستشار عقاري'
+      languages: 'العربية، الإنجليزية'
+      city: riyadh
+      timezone: 'Asia/Riyadh'
+      rating: 4.7
+      photo: 'generate:Professional corporate headshot of a Saudi businessman in a white thobe and dark bisht, neutral studio background, soft lighting.'
+  - entity: advisor
+    fields:
+      name: 'مروان صادق'
+      title: 'مستشار استثمار عقاري'
+      languages: 'العربية، الإنجليزية، الأوردية'
+      city: abu_dhabi
+      timezone: 'Asia/Dubai'
+      rating: 4.5
+      photo: 'generate:Professional corporate headshot of a Middle Eastern businessman in a charcoal suit and open collar shirt, neutral studio background, soft lighting.'

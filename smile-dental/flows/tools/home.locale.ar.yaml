@@ -1,0 +1,15 @@
+flow_id: home
+
+strings:
+  header:              '🦷 عيادة سمايل للأسنان'
+  greeting:            'أهلاً بك في سمايل 🦷 نحجز لك موعدك في دقيقة.'
+  upcoming:            '📅 لديك {count} موعد قادم.'
+  cta:                 'اختر'
+  row_treatments:      '🦷 الإجراءات والأسعار'
+  row_treatments_d:    'تنظيف · حشو · تبييض · تقويم · زراعة'
+  row_dentists:        '👩‍⚕️ الأطباء'
+  row_dentists_d:      'التخصصات والتقييمات'
+  row_book:            '🗓️ احجز موعد'
+  row_book_d:          'اختر الإجراء والطبيب والوقت'
+  row_visits:          '📋 مواعيدي'
+  row_visits_d:        'مواعيدك وتقييم زيارتك'

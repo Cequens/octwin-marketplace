@@ -1,0 +1,15 @@
+flow_id: product
+
+strings:
+  price:          '💰 السعر: {price}'
+  notes:          '🌿 المكوّنات: {notes}'
+  longevity:      '⏳ الثبات: {longevity}'
+  long.light:     'خفيف'
+  long.moderate:  'متوسط'
+  long.long:      'طويل'
+  long.very_long: 'طويل جداً'
+  in_stock:       '📦 متوفّر للشحن'
+  out_of_stock:   '⚠️ غير متوفّر حالياً'
+  btn_add:        '🛒 أضف للسلة'
+  btn_cart:       '🧾 سلتي'
+  btn_more:       '🛍️ منتجات أخرى'

@@ -1,0 +1,6 @@
+flow_id: shop
+
+strings:
+  intro:      '🛍️ اخترت لك {count} من مجموعتنا — اسحب للاستعراض:'
+  btn_add:    '🛒 أضف للسلة'
+  btn_detail: '📋 التفاصيل'

@@ -1,0 +1,6 @@
+flow_id: my-orders
+
+strings:
+  header:      '🛵 أوردراتك'
+  btn_menu:    '🌯 المنيو'
+  btn_basket:  '🛒 سلتي'

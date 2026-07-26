@@ -1,0 +1,148 @@
+# damage-check — the pack's signature journey: a photo becomes a triaged JOB CARD
+# sitting in the right workshop queue with an SLA running.
+#
+# The chain: a `type: media` upload field takes the photo (the engine adopts the next
+# inbound image itself, so the fold never depends on the agent naming the ref) → the
+# platform's OWN vision pass has already read it (`inbound_preprocessing.image` in
+# manifest.yaml, whose prompt returns the work area, job type and severity) and
+# delivered that as a pre-turn briefing → the agent passes those fields in → the flow
+# routes on them via `work_open`, which resolves the queue from
+# worklist.yaml's `route_by: work_area` and stamps the SLA.
+#
+# WHY NOT call `analyze_image` here as a second pass: `analyze_image` takes a URL or
+# data URL, and the media URL a self-hosted platform serves is not reachable from a
+# remote inference provider — so the analysis silently comes back empty. The manifest
+# pre-processing hands the model the BYTES, which is both the working path and one
+# vision call instead of two. The flow still defaults safely when the agent supplies
+# nothing: `diagnostics` means "a human decides", which is the honest fallback.
+#
+# Nothing here ever states a price. The real number is the foreman's `quote_ready`
+# disposition, which relays to the customer on its own.
+
+flow_id:     damage-check
+version:     1
+description: |-
+  [interactive] Triage a problem from a photo and open a workshop job. Call when the
+  customer describes damage, a warning light, a noise or a leak, or sends a photo of
+  their car. Pre-fill `complaint` from a voice note when you have one.
+
+input:
+  complaint:
+    type:     string
+    optional: true
+    describe: "What the customer says is wrong, in their own words."
+  plate:
+    type:     string
+    optional: true
+    describe: 'Licence plate, if known (may come from a photo the platform already read).'
+  work_area:
+    type:     enum
+    enum:     [mechanical, body, diagnostics]
+    optional: true
+    describe: 'Which department the photo points to, from the briefing the platform gave you after reading the image. Omit if unsure — the job then goes to diagnostics for a human to decide.'
+  job_type:
+    type:     enum
+    enum:     [periodic_service, body_repair, diagnostic_check, breakdown]
+    optional: true
+    describe: 'The kind of job, from the same briefing. Omit if unsure.'
+  severity:
+    type:     enum
+    enum:     [minor, moderate, major]
+    optional: true
+    describe: 'How serious the VISIBLE damage looks, from the briefing. Never guess beyond what the image showed.'
+  make_model:
+    type:     string
+    optional: true
+    describe: 'Make and model, if the platform identified it from the photo.'
+  findings:
+    type:     string
+    optional: true
+    describe: 'Two or three short lines, in the customer''s language, describing ONLY what is visible in the photo — copied from the briefing, never invented, never a diagnosis and never a price.'
+
+entry:
+  - else: true
+    goto: gather
+
+steps:
+  gather:
+    - collect:
+        gap_instructions: 'Ask the customer for the next item ({$collect_field}) in one short line. For the photo, ask for a clear shot of the damaged area or the dashboard. Re-call damage-check once they send it. NEVER estimate a cost yourself.'
+        fields:
+          - field: plate
+            label:    '$t("damage-check.label.plate")'
+            describe: 'The licence plate, as printed.'
+          - field: complaint
+            label:    '$t("damage-check.label.complaint")'
+            describe: "What is wrong, in the customer's own words."
+          # An UPLOAD field — the engine adopts the next inbound image of this kind.
+          - field: damage_photo
+            type:       media
+            media_kind: image
+            label:      '$t("damage-check.label.photo")'
+        complete: [{ goto: save_vehicle }]
+
+  save_vehicle:
+    # Deduped on plate, so a returning customer's car is updated, never duplicated.
+    - do: record_save
+      args:
+        entity: vehicle
+        match:  { field: plate, value: '$state.plate' }
+        fields:
+          plate:      '$state.plate'
+          make_model: '$state.make_model'
+      bind: car
+      outputs:
+        ok:      [{ goto: open_job }]
+        invalid: [{ goto: open_job }]
+        failed:  [{ goto: open_job }]
+
+  open_job:
+    # Defaults matter more than the happy path here: an unset area routes to
+    # diagnostics, which means "a human looks at it" — never a guess at a repair.
+    - assign:
+        area:     '$coalesce($state.work_area, "diagnostics")'
+        jtype:    '$coalesce($state.job_type, "diagnostic_check")'
+        findings: '$coalesce($state.findings, $t("damage-check.no_findings"))'
+    # `work_open` writes the record AND enrols it in the worklist: the queue comes
+    # from `route_by: work_area`, the SLA from the type. The ports are the whole
+    # contract — there is no status string to inspect.
+    - do: work_open
+      args:
+        entity: repair_job
+        stage:  received
+        fields:
+          job_type:     '$jtype'
+          work_area:    '$area'
+          vehicle:      '$car.record_id'
+          plate:        '$state.plate'
+          complaint:    '$state.complaint'
+          triage_notes: '$lines($compact([$findings, $triage.json.recommended_checks_ar]), "\n")'
+          damage_photo: '$state.damage_photo'
+      bind: job
+      outputs:
+        ok:     [{ goto: triaged }]
+        failed: [{ goto: job_failed }]
+
+  triaged:
+    - render:
+        render_intent: detail_card
+        header: '{$t("damage-check.header")}'
+        body: '$lines($compact([
+                 $t("damage-check.job_ref", { ref: $job.record_number }),
+                 $t("damage-check.plate", { plate: $state.plate }),
+                 $findings,
+                 $t("damage-check.area", { area: $enum_lookup($area, { mechanical: $t("damage-check.ar.mechanical"), body: $t("damage-check.ar.body"), diagnostics: $t("damage-check.ar.diagnostics") }, $area) }),
+                 $t("damage-check.severity", { severity: $enum_lookup($state.severity, { minor: $t("damage-check.sev.minor"), moderate: $t("damage-check.sev.moderate"), major: $t("damage-check.sev.major") }, $t("damage-check.sev.unknown")) }),
+                 $t("damage-check.no_quote")
+               ]), "\n")'
+        footer: '{$t("damage-check.footer")}'
+        buttons:
+          - { title: '{$t("damage-check.btn_book")}',   on_select: { invoke: book-service, with: { work_area: '$area', plate: '$state.plate' } } }
+          - { title: '{$t("damage-check.btn_garage")}', on_select: { invoke: my-garage } }
+      memory_note: 'Triaged a photo into repair_job #{$job.record_number} — area {$area}, queue {$job.queue_key}. NO price was quoted; the foreman quotes.'
+      data: { job_number: '$job.record_number', work_area: '$area' }
+    - end: applied
+
+  job_failed:
+    - answer:
+        instructions: 'The job card could not be opened. Say so plainly in one line and offer to try again or to have the service desk call them. Do NOT claim a job was created, and do NOT estimate a price.'

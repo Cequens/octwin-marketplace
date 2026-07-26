@@ -1,0 +1,79 @@
+# my-garage — the customer's cars and the live state of every job card on them.
+# Contact-scoped, so no identity plumbing. The stage hint is what turns a status
+# word into something the customer can act on.
+
+flow_id:     my-garage
+version:     1
+description: |-
+  Show this customer's vehicles and the state of their job cards. Call for "سياراتي",
+  "وين وصلت سيارتي", "my car". Never state a job stage from memory — call this.
+
+input:
+  message:
+    type:     string
+    optional: true
+    describe: 'Optional note from the customer.'
+
+entry:
+  - else: true
+    goto: load_jobs
+
+steps:
+  load_jobs:
+    - do: record_list
+      args: { entity: repair_job, limit: 10, active_only: false, sort: created_at }
+      bind: jobs
+      outputs:
+        ok:     [{ goto: load_cars }]
+        empty:  [{ goto: load_cars }]
+        failed: [{ goto: unavailable }]
+
+  load_cars:
+    - do: record_list
+      args: { entity: vehicle, limit: 10 }
+      bind: cars
+      outputs:
+        ok:     [{ goto: show }]
+        empty:  [{ goto: show }]
+        failed: [{ goto: show }]
+
+  show:
+    - assign:
+        job_lines: '$map($coalesce($jobs.rows, []), $lines($compact([
+                       "🧾 #" + $item.record_number,
+                       $item.fields.plate,
+                       $enum_label($item.fields.work_area, "area", $item.fields.work_area),
+                       $enum_label($item.stage, "stage", $item.stage)
+                     ]), " · "))'
+        car_lines: '$map($coalesce($cars.rows, []), $lines($compact([
+                       "🚗 " + $item.fields.plate,
+                       $item.fields.make_model
+                     ]), " · "))'
+        latest: '$jobs.rows[0]'
+    - if: '$length($job_lines) == 0 && $length($car_lines) == 0'
+      then:
+        - goto: none
+    - render:
+        render_intent: detail_card
+        header: '{$t("my-garage.header")}'
+        body: '$lines($compact($concat(
+                 [$length($car_lines) > 0 ? $t("my-garage.cars_header") : null],
+                 $car_lines,
+                 [$length($job_lines) > 0 ? $t("my-garage.jobs_header") : null],
+                 $job_lines,
+                 [$latest != null ? $enum_label($latest.stage, "stage_hint", "") : null]
+               )), "\n")'
+        buttons:
+          - { title: '{$t("my-garage.btn_check")}',   on_select: { invoke: damage-check } }
+          - { title: '{$t("my-garage.btn_book")}',    on_select: { invoke: book-service } }
+          - { title: '{$t("my-garage.btn_services")}', on_select: { invoke: services } }
+      memory_note: 'Showed {$length($car_lines)} vehicle(s) and {$length($job_lines)} job card(s); latest stage {$latest.stage}.'
+    - end: applied
+
+  none:
+    - answer:
+        instructions: 'This customer has no vehicle or job on file yet. Say so warmly in one line and offer the photo triage (damage-check) or the service menu.'
+
+  unavailable:
+    - answer:
+        instructions: 'The garage lookup failed. Apologise in one line and offer to try again shortly. Do NOT state a job stage from memory.'

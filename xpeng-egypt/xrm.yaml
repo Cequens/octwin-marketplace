@@ -1,0 +1,285 @@
+# xrm.yaml — records module for XPeng Egypt.
+#
+#   model   : reference catalog (no pipeline → always listed). The lineup.
+#   branch  : reference catalog of showrooms (also the bookable resource).
+#   lead    : sales pipeline (new → … → won/lost), deduped by phone.
+#   booking : the platform `booking` system entity, EXTENDED with pack fields.
+#
+# Localized text fields hold a { en, ar } bag; render them in flows via $loc(value).
+# The `demo:` block seeds reference data on `octwin deploy --seed`.
+# 'generate:<prompt>' attaches an AI photo IF the deploy token has media:generate.
+
+entities:
+
+  # ─────────────────────────────────────────── the lineup ──
+  model:
+    label: { en: 'Model', ar: 'موديل' }
+    fields:
+      name:        { type: text, required: true, localized: true }
+      code:        { type: text, required: true, unique: true }
+      body_type:
+        type: select
+        options:
+          - { value: sedan, label: { en: 'Sedan',            ar: 'سيدان' } }
+          - { value: suv,   label: { en: 'SUV',              ar: 'دفع رباعي (SUV)' } }
+          - { value: mpv,   label: { en: 'MPV (7-seater)',   ar: 'عائلية 7 مقاعد (MPV)' } }
+      tagline:     { type: text, localized: true }
+      range_km:    { type: number }
+      battery_kwh: { type: number }
+      power_hp:    { type: number }
+      accel_0_100: { type: number }
+      seats:       { type: number }
+      price_from:  { type: number }        # EGP major units; indicative (see demo note)
+      highlights:  { type: textarea, localized: true }
+      photo:       { type: image }
+      gallery:     { type: image_list }
+    title_field: name
+    list: [body_type, range_km]
+    dedupe_by: code
+
+  # ─────────────────────────────────────── the showrooms ──
+  branch:
+    label: { en: 'Showroom', ar: 'معرض' }
+    fields:
+      name:    { type: text, required: true, localized: true }
+      code:    { type: text, required: true, unique: true }
+      area:    { type: text, localized: true }
+      address: { type: text, localized: true }
+      phone:   { type: text }
+      hours:   { type: text, localized: true }
+      geo:     { type: geo }
+      photo:   { type: image }
+    title_field: name
+    list: [area]
+    dedupe_by: code
+
+  # ─────────────────────────────────────────── sales leads ──
+  lead:
+    label: { en: 'Sales lead', ar: 'عميل محتمل' }
+    fields:
+      name:  { type: text, required: true }
+      phone: { type: text, required: true }
+      email: { type: text }
+      interested_model:
+        type: select
+        options:
+          - { value: m03,     label: { en: 'MONA M03', ar: 'مونا M03' } }
+          - { value: p7,      label: { en: 'P7',       ar: 'P7' } }
+          - { value: p7_plus, label: { en: 'P7+',      ar: '+P7' } }
+          - { value: g6,      label: { en: 'G6',       ar: 'G6' } }
+          - { value: g9,      label: { en: 'G9',       ar: 'G9' } }
+          - { value: x9,      label: { en: 'X9',       ar: 'X9' } }
+      interest_type:
+        type: select
+        options:
+          - { value: info,       label: { en: 'More info',      ar: 'معلومات أكثر' } }
+          - { value: quote,      label: { en: 'Price quote',    ar: 'عرض سعر' } }
+          - { value: test_drive, label: { en: 'Test drive',     ar: 'تجربة قيادة' } }
+          - { value: callback,   label: { en: 'Call me back',   ar: 'اتصلوا بيا' } }
+      preferred_branch:
+        type: select
+        options:
+          - { value: zayed,  label: { en: 'Sheikh Zayed', ar: 'الشيخ زايد' } }
+          - { value: dune,   label: { en: 'DUNE Mall',    ar: 'دُن مول' } }
+          - { value: mivida, label: { en: 'Mivida',       ar: 'ميفيدا' } }
+      notes: { type: textarea }
+      # Expected deal value (EGP) — seeded from the interested model's price at
+      # capture time; the purchase-journey conversion value pulls from this.
+      expected_value: { type: number }
+    list: [interest_type, phone]
+    dedupe_by: phone
+    pipeline:
+      stages:   [new, contacted, qualified, won, lost]
+      initial:  new
+      terminal: [won, lost]
+    # Reaction hooks (reactions-guide `on:` grammar). Off-channel funnel bridge:
+    # when a rep marks the lead `won` (however it happens — console, a flow's
+    # record_stage, or an automation transition), complete the purchase journey's
+    # terminal goal, valued per-lead from expected_value. Each hook is a LIST of
+    # single-verb directives. Do NOT also emit this goal from a flow.
+    on:
+      enter:
+        won:
+          - track: { journey: purchase, goal_reached: deal_won, value_field: expected_value }
+
+  # ──────────────────────── test-drive bookings (system entity) ──
+  booking:
+    extends: system                 # merge pack fields over the platform booking template
+    fields:
+      interested_model:
+        type: select
+        options:
+          - { value: m03,     label: { en: 'MONA M03', ar: 'مونا M03' } }
+          - { value: p7,      label: { en: 'P7',       ar: 'P7' } }
+          - { value: p7_plus, label: { en: 'P7+',      ar: '+P7' } }
+          - { value: g6,      label: { en: 'G6',       ar: 'G6' } }
+          - { value: g9,      label: { en: 'G9',       ar: 'G9' } }
+          - { value: x9,      label: { en: 'X9',       ar: 'X9' } }
+      customer_name:  { type: text }
+      customer_phone: { type: text }
+      notes:          { type: textarea }
+
+# ══════════════════════════════════════════════ demo seed data ══
+# Prices/specs are INDICATIVE placeholders — replace with the official XPeng
+# Egypt sheet before go-live. Photos are AI-generated (need media:generate).
+demo:
+  # ── models (cheapest → flagship) ──
+  - entity: model
+    fields:
+      name:        { en: 'XPENG MONA M03', ar: 'إكس بينج مونا M03' }
+      code:        m03
+      body_type:   sedan
+      tagline:     { en: 'Smart sports sedan, made accessible', ar: 'سيدان رياضية ذكية في متناول الجميع' }
+      range_km:    620
+      battery_kwh: 51.8
+      power_hp:    215
+      accel_0_100: 6.7
+      seats:       5
+      price_from:  1350000
+      highlights:
+        en: "• Up to 620 km range (CLTC)\n• Sleek aerodynamic coupe silhouette\n• XPENG smart cockpit & driver assistance\n• Fast DC charging"
+        ar: "• مدى حتى 620 كم (CLTC)\n• تصميم كوبيه انسيابي أنيق\n• كابينة ذكية وأنظمة مساعدة السائق من XPENG\n• شحن سريع DC"
+      photo:   'generate:Studio product shot of a sleek white XPENG MONA M03 electric sports sedan, three-quarter front view, seamless light-grey background, premium automotive photography, high detail'
+      gallery:
+        - 'generate:Front three-quarter studio shot of a white XPENG MONA M03 electric sedan, light background'
+        - 'generate:Rear three-quarter studio shot of a white XPENG MONA M03 electric sedan, light background'
+        - 'generate:Modern minimalist interior of an XPENG electric sedan with large central touchscreen'
+
+  - entity: model
+    fields:
+      name:        { en: 'XPENG P7', ar: 'إكس بينج P7' }
+      code:        p7
+      body_type:   sedan
+      tagline:     { en: 'Flagship smart sports sedan', ar: 'السيدان الرياضية الذكية الرائدة' }
+      range_km:    725
+      battery_kwh: 86.2
+      power_hp:    348
+      accel_0_100: 4.3
+      seats:       5
+      price_from:  2350000
+      highlights:
+        en: "• Up to 725 km range (NEDC)\n• 0–100 km/h in ~4.3 s (Performance)\n• 200 km/h top speed\n• XPILOT advanced driver assistance"
+        ar: "• مدى حتى 725 كم (NEDC)\n• من 0–100 كم/س في ~4.3 ث (النسخة الرياضية)\n• سرعة قصوى 200 كم/س\n• أنظمة XPILOT المتقدمة لمساعدة السائق"
+      photo:   'generate:Studio product shot of a metallic blue XPENG P7 electric sports sedan, three-quarter front view, seamless light background, premium automotive photography, high detail'
+      gallery:
+        - 'generate:Front three-quarter studio shot of a blue XPENG P7 electric sports sedan, light background'
+        - 'generate:Side profile studio shot of a blue XPENG P7 electric sports sedan, light background'
+        - 'generate:Luxury interior of the XPENG P7 with dual curved displays and ambient lighting'
+
+  - entity: model
+    fields:
+      name:        { en: 'XPENG P7+', ar: 'إكس بينج +P7' }
+      code:        p7_plus
+      body_type:   sedan
+      tagline:     { en: 'The AI-defined smart sedan', ar: 'السيدان الذكية المعرّفة بالذكاء الاصطناعي' }
+      range_km:    710
+      battery_kwh: 92.0
+      power_hp:    308
+      accel_0_100: 6.1
+      seats:       5
+      price_from:  2600000
+      highlights:
+        en: "• Spacious AI-defined flagship sedan\n• Long range with rapid DC fast charging\n• Next-gen XPENG smart cockpit\n• Advanced driver assistance"
+        ar: "• سيدان رائدة واسعة معرّفة بالذكاء الاصطناعي\n• مدى طويل مع شحن DC سريع\n• كابينة XPENG الذكية من الجيل الجديد\n• أنظمة متقدمة لمساعدة السائق"
+      photo:   'generate:Studio product shot of a black XPENG P7 Plus electric sedan, three-quarter front view, seamless light background, premium automotive photography, high detail'
+      gallery:
+        - 'generate:Front three-quarter studio shot of a black XPENG P7 Plus electric sedan, light background'
+        - 'generate:Rear studio shot of a black XPENG P7 Plus electric sedan, light background'
+        - 'generate:Spacious modern interior of a flagship XPENG electric sedan'
+
+  - entity: model
+    fields:
+      name:        { en: 'XPENG G6', ar: 'إكس بينج G6' }
+      code:        g6
+      body_type:   suv
+      tagline:     { en: 'Ultra-smart coupe SUV', ar: 'SUV كوبيه فائق الذكاء' }
+      range_km:    725
+      battery_kwh: 80.8
+      power_hp:    286
+      accel_0_100: 6.9
+      seats:       5
+      price_from:  2450000
+      highlights:
+        en: "• Up to 725 km range\n• 800V platform — 10–80% charge in ~20 min\n• Coupe-SUV design\n• XPENG smart cockpit & driver assistance"
+        ar: "• مدى حتى 725 كم\n• منصة 800 فولت — شحن 10–80% في ~20 دقيقة\n• تصميم كوبيه SUV\n• كابينة ذكية وأنظمة مساعدة السائق"
+      photo:   'generate:Studio product shot of a silver XPENG G6 electric coupe SUV, three-quarter front view, seamless light background, premium automotive photography, high detail'
+      gallery:
+        - 'generate:Front three-quarter studio shot of a silver XPENG G6 electric coupe SUV, light background'
+        - 'generate:Rear three-quarter studio shot of a silver XPENG G6 electric SUV, light background'
+        - 'generate:Premium interior of the XPENG G6 SUV with panoramic roof and large touchscreen'
+
+  - entity: model
+    fields:
+      name:        { en: 'XPENG G9', ar: 'إكس بينج G9' }
+      code:        g9
+      body_type:   suv
+      tagline:     { en: 'Flagship 800V smart SUV', ar: 'SUV ذكية رائدة بمنصة 800 فولت' }
+      range_km:    570
+      battery_kwh: 98.0
+      power_hp:    423
+      accel_0_100: 3.9
+      seats:       5
+      price_from:  2600000
+      highlights:
+        en: "• Flagship large SUV\n• 800V ultra-fast charging — 10–80% in ~12 min\n• 0–100 km/h in ~3.9 s (AWD)\n• Premium cabin & advanced ADAS"
+        ar: "• SUV كبيرة رائدة\n• شحن فائق السرعة 800 فولت — 10–80% في ~12 دقيقة\n• من 0–100 كم/س في ~3.9 ث (دفع رباعي)\n• كابينة فاخرة وأنظمة قيادة متقدمة"
+      photo:   'generate:Studio product shot of a dark grey XPENG G9 large electric SUV, three-quarter front view, seamless light background, premium automotive photography, high detail'
+      gallery:
+        - 'generate:Front three-quarter studio shot of a dark grey XPENG G9 large electric SUV, light background'
+        - 'generate:Rear three-quarter studio shot of a dark grey XPENG G9 electric SUV, light background'
+        - 'generate:Luxurious interior of the XPENG G9 flagship SUV with triple screens'
+
+  - entity: model
+    fields:
+      name:        { en: 'XPENG X9', ar: 'إكس بينج X9' }
+      code:        x9
+      body_type:   mpv
+      tagline:     { en: 'Ultra-smart 7-seater MPV', ar: 'عائلية 7 مقاعد فائقة الذكاء' }
+      range_km:    640
+      battery_kwh: 101.5
+      power_hp:    320
+      accel_0_100: 5.7
+      seats:       7
+      price_from:  3200000
+      highlights:
+        en: "• Spacious 7-seat luxury MPV\n• Rear-wheel steering for easy maneuvering\n• Lie-flat rear seats & entertainment\n• 800V fast charging"
+        ar: "• عائلية فاخرة 7 مقاعد واسعة\n• توجيه العجلات الخلفية لسهولة المناورة\n• مقاعد خلفية قابلة للاستلقاء ونظام ترفيه\n• شحن سريع 800 فولت"
+      photo:   'generate:Studio product shot of a white XPENG X9 luxury electric MPV minivan, three-quarter front view, seamless light background, premium automotive photography, high detail'
+      gallery:
+        - 'generate:Front three-quarter studio shot of a white XPENG X9 luxury electric MPV, light background'
+        - 'generate:Side sliding-door view of a white XPENG X9 electric MPV, light background'
+        - 'generate:Spacious 7-seat lounge interior of the XPENG X9 MPV with captain chairs'
+
+  # ── showrooms ──
+  - entity: branch
+    fields:
+      name:    { en: 'XPENG Sheikh Zayed', ar: 'إكس بينج الشيخ زايد' }
+      code:    zayed
+      area:    { en: 'Sheikh Zayed City', ar: 'مدينة الشيخ زايد' }
+      address: { en: 'Sheikh Zayed City, Giza', ar: 'مدينة الشيخ زايد، الجيزة' }
+      phone:   '+20 100 000 0001'
+      hours:   { en: 'Sat–Thu, 11:00–20:00', ar: 'السبت–الخميس، 11:00–20:00' }
+      geo:     { lat: 30.0444, lng: 30.9760 }
+      photo:   'generate:Modern glass XPENG electric-car showroom exterior in a sunny upscale district, cars visible inside, daytime, high detail'
+
+  - entity: branch
+    fields:
+      name:    { en: 'XPENG DUNE Mall', ar: 'إكس بينج دُن مول' }
+      code:    dune
+      area:    { en: 'DUNE Mall, Sheikh Zayed', ar: 'دُن مول، الشيخ زايد' }
+      address: { en: 'DUNE Mall, Sheikh Zayed, Giza', ar: 'دُن مول، الشيخ زايد، الجيزة' }
+      phone:   '+20 100 000 0002'
+      hours:   { en: 'Daily, 12:00–22:00', ar: 'يوميًا، 12:00–22:00' }
+      geo:     { lat: 30.0280, lng: 30.9720 }
+      photo:   'generate:Sleek XPENG electric-car display inside a modern shopping mall, bright lighting, cars on display, high detail'
+
+  - entity: branch
+    fields:
+      name:    { en: 'XPENG Mivida', ar: 'إكس بينج ميفيدا' }
+      code:    mivida
+      area:    { en: 'Mivida, New Cairo', ar: 'ميفيدا، القاهرة الجديدة' }
+      address: { en: 'Mivida, New Cairo', ar: 'ميفيدا، القاهرة الجديدة' }
+      phone:   '+20 100 000 0003'
+      hours:   { en: 'Sat–Thu, 11:00–20:00', ar: 'السبت–الخميس، 11:00–20:00' }
+      geo:     { lat: 30.0080, lng: 31.4910 }
+      photo:   'generate:Contemporary XPENG electric-car showroom exterior in an upscale New Cairo compound, evening lighting, high detail'

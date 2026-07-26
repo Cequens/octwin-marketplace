@@ -1,0 +1,167 @@
+# apply — the admissions funnel, and the flow that fires the MILESTONES a registrar
+# reports on. Three of the five live here:
+#
+#   applied        — the moment the application record exists
+#   docs_complete  — only when BOTH documents are actually attached, never on intent
+#   (offer_made / enrolled are the registrar's own decisions, made in the console)
+#
+# `record_milestone` is fired at the moment the thing happens, which is what makes the
+# console's completion rates true. The flow never fires a milestone it did not cause.
+
+flow_id:     apply
+version:     1
+description: |-
+  [interactive] Start or continue an admissions application. Call when the guardian wants
+  to apply. Pass `programme_id` when they tapped a programme card, and pre-fill
+  `student_name` / `previous_school` from a document the platform already read.
+
+input:
+  programme_id:
+    type:     string
+    optional: true
+    describe: 'Programme record id from a programmes card — never a typed name.'
+  student_name:
+    type:     string
+    optional: true
+    describe: "The student's name, if known (may come from a birth certificate photo)."
+  previous_school:
+    type:     string
+    optional: true
+    describe: 'Previous school, if known (may come from a report card photo).'
+
+entry:
+  - else: true
+    goto: gather
+
+steps:
+  gather:
+    - collect:
+        before_each:
+          - assign: { prog_label: null, prog_seats: null }
+          - if: '$state.programme_id != null'
+            then:
+              - do: record_get
+                args: { entity: programme, record_id: '$state.programme_id' }
+                bind: prog
+                outputs:
+                  ok:        []
+                  not_found: [{ assign: { state: '$merge($state, { programme_id: null })' } }]
+                  failed:    []
+              - if: '$prog.fields != null'
+                then:
+                  - assign:
+                      prog_label: '$prog.fields.name'
+                      prog_seats: '$prog.fields.seats_left'
+        progress: '$lines($compact([
+                     $t("apply.progress.header"),
+                     $prog_label != null ? $t("apply.progress.programme", { programme: $prog_label }) : null,
+                     $state.student_name != null ? $t("apply.progress.student", { student: $state.student_name }) : null
+                   ]), "\n")'
+        gap_instructions: 'Ask the guardian for the next detail ({$collect_field}) in one short line, in Egyptian Arabic. Re-call apply once they answer. NEVER comment on whether the student will be accepted.'
+        fields:
+          - field: programme_id
+            when: '$state.programme_id == null'
+            label: '$t("apply.label.programme")'
+            options:
+              header: apply.field_header.programme
+              cta:    apply.field_cta.programme
+              # Only programmes with a seat are offered — an application for a full
+              # programme wastes the family's time and the registrar's.
+              fetch:  { do: record_list, args: { entity: programme, all: true, limit: 10, where: { all: [{ field: seats_left, op: gte, value: 1 }] } }, bind: progs }
+              rows:   '$progs.rows'
+              map:
+                value:       '$item.id'
+                label:       '$item.fields.name'
+                description: '$format_money_field($item.fields.annual_fee, $coalesce($item.fields.currency, "EGP"))'
+                selection:   { prog_label: '$item.fields.name' }
+              auto_resolve: true
+          - field: student_name
+            label:    '$t("apply.label.student")'
+            describe: "The student's full name as printed on the birth certificate."
+          - field: entry_year
+            label: '$t("apply.label.entry_year")'
+            options:
+              header: apply.field_header.entry_year
+              cta:    apply.field_cta.entry_year
+              items:
+                - { value: kg1, label: apply.year.kg1 }
+                - { value: kg2, label: apply.year.kg2 }
+                - { value: y1,  label: apply.year.y1 }
+                - { value: y3,  label: apply.year.y3 }
+                - { value: y5,  label: apply.year.y5 }
+                - { value: y7,  label: apply.year.y7 }
+                - { value: y9,  label: apply.year.y9 }
+          - field: guardian_name
+            label:    '$t("apply.label.guardian")'
+            describe: "The guardian's full name."
+          - field: guardian_phone
+            label:    '$t("apply.label.phone")'
+            describe: "The guardian's mobile number."
+          - field: previous_school
+            required: false
+            label:    '$t("apply.label.previous")'
+            describe: 'Previous school, if there is one.'
+        complete: [{ goto: create }]
+
+  create:
+    - do: record_save
+      args:
+        entity: application
+        stage:  application_started
+        fields:
+          student_name:    '$state.student_name'
+          guardian_name:   '$state.guardian_name'
+          # Forced to text: a numeric-looking value (a tap binding, or a typed
+          # "01001234567") arrives as a NUMBER and a `text` field rejects it on the
+          # `invalid` port. Concatenating an empty string makes it a string.
+          guardian_phone:  '"" + $state.guardian_phone'
+          programme:       '$state.programme_id'
+          programme_label: '$coalesce($prog_label, $state.prog_label)'
+          entry_year:      '$state.entry_year'
+          previous_school: '$state.previous_school'
+      bind: app
+      outputs:
+        ok:      [{ goto: mark_applied }]
+        invalid: [{ goto: save_invalid }]
+        failed:  [{ goto: save_failed }]
+
+  mark_applied:
+    # Milestone #1 — fired because the application now exists, not because someone said
+    # they intended to apply.
+    - do: record_milestone
+      args: { record_id: '$app.record_id', milestone: applied }
+      detach: true
+    - goto: ask_docs
+
+  # The documents are an OFFERED upload, deliberately not a hard gate: an application that
+  # exists without a birth certificate is still a lead the registrar can chase, whereas one
+  # abandoned at a document wall is nothing.
+  ask_docs:
+    - render:
+        render_intent: detail_card
+        header: '{$t("apply.created_header")}'
+        body: '$lines($compact([
+                 $t("apply.created_ref", { ref: $app.record_number }),
+                 $t("apply.created_programme", { programme: $coalesce($prog_label, "-") }),
+                 $t("apply.created_docs"),
+                 $t("apply.created_no_promise")
+               ]), "\n")'
+        footer: '{$t("apply.created_footer")}'
+        buttons:
+          - { title: '{$t("apply.btn_tour")}',  on_select: { invoke: book-tour, with: { application_id: '$app.record_id' } } }
+          - { title: '{$t("apply.btn_progs")}', on_select: { invoke: programmes } }
+      memory_note: 'Created application #{$app.record_number} at application_started and fired the `applied` milestone. Documents still outstanding — if the guardian sends a birth certificate or a report card photo, call apply again with attach_documents=true and the MEDIA- refs.'
+      data: { application_number: '$app.record_number' }
+    - end: applied
+
+  # `invalid` is the AGENT-CORRECTABLE port: its `reason` names the field the platform
+  # rejected, and handing that to the agent with no render lets it fix its own argument
+  # and retry, instead of showing the guardian a dead end.
+  save_invalid:
+    - answer:
+        data: { reason: '$app.reason' }
+        instructions: 'The application was rejected for the reason in `data.reason`. Fix that one field and call apply again. Do NOT tell the guardian it failed unless you cannot fix it.'
+
+  save_failed:
+    - answer:
+        instructions: 'The application could not be saved. Say so plainly in one line and give the admissions office number. Do NOT claim an application exists.'

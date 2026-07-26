@@ -1,0 +1,50 @@
+# manifest.yaml — the entire XPeng Egypt pack is declared here.
+# Strict schema: unknown keys are rejected on deploy. Keep `octwin validate` green.
+
+id:          xpeng-egypt
+version:     '1.4.0'
+description: 'XPeng Egypt assistant — browse models, capture leads, book test drives, activate the XPeng App, and open after-sales support tickets on WhatsApp & web (AR/EN).'
+
+# Channels + platform capabilities. `messaging` is the conversational adapter;
+# records / scheduling / casework are unlocked by the sibling declaration files
+# (xrm.yaml / scheduling.yaml / worklist.yaml), not by an adapter.
+supported_channels: [whatsapp, web]
+required_adapters:  [messaging]
+
+# Default language for platform-emitted copy + `$t()` lookups. The agent still
+# adapts to whichever language the customer writes in (bilingual — see prompt).
+default_settings:
+  locale: ar
+
+# Agent-callable flow tools → flows/tools/<id>.flow.yaml (+ locale files).
+flows:
+  - home
+  - browse-models
+  - model-details
+  - capture-lead
+  - list-branches
+  - book-test-drive
+  - activate-app
+  - open-support
+  - ticket-status
+  - after-sales
+
+# One agent — the XPeng Egypt showroom assistant.
+agents:
+  - id:                assistant
+    display_name:      'XPeng Egypt Assistant'
+    default_model:     'openrouter/anthropic/claude-sonnet-4-5'
+    tools:
+      - home
+      - browse-models
+      - model-details
+      - capture-lead
+      - list-branches
+      - book-test-drive
+      - activate-app
+      - open-support
+      - ticket-status
+      - after-sales
+    include_platform_protocol: true
+    instructions:
+      - file: prompts/identity.md

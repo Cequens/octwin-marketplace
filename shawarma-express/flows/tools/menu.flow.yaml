@@ -1,0 +1,94 @@
+# menu — the food carousel. Dishes carry photography, so this is a carousel; each
+# card adds straight to the basket. Only AVAILABLE dishes are offered, so the bot
+# never sells something the kitchen has run out of.
+
+flow_id:     menu
+version:     1
+description: |-
+  Show the menu. Call when the customer asks what you have, names a section, or asks
+  for a recommendation. Pass `category` when they named one (shawarma, grills,
+  sandwiches, sides, drinks, desserts), or `bestsellers: true` for the popular ones.
+
+input:
+  category:
+    type:     string
+    optional: true
+    describe: 'One of: shawarma, grills, sandwiches, sides, drinks, desserts.'
+  bestsellers:
+    type:     boolean
+    optional: true
+    describe: 'True to show the bestsellers segment instead of the full menu.'
+
+entry:
+  - if:   '$input.bestsellers == true'
+    goto: load_best
+  - if:   '$input.category != null'
+    goto: load_category
+  - else: true
+    goto: load_all
+
+steps:
+  # A declared SEGMENT is a named, project-wide filter — the definition lives in
+  # xrm.yaml, so the kitchen can change what counts as a bestseller without a deploy.
+  load_best:
+    - do: record_list
+      args: { segment: bestsellers, all: true, limit: 20 }
+      bind: page
+      outputs:
+        ok:     [{ goto: show }]
+        empty:  [{ goto: load_all }]
+        failed: [{ goto: unavailable }]
+
+  load_all:
+    - do: record_list
+      args:
+        entity:  dish
+        all:     true
+        limit:   20
+        where:   { all: [{ field: available, op: eq, value: true }] }
+        sort_by: { field: price, dir: asc }
+      bind: page
+      outputs:
+        ok:     [{ goto: show }]
+        empty:  [{ goto: none }]
+        failed: [{ goto: unavailable }]
+
+  load_category:
+    - do: record_list
+      args:
+        entity:  dish
+        all:     true
+        limit:   20
+        where:   { all: [{ field: category, op: eq, value: '$input.category' }, { field: available, op: eq, value: true }] }
+        sort_by: { field: price, dir: asc }
+      bind: page
+      outputs:
+        ok:     [{ goto: show }]
+        empty:  [{ goto: load_all }]
+        failed: [{ goto: unavailable }]
+
+  show:
+    - render:
+        render_intent: carousel
+        body:  '{$t("menu.intro", { total: $page.total })}'
+        items: '$page.rows'
+        item_template:
+          image_url: '$coalesce($item.fields.photo, "")'
+          body: '$lines($compact([
+                   ($item.fields.spicy == true ? "🌶️ " : "") + $item.fields.name,
+                   $format_money_field($item.fields.price, $coalesce($item.fields.currency, "EGP"))
+                 ]), "\n")'
+          buttons:
+            - { title: '{$t("menu.btn_add")}',     on_select: { invoke: basket, with: { action: add, dish_code: '$item.fields.code' } } }
+            - { title: '{$t("menu.btn_basket")}',  on_select: { invoke: basket, with: { action: view } } }
+      memory_note: 'Showed {$page.total} dish(es).'
+      data: { total: '$page.total' }
+    - end: applied
+
+  none:
+    - answer:
+        instructions: 'The menu is empty right now. Say so in one line and offer to take the customer''s number so the branch can call when the kitchen reopens.'
+
+  unavailable:
+    - answer:
+        instructions: 'The menu could not be read. Apologise in one line and offer to try again shortly. NEVER quote a dish or a price from memory.'

@@ -1,0 +1,43 @@
+# home — the front door. Surfaces any credit review already in flight, so an applicant
+# waiting on a decision lands on that rather than on the sales menu.
+
+flow_id:     home
+version:     1
+description: Main menu / welcome. Call on a greeting, an unclear or off-topic message, or "what can you do?".
+
+input:
+  message:
+    type:     string
+    optional: true
+    describe: 'Optional ONE short greeting line YOU compose for this customer.'
+
+entry:
+  - else: true
+    goto: count_reviews
+
+steps:
+  count_reviews:
+    - do: case_list
+      args: { contact_id: '$contact.id' }
+      bind: cases
+      outputs:
+        ok:     [{ goto: show }]
+        empty:  [{ goto: show }]
+        failed: [{ goto: show }]
+
+  show:
+    - assign: { reviews: '$length($coalesce($cases, []))' }
+    - render:
+        render_intent: list_picker
+        header: '{$t("home.header")}'
+        body: '$lines($compact([
+                 $coalesce($input.message, $t("home.greeting")),
+                 $reviews > 0 ? $t("home.in_review", { count: $reviews }) : null
+               ]), "\n")'
+        cta: '{$t("home.cta")}'
+        items:
+          - { title: '{$t("home.row_products")}', description: '{$t("home.row_products_d")}', on_select: { invoke: products } }
+          - { title: '{$t("home.row_estimate")}', description: '{$t("home.row_estimate_d")}', on_select: { invoke: estimate } }
+          - { title: '{$t("home.row_apply")}',    description: '{$t("home.row_apply_d")}',    on_select: { invoke: apply } }
+      memory_note: 'Showed the Barakah Finance menu ({$reviews} review(s) in progress).'
+    - end: applied

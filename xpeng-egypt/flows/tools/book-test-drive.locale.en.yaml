@@ -1,0 +1,27 @@
+flow_id: book-test-drive
+
+strings:
+  gap: "Politely ask the customer for the requested detail in their language."
+  choose: 'Choose ✅'
+  min_label:   'min test drive'
+  spots_label: 'slot(s) available'
+
+  b_header: 'Choose a showroom'
+  b_body:   'Which showroom would you like to test drive at?'
+  b_cta:    'Pick a branch'
+
+  m_body:   'Great! Now pick the model you would like to test drive 👇'
+
+  s_header: 'Choose a time'
+  s_body:   'Available slots at {branch} 👇'
+  s_cta:    'Pick a time'
+
+  f_name:  'Your name?'
+  f_phone: 'Your phone number? (for confirmation & reminders)'
+
+  c_title:        'Test drive confirmed 🚗'
+  confirmed_line: 'Your test drive is booked!'
+  any_model:      'To choose at the showroom'
+  reminder_note:  "We'll remind you 24 hours and 2 hours before."
+  reminder:       'Reminder: your XPENG test drive at {branch} is coming up soon. See you there! 🚗'
+  photo_caption:  '{branch} — see you there 👇'

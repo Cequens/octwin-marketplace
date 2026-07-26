@@ -1,0 +1,42 @@
+# Worklist declaration — the WORKSHOP QUEUE, on the pack's own `repair_job` entity.
+#
+# This is the worklist engine used WITHOUT casework: `repair_job` is not a support
+# ticket, it is a job card. The engine still gives it queue routing, an SLA clock,
+# an assignee, the console work inbox, and a disposition library — because none of
+# that is case-specific.
+#
+# Routing is by FIELD, not a static queue: `route_by: work_area` with an explicit
+# `map`, so a body-shop job never lands in the diagnostics bay. `fallback` catches a
+# job whose area was never set, so nothing strands unrouted.
+
+queues:
+  - { key: mechanical_bay, name: 'Mechanical Bay' }
+  - { key: body_shop,      name: 'Body Shop' }
+  - { key: diagnostics,    name: 'Diagnostics' }
+  - { key: service_desk,   name: 'Service Desk' }
+
+work:
+  repair_job:
+    type_field: job_type
+    actions:
+      quote_ready:
+        label:  { ar: 'عرض السعر جاهز', en: 'Quote ready' }
+        params: [{ name: amount, type: number, required: true, label: 'Quote amount (AED)' }]
+        relay:  true
+      parts_ordered:
+        label:  { ar: 'تم طلب قطع الغيار', en: 'Parts ordered' }
+        params: [{ name: eta_days, type: number, required: true, label: 'ETA (days)' }]
+        relay:  true
+      ready_for_collection:
+        label:  { ar: 'السيارة جاهزة للاستلام', en: 'Ready for collection' }
+        params: []
+        relay:  true
+      declined_by_customer:
+        label:  { ar: 'العميل رفض العرض', en: 'Declined by customer' }
+        params: [{ name: reason, type: text, required: false, label: 'Reason' }]
+        relay:  false
+    types:
+      periodic_service: { route_by: work_area, map: { mechanical: mechanical_bay, body: body_shop, diagnostics: diagnostics }, fallback: service_desk, priority: normal, actions: [quote_ready, ready_for_collection], sla: { resolve_within_hours: 24 } }
+      body_repair:      { route_by: work_area, map: { mechanical: mechanical_bay, body: body_shop, diagnostics: diagnostics }, fallback: body_shop,    priority: normal, actions: [quote_ready, parts_ordered, ready_for_collection, declined_by_customer], sla: { resolve_within_hours: 48 } }
+      diagnostic_check: { queue: diagnostics,  priority: high,   actions: [quote_ready, ready_for_collection],                sla: { resolve_within_hours: 8 } }
+      breakdown:        { queue: mechanical_bay, priority: urgent, actions: [quote_ready, parts_ordered, ready_for_collection], sla: { resolve_within_hours: 4 } }

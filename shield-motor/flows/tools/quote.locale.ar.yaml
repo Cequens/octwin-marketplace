@@ -1,0 +1,45 @@
+flow_id: quote
+
+strings:
+  label.plan:   'الباقة'
+  label.value:  'قيمة المركبة'
+  label.driver: 'عمر السائق'
+  label.ncd:    'سنوات بدون مطالبات'
+
+  field_header.plan:   '📋 أي باقة تفضّل؟'
+  field_cta.plan:      'الباقات'
+  field_header.value:  '🚗 قيمة المركبة تقريباً؟'
+  field_cta.value:     'اختر'
+  field_header.driver: '👤 عمر السائق؟'
+  field_cta.driver:    'اختر'
+  field_header.ncd:    '🏅 كم سنة بدون مطالبات؟'
+  field_cta.ncd:       'اختر'
+
+  value.v50:   'حتى 50 ألف درهم'
+  value.v100:  'حتى 100 ألف درهم'
+  value.v200:  'حتى 200 ألف درهم'
+  value.v400:  'حتى 400 ألف درهم'
+  value.v800:  'حتى 800 ألف درهم'
+
+  driver.under_25:      'أقل من 25 سنة'
+  driver.from_25_to_40: 'من 25 إلى 40 سنة'
+  driver.over_40:       'أكثر من 40 سنة'
+
+  ncd.n0:  'لا يوجد'
+  ncd.n1:  'سنة واحدة'
+  ncd.n3:  '3 سنوات'
+  ncd.n5:  '5 سنوات أو أكثر'
+
+  header:          '🧮 القسط السنوي التقديري'
+  line.plan:       '📋 الباقة: {plan}'
+  line.value:      '🚗 قيمة المركبة: {value}'
+  line.base:       '🏷️ القسط الأساسي: {base}'
+  line.load:       '⬆️ تحميل السن الصغير: {pct}%'
+  line.ncd:        '⬇️ خصم عدم المطالبة: {pct}%'
+  line.premium:    '📌 القسط التقديري: {premium}'
+  line.excess:     '💠 مبلغ التحمّل عند المطالبة: {excess}'
+  line.agency:     '🔧 الإصلاح بالوكالة مشمول'
+  disclaimer:      'ℹ️ رقم تقديري محسوب من عوامل التسعير المنشورة — وليس عرضاً ملزماً.'
+  footer:          'القسط النهائي يصدر من الاكتتاب بعد مراجعة الملكية ورخصة القيادة.'
+  btn_plans:       '📋 باقات أخرى'
+  btn_home:        '🏠 القائمة الرئيسية'

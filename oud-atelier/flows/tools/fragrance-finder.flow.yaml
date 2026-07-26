@@ -1,0 +1,134 @@
+# fragrance-finder — the boutique's signature journey: a three-tap quiz that
+# composes a natural-language brief and hands it to the platform's SEMANTIC
+# record search over the product entity. The value is that nothing is hardcoded — add a product to the
+# catalog and the quiz recommends it with no edit here.
+
+flow_id:     fragrance-finder
+version:     1
+description: |-
+  A short fragrance quiz that recommends products. Call when the shopper does not
+  know what they want, asks "which perfume suits me", wants a gift recommendation,
+  or their request is too vague to search.
+
+input:
+  message:
+    type:     string
+    optional: true
+    describe: 'Optional note from the shopper.'
+
+entry:
+  - else: true
+    goto: quiz
+
+steps:
+  quiz:
+    - collect:
+        derive:
+          # The quiz answers become one natural-language brief; the semantic
+          # search embeds it, so the match improves as the catalog copy improves.
+          brief: '$lines($compact([
+                    $enum_lookup($state.family, { oud: $t("fragrance-finder.brief.oud"), floral: $t("fragrance-finder.brief.floral"), amber: $t("fragrance-finder.brief.amber"), fresh: $t("fragrance-finder.brief.fresh") }, null),
+                    $enum_lookup($state.occasion, { daily: $t("fragrance-finder.brief.daily"), evening: $t("fragrance-finder.brief.evening"), wedding: $t("fragrance-finder.brief.wedding"), gift: $t("fragrance-finder.brief.gift") }, null),
+                    $enum_lookup($state.budget, { b500: $t("fragrance-finder.brief.b500"), b1000: $t("fragrance-finder.brief.b1000"), bopen: $t("fragrance-finder.brief.bopen") }, null)
+                  ]), " ")'
+          cap: '$enum_lookup($state.budget, { b500: 500, b1000: 1000, bopen: 99999 }, 99999)'
+        before_prompt:
+          - assign:
+              progress_card: '$lines($compact([
+                                $t("fragrance-finder.progress.header"),
+                                $state.family != null ? $t("fragrance-finder.progress.family") : null,
+                                $state.occasion != null ? $t("fragrance-finder.progress.occasion") : null
+                              ]), "\n")'
+        progress: '$progress_card'
+        gap_instructions: 'Ask the shopper the next quiz question ({$collect_field}) in one short warm line, then re-call fragrance-finder once they answer.'
+        fields:
+          - field: family
+            label: '$t("fragrance-finder.label.family")'
+            options:
+              header: fragrance-finder.field_header.family
+              cta:    fragrance-finder.field_cta.family
+              items:
+                - { value: oud,    label: fragrance-finder.family.oud }
+                - { value: floral, label: fragrance-finder.family.floral }
+                - { value: amber,  label: fragrance-finder.family.amber }
+                - { value: fresh,  label: fragrance-finder.family.fresh }
+          - field: occasion
+            label: '$t("fragrance-finder.label.occasion")'
+            options:
+              header: fragrance-finder.field_header.occasion
+              cta:    fragrance-finder.field_cta.occasion
+              items:
+                - { value: daily,   label: fragrance-finder.occasion.daily }
+                - { value: evening, label: fragrance-finder.occasion.evening }
+                - { value: wedding, label: fragrance-finder.occasion.wedding }
+                - { value: gift,    label: fragrance-finder.occasion.gift }
+          - field: budget
+            label: '$t("fragrance-finder.label.budget")'
+            options:
+              header: fragrance-finder.field_header.budget
+              cta:    fragrance-finder.field_cta.budget
+              items:
+                - { value: b500,  label: fragrance-finder.budget.b500 }
+                - { value: b1000, label: fragrance-finder.budget.b1000 }
+                - { value: bopen, label: fragrance-finder.budget.bopen }
+        complete: [{ goto: recommend }]
+
+  # Semantic search over the product RECORD (the system entity declares
+  # `search.semantic: [name, description]`), so the brief matches on meaning —
+  # and the row carries the pack's own `photo` for the carousel.
+  recommend:
+    - do: record_search
+      args:
+        entity: fragrance
+        query:  '$state.brief'
+        limit:  6
+        where:  { all: [{ field: price, op: lte, value: '$state.cap' }] }
+      bind: picks
+      outputs:
+        ok:     [{ goto: show }]
+        # Nothing under the cap is a normal outcome — widen once rather than
+        # dead-ending the quiz the shopper just completed.
+        empty:  [{ goto: widen }]
+        failed: [{ goto: widen }]
+
+  widen:
+    - do: record_search
+      args: { entity: fragrance, query: '$state.brief', limit: 6 }
+      bind: picks
+      outputs:
+        ok:     [{ goto: show_widened }]
+        empty:  [{ goto: nothing }]
+        failed: [{ goto: nothing }]
+
+  show:
+    - render:
+        render_intent: carousel
+        body: '{$t("fragrance-finder.result", { count: $length($picks.rows) })}'
+        items: '$picks.rows'
+        item_template:
+          image_url: '$coalesce($item.fields.photo, "")'
+          body: '$lines($compact([$item.fields.name, $format_money_field($item.fields.price, $coalesce($item.fields.currency, "SAR"))]), "\n")'
+          buttons:
+            - { title: '{$t("fragrance-finder.btn_add")}',    on_select: { invoke: cart,    with: { action: add, product_id: '$item.fields.sku' } } }
+            - { title: '{$t("fragrance-finder.btn_detail")}', on_select: { invoke: product, with: { product_id: '$item.fields.sku' } } }
+      memory_note: 'Fragrance quiz recommended {$length($picks.rows)} product(s) for brief "{$state.brief}".'
+    - end: applied
+
+  show_widened:
+    - render:
+        render_intent: carousel
+        body: '{$t("fragrance-finder.result_widened", { count: $length($picks.rows) })}'
+        items: '$picks.rows'
+        item_template:
+          image_url: '$coalesce($item.fields.photo, "")'
+          body: '$lines($compact([$item.fields.name, $format_money_field($item.fields.price, $coalesce($item.fields.currency, "SAR"))]), "\n")'
+          buttons:
+            - { title: '{$t("fragrance-finder.btn_add")}',    on_select: { invoke: cart,    with: { action: add, product_id: '$item.fields.sku' } } }
+            - { title: '{$t("fragrance-finder.btn_detail")}', on_select: { invoke: product, with: { product_id: '$item.fields.sku' } } }
+      memory_note: 'Fragrance quiz widened past the budget cap and recommended {$length($picks.rows)} product(s).'
+    - end: applied
+
+  nothing:
+    - answer:
+        data: { brief: '$state.brief' }
+        instructions: 'The quiz produced no match. Say so in one line, mention what they asked for, and offer a full browse (shop). Never invent a product.'

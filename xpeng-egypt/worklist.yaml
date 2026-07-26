@@ -1,0 +1,46 @@
+# worklist.yaml — after-sales casework for XPeng Egypt.
+#
+# Casework is a preset over the worklist engine: a `case` is the platform `case`
+# XRM system entity, worked through a queue by the support team in the console,
+# with the agent as the sole voice to the customer. The standard decision set
+# (resolve / reject / request_more_info / escalate) is merged in automatically —
+# we declare only queues + case types (+ any CUSTOM decisions) here.
+#
+# The lifecycle is FIXED by the platform (the `case` entity pipeline):
+#   open → in_progress → awaiting_customer → resolved → closed  (+ reopened).
+# What we define below is the layer on top: ticket TYPES, the TEAM (queue) each
+# routes to, its PRIORITY + SLA, and the CUSTOM dispositions an operator can pick.
+#
+# Locale coverage (cases.<type> / status.<state> / decision.<action>) is enforced
+# at boot in BOTH directions against locale.<lang>.yaml — keep them in lockstep.
+
+queues:
+  - { key: technical_service, name: 'Technical Service' }   # car faults, charging, roadside
+  - { key: customer_care,     name: 'Customer Care' }        # owner activation, general issues
+
+work:
+  case:
+    type_field: case_type
+
+    # CUSTOM dispositions (the standard resolve/reject/request_more_info/escalate
+    # set is merged in automatically). `relay: true` sends the update to the
+    # customer in their language; `to_stage` moves the case on the pipeline.
+    actions:
+      activate_account:                 # app-owner activation approved
+        relay:    true
+        to_stage: resolved
+      dispatch_roadside:                # roadside team sent out
+        relay:    true
+        to_stage: in_progress
+        params:
+          - { name: eta, label: 'ETA', type: text }
+
+    types:
+      # 📱 App owner activation — verify car registration + owner ID, activate the app account.
+      app_owner_activation: { queue: customer_care,    priority: normal, sla: { resolve_within_hours: 24 }, actions: [activate_account] }
+      # 🚨 Roadside / breakdown — most urgent.
+      roadside_assistance:  { queue: technical_service, priority: urgent, sla: { resolve_within_hours: 2  }, actions: [dispatch_roadside] }
+      # 🔌 Charging problem — home/public charging or hardware.
+      charging_issue:       { queue: technical_service, priority: high,   sla: { resolve_within_hours: 8  } }
+      # 🗂️ Anything else after-sales (catch-all).
+      other:                { queue: customer_care,     priority: normal, sla: { resolve_within_hours: 48 } }

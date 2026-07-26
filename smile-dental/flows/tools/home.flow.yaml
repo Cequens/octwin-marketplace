@@ -1,0 +1,44 @@
+# home — the front door. Shows the patient's upcoming visit count so a returning
+# patient lands on their appointment rather than the price list.
+
+flow_id:     home
+version:     1
+description: Main menu / welcome. Call on a greeting, an unclear or off-topic message, or "what can you do?".
+
+input:
+  message:
+    type:     string
+    optional: true
+    describe: 'Optional ONE short greeting line YOU compose for this patient.'
+
+entry:
+  - else: true
+    goto: count_visits
+
+steps:
+  count_visits:
+    - do: record_aggregate
+      args: { entity: booking, op: count, active_only: true }
+      bind: visits
+      outputs:
+        ok:     [{ goto: show }]
+        failed: [{ goto: show }]
+
+  show:
+    - assign:
+        upcoming: '$coalesce($visits.value, 0)'
+    - render:
+        render_intent: list_picker
+        header: '{$t("home.header")}'
+        body: '$lines($compact([
+                 $coalesce($input.message, $t("home.greeting")),
+                 $upcoming > 0 ? $t("home.upcoming", { count: $upcoming }) : null
+               ]), "\n")'
+        cta: '{$t("home.cta")}'
+        items:
+          - { title: '{$t("home.row_treatments")}', description: '{$t("home.row_treatments_d")}', on_select: { invoke: treatments } }
+          - { title: '{$t("home.row_dentists")}',   description: '{$t("home.row_dentists_d")}',   on_select: { invoke: dentists } }
+          - { title: '{$t("home.row_book")}',       description: '{$t("home.row_book_d")}',       on_select: { invoke: book-visit } }
+          - { title: '{$t("home.row_visits")}',     description: '{$t("home.row_visits_d")}',     on_select: { invoke: my-visits } }
+      memory_note: 'Showed the Smile Dental menu ({$upcoming} upcoming visit(s)).'
+    - end: applied

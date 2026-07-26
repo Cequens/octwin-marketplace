@@ -1,0 +1,335 @@
+# cart — the shopping cart, built from contact-scoped `cart_line` records.
+#
+# Two things worth noting. (1) `record_list` with NO `all:` is scoped to the
+# calling contact, so a shopper only ever sees their own lines — there is no
+# identity plumbing here at all. (2) Checkout is confirm-before-commit: a
+# `collect:` gathers delivery, `approve_apply` renders the ✅/❌ card, and only the
+# ✅ branch writes the `purchase` record and clears the lines. Nothing before that
+# tap creates an order.
+
+flow_id:     cart
+version:     1
+description: |-
+  Manage the cart. `action`: add (needs product_id) · view · remove · clear ·
+  checkout. Default is view. Never call with action=checkout unless the shopper
+  asked to complete the order.
+
+input:
+  action:     { type: enum, enum: [add, view, remove, clear, checkout], optional: true, describe: 'add | view | remove | clear | checkout (default view).' }
+  product_id: { type: string, optional: true, describe: 'The fragrance SKU — required for add / remove. Comes from a card, never typed.' }
+  qty:        { type: number, optional: true, describe: 'Quantity for add (default 1).' }
+
+entry:
+  - else: true
+    goto: route
+
+steps:
+  route:
+    - dispatch:
+        key: '$coalesce($input.action, "view")'
+        cases:
+          add:      [{ goto: load_product }]
+          view:     [{ goto: load_lines }]
+          remove:   [{ goto: remove_line }]
+          clear:    [{ goto: clear_lines }]
+          checkout: [{ goto: checkout_collect }]
+
+  # ── add ──────────────────────────────────────────────────────────────────
+  load_product:
+    - do: record_get
+      args: { entity: fragrance, match: { field: sku, value: '$input.product_id' } }
+      bind: prod
+      outputs:
+        ok:        [{ goto: check_stock }]
+        not_found: [{ goto: unknown_sku }]
+        failed:    [{ goto: unavailable }]
+
+  check_stock:
+    - if: '$coalesce($prod.fields.stock, 0) <= 0'
+      then:
+        - goto: out_of_stock
+    - goto: add_line
+
+  add_line:
+    - assign:
+        n:          '$coalesce($input.qty, 1)'
+        unit:       '$prod.fields.price.value / $prod.fields.price.offset'
+    - do: record_save
+      args:
+        entity: cart_line
+        # `dedupe_by: line_key` — a second add of the same SKU by the SAME shopper updates
+        # their line rather than stacking a duplicate. The contact is folded into the key
+        # because `findRecord` is not contact-scoped: keying on the bare SKU let one
+        # shopper's upsert land on another shopper's row.
+        match:  { field: line_key, value: '$contact.id + ":" + $input.product_id' }
+        fields:
+          line_key:   '$contact.id + ":" + $input.product_id'
+          fragrance:  '$prod.record_id'
+          sku:        '$input.product_id'
+          title:      '$prod.fields.name'
+          qty:        '$n'
+          unit_price: '$unit'
+          line_total: '$unit * $n'
+      bind: line
+      outputs:
+        ok:      [{ goto: load_lines }]
+        invalid: []
+        failed:  [{ goto: unavailable }]
+
+  # ── remove / clear ───────────────────────────────────────────────────────
+  remove_line:
+    - do: record_get
+      args: { entity: cart_line, match: { field: line_key, value: '$contact.id + ":" + $input.product_id' } }
+      bind: gone
+      outputs:
+        ok:        [{ goto: zero_line }]
+        not_found: [{ goto: load_lines }]
+        failed:    [{ goto: unavailable }]
+
+  # A pack cannot delete a record from a flow, so a removed line is zeroed and
+  # filtered out of every read below. (Logged in FEEDBACK.md as a gap.)
+  zero_line:
+    - do: record_save
+      args:
+        entity:    cart_line
+        record_id: '$gone.record_id'
+        fields:    { qty: 0, line_total: 0 }
+      outputs:
+        ok:      [{ goto: load_lines }]
+        invalid: [{ goto: load_lines }]
+        failed:  [{ goto: unavailable }]
+
+  clear_lines:
+    - do: record_list
+      args: { entity: cart_line, limit: 50 }
+      bind: all_lines
+      outputs:
+        ok:     [{ goto: zero_all }]
+        empty:  [{ goto: load_lines }]
+        failed: [{ goto: unavailable }]
+
+  zero_all:
+    - foreach:
+        in: '$all_lines.rows'
+        as: row
+        body:
+          - do: record_save
+            args:
+              entity:    cart_line
+              record_id: '$row.id'
+              fields:    { qty: 0, line_total: 0 }
+    - goto: load_lines
+
+  # ── view ─────────────────────────────────────────────────────────────────
+  load_lines:
+    - do: record_list
+      args: { entity: cart_line, limit: 50 }
+      bind: lines
+      outputs:
+        ok:     [{ goto: render_cart }]
+        empty:  [{ goto: empty_cart }]
+        failed: [{ goto: unavailable }]
+
+  render_cart:
+    - assign:
+        # NOT `$filter(rows, $item… > 0)` — `$filter`'s predicate is a field PATH or an
+        # equality object, never a per-row expression (only `$map` binds `$item`), so an
+        # expression predicate silently returns the whole array. `$filter_gte` is the
+        # per-field comparison form.
+        live: '$filter_gte($coalesce($lines.rows, []), "fields.qty", 1)'
+    - if: '$length($live) == 0'
+      then:
+        - goto: empty_cart
+    - assign:
+        total: '$sum($map($live, $item.fields.line_total.value / $item.fields.line_total.offset))'
+        count: '$sum($map($live, $item.fields.qty))'
+        body_lines: '$map($live, "🕌 " + $item.fields.qty + "× " + $item.fields.title + " — " + $format_money_field($item.fields.line_total, "SAR"))'
+    - render:
+        render_intent: detail_card
+        header: '{$t("cart.header")}'
+        body:   '$lines($body_lines, "\n")'
+        footer: '{$t("cart.subtotal", { subtotal: $format_money($total, "SAR") })}'
+        buttons:
+          - { title: '{$t("cart.btn_checkout")}', on_select: { invoke: cart, with: { action: checkout } } }
+          - { title: '{$t("cart.btn_shop")}',     on_select: { invoke: shop } }
+          - { title: '{$t("cart.btn_clear")}',    on_select: { invoke: cart, with: { action: clear } } }
+      memory_note: 'Cart holds {$count} item(s), total {$total} SAR.'
+      data: { count: '$count', total: '$total' }
+    - end: applied
+
+  empty_cart:
+    - render:
+        render_intent: detail_card
+        header: '{$t("cart.header")}'
+        body:   '{$t("cart.empty")}'
+        buttons:
+          - { title: '{$t("cart.btn_shop")}', on_select: { invoke: shop } }
+          - { title: '{$t("cart.btn_quiz")}', on_select: { invoke: fragrance-finder } }
+      memory_note: 'The cart is empty.'
+    - end: applied
+
+  # ── checkout ─────────────────────────────────────────────────────────────
+  checkout_collect:
+    - do: record_list
+      args: { entity: cart_line, limit: 50 }
+      bind: lines
+      outputs:
+        ok:     [{ goto: gather }]
+        empty:  [{ goto: empty_cart }]
+        failed: [{ goto: unavailable }]
+
+  gather:
+    - collect:
+        before_each:
+          - assign:
+              live: '$filter_gte($coalesce($lines.rows, []), "fields.qty", 1)'
+          - assign:
+              order_total: '$sum($map($live, $item.fields.line_total.value / $item.fields.line_total.offset))'
+              order_count: '$sum($map($live, $item.fields.qty))'
+              order_summary: '$lines($map($live, $item.fields.qty + "× " + $item.fields.title), ", ")'
+        progress: '$lines($compact([
+                     $t("cart.progress.header"),
+                     $t("cart.progress.total", { total: $format_money($order_total, "SAR") }),
+                     $state.city != null ? $t("cart.progress.city") : null
+                   ]), "\n")'
+        gap_instructions: 'Ask the shopper for the next delivery detail ({$collect_field}) in one short line, then re-call cart with action=checkout once they answer.'
+        fields:
+          - field: recipient
+            label: '$t("cart.label.recipient")'
+            describe: "The recipient's full name for the delivery."
+          - field: city
+            label: '$t("cart.label.city")'
+            options:
+              header: cart.field_header.city
+              cta:    cart.field_cta.city
+              items:
+                - { value: riyadh,  label: cart.city.riyadh }
+                - { value: jeddah,  label: cart.city.jeddah }
+                - { value: dammam,  label: cart.city.dammam }
+                - { value: makkah,  label: cart.city.makkah }
+                - { value: madinah, label: cart.city.madinah }
+                - { value: abha,    label: cart.city.abha }
+          - field: address
+            label: '$t("cart.label.address")'
+            describe: 'District, street and any landmark for the courier.'
+          - field: payment_method
+            label: '$t("cart.label.payment")'
+            options:
+              header: cart.field_header.payment
+              cta:    cart.field_cta.payment
+              items:
+                - { value: cash_on_delivery, label: cart.payment.cash }
+                - { value: bank_transfer,    label: cart.payment.transfer }
+        complete: [{ goto: confirm }]
+
+  confirm:
+    - use: approve_apply
+      with:
+        preview: '$lines($compact([
+                    $t("cart.preview.header"),
+                    $order_summary,
+                    $t("cart.preview.total", { total: $format_money($order_total, "SAR") }),
+                    $t("cart.preview.to", { recipient: $state.recipient }),
+                    $t("cart.preview.address", { address: $state.address }),
+                    $t("cart.preview.payment", { payment: $enum_lookup($state.payment_method, { cash_on_delivery: $t("cart.payment.cash_plain"), bank_transfer: $t("cart.payment.transfer_plain") }, $state.payment_method) })
+                  ]), "\n")'
+        header:        '{$t("cart.confirm_header")}'
+        footer:        '{$t("cart.confirm_footer")}'
+        confirm_title: '{$t("cart.btn_confirm")}'
+        cancel_title:  '{$t("cart.btn_cancel")}'
+        apply:         place_order
+        abort:         aborted
+        on_other:      gather
+        memory_note:   'Order NOT placed — awaiting the shopper''s ✅ on a {$order_total} SAR order.'
+
+  place_order:
+    - do: record_save
+      args:
+        entity: purchase
+        stage:  placed
+        fields:
+          items_summary:  '$order_summary'
+          item_count:     '$order_count'
+          total:          '$order_total'
+          currency:       SAR
+          recipient:      '$state.recipient'
+          city:           '$state.city'
+          address:        '$state.address'
+          payment_method: '$state.payment_method'
+      bind: order
+      outputs:
+        ok:      [{ goto: after_order }]
+        invalid: [{ goto: order_failed }]
+        failed:  [{ goto: order_failed }]
+
+  after_order:
+    # The money moment — a milestone the console funnel charts. `detach: true`
+    # fires it without awaiting, so a slow write never adds turn latency.
+    - do: record_milestone
+      args: { record_id: '$order.record_id', milestone: order_placed }
+      detach: true
+    # Decrement stock per line, then retire the lines so the next visit starts
+    # clean. A `foreach` body may not carry empty ports (that is collect-hook-only
+    # sugar) and a `goto` inside one would break the loop — so these are bare
+    # binds: a `not_found` binds its payload, and a genuine `failed` throws to the
+    # platform error-net, which is the right home for "the database is down".
+    - foreach:
+        in: '$live'
+        as: row
+        body:
+          # Resolve by SKU (the entity's `dedupe_by`) rather than by the line's
+          # `fragrance` record ref — a ref is not a plain record_id, and passing one
+          # made record_get return its `failed` port mid-loop.
+          - do: record_get
+            args: { entity: fragrance, match: { field: sku, value: '$row.fields.sku' } }
+            bind: f
+          - if: '$f.fields != null'
+            then:
+              - do: record_save
+                args:
+                  entity: fragrance
+                  match:  { field: sku, value: '$row.fields.sku' }
+                  fields: { stock: '$coalesce($f.fields.stock, 0) - $row.fields.qty' }
+          - do: record_save
+            args:
+              entity:    cart_line
+              record_id: '$row.id'
+              fields:    { qty: 0, line_total: 0 }
+    - render:
+        render_intent: detail_card
+        header: '{$t("cart.placed_header")}'
+        body: '$lines($compact([
+                 $t("cart.placed_body", { ref: $order.record_number }),
+                 $order_summary,
+                 $t("cart.preview.total", { total: $format_money($order_total, "SAR") }),
+                 $state.payment_method == "bank_transfer" ? $t("cart.placed_transfer") : $t("cart.placed_cash")
+               ]), "\n")'
+        footer: '{$t("cart.placed_footer")}'
+        buttons:
+          - { title: '{$t("cart.btn_orders")}', on_select: { invoke: orders } }
+          - { title: '{$t("cart.btn_shop")}',   on_select: { invoke: shop } }
+      memory_note: 'Placed order #{$order.record_number} — {$order_count} item(s), {$order_total} SAR, {$state.payment_method}.'
+      data: { order_number: '$order.record_number' }
+    - end: applied
+
+  # ── outcomes that are NOT errors ─────────────────────────────────────────
+  out_of_stock:
+    - answer:
+        data: { product: '$prod.fields.name' }
+        instructions: 'That item is out of stock right now. Say so in one line, name it, and offer something similar via shop. Do NOT add it to the cart.'
+
+  unknown_sku:
+    - answer:
+        data: { product_id: '$input.product_id' }
+        instructions: 'That SKU does not exist in the catalog. Do NOT apologise for a system error — call shop so the shopper can tap a real product.'
+
+  aborted:
+    - end: { status: aborted, body: '{$t("cart.aborted")}' }
+
+  order_failed:
+    - answer:
+        instructions: 'The order could not be written. Say so plainly in one line and offer to try again. Do NOT claim an order was placed.'
+
+  unavailable:
+    - answer:
+        instructions: 'The cart is unavailable for a moment. Apologise in one line and offer to try again shortly. Do NOT claim anything was added or ordered.'

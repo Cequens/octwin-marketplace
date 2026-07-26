@@ -1,0 +1,15 @@
+flow_id: home
+
+strings:
+  header:              '💪 آيرون بالس'
+  greeting:            'أهلاً بك في آيرون بالس 💪 جاهز للحصة القادمة؟'
+  upcoming:            '📅 لديك {count} حصة محجوزة.'
+  cta:                 'اختر'
+  row_classes:         '🏋️ جدول الحصص'
+  row_classes_d:       'سبيننج · هيت · يوجا · بوكسينج · أثقال'
+  row_book:            '📅 احجز حصة'
+  row_book_d:          'اختر الحصة والمدرب والوقت'
+  row_membership:      '🎫 العضويات والأسعار'
+  row_membership_d:    'باقات شهرية وسنوية وبطاقة حصص'
+  row_schedule:        '🗓️ حصصي'
+  row_schedule_d:      'حصصك القادمة وإلغاء الحجز'

@@ -1,0 +1,21 @@
+flow_id: my-requests
+
+strings:
+  header:           '📁 طلباتك'
+  viewings_header:  '— المعاينات —'
+  leads_header:     '— طلبات التمويل والاستفسارات —'
+  btn_book:         '🗓️ معاينة جديدة'
+  btn_browse:       '🏙️ استعرض المشاريع'
+
+  stage.requested:      'بانتظار التأكيد'
+  stage.confirmed:      'مؤكَّدة ✅'
+  stage.checked_in:     'جارية'
+  stage.completed:      'تمت'
+  stage.cancelled:      'ملغاة'
+
+  lead.new:             'جديد'
+  lead.qualified:       'مؤهَّل'
+  lead.viewing_booked:  'تم حجز معاينة'
+  lead.offer_made:      'عرض مقدَّم'
+  lead.reserved:        'محجوز 🎉'
+  lead.lost:            'مغلق'

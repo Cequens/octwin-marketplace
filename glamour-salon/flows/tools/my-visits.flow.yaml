@@ -1,0 +1,217 @@
+# my-visits — the client's appointments, a cancel that frees the chair, and the rating
+# loop that re-ranks the team (stars → stamp the stylist → aggregate → write back).
+
+flow_id:     my-visits
+version:     1
+description: |-
+  Show this client's appointments, cancel one, or record a rating. Call for "مواعيدي",
+  "ألغي الموعد", or when she wants to rate a visit. Never state an appointment from memory.
+
+input:
+  action:
+    type:     enum
+    enum:     [list, cancel, rate, comment]
+    optional: true
+    describe: 'list (default) | cancel | rate | comment.'
+  visit_id:
+    type:     string
+    optional: true
+    describe: 'A booking record id from a list row — never invented.'
+  stars:
+    type:     number
+    optional: true
+    describe: 'For action=rate — 1 to 5, only from a rating tap.'
+  comment:
+    type:     string
+    optional: true
+    describe: "For action=comment — the client's own words about the visit."
+
+entry:
+  - else: true
+    goto: route
+
+steps:
+  route:
+    - dispatch:
+        key: '$coalesce($input.action, "list")'
+        cases:
+          list:    [{ goto: load }]
+          cancel:  [{ goto: do_cancel }]
+          rate:    [{ goto: do_rate }]
+          comment: [{ goto: do_comment }]
+
+  load:
+    - do: record_list
+      args: { entity: booking, limit: 10, active_only: false, sort: created_at }
+      bind: page
+      outputs:
+        ok:     [{ goto: show }]
+        empty:  [{ goto: none }]
+        failed: [{ goto: unavailable }]
+
+  show:
+    - render:
+        render_intent: list_picker
+        header: '{$t("my-visits.header")}'
+        body:   '{$t("my-visits.intro")}'
+        cta:    '{$t("my-visits.cta")}'
+        items:  '$page.rows'
+        item_template:
+          title:       '{$t("my-visits.row_title", { ref: $item.record_number })}'
+          description: '$lines($compact([
+                          $item.fields.slot_label,
+                          $item.fields.stylist_label,
+                          $enum_label($item.stage, "status", $item.stage)
+                        ]), " · ")'
+          on_select:   { invoke: my-visits, with: { action: rate, visit_id: '$item.id' } }
+      memory_note: 'Showed {$length($page.rows)} appointment(s).'
+    - end: applied
+
+  do_cancel:
+    - do: booking_cancel
+      args: { booking_record_id: '$input.visit_id' }
+      outputs:
+        ok:              [{ goto: cancelled }]
+        not_cancellable: [{ goto: too_late }]
+        failed:          [{ goto: unavailable }]
+
+  cancelled:
+    - render:
+        render_intent: detail_card
+        header: '{$t("my-visits.cancel_header")}'
+        body:   '{$t("my-visits.cancel_body")}'
+        buttons:
+          - { title: '{$t("my-visits.btn_rebook")}', on_select: { invoke: book-appointment } }
+          - { title: '{$t("my-visits.btn_mine")}',   on_select: { invoke: my-visits } }
+      memory_note: 'Cancelled appointment {$input.visit_id} — the chair is free again.'
+    - end: applied
+
+  too_late:
+    - answer:
+        instructions: 'That appointment can no longer be cancelled from chat. Say so in one line and suggest calling reception.'
+
+  # ── the rating loop ──────────────────────────────────────────────────────
+  do_rate:
+    - if: '$input.stars == null'
+      then:
+        - goto: ask_stars
+    - do: survey_submit
+      args: { survey: visit_feedback, subject_ref: '$input.visit_id', answers: { stars: '$input.stars' } }
+      bind: response
+      outputs:
+        ok:     [{ goto: stamp }]
+        failed: [{ goto: unavailable }]
+
+  ask_stars:
+    - do: record_get
+      args: { entity: booking, record_id: '$input.visit_id' }
+      bind: v
+      outputs:
+        ok:        [{ goto: render_stars }]
+        not_found: [{ goto: none }]
+        failed:    [{ goto: unavailable }]
+
+  render_stars:
+    - render:
+        render_intent: list_picker
+        header: '{$t("my-visits.rate_header")}'
+        body:   '{$t("my-visits.rate_body", { stylist: $coalesce($v.fields.stylist_label, "-") })}'
+        cta:    '{$t("my-visits.rate_cta")}'
+        items:
+          - { title: '{$t("my-visits.stars5")}', on_select: { invoke: my-visits, with: { action: rate, visit_id: '$input.visit_id', stars: 5 } } }
+          - { title: '{$t("my-visits.stars4")}', on_select: { invoke: my-visits, with: { action: rate, visit_id: '$input.visit_id', stars: 4 } } }
+          - { title: '{$t("my-visits.stars3")}', on_select: { invoke: my-visits, with: { action: rate, visit_id: '$input.visit_id', stars: 3 } } }
+          - { title: '{$t("my-visits.stars2")}', on_select: { invoke: my-visits, with: { action: rate, visit_id: '$input.visit_id', stars: 2 } } }
+          - { title: '{$t("my-visits.stars1")}', on_select: { invoke: my-visits, with: { action: rate, visit_id: '$input.visit_id', stars: 1 } } }
+      memory_note: 'Offered a 1-5 rating for appointment {$input.visit_id}.'
+    - end: applied
+
+  # A survey's subject is the BOOKING, so the rated stylist must be stamped on the
+  # response — otherwise the rollup below has no dimension to group by.
+  stamp:
+    - do: record_get
+      args: { entity: booking, record_id: '$input.visit_id' }
+      bind: rated
+      outputs:
+        ok:        [{ goto: write_dimension }]
+        not_found: [{ goto: thanks }]
+        failed:    [{ goto: thanks }]
+
+  write_dimension:
+    - do: record_save
+      args: { entity: survey_response, record_id: '$response.record_id', fields: { stylist: '$rated.fields.stylist' } }
+      outputs:
+        ok:      [{ goto: rollup_avg }]
+        invalid: [{ goto: thanks }]
+        failed:  [{ goto: thanks }]
+
+  rollup_avg:
+    - do: record_aggregate
+      args:
+        entity: survey_response
+        op:     avg
+        field:  score
+        where:  { all: [{ field: stylist, op: eq, value: '$rated.fields.stylist' }] }
+      bind: avg
+      outputs:
+        ok:     [{ goto: rollup_count }]
+        failed: [{ goto: thanks }]
+
+  rollup_count:
+    - do: record_aggregate
+      args:
+        entity: survey_response
+        op:     count
+        where:  { all: [{ field: stylist, op: eq, value: '$rated.fields.stylist' }] }
+      bind: n
+      outputs:
+        ok:     [{ goto: write_rating }]
+        failed: [{ goto: thanks }]
+
+  write_rating:
+    - do: record_save
+      args:
+        entity:    stylist
+        record_id: '$rated.fields.stylist'
+        fields:
+          rating:       '$round($coalesce($avg.value, 0), 1)'
+          rating_count: '$coalesce($n.value, 0)'
+      outputs:
+        ok:      [{ goto: thanks }]
+        invalid: [{ goto: thanks }]
+        failed:  [{ goto: thanks }]
+
+  thanks:
+    - render:
+        render_intent: detail_card
+        header: '{$t("my-visits.thanks_header")}'
+        body:   '{$t("my-visits.thanks_body", { stars: $input.stars })}'
+        footer: '{$t("my-visits.thanks_footer")}'
+        buttons:
+          - { title: '{$t("my-visits.btn_mine")}',   on_select: { invoke: my-visits } }
+          - { title: '{$t("my-visits.btn_rebook")}', on_select: { invoke: book-appointment } }
+      memory_note: 'Recorded {$input.stars} stars and rolled it up onto the stylist. If she now types a comment, call my-visits action=comment with the same visit_id.'
+    - end: applied
+
+  # A second submit for the same visit PATCHES the same response.
+  do_comment:
+    - do: survey_submit
+      args: { survey: visit_feedback, subject_ref: '$input.visit_id', answers: { comment: '$input.comment' } }
+      outputs:
+        ok:     [{ goto: comment_ok }]
+        failed: [{ goto: unavailable }]
+
+  comment_ok:
+    - render:
+        render_intent: text_card
+        body: '{$t("my-visits.comment_thanks")}'
+      memory_note: 'Attached the comment to the existing rating for {$input.visit_id}.'
+    - end: applied
+
+  none:
+    - answer:
+        instructions: 'This client has no appointment yet. Say so warmly in one line and offer the menu or a booking.'
+
+  unavailable:
+    - answer:
+        instructions: 'That could not be completed right now. Apologise in one line and offer to try again. Do NOT claim a cancellation or a rating was recorded.'

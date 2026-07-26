@@ -1,0 +1,51 @@
+# product — the detail drill-down. Loads the record by `retailer_id` (the product
+# entity's `dedupe_by`, so `match:` resolves it) and offers the add-to-cart action
+# against the real commerce cart.
+
+flow_id:     product
+version:     1
+description: |-
+  Show one product in full with an add-to-cart action. Call with `product_id`
+  (a retailer_id from a shop card) — never a typed name.
+
+input:
+  product_id:
+    type:     string
+    describe: 'The product retailer_id from a shop card or a search result.'
+
+entry:
+  - else: true
+    goto: load
+
+steps:
+  load:
+    - do: record_get
+      args: { entity: fragrance, match: { field: sku, value: '$input.product_id' } }
+      bind: item
+      outputs:
+        ok:        [{ goto: show }]
+        not_found: [{ goto: missing }]
+        failed:    [{ goto: missing }]
+
+  show:
+    - assign: { cur: '$coalesce($item.fields.currency, "SAR")' }
+    - render:
+        render_intent: detail_card
+        header: '{$item.fields.name}'
+        body: '$lines($compact([
+                 $item.fields.description,
+                 $t("product.price", { price: $format_money_field($item.fields.price, $cur) }),
+                 $item.fields.scent_notes != null ? $t("product.notes", { notes: $item.fields.scent_notes }) : null,
+                 $item.fields.longevity != null ? $t("product.longevity", { longevity: $enum_lookup($item.fields.longevity, { light: $t("product.long.light"), moderate: $t("product.long.moderate"), long: $t("product.long.long"), very_long: $t("product.long.very_long") }, $item.fields.longevity) }) : null,
+                 $item.fields.stock != null && $item.fields.stock > 0 ? $t("product.in_stock") : $t("product.out_of_stock")
+               ]), "\n")'
+        buttons:
+          - { title: '{$t("product.btn_add")}',  on_select: { invoke: cart, with: { action: add, product_id: '$input.product_id' } } }
+          - { title: '{$t("product.btn_cart")}', on_select: { invoke: cart, with: { action: view } } }
+          - { title: '{$t("product.btn_more")}', on_select: { invoke: shop } }
+      memory_note: 'Showed product {$item.fields.name} ({$input.product_id}).'
+    - end: applied
+
+  missing:
+    - answer:
+        instructions: 'That product id does not resolve. Apologise in one line and call shop so the shopper can pick from the live catalog. Never invent a product.'

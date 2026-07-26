@@ -1,0 +1,43 @@
+flow_id: claim
+
+strings:
+  status_header:  '🧾 مطالباتك'
+  status_note:    'ℹ️ قرار المُقيِّم بيوصلك هنا في المحادثة — إحنا بنعرض المسجَّل فقط.'
+  btn_new:        '🚨 إبلاغ عن حادث'
+  btn_home:       '🏠 القائمة الرئيسية'
+  btn_status:     '🧾 حالة مطالبتي'
+
+  label.type:        'نوع الحادث'
+  label.policy:      'رقم الوثيقة'
+  label.plate:       'رقم اللوحة'
+  label.emirate:     'الإمارة'
+  label.when:        'وقت الحادث'
+  label.description: 'وصف ما حدث'
+  label.police:      'رقم تقرير الشرطة'
+
+  field_header.type:    '🚨 نوع الحادث؟'
+  field_cta.type:       'اختر'
+  field_header.emirate: '📍 في أي إمارة؟'
+  field_cta.emirate:    'الإمارات'
+
+  type.own_damage:   '🚗 أضرار بمركبتي'
+  type.third_party:  '🚙 حادث مع طرف آخر'
+  type.windscreen:   '🪟 زجاج أمامي'
+  type.theft:        '🔓 سرقة'
+  type.injury:       '🚑 يوجد مصابون'
+
+  em.dubai:      'دبي'
+  em.sharjah:    'الشارقة'
+  em.abu_dhabi:  'أبوظبي'
+  em.ajman:      'عجمان'
+  em.rak:        'رأس الخيمة'
+
+  case_subject:       'مطالبة — لوحة {plate}'
+  caption:            'أضرار مركبة {plate}'
+  done_header:        '✅ تم تسجيل الإبلاغ'
+  done_ref:           '🧾 رقم الإشعار: #{ref}'
+  done_case:          '👨‍🔧 رقم المطالبة: #{ref} — يتم الرد خلال {hours} ساعة'
+  done_no_coverage:   'ℹ️ لا نستطيع تحديد التغطية أو المسؤولية من هنا — المُقيِّم يراجع الحادث ويبلّغك بقراره.'
+  done_injury:        '🚑 لو فيه مصابين، اتصل بالإسعاف والشرطة فوراً قبل أي شيء آخر.'
+  done_footer:        'المُقيِّم قد يطلب مستندات إضافية من خلال المحادثة.'
+  done_no_case:       '⚠️ الإشعار محفوظ، لكن لم نتمكن من فتح المطالبة آلياً — اتصل بخط المطالبات ونحن نتابعها فوراً.'

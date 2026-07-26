@@ -1,0 +1,6 @@
+flow_id: stylists
+
+strings:
+  intro:      '👩‍🎨 فريقنا — مرتّب بحسب تقييمات العميلات:'
+  rating:     '⭐ {rating} من {count} تقييم'
+  btn_book:   '📅 احجزي معها'

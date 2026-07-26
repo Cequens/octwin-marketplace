@@ -1,0 +1,198 @@
+# book-appointment — treatment → stylist (filtered to that specialty) → slot → ✅.
+#
+# `slot_minutes` is the TREATMENT's own `duration_min`, which is what the booking
+# RECORDS — so the salon sees a four-hour keratin job as four hours. It is NOT what
+# protects the diary: `booking_reserve` claims the slot it is given and does not consume
+# the following grid slots. The protection comes from `scheduling.yaml`, where each
+# stylist's grid step matches the length of the work she does (see the note there).
+
+flow_id:     book-appointment
+version:     1
+description: |-
+  [interactive] Book a salon appointment. Call when the client wants a booking. Pass
+  `treatment_id` and/or `stylist_id` when she came from a card; the tool asks for
+  whatever is missing.
+
+input:
+  treatment_id:
+    type:     string
+    optional: true
+    describe: 'Treatment record id from a services card — never a typed name.'
+  stylist_id:
+    type:     string
+    optional: true
+    describe: 'Stylist record id from a stylists card — never a typed name.'
+
+entry:
+  - else: true
+    goto: collect_fields
+
+steps:
+  collect_fields:
+    - collect:
+        before_each:
+          - assign: { tr_label: null, tr_minutes: null, tr_category: null, st_label: null }
+          - if: '$state.treatment_id != null'
+            then:
+              - do: record_get
+                args: { entity: treatment, record_id: '$state.treatment_id' }
+                bind: tr
+                outputs:
+                  ok:        []
+                  not_found: [{ assign: { state: '$merge($state, { treatment_id: null })' } }]
+                  failed:    []
+              - if: '$tr.fields != null'
+                then:
+                  - assign:
+                      tr_label:    '$tr.fields.name'
+                      tr_minutes:  '$tr.fields.duration_min'
+                      tr_category: '$tr.fields.category'
+          - if: '$state.stylist_id != null'
+            then:
+              - do: record_get
+                args: { entity: stylist, record_id: '$state.stylist_id' }
+                bind: st
+                outputs:
+                  ok:        []
+                  # A dead resource id would call slot_list on nothing — drop it.
+                  not_found: [{ assign: { state: '$merge($state, { stylist_id: null })' } }]
+                  failed:    []
+              - if: '$st.fields != null'
+                then:
+                  - assign: { st_label: '$st.fields.name' }
+        progress: '$lines($compact([
+                     $t("book-appointment.progress.header"),
+                     $tr_label != null ? $t("book-appointment.progress.treatment", { treatment: $tr_label }) : null,
+                     $st_label != null ? $t("book-appointment.progress.stylist", { stylist: $st_label }) : null,
+                     $state.slot_label != null ? $t("book-appointment.progress.slot", { slot: $state.slot_label }) : null
+                   ]), "\n")'
+        gap_instructions: 'Ask the client for the next missing detail ({$collect_field}), one at a time, in her language. Re-call book-appointment once she answers. Never give beauty or medical advice.'
+        fields:
+          - field: treatment_id
+            when: '$state.treatment_id == null'
+            label: '$t("book-appointment.label.treatment")'
+            options:
+              header: book-appointment.field_header.treatment
+              cta:    book-appointment.field_cta.treatment
+              fetch:  { do: record_search, args: { entity: treatment, query: '', limit: 10 }, bind: trs }
+              rows:   '$trs.rows'
+              map:
+                value:       '$item.id'
+                label:       '$item.fields.name'
+                description: '$format_money_field($item.fields.price, $coalesce($item.fields.currency, "SAR"))'
+                selection:   { tr_label: '$item.fields.name', tr_minutes: '$item.fields.duration_min', tr_category: '$item.fields.category' }
+              auto_resolve: true
+          # Only specialists who do this category are offered (`has` on the
+          # multi_select), so a nail artist never appears for a colour job.
+          - field: stylist_id
+            when: '$state.stylist_id == null'
+            label: '$t("book-appointment.label.stylist")'
+            options:
+              header: book-appointment.field_header.stylist
+              cta:    book-appointment.field_cta.stylist
+              fetch:  { do: record_search, args: { entity: stylist, query: '', limit: 10, where: { all: [{ field: specialties, op: has, value: '$tr_category' }] } }, bind: sts }
+              rows:   '$sts.rows'
+              map:
+                value:       '$item.id'
+                label:       '$item.fields.name'
+                description: '$item.fields.title'
+                selection:   { st_label: '$item.fields.name' }
+              auto_resolve: true
+          - field: slot_start
+            label: '$t("book-appointment.label.slot")'
+            options:
+              header: book-appointment.field_header.slot
+              cta:    book-appointment.field_cta.slot
+              fetch:  { do: slot_list, args: { resource_record_id: '$state.stylist_id' }, bind: slots }
+              rows:   '$slots'
+              map:
+                value: '$item.slot_start'
+                label: '$lines($compact([$item.local_date, $item.local_time]), " — ")'
+                selection:
+                  slot_label: '$lines($compact([$item.local_date, $item.local_time]), " — ")'
+          - field: notes
+            required: false
+            label:    '$t("book-appointment.label.notes")'
+            describe: 'Anything the specialist should know (allergies, a reference photo, a preference).'
+        complete: [{ goto: confirm }]
+
+  confirm:
+    - use: approve_apply
+      with:
+        preview: '$lines($compact([
+                    $t("book-appointment.preview.header"),
+                    $t("book-appointment.preview.treatment", { treatment: $coalesce($tr_label, $state.tr_label, "-") }),
+                    $t("book-appointment.preview.stylist", { stylist: $coalesce($st_label, $state.st_label, "-") }),
+                    $t("book-appointment.preview.slot", { slot: $coalesce($state.slot_label, "-") }),
+                    $t("book-appointment.preview.duration", { min: $coalesce($tr_minutes, $state.tr_minutes, 30) }),
+                    $state.notes != null ? $t("book-appointment.preview.notes", { notes: $state.notes }) : null
+                  ]), "\n")'
+        header:        '{$t("book-appointment.approve_header")}'
+        footer:        '{$t("book-appointment.approve_footer")}'
+        confirm_title: '{$t("book-appointment.confirm_title")}'
+        cancel_title:  '{$t("book-appointment.cancel_title")}'
+        apply:         reserve_chair
+        abort:         aborted
+        on_other:      collect_fields
+        memory_note:   'Appointment NOT booked yet — awaiting the client''s ✅.'
+
+  reserve_chair:
+    - do: booking_reserve
+      args:
+        resource_record_id: '$state.stylist_id'
+        slot_start:         '$state.slot_start'
+        # Recorded on the booking so the salon sees the true length. The diary is
+        # protected by the per-stylist grid step, not by this number.
+        slot_minutes:       '$coalesce($tr_minutes, $state.tr_minutes, 90)'
+        fields:
+          treatment:       '$state.treatment_id'
+          stylist:         '$state.stylist_id'
+          treatment_label: '$coalesce($tr_label, $state.tr_label)'
+          stylist_label:   '$coalesce($st_label, $state.st_label)'
+          slot_label:      '$state.slot_label'
+          notes:           '$state.notes'
+      bind: appt
+      outputs:
+        ok:           [{ goto: remind }]
+        full:         [{ goto: slot_taken }]
+        invalid_slot: [{ goto: slot_taken }]
+        failed:       [{ end: failed }]
+
+  remind:
+    - if: '$length($coalesce($appt.reminders, [])) > 0'
+      then:
+        - do: schedule_notify
+          args:
+            to:          { contact_id: '$contact.id' }
+            send_at:     '$appt.reminders[0].send_at'
+            dedupe_key:  'glamour:appt:{$appt.record_id}:t24'
+            memory_note: 'Appointment reminder (t24)'
+            intent:
+              render_intent: detail_card
+              body: '{$t("book-appointment.reminder.body", { treatment: $coalesce($tr_label, ""), slot: $coalesce($state.slot_label, "") })}'
+              buttons:
+                - { title: '{$t("book-appointment.reminder.mine")}', on_select: { invoke: my-visits } }
+          detach: true
+    - render:
+        render_intent: detail_card
+        header: '{$t("book-appointment.done_header")}'
+        body: '$lines($compact([
+                 $t("book-appointment.done_body", { stylist: $coalesce($st_label, ""), slot: $coalesce($state.slot_label, "") }),
+                 $t("book-appointment.done_ref", { ref: $appt.record_number }),
+                 $t("book-appointment.done_note")
+               ]), "\n")'
+        buttons:
+          - { title: '{$t("book-appointment.btn_mine")}',     on_select: { invoke: my-visits } }
+          - { title: '{$t("book-appointment.btn_services")}', on_select: { invoke: services } }
+      memory_note: 'Booked appointment #{$appt.record_number} for {$tr_minutes} minutes with {$st_label}.'
+    - end: applied
+
+  slot_taken:
+    - render:
+        render_intent: text_card
+        body: '{$t("book-appointment.slot_taken")}'
+      memory_note: 'The slot was taken (or too short for this treatment) — offered another.'
+    - end: aborted
+
+  aborted:
+    - end: { status: aborted, body: '{$t("book-appointment.aborted")}' }

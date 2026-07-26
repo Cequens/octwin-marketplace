@@ -1,0 +1,60 @@
+# my-bookings — the guest's own stays, their stage, and the outstanding deposit. A `held`
+# stay is NOT a confirmed one, and the stage hint says so plainly.
+
+flow_id:     my-bookings
+version:     1
+description: |-
+  Show this guest's bookings and where each stands. Call for "حجزي", "my booking". Never
+  state a booking status or a balance from memory — call this.
+
+input:
+  message:
+    type:     string
+    optional: true
+    describe: 'Optional note from the guest.'
+
+entry:
+  - else: true
+    goto: load
+
+steps:
+  load:
+    - do: record_list
+      args: { entity: stay, limit: 10, active_only: false, sort: created_at }
+      bind: page
+      outputs:
+        ok:     [{ goto: show }]
+        empty:  [{ goto: none }]
+        failed: [{ goto: unavailable }]
+
+  show:
+    - assign:
+        stay_lines: '$map($page.rows, $lines($compact([
+                        "🧾 #" + $item.record_number,
+                        $item.fields.resort_label,
+                        $item.fields.room_label,
+                        $item.fields.check_in_label,
+                        $format_money_field($item.fields.total, "EGP"),
+                        $enum_label($item.stage, "stage", $item.stage)
+                      ]), " · "))'
+        latest: '$page.rows[0]'
+    - render:
+        render_intent: detail_card
+        header: '{$t("my-bookings.header")}'
+        body: '$lines($compact($concat(
+                 $stay_lines,
+                 [$latest != null ? $enum_label($latest.stage, "stage_hint", "") : null]
+               )), "\n")'
+        buttons:
+          - { title: '{$t("my-bookings.btn_rooms")}', on_select: { invoke: rooms } }
+          - { title: '{$t("my-bookings.btn_book")}',  on_select: { invoke: book-stay } }
+      memory_note: 'Showed {$length($page.rows)} booking(s); latest stage {$latest.stage}.'
+    - end: applied
+
+  none:
+    - answer:
+        instructions: 'This guest has no booking yet. Say so warmly in one line and offer the rooms.'
+
+  unavailable:
+    - answer:
+        instructions: 'The booking lookup failed. Apologise in one line and offer to try again shortly. Do NOT state a status or a balance from memory.'

@@ -1,0 +1,134 @@
+# XRM declaration for umrah-journeys.
+#
+#  • `package`  — the shared catalog (no pipeline ⇒ always listable), with an
+#                 AI-generated hero image and semantic search over the copy.
+#  • `pilgrim`  — a traveller in the party, contact-scoped. One per person, so a
+#                 family books once and the names persist for the next trip.
+#  • `trip`     — the booking PIPELINE. This is what the agency measures.
+#
+# The visa file is deliberately NOT an entity here — it is the `case` system
+# entity, worked through worklist.yaml, because it is human work with an SLA.
+
+entities:
+  package:
+    label: { en: 'Package', ar: 'باقة' }
+    fields:
+      code:          { type: text, required: true, label: { en: 'Code', ar: 'الرمز' } }
+      name:          { type: text, required: true, label: { en: 'Name', ar: 'الاسم' } }
+      kind:          { type: select, options: [umrah, hajj, ramadan_umrah, ziyarah], label: { en: 'Kind', ar: 'النوع' } }
+      nights:        { type: number, label: { en: 'Nights', ar: 'عدد الليالي' } }
+      makkah_hotel:  { type: text, label: { en: 'Makkah hotel', ar: 'فندق مكة' } }
+      madinah_hotel: { type: text, label: { en: 'Madinah hotel', ar: 'فندق المدينة' } }
+      distance_haram: { type: text, label: { en: 'Distance to Haram', ar: 'المسافة من الحرم' } }
+      transport:     { type: text, label: { en: 'Transport', ar: 'المواصلات' } }
+      includes:      { type: textarea, label: { en: 'Includes', ar: 'يشمل' } }
+      price_pp:      { type: money, label: { en: 'Price per person', ar: 'السعر للفرد' } }
+      currency:      { type: text, label: { en: 'Currency', ar: 'العملة' }, default: 'SAR' }
+      hero:          { type: image, label: { en: 'Photo', ar: 'الصورة' } }
+      rating:        { type: number, label: { en: 'Popularity', ar: 'الأكثر طلباً' }, default: 0 }
+    list: [kind, nights, price_pp]
+    search: { text: [name, makkah_hotel, madinah_hotel], semantic: [name, includes], rank_by: rating }
+    dedupe_by: code
+
+  pilgrim:
+    label: { en: 'Pilgrim', ar: 'معتمر' }
+    fields:
+      full_name:       { type: text, required: true, label: { en: 'Name', ar: 'الاسم' } }
+      passport_number: { type: text, label: { en: 'Passport', ar: 'رقم الجواز' } }
+      nationality:     { type: text, label: { en: 'Nationality', ar: 'الجنسية' } }
+      relation:        { type: text, label: { en: 'Relation', ar: 'صلة القرابة' } }
+      passport_scan:   { type: image, label: { en: 'Passport scan', ar: 'صورة الجواز' } }
+    list: [passport_number, nationality]
+    dedupe_by: full_name
+
+  trip:
+    label: { en: 'Trip', ar: 'رحلة' }
+    fields:
+      package:        { type: record, entity: package, label: { en: 'Package', ar: 'الباقة' } }
+      package_label:  { type: text, label: { en: 'Package', ar: 'الباقة' } }
+      package_code:   { type: text, label: { en: 'Package code', ar: 'رمز الباقة' } }
+      lead_name:      { type: text, label: { en: 'Lead traveller', ar: 'المسؤول عن الحجز' } }
+      travellers:     { type: number, label: { en: 'Travellers', ar: 'عدد المسافرين' } }
+      departure_city: { type: select, options: [riyadh, jeddah, cairo, dubai, casablanca, jakarta], label: { en: 'Departure city', ar: 'مدينة المغادرة' } }
+      travel_month:   { type: select, options: [rajab, shaaban, ramadan, shawwal, dhul_qadah, dhul_hijjah], label: { en: 'Month', ar: 'الشهر' } }
+      room_type:      { type: select, options: [double, triple, quad], label: { en: 'Room', ar: 'نوع الغرفة' } }
+      total_price:    { type: money, label: { en: 'Total', ar: 'الإجمالي' } }
+      currency:       { type: text, label: { en: 'Currency', ar: 'العملة' }, default: 'SAR' }
+      notes:          { type: textarea, label: { en: 'Notes', ar: 'ملاحظات' } }
+    list: [package_label, travellers, travel_month, total_price]
+    pipeline:
+      stages:   [enquiry, reserved, docs_pending, visa_issued, ticketed, travelled, cancelled]
+      initial:  enquiry
+      terminal: [travelled, cancelled]
+    milestones:
+      trip_reserved: { label: { en: 'Reserved', ar: 'تم الحجز' },       stage: reserved }
+      visa_issued:   { label: { en: 'Visa issued', ar: 'صدرت التأشيرة' }, stage: visa_issued }
+      travelled:     { label: { en: 'Travelled', ar: 'تمت الرحلة' },     stage: travelled, terminal: true }
+
+segments:
+  live_trips:
+    entity: trip
+    label: { en: 'Live trips', ar: 'رحلات قائمة' }
+    where: { all: [{ active: true }] }
+
+demo:
+  - entity: package
+    fields:
+      code: 'UMR-ECON-7'
+      name: 'عمرة الاقتصادية — ٧ ليالٍ'
+      kind: umrah
+      nights: 7
+      makkah_hotel: 'فندق دار الإيمان'
+      madinah_hotel: 'فندق الحرم بلازا'
+      distance_haram: '٦٥٠ متر من الحرم'
+      transport: 'باص مكيّف بين مكة والمدينة والمطار'
+      includes: 'إقامة ٧ ليالٍ · إفطار يومي · تنقلات · مرشد ديني · تأشيرة عمرة. Seven nights, daily breakfast, all transfers, a religious guide and the Umrah visa.'
+      price_pp: 2450
+      currency: SAR
+      rating: 4.5
+      hero: 'generate:Photograph of a modern hotel building in Makkah at dusk with the Abraj Al Bait clock tower visible in the background, warm evening light, pilgrims walking on a clean plaza, photorealistic.'
+  - entity: package
+    fields:
+      code: 'UMR-PREM-10'
+      name: 'عمرة الراحة — ١٠ ليالٍ'
+      kind: umrah
+      nights: 10
+      makkah_hotel: 'فندق سويس أوتيل المقام'
+      madinah_hotel: 'فندق أنوار المدينة موڤنبيك'
+      distance_haram: 'مواجه للحرم — بدون مشي'
+      transport: 'سيارات خاصة (GMC) لكل التنقلات'
+      includes: 'إقامة ١٠ ليالٍ بإطلالة على الحرم · إفطار وعشاء · تنقلات خاصة · مرشد · تأشيرة. Ten nights with a Haram view, half board, private transfers, a guide and the visa.'
+      price_pp: 7900
+      currency: SAR
+      rating: 4.9
+      hero: 'generate:Photograph from a luxury hotel room balcony overlooking the Grand Mosque in Makkah at blue hour, marble interior in the foreground, warm lamps, photorealistic, serene.'
+  - entity: package
+    fields:
+      code: 'UMR-RAM-15'
+      name: 'عمرة رمضان — العشر الأواخر'
+      kind: ramadan_umrah
+      nights: 15
+      makkah_hotel: 'فندق جبل عمر ماريوت'
+      madinah_hotel: 'فندق العنصر'
+      distance_haram: '٢٠٠ متر — ممشى مغطّى'
+      transport: 'باص فاخر + تنقلات ليلية للحرم'
+      includes: 'إقامة ١٥ ليلة تشمل العشر الأواخر · سحور وإفطار · تنقلات ليلية · برنامج ديني. Fifteen nights covering the last ten days of Ramadan, suhoor and iftar, night transfers and a religious programme.'
+      price_pp: 11500
+      currency: SAR
+      rating: 4.8
+      hero: 'generate:Photograph of the Grand Mosque courtyard in Makkah during Ramadan night, thousands of pilgrims praying under warm floodlights, long exposure, reverent atmosphere, photorealistic.'
+  - entity: package
+    fields:
+      code: 'HAJ-STD-21'
+      name: 'حج التصريح — ٢١ يوماً'
+      kind: hajj
+      nights: 21
+      makkah_hotel: 'فندق العزيزية + مخيم منى المكيّف'
+      madinah_hotel: 'فندق المدينة موڤنبيك'
+      distance_haram: 'العزيزية — نقل مستمر للحرم'
+      transport: 'باصات المشاعر + نقل داخلي'
+      includes: 'مخيم مكيّف بمنى وعرفات · إعاشة كاملة · مرشد لكل ٤٠ حاجاً · تصريح الحج. Air-conditioned camps at Mina and Arafat, full board, one guide per forty pilgrims and the Hajj permit.'
+      price_pp: 24500
+      currency: SAR
+      rating: 4.6
+      hero: 'generate:Photograph of orderly white air-conditioned pilgrim tents in the valley of Mina during Hajj, bright daylight, mountains behind, documentary style, photorealistic.'

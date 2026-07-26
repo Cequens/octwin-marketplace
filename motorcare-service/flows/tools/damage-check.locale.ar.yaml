@@ -1,0 +1,26 @@
+flow_id: damage-check
+
+strings:
+  label.plate:      'رقم اللوحة'
+  label.complaint:  'وصف المشكلة'
+  label.photo:      'صورة للضرر أو للوحة العدادات'
+
+  header:           '🔎 نتيجة الفحص المبدئي'
+  job_ref:          '🧾 رقم بطاقة العمل: #{ref}'
+  plate:            '🚗 اللوحة: {plate}'
+  area:             '🔧 القسم المختص: {area}'
+  severity:         '📊 مستوى المشكلة: {severity}'
+  no_quote:         'ℹ️ هذا فحص مبدئي من الصورة وليس عرض سعر — الورشة تفحص السيارة وترسل لك السعر النهائي.'
+  footer:           'بطاقة عملك وصلت للورشة وفيها مهلة محددة للرد.'
+  no_findings:      'الصورة غير واضحة بما يكفي للفحص المبدئي — الورشة تفحصها بنفسها.'
+
+  ar.mechanical:    'الميكانيكا'
+  ar.body:          'السمكرة والدهان'
+  ar.diagnostics:   'الفحص بالكمبيوتر'
+  sev.minor:        'بسيط'
+  sev.moderate:     'متوسط'
+  sev.major:        'كبير'
+  sev.unknown:      'يحتاج فحص'
+
+  btn_book:         '🗓️ احجز موعد'
+  btn_garage:       '🚗 سياراتي'

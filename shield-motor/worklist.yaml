@@ -1,0 +1,43 @@
+# Worklist declaration — the CLAIMS desk, on the `case` system entity.
+#
+# Note what is missing: there is no disposition a flow can reach that admits liability or
+# pays a claim. `settlement_offered` and `claim_declined` are assessor-only decisions, and
+# each relays its own wording to the customer — so the bot never has to paraphrase a
+# coverage decision it is not qualified to make.
+#
+# A total loss or an injury routes to a senior queue with the shortest SLA, because those
+# are the claims where a delay costs the customer most.
+
+queues:
+  - { key: fnol_desk,       name: 'FNOL Desk' }
+  - { key: claims_assessor, name: 'Claims Assessors' }
+  - { key: major_claims,    name: 'Major & Injury Claims' }
+  - { key: underwriting,    name: 'Underwriting' }
+
+work:
+  case:
+    type_field: case_type
+    actions:
+      assessor_assigned:
+        label:  { ar: 'تم تعيين مُقيِّم', en: 'Assessor assigned' }
+        params: [{ name: assessor, type: text, required: true, label: 'Assessor name' }, { name: visit, type: text, required: false, label: 'Inspection appointment' }]
+        relay:  true
+      documents_required:
+        label:  { ar: 'مطلوب مستندات', en: 'Documents required' }
+        params: [{ name: documents, type: text, required: true, label: 'Which documents' }]
+        relay:  true
+      settlement_offered:
+        label:  { ar: 'عرض تسوية', en: 'Settlement offered' }
+        params: [{ name: amount, type: number, required: true, label: 'Amount (AED)' }, { name: basis, type: text, required: false, label: 'Basis' }]
+        relay:  true
+      claim_declined:
+        label:  { ar: 'المطالبة غير مشمولة', en: 'Claim declined' }
+        params: [{ name: reason, type: text, required: true, label: 'Reason (customer-safe wording)' }]
+        relay:  true
+    types:
+      own_damage:      { queue: claims_assessor, priority: high,   actions: [assessor_assigned, documents_required, settlement_offered, claim_declined], sla: { resolve_within_hours: 8 } }
+      third_party:     { queue: claims_assessor, priority: high,   actions: [assessor_assigned, documents_required, settlement_offered, claim_declined], sla: { resolve_within_hours: 8 } }
+      theft:           { queue: major_claims,    priority: urgent, actions: [assessor_assigned, documents_required, settlement_offered, claim_declined], sla: { resolve_within_hours: 4 } }
+      injury:          { queue: major_claims,    priority: urgent, actions: [assessor_assigned, documents_required],                                    sla: { resolve_within_hours: 2 } }
+      windscreen:      { queue: fnol_desk,       priority: normal, actions: [assessor_assigned, settlement_offered],                                    sla: { resolve_within_hours: 24 } }
+      policy_query:    { queue: underwriting,    priority: normal,                                                                                      sla: { resolve_within_hours: 24 } }

@@ -1,0 +1,23 @@
+flow_id: ticket-status
+
+strings:
+  intro: 'Here are your after-sales tickets. Tap an action under any ticket. 👇'
+
+  # Card action buttons.
+  btn_details: '🔎 Latest update'
+  btn_docs:    '📎 Send a document'
+  btn_reply:   '💬 Reply / send info'
+
+  # 📎 Add a document.
+  docs_gap: 'Ask the customer to upload the photo or document they want to add to this ticket.'
+  f_doc:    'Photo / document'
+  cap_doc:  'Document added by the customer'
+  docs_ok:  'Got it — your document has been added to ticket XP-{ref}. Our team will review it. ✅'
+
+  # 💬 Reply / send info.
+  msg_gap:   "Ask the customer what they'd like to tell the team about this ticket — extra details, an answer to a question, or any update."
+  f_message: 'Your message'
+  msg_ok:    "Thanks — your reply has reached the team on ticket XP-{ref}. They'll follow up with you here. ✅"
+
+  # Shared error line for a failed action.
+  err: 'Sorry — something went wrong on our side. Please try again in a moment.'

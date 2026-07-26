@@ -1,0 +1,8 @@
+flow_id: services
+
+strings:
+  intro:      '🔧 لدينا {total} باقة صيانة — اسحب لاستعراضها:'
+  from:       '💰 تبدأ من {price}'
+  duration:   '⏱️ حوالي {min} دقيقة'
+  btn_book:   '🗓️ احجز'
+  btn_check:  '📸 افحص بالصورة'

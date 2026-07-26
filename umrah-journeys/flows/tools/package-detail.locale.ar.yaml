@@ -1,0 +1,14 @@
+flow_id: package-detail
+
+strings:
+  nights:    '🌙 {nights} ليالٍ'
+  makkah:    '🕋 فندق مكة: {hotel}'
+  madinah:   '🕌 فندق المدينة: {hotel}'
+  distance:  '📍 {distance}'
+  transport: '🚌 {transport}'
+  includes:  '✅ {includes}'
+  price:     '💰 السعر للفرد: {price}'
+  footer:    'الأسعار للفرد في الغرفة المزدوجة وتختلف بحسب نوع الغرفة.'
+  btn_book:  '📝 احجز هذه الباقة'
+  btn_ask:   '💬 استفسار'
+  btn_back:  '↩️ باقي الباقات'

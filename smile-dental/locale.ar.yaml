@@ -1,0 +1,5 @@
+# smile-dental — pack-wide Arabic strings.
+pack_id: smile-dental
+strings:
+  field_picker_footer: 'اختر من القائمة 👆'
+  greeting:            'أهلاً بك في عيادة سمايل 🦷 كيف أساعدك؟'

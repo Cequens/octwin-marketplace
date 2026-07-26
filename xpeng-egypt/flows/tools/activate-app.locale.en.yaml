@@ -1,0 +1,10 @@
+flow_id: activate-app
+
+strings:
+  gap:             'Politely ask the customer, in their language, for the item still needed to activate their XPeng App.'
+  f_phone:         'Your phone number? (so we can verify and reach you)'
+  f_registration:  '📷 Please send a clear photo of your car registration (رخصة السيارة).'
+  f_id:            '📷 Now please send a photo of the car owner’s national ID.'
+  cap_registration: 'Car registration'
+  cap_id:           'Owner national ID'
+  confirm:         'Thanks! Your XPeng App activation request is logged as XP-{ref} 🎫 Our team will verify your documents and activate your account within {sla} hours. I’ll let you know as soon as it’s done.'

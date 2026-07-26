@@ -1,0 +1,73 @@
+flow_id:     model-details
+version:     1
+description: |-
+  Show full details and specs for ONE XPENG model (hero photo, range, battery,
+  power, seats, indicative price) plus a photo gallery. Pass model_code — one of
+  m03, p7, p7_plus, g6, g9, x9.
+
+input:
+  model_code:
+    type: enum
+    enum: [m03, p7, p7_plus, g6, g9, x9]
+    optional: true
+    describe: 'The model to show. Omit only if unknown — then the tool asks.'
+
+entry:
+  - if: '$input.model_code == null'
+    goto: need_code
+  - else: true
+    goto: load
+
+steps:
+  need_code:
+    - answer:
+        instructions: "Ask which model they're interested in (MONA M03, P7, P7+, G6, G9, or X9), or call browse-models to show the whole lineup."
+
+  load:
+    - do: record_get
+      args:
+        entity: model
+        match: { field: code, value: '$input.model_code' }
+      bind: m
+      outputs:
+        ok:        [{ goto: show }]
+        not_found: [{ goto: unknown }]
+        # failed → throws → error-net
+
+  show:
+    # Hero card: photo + iconed specs + the CTA set (carousel, since detail_card has no image).
+    - render:
+        render_intent: carousel
+        body: '{$t("model-details.intro")}'
+        items: '[$m]'
+        item_template:
+          image_url: '$coalesce($item.fields.photo, "")'
+          body: "$lines([ '🚗 ' + $loc($item.fields.name), $loc($item.fields.tagline), '', '⚡ ' + $t('model-details.range') + ': ' + $format_number($item.fields.range_km) + ' ' + $t('model-details.km'), '🔋 ' + $t('model-details.battery') + ': ' + $format_number($item.fields.battery_kwh) + ' kWh', '🐎 ' + $t('model-details.power') + ': ' + $format_number($item.fields.power_hp) + ' hp', '⏱ ' + $t('model-details.accel') + ': ' + $format_number($item.fields.accel_0_100) + ' ' + $t('model-details.sec'), '👥 ' + $t('model-details.seats') + ': ' + $format_number($item.fields.seats), '', '💰 ' + $t('model-details.from') + ': ' + $format_number($item.fields.price_from) + ' ' + $t('model-details.egp'), '', $loc($item.fields.highlights), '', 'ℹ️ ' + $t('xpeng-egypt.price_provisional') ])"
+          # WhatsApp + web cap carousel cards at 2 buttons (carousel.buttonsPerCard).
+          # Keep the two conversion CTAs; branches stay reachable via the home hub
+          # and the test-drive flow's own branch picker.
+          buttons:
+            - { title: '{$t("xpeng-egypt.cta_quote")}',       on_select: { invoke: capture-lead,    with: { interested_model: '$m.fields.code', interest_type: quote } } }
+            - { title: '{$t("xpeng-egypt.cta_test_drive")}',  on_select: { invoke: book-test-drive, with: { model_code: '$m.fields.code' } } }
+      memory_note: 'Showed details for model {$m.fields.code}.'
+    # Purchase funnel: deep on a specific model — stamp the model for cohort analysis.
+    - track: { journey: purchase, event: viewed_model, metadata: { model: '$m.fields.code' } }
+    # Follow-on: swipeable gallery of extra shots (best-effort — never blocks the turn).
+    - if: '$length($m.fields.gallery) > 0'
+      then:
+        - do: send_message
+          detach: true
+          args:
+            to: '$conversation.channel_contact_handle'
+            intent:
+              render_intent: carousel
+              body: '{$t("model-details.gallery")}'
+              items: '$m.fields.gallery'
+              item_template:
+                image_url: '$item'
+                body: '{$loc($m.fields.name)}'
+    - end: applied
+
+  unknown:
+    - answer:
+        instructions: "That model wasn't found. List the available models (MONA M03, P7, P7+, G6, G9, X9) and offer to show the full lineup via browse-models."

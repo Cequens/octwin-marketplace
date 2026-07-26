@@ -1,0 +1,118 @@
+# XRM declaration for pharmaplus-rx.
+#
+#  • `otc_item`     — the over-the-counter shelf ONLY. `rx_required` is a hard flag: an
+#                     item marked true is never sellable through the OTC flow, whatever the
+#                     agent is asked. That is a data-level guard, not a prompt.
+#  • `rx_request`   — a prescription intake, its own pipeline. It stops at
+#                     `pharmacist_review`; the dispensing decision is the pharmacist's case.
+#  • `basket_line`  — the OTC basket, contact-scoped.
+
+entities:
+  otc_item:
+    label: { en: 'OTC item', ar: 'منتج بدون روشتة' }
+    fields:
+      code:        { type: text, required: true, label: { en: 'Code', ar: 'الرمز' } }
+      name:        { type: text, required: true, label: { en: 'Name', ar: 'الاسم' } }
+      category:    { type: select, options: [pain_relief, cold_flu, vitamins, baby, skincare, first_aid, devices], label: { en: 'Category', ar: 'القسم' } }
+      description: { type: textarea, label: { en: 'Description', ar: 'الوصف' } }
+      price:       { type: money, label: { en: 'Price', ar: 'السعر' } }
+      currency:    { type: text, label: { en: 'Currency', ar: 'العملة' }, default: 'EGP' }
+      # TRUE means: never sellable without a pharmacist. The OTC flow filters on it.
+      rx_required: { type: boolean, label: { en: 'Prescription required', ar: 'يتطلب روشتة' }, default: false }
+      in_stock:    { type: boolean, label: { en: 'In stock', ar: 'متوفر' }, default: true }
+      photo:       { type: image, label: { en: 'Photo', ar: 'الصورة' } }
+    list: [category, price, in_stock]
+    search: { text: [name, description], semantic: [name, description] }
+    dedupe_by: code
+
+  rx_request:
+    label: { en: 'Prescription request', ar: 'طلب صرف روشتة' }
+    fields:
+      patient_name:   { type: text, label: { en: 'Patient', ar: 'اسم المريض' } }
+      prescriber:     { type: text, label: { en: 'Prescriber', ar: 'الطبيب' } }
+      # Stored VERBATIM — what the paper says, never a normalised or corrected reading.
+      items_verbatim: { type: textarea, label: { en: 'Prescription text (verbatim)', ar: 'نص الروشتة كما هو' } }
+      rx_photo:       { type: image, label: { en: 'Prescription photo', ar: 'صورة الروشتة' } }
+      delivery_area:  { type: select, options: [nasr_city, maadi, heliopolis, zamalek, october, giza], label: { en: 'Area', ar: 'المنطقة' } }
+      address:        { type: textarea, label: { en: 'Address', ar: 'العنوان' } }
+      phone:          { type: text, label: { en: 'Phone', ar: 'الهاتف' } }
+      insurance:      { type: text, label: { en: 'Insurer', ar: 'التأمين' } }
+    list: [patient_name, delivery_area]
+    pipeline:
+      # Ends at `pharmacist_review` on the bot's side — everything past it is a pharmacist
+      # decision recorded on the case.
+      stages:   [received, pharmacist_review, approved, dispensed, delivered, rejected]
+      initial:  received
+      terminal: [delivered, rejected]
+    milestones:
+      submitted_for_review: { label: { en: 'Sent for review', ar: 'أُرسلت للمراجعة' }, stage: pharmacist_review }
+      delivered:            { label: { en: 'Delivered', ar: 'تم التسليم' },            stage: delivered, terminal: true }
+
+  # An OTC order. The basket used to end at a card that PROMISED the branch would call,
+  # while creating nothing and notifying no one — a dead end with a false promise. An
+  # order is now a real record on a pipeline, paired with a `dispensing` case so a human
+  # actually packs it.
+  otc_order:
+    label: { en: 'Shelf order', ar: 'طلب من الرف' }
+    fields:
+      items_summary:  { type: textarea, label: { en: 'Items', ar: 'المنتجات' } }
+      item_count:     { type: number, label: { en: 'Items', ar: 'عدد المنتجات' } }
+      subtotal:       { type: money, label: { en: 'Subtotal', ar: 'إجمالي المنتجات' } }
+      delivery_fee:   { type: money, label: { en: 'Delivery', ar: 'التوصيل' } }
+      total:          { type: money, label: { en: 'Total', ar: 'الإجمالي' } }
+      currency:       { type: text, label: { en: 'Currency', ar: 'العملة' }, default: 'EGP' }
+      patient_name:   { type: text, label: { en: 'Customer', ar: 'العميل' } }
+      delivery_area:  { type: select, options: [nasr_city, maadi, heliopolis, zamalek, october, giza], label: { en: 'Area', ar: 'المنطقة' } }
+      address:        { type: textarea, label: { en: 'Address', ar: 'العنوان' } }
+      phone:          { type: text, label: { en: 'Phone', ar: 'الهاتف' } }
+      payment_method: { type: select, options: [cash_on_delivery, card_on_delivery], label: { en: 'Payment', ar: 'الدفع' } }
+    list: [patient_name, item_count, total, delivery_area]
+    pipeline:
+      stages:   [placed, packed, out_for_delivery, delivered, cancelled]
+      initial:  placed
+      terminal: [delivered, cancelled]
+    milestones:
+      order_placed:    { label: { en: 'Placed', ar: 'تم الطلب' },      stage: placed }
+      order_delivered: { label: { en: 'Delivered', ar: 'تم التسليم' }, stage: delivered, terminal: true }
+
+  basket_line:
+    label: { en: 'Basket line', ar: 'سطر السلة' }
+    fields:
+      # A per-contact UNIQUENESS key: `<contact-id>:<item>`. `dedupe_by` resolves through
+      # `findRecord`, which scopes to project + entity + field value and NOT to the
+      # contact — so dedupe_by on a bare item code made one shopper's `record_save match:`
+      # update ANOTHER shopper's line (their basket silently changed; this one looked
+      # empty, because the row belonged to someone else). Folding the contact into the key
+      # restores per-customer isolation.
+      line_key:   { type: text, label: { en: 'Line key', ar: 'مفتاح السطر' } }
+      item:       { type: record, entity: otc_item, label: { en: 'Item', ar: 'المنتج' } }
+      code:       { type: text, label: { en: 'Code', ar: 'الرمز' } }
+      title:      { type: text, label: { en: 'Item', ar: 'المنتج' } }
+      qty:        { type: number, label: { en: 'Qty', ar: 'الكمية' }, default: 1 }
+      unit_price: { type: money, label: { en: 'Unit price', ar: 'سعر الوحدة' } }
+      line_total: { type: money, label: { en: 'Line total', ar: 'إجمالي السطر' } }
+    list: [title, qty, line_total]
+    dedupe_by: line_key
+
+segments:
+  open_rx:
+    entity: rx_request
+    label: { en: 'Open prescriptions', ar: 'روشتات قائمة' }
+    where: { all: [{ active: true }] }
+
+demo:
+  - entity: otc_item
+    fields: { code: 'PAR-500', name: 'باراسيتامول ٥٠٠ مجم (٢٠ قرص)', category: pain_relief, description: 'مسكن وخافض للحرارة — يُستخدم حسب التعليمات المكتوبة على العلبة. Analgesic and antipyretic; follow the pack directions.', price: 25, currency: EGP, rx_required: false, in_stock: true, photo: 'generate:Clean product photograph of a generic white paracetamol tablet box on a bright pharmacy counter, unbranded plain packaging, soft even lighting.' }
+  - entity: otc_item
+    fields: { code: 'VITC-1000', name: 'فيتامين سي ١٠٠٠ مجم (٣٠ قرص)', category: vitamins, description: 'مكمل غذائي لدعم المناعة. Vitamin C dietary supplement.', price: 90, currency: EGP, rx_required: false, in_stock: true, photo: 'generate:Clean product photograph of an unbranded vitamin C supplement tub on a bright pharmacy shelf, plain white label, soft lighting.' }
+  - entity: otc_item
+    fields: { code: 'ORS-SACH', name: 'محلول معالجة الجفاف (١٠ أكياس)', category: first_aid, description: 'أكياس أملاح لتعويض السوائل. Oral rehydration salt sachets.', price: 45, currency: EGP, rx_required: false, in_stock: true, photo: 'generate:Clean product photograph of unbranded oral rehydration salt sachets fanned out on a pharmacy counter, plain packaging, soft lighting.' }
+  - entity: otc_item
+    fields: { code: 'BABY-WIPE', name: 'مناديل مبللة للأطفال (٧٢ منديل)', category: baby, description: 'مناديل مبللة لطيفة على بشرة الطفل. Gentle baby wipes.', price: 55, currency: EGP, rx_required: false, in_stock: true, photo: 'generate:Clean product photograph of an unbranded pack of baby wipes on a pharmacy shelf, pastel plain packaging, soft lighting.' }
+  - entity: otc_item
+    fields: { code: 'BP-MON', name: 'جهاز قياس ضغط الدم', category: devices, description: 'جهاز رقمي لقياس ضغط الدم للاستخدام المنزلي. Digital home blood-pressure monitor.', price: 850, currency: EGP, rx_required: false, in_stock: true, photo: 'generate:Clean product photograph of a digital home blood pressure monitor with an arm cuff on a white surface, unbranded, soft studio lighting.' }
+  - entity: otc_item
+    fields: { code: 'SUN-50', name: 'واقٍ شمسي SPF 50', category: skincare, description: 'واقٍ شمسي عالي الحماية للوجه والجسم. High-protection sunscreen for face and body.', price: 320, currency: EGP, rx_required: false, in_stock: true, photo: 'generate:Clean product photograph of an unbranded SPF 50 sunscreen tube standing on a white surface, plain label, bright soft lighting.' }
+  # An Rx-only line, seeded deliberately so the OTC filter has something to exclude.
+  - entity: otc_item
+    fields: { code: 'AB-AMOX', name: 'مضاد حيوي (أموكسيسيلين)', category: cold_flu, description: 'يُصرف بروشتة طبية فقط. Prescription-only; dispensed after pharmacist review.', price: 0, currency: EGP, rx_required: true, in_stock: true }

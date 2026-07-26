@@ -1,0 +1,219 @@
+# book-class — class → trainer → a slot with real remaining seats → confirm → reserve.
+#
+# The `full` port is the whole point of this pack. A class slot holds many seats, so
+# the interesting failure is not "the diary is busy" but "the last mat went while you
+# were reading" — and the platform's conditional upsert is what makes that safe rather
+# than overselling. The slot label shows the remaining count so the member can see it
+# closing.
+
+flow_id:     book-class
+version:     1
+description: |-
+  [interactive] Book a seat in a class. Call when the member wants to attend. Pass
+  `class_id` when they tapped a class card and `is_trial: true` when this is a first
+  free session. The tool asks for whatever is missing.
+
+input:
+  class_id:
+    type:     string
+    optional: true
+    describe: 'Class (session_type) record id from a classes card — never a typed name.'
+  is_trial:
+    type:     boolean
+    optional: true
+    describe: 'True when this is a free trial session for a prospective member.'
+
+entry:
+  - else: true
+    goto: collect_fields
+
+steps:
+  collect_fields:
+    - collect:
+        before_each:
+          - assign: { class_label: null, class_discipline: null, trainer_label: null }
+          - if: '$state.class_id != null'
+            then:
+              - do: record_get
+                args: { entity: session_type, record_id: '$state.class_id' }
+                bind: cls
+                outputs:
+                  ok:        []
+                  not_found: [{ assign: { state: '$merge($state, { class_id: null })' } }]
+                  failed:    []
+              - if: '$cls.fields != null'
+                then:
+                  - assign:
+                      class_label:      '$cls.fields.name'
+                      class_discipline: '$cls.fields.discipline'
+          - if: '$state.trainer_id != null'
+            then:
+              - do: record_get
+                args: { entity: trainer, record_id: '$state.trainer_id' }
+                bind: tr
+                outputs:
+                  ok:        []
+                  # A dead trainer id would call slot_list on nothing — drop it.
+                  not_found: [{ assign: { state: '$merge($state, { trainer_id: null })' } }]
+                  failed:    []
+              - if: '$tr.fields != null'
+                then:
+                  - assign: { trainer_label: '$tr.fields.name' }
+        progress: '$lines($compact([
+                     $t("book-class.progress.header"),
+                     $class_label != null ? $t("book-class.progress.class", { class: $class_label }) : null,
+                     $trainer_label != null ? $t("book-class.progress.trainer", { trainer: $trainer_label }) : null,
+                     $state.slot_label != null ? $t("book-class.progress.slot", { slot: $state.slot_label }) : null
+                   ]), "\n")'
+        gap_instructions: 'Ask the member for the next missing detail ({$collect_field}), one at a time, in their language. Re-call book-class once they answer. Never give training or medical advice.'
+        fields:
+          - field: class_id
+            when: '$state.class_id == null'
+            label: '$t("book-class.label.class")'
+            options:
+              header: book-class.field_header.class
+              cta:    book-class.field_cta.class
+              fetch:  { do: record_search, args: { entity: session_type, query: '', limit: 10 }, bind: cs }
+              rows:   '$cs.rows'
+              map:
+                value:       '$item.id'
+                label:       '$item.fields.name'
+                description: '$item.fields.duration_min'
+                selection:   { class_label: '$item.fields.name', class_discipline: '$item.fields.discipline' }
+              auto_resolve: true
+          # Only trainers who teach this discipline are offered — a yoga instructor
+          # never appears for a boxing class.
+          - field: trainer_id
+            when: '$state.trainer_id == null'
+            label: '$t("book-class.label.trainer")'
+            options:
+              header: book-class.field_header.trainer
+              cta:    book-class.field_cta.trainer
+              fetch:  { do: record_search, args: { entity: trainer, query: '', limit: 10, where: { all: [{ field: specialty, op: eq, value: '$class_discipline' }] } }, bind: ts }
+              rows:   '$ts.rows'
+              map:
+                value:       '$item.id'
+                label:       '$item.fields.name'
+                description: '$item.fields.bio'
+                selection:   { trainer_label: '$item.fields.name' }
+              auto_resolve: true
+          # The label carries the REMAINING seat count straight off the engine's slot
+          # row, so a member can see a class filling up.
+          - field: slot_start
+            label: '$t("book-class.label.slot")'
+            options:
+              header: book-class.field_header.slot
+              cta:    book-class.field_cta.slot
+              fetch:  { do: slot_list, args: { resource_record_id: '$state.trainer_id' }, bind: slots }
+              rows:   '$slots'
+              map:
+                value: '$item.slot_start'
+                label: '$lines($compact([$item.local_date, $item.local_time]), " — ")'
+                description: '$t("book-class.seats_left", { remaining: $item.remaining })'
+                selection:
+                  slot_minutes: '$item.slot_minutes'
+                  slot_label:   '$lines($compact([$item.local_date, $item.local_time]), " — ")'
+                  remaining:    '$item.remaining'
+        complete: [{ goto: confirm }]
+
+  confirm:
+    - use: approve_apply
+      with:
+        preview: '$lines($compact([
+                    $t("book-class.preview.header"),
+                    $t("book-class.preview.class", { class: $coalesce($class_label, "-") }),
+                    $t("book-class.preview.trainer", { trainer: $coalesce($trainer_label, "-") }),
+                    $t("book-class.preview.slot", { slot: $coalesce($state.slot_label, "-") }),
+                    $state.remaining != null ? $t("book-class.preview.remaining", { remaining: $state.remaining }) : null,
+                    $state.is_trial == true ? $t("book-class.preview.trial") : null
+                  ]), "\n")'
+        header:        '{$t("book-class.approve_header")}'
+        footer:        '{$t("book-class.approve_footer")}'
+        confirm_title: '{$t("book-class.confirm_title")}'
+        cancel_title:  '{$t("book-class.cancel_title")}'
+        apply:         commit
+        abort:         aborted
+        on_other:      collect_fields
+        memory_note:   'Seat NOT reserved yet — awaiting the member''s ✅.'
+
+  commit:
+    - do: booking_reserve
+      args:
+        resource_record_id: '$state.trainer_id'
+        slot_start:         '$state.slot_start'
+        slot_minutes:       '$state.slot_minutes'
+        fields:
+          session_type:  '$state.class_id'
+          class_label:   '$class_label'
+          trainer_label: '$trainer_label'
+          slot_label:    '$state.slot_label'
+          is_trial:      '$coalesce($state.is_trial, false)'
+      bind: seat
+      outputs:
+        ok:           [{ goto: after_booking }]
+        # The realistic failure for a class: the last seat went a second ago.
+        full:         [{ goto: class_full }]
+        invalid_slot: [{ goto: class_full }]
+        failed:       [{ end: failed }]
+
+  after_booking:
+    # A trial booking is a sales event — advance the enquiry so the club can measure
+    # trial-to-member conversion without anyone typing into a CRM.
+    - if: '$state.is_trial == true'
+      then:
+        - do: record_save
+          args:
+            entity: member_lead
+            stage:  trial_booked
+            fields:
+              notes: '$t("book-class.trial_note", { class: $coalesce($class_label, "-"), slot: $coalesce($state.slot_label, "-") })'
+          bind: lead
+          outputs:
+            ok:      []
+            invalid: []
+            failed:  []
+    - goto: remind
+
+  remind:
+    - if: '$length($coalesce($seat.reminders, [])) > 0'
+      then:
+        - do: schedule_notify
+          args:
+            to:          { contact_id: '$contact.id' }
+            send_at:     '$seat.reminders[1].send_at'
+            dedupe_key:  'ironpulse:class:{$seat.record_id}:t2'
+            memory_note: 'Class reminder (t2)'
+            intent:
+              render_intent: detail_card
+              body: '{$t("book-class.reminder.body", { class: $coalesce($class_label, ""), slot: $coalesce($state.slot_label, "") })}'
+              buttons:
+                - { title: '{$t("book-class.reminder.mine")}', on_select: { invoke: my-schedule } }
+          detach: true
+    - render:
+        render_intent: detail_card
+        header: '{$t("book-class.done_header")}'
+        body: '$lines($compact([
+                 $t("book-class.done_body", { class: $coalesce($class_label, ""), trainer: $coalesce($trainer_label, ""), slot: $coalesce($state.slot_label, "") }),
+                 $t("book-class.done_ref", { ref: $seat.record_number }),
+                 $t("book-class.done_arrive")
+               ]), "\n")'
+        buttons:
+          - { title: '{$t("book-class.btn_mine")}',    on_select: { invoke: my-schedule } }
+          - { title: '{$t("book-class.btn_classes")}', on_select: { invoke: classes } }
+      memory_note: 'Reserved a seat (#{$seat.record_number}) in {$class_label} with {$trainer_label} at {$state.slot_label}.'
+      data: { booking_number: '$seat.record_number' }
+    - end: applied
+
+  class_full:
+    - render:
+        render_intent: detail_card
+        header: '{$t("book-class.full_header")}'
+        body:   '{$t("book-class.full_body")}'
+        buttons:
+          - { title: '{$t("book-class.btn_retry")}',   on_select: { invoke: book-class, with: { class_id: '$state.class_id' } } }
+          - { title: '{$t("book-class.btn_classes")}', on_select: { invoke: classes } }
+      memory_note: 'The class filled up before the member confirmed — offered another slot.'
+    - end: aborted
+
+  aborted:
+    - end: { status: aborted, body: '{$t("book-class.aborted")}' }

@@ -1,0 +1,27 @@
+flow_id: membership
+
+strings:
+  label.goal:       'هدفك من التمرين'
+  label.experience: 'خبرتك السابقة'
+  label.name:       'الاسم'
+
+  field_header.goal:       '🎯 إيه هدفك من التمرين؟'
+  field_cta.goal:          'اختر'
+  field_header.experience: '📊 خبرتك في التمرين؟'
+  field_cta.experience:    'اختر'
+
+  goal.weight_loss:      '⚖️ نزول وزن'
+  goal.muscle_gain:      '💪 بناء عضل'
+  goal.endurance:        '🏃 لياقة وتحمّل'
+  goal.general_fitness:  '✨ لياقة عامة'
+  goal.rehab:            '🩹 إعادة تأهيل'
+
+  exp.none:     'مبتدئ تماماً'
+  exp.some:     'تمرّنت قبل كذا'
+  exp.regular:  'أتمرّن بانتظام'
+
+  header:       '🎫 باقات العضوية'
+  intro:        'اختر باقة واحجز حصتك التجريبية المجانية:'
+  footer:       'الأسعار تشمل ضريبة القيمة المضافة.'
+  cta:          'الباقات'
+  classes_in:   'يشمل الحصص ✅'

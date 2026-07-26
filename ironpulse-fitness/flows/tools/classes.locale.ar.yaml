@@ -1,0 +1,9 @@
+flow_id: classes
+
+strings:
+  intro:             '🏋️ حصصنا — اسحب لاستعراضها:'
+  seats:             '🎟️ {seats} مقعداً في الحصة'
+  int.beginner:      '🟢 مبتدئ'
+  int.intermediate:  '🟡 متوسط'
+  int.advanced:      '🔴 متقدم'
+  btn_book:          '📅 احجز'

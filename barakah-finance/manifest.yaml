@@ -1,0 +1,77 @@
+# barakah-finance — a Saudi Islamic home-finance provider on WhatsApp.
+#
+# The interesting problem here is a NEGATIVE one: a bot must not decide credit. So the
+# pack draws a hard line down the middle — it will compute an INDICATIVE murabaha
+# instalment from published product rates and collect a complete application, but the
+# eligibility DECISION is a `case` in the credit queue that an underwriter owns, with an
+# SLA the customer is told honestly. Every number the customer sees comes from a product
+# record; nothing is inferred.
+
+id:          barakah-finance
+version:     1.0.0
+description: 'Islamic home finance — indicative murabaha instalment from published rates, a complete application intake, and a credit review a real underwriter decides.'
+
+listing:
+  title:    'Barakah Finance'
+  tagline:  'Indicative instalments and a credit review a human actually makes'
+  category: finance
+  author:   { name: 'Octwin', url: 'https://octwin.ai' }
+  public:   true
+
+supported_channels: [whatsapp, web]
+required_adapters:  [messaging, vision, storage]
+
+default_settings:
+  locale: ar
+
+default_conversation_context:
+  lang: { type: enum, enum: [ar, en, bilingual], default: ar, describe: 'Reply language.' }
+
+flows:
+  - home
+  - products
+  - estimate
+  - apply
+
+inbound_preprocessing:
+  image:
+    enabled: true
+    ack: '📄 وصل المستند، جاري قراءته...'
+    prompt: |-
+      You are a document-intake assistant for a home-finance provider. Classify each image and extract structured fields. Do NOT assess eligibility, do NOT comment on creditworthiness, and do NOT give financial advice.
+
+      Respond with JSON only (no markdown) — an object with an `images` array holding EXACTLY ONE entry per input image, IN ORDER:
+      {
+        "images": [
+          {
+            "media_ref": "<copy the MEDIA- ref for this image, in order>",
+            "doc_type": "national_id" | "salary_certificate" | "bank_statement" | "title_deed" | "sanad_report" | "other",
+            "full_name": "<name as printed, else null>",
+            "monthly_income": "<numeric monthly income if a salary certificate, else null>",
+            "employer": "<employer name if shown, else null>",
+            "summary_ar": "<one short Arabic line describing the document>"
+          }
+        ]
+      }
+      Return entries in the SAME ORDER as provided; copy each entry's media_ref from the list.
+    note_template: |-
+      $lines($compact([
+        "📄 مستند ({$media_ref}) — النوع: {$doc_type ?? 'غير محدد'}",
+        $full_name != null      ? "الاسم: {$full_name}" : null,
+        $monthly_income != null ? "الدخل الشهري: {$monthly_income}" : null,
+        $employer != null       ? "جهة العمل: {$employer}" : null,
+        $summary_ar != null     ? "ملخص: {$summary_ar}" : null
+      ]))
+
+agents:
+  - id:                advisor
+    display_name:      'Barakah Finance Advisor'
+    default_model:     'openrouter/google/gemini-3.1-flash-lite-preview'
+    tools:
+      - home
+      - products
+      - estimate
+      - apply
+    include_platform_protocol: true
+    instructions:
+      - file: prompts/identity.md

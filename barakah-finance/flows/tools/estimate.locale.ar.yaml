@@ -1,0 +1,46 @@
+flow_id: estimate
+
+strings:
+  label.product: 'المنتج'
+  label.price:   'سعر العقار'
+  label.down:    'الدفعة المقدمة'
+  label.term:    'مدة التمويل'
+
+  field_header.product: '📋 أي منتج تمويلي؟'
+  field_cta.product:    'المنتجات'
+  field_header.price:   '🏠 سعر العقار تقريباً؟'
+  field_cta.price:      'اختر'
+  field_header.down:    '💵 كم الدفعة المقدمة؟'
+  field_cta.down:       'اختر'
+  field_header.term:    '📆 مدة التمويل؟'
+  field_cta.term:       'اختر'
+
+  price.p500:   'حتى 500 ألف ريال'
+  price.p800:   'حتى 800 ألف ريال'
+  price.p1200:  'حتى 1.2 مليون ريال'
+  price.p2000:  'حتى 2 مليون ريال'
+  price.p3000:  'حتى 3 مليون ريال'
+
+  down.d10:  '10% دفعة مقدمة'
+  down.d15:  '15% دفعة مقدمة'
+  down.d20:  '20% دفعة مقدمة'
+  down.d30:  '30% دفعة مقدمة'
+  down.d50:  '50% دفعة مقدمة'
+
+  term.y10:  '10 سنوات'
+  term.y15:  '15 سنة'
+  term.y20:  '20 سنة'
+  term.y25:  '25 سنة'
+
+  header:          '🧮 القسط الشهري التقديري'
+  line.product:    '📋 {product} ({structure})'
+  line.price:      '🏠 سعر العقار: {amount}'
+  line.down:       '💵 الدفعة المقدمة ({pct}%): {amount}'
+  line.financed:   '🏦 المبلغ المموَّل: {amount}'
+  line.term:       '📆 المدة: {years} سنة'
+  line.rate:       '📈 نسبة الربح المنشورة: {rate}%'
+  line.monthly:    '📌 القسط الشهري التقديري: {amount}'
+  disclaimer:      'ℹ️ رقم تقديري للاسترشاد فقط، محسوب من النسبة المنشورة — وليس عرضاً ولا موافقة.'
+  footer:          'القرار والمبلغ النهائي من لجنة التمويل بعد دراسة الطلب.'
+  btn_apply:       '📝 قدّم طلب'
+  btn_products:    '📋 منتجات أخرى'

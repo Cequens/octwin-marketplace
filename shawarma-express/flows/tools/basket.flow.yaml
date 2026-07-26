@@ -1,0 +1,344 @@
+# basket — add / view / clear / checkout, built from contact-scoped `basket_line`
+# records. Checkout enforces the branch's own minimum order and adds the delivery fee
+# from pack config, so the total the customer confirms is the total they pay.
+
+flow_id:     basket
+version:     1
+description: |-
+  Manage the basket. `action`: add (needs dish_code) · view · remove · clear ·
+  checkout. Default is view. Only call checkout when the customer asked to finish
+  the order.
+
+input:
+  action:    { type: enum, enum: [add, view, remove, clear, checkout], optional: true, describe: 'add | view | remove | clear | checkout (default view).' }
+  dish_code: { type: string, optional: true, describe: 'The dish code — required for add / remove. Comes from a menu card, never typed.' }
+  qty:       { type: number, optional: true, describe: 'Quantity for add (default 1).' }
+
+entry:
+  - else: true
+    goto: route
+
+steps:
+  route:
+    - dispatch:
+        key: '$coalesce($input.action, "view")'
+        cases:
+          add:      [{ goto: load_dish }]
+          view:     [{ goto: load_lines }]
+          remove:   [{ goto: remove_line }]
+          clear:    [{ goto: clear_lines }]
+          checkout: [{ goto: checkout_load }]
+
+  load_dish:
+    - do: record_get
+      args: { entity: dish, match: { field: code, value: '$input.dish_code' } }
+      bind: dish
+      outputs:
+        ok:        [{ goto: check_available }]
+        not_found: [{ goto: unknown_dish }]
+        failed:    [{ goto: unavailable }]
+
+  check_available:
+    - if: '$dish.fields.available == false'
+      then:
+        - goto: sold_out
+    - goto: add_line
+
+  add_line:
+    - assign:
+        n:    '$coalesce($input.qty, 1)'
+        unit: '$dish.fields.price.value / $dish.fields.price.offset'
+    - do: record_save
+      args:
+        entity: basket_line
+        # Deduped per SHOPPER, not per dish: `findRecord` is not contact-scoped, so a bare
+        # dish code let one customer's upsert land on another customer's line.
+        match:  { field: line_key, value: '$contact.id + ":" + $input.dish_code' }
+        fields:
+          line_key:   '$contact.id + ":" + $input.dish_code'
+          dish:       '$dish.record_id'
+          code:       '$input.dish_code'
+          title:      '$dish.fields.name'
+          qty:        '$n'
+          unit_price: '$unit'
+          line_total: '$unit * $n'
+      outputs:
+        ok:      [{ goto: load_lines }]
+        invalid: []
+        failed:  [{ goto: unavailable }]
+
+  remove_line:
+    - do: record_get
+      args: { entity: basket_line, match: { field: line_key, value: '$contact.id + ":" + $input.dish_code' } }
+      bind: gone
+      outputs:
+        ok:        [{ goto: zero_line }]
+        not_found: [{ goto: load_lines }]
+        failed:    [{ goto: unavailable }]
+
+  # A flow cannot delete a record, so a removed line is zeroed and filtered out of
+  # every read below (`$filter_gte` on the quantity).
+  zero_line:
+    - do: record_save
+      args: { entity: basket_line, record_id: '$gone.record_id', fields: { qty: 0, line_total: 0 } }
+      outputs:
+        ok:      [{ goto: load_lines }]
+        invalid: [{ goto: load_lines }]
+        failed:  [{ goto: unavailable }]
+
+  clear_lines:
+    - do: record_list
+      args: { entity: basket_line, limit: 50 }
+      bind: all_lines
+      outputs:
+        ok:     [{ goto: zero_all }]
+        empty:  [{ goto: load_lines }]
+        failed: [{ goto: unavailable }]
+
+  zero_all:
+    - foreach:
+        in: '$all_lines.rows'
+        as: row
+        body:
+          - do: record_save
+            args: { entity: basket_line, record_id: '$row.id', fields: { qty: 0, line_total: 0 } }
+    - goto: load_lines
+
+  load_lines:
+    - do: record_list
+      args: { entity: basket_line, limit: 50 }
+      bind: lines
+      outputs:
+        ok:     [{ goto: render_basket }]
+        empty:  [{ goto: empty_basket }]
+        failed: [{ goto: unavailable }]
+
+  render_basket:
+    # `$filter_gte(rows, "<path>", min)` — `$filter`'s predicate is a field path, not
+    # a per-row expression, so an expression predicate would return everything.
+    - assign: { live: '$filter_gte($coalesce($lines.rows, []), "fields.qty", 1)' }
+    - if: '$length($live) == 0'
+      then:
+        - goto: empty_basket
+    - assign:
+        subtotal: '$sum($map($live, $item.fields.line_total.value / $item.fields.line_total.offset))'
+        count:    '$sum($map($live, $item.fields.qty))'
+        body_lines: '$map($live, "🌯 " + $item.fields.qty + "× " + $item.fields.title + " — " + $format_money_field($item.fields.line_total, "EGP"))'
+        minimum:  '$coalesce($config.delivery.minimum_order, 80)'
+    - render:
+        render_intent: detail_card
+        header: '{$t("basket.header")}'
+        body: '$lines($compact($concat(
+                 $body_lines,
+                 [$t("basket.subtotal", { subtotal: $format_money($subtotal, "EGP") })],
+                 [$subtotal < $minimum ? $t("basket.below_min", { minimum: $format_money($minimum, "EGP") }) : null]
+               )), "\n")'
+        buttons:
+          - { title: '{$t("basket.btn_checkout")}', on_select: { invoke: basket, with: { action: checkout } } }
+          - { title: '{$t("basket.btn_menu")}',     on_select: { invoke: menu } }
+          - { title: '{$t("basket.btn_clear")}',    on_select: { invoke: basket, with: { action: clear } } }
+      memory_note: 'Basket holds {$count} item(s), subtotal {$subtotal} EGP (minimum {$minimum}).'
+      data: { count: '$count', subtotal: '$subtotal' }
+    - end: applied
+
+  empty_basket:
+    - render:
+        render_intent: detail_card
+        header: '{$t("basket.header")}'
+        body:   '{$t("basket.empty")}'
+        buttons:
+          - { title: '{$t("basket.btn_menu")}', on_select: { invoke: menu } }
+      memory_note: 'The basket is empty.'
+    - end: applied
+
+  # ── checkout ─────────────────────────────────────────────────────────────
+  checkout_load:
+    - do: record_list
+      args: { entity: basket_line, limit: 50 }
+      bind: lines
+      outputs:
+        ok:     [{ goto: min_gate }]
+        empty:  [{ goto: empty_basket }]
+        failed: [{ goto: unavailable }]
+
+  min_gate:
+    - assign: { live: '$filter_gte($coalesce($lines.rows, []), "fields.qty", 1)' }
+    - assign:
+        subtotal: '$sum($map($live, $item.fields.line_total.value / $item.fields.line_total.offset))'
+        minimum:  '$coalesce($config.delivery.minimum_order, 80)'
+    - if: '$length($live) == 0'
+      then:
+        - goto: empty_basket
+    # The minimum is a business rule, not an error — say the number and let them add.
+    - if: '$subtotal < $minimum'
+      then:
+        - goto: below_minimum
+    - goto: gather
+
+  below_minimum:
+    - answer:
+        data: { subtotal: '$subtotal', minimum: '$minimum' }
+        instructions: 'The basket is under the delivery minimum. Say the shortfall warmly in one line, name the minimum, and suggest a side or a drink to reach it. Do NOT place the order.'
+
+  gather:
+    - collect:
+        before_each:
+          - assign:
+              live: '$filter_gte($coalesce($lines.rows, []), "fields.qty", 1)'
+          - assign:
+              order_subtotal: '$sum($map($live, $item.fields.line_total.value / $item.fields.line_total.offset))'
+              order_count:    '$sum($map($live, $item.fields.qty))'
+              order_summary:  '$lines($map($live, $item.fields.qty + "× " + $item.fields.title), ", ")'
+              fee:            '$coalesce($config.delivery.fee, 25)'
+          - assign:
+              order_total: '$order_subtotal + $fee'
+        progress: '$lines($compact([
+                     $t("basket.progress.header"),
+                     $t("basket.progress.subtotal", { subtotal: $format_money($order_subtotal, "EGP") }),
+                     $state.area != null ? $t("basket.progress.area") : null
+                   ]), "\n")'
+        gap_instructions: 'Ask the customer for the next delivery detail ({$collect_field}) in one short line, in Egyptian Arabic. Re-call basket with action=checkout once they answer.'
+        fields:
+          - field: customer_name
+            label:    '$t("basket.label.name")'
+            describe: "The customer's name for the delivery."
+          - field: area
+            label: '$t("basket.label.area")'
+            options:
+              header: basket.field_header.area
+              cta:    basket.field_cta.area
+              items:
+                - { value: nasr_city,  label: basket.area.nasr_city }
+                - { value: maadi,      label: basket.area.maadi }
+                - { value: zamalek,    label: basket.area.zamalek }
+                - { value: heliopolis, label: basket.area.heliopolis }
+                - { value: october,    label: basket.area.october }
+                - { value: giza,       label: basket.area.giza }
+          - field: address
+            label:    '$t("basket.label.address")'
+            describe: 'Street, building and flat number, plus a landmark for the driver.'
+          - field: payment_method
+            label: '$t("basket.label.payment")'
+            options:
+              header: basket.field_header.payment
+              cta:    basket.field_cta.payment
+              items:
+                - { value: cash_on_delivery, label: basket.pay.cash }
+                - { value: card_on_delivery, label: basket.pay.card }
+                - { value: wallet,           label: basket.pay.wallet }
+        complete: [{ goto: pick_branch }]
+
+  # The nearest branch that covers the customer's area fulfils the order. If the area
+  # has no branch, the order is still taken and the desk routes it — never lost.
+  pick_branch:
+    - do: record_list
+      args:
+        entity: branch
+        all:    true
+        limit:  5
+        where:  { all: [{ field: area, op: eq, value: '$state.area' }] }
+      bind: branches
+      outputs:
+        ok:     [{ goto: confirm }]
+        empty:  [{ goto: confirm }]
+        failed: [{ goto: confirm }]
+
+  confirm:
+    - assign:
+        branch:       '$branches.rows[0]'
+    - assign:
+        branch_label: '$coalesce($branch.fields.name, $t("basket.branch_tbd"))'
+    - use: approve_apply
+      with:
+        preview: '$lines($compact([
+                    $t("basket.preview.header"),
+                    $order_summary,
+                    $t("basket.preview.subtotal", { subtotal: $format_money($order_subtotal, "EGP") }),
+                    $t("basket.preview.fee", { fee: $format_money($fee, "EGP") }),
+                    $t("basket.preview.total", { total: $format_money($order_total, "EGP") }),
+                    $t("basket.preview.to", { name: $state.customer_name }),
+                    $t("basket.preview.address", { address: $state.address }),
+                    $t("basket.preview.branch", { branch: $branch_label }),
+                    $t("basket.preview.payment", { payment: $enum_lookup($state.payment_method, { cash_on_delivery: $t("basket.pay.cash_plain"), card_on_delivery: $t("basket.pay.card_plain"), wallet: $t("basket.pay.wallet_plain") }, $state.payment_method) })
+                  ]), "\n")'
+        header:        '{$t("basket.confirm_header")}'
+        footer:        '{$t("basket.confirm_footer")}'
+        confirm_title: '{$t("basket.btn_confirm")}'
+        cancel_title:  '{$t("basket.btn_cancel")}'
+        apply:         place
+        abort:         aborted
+        on_other:      gather
+        memory_note:   'Order NOT placed — awaiting the customer''s ✅ on {$order_total} EGP.'
+
+  place:
+    - do: record_save
+      args:
+        entity: food_order
+        stage:  placed
+        fields:
+          items_summary:  '$order_summary'
+          item_count:     '$order_count'
+          subtotal:       '$order_subtotal'
+          delivery_fee:   '$fee'
+          total:          '$order_total'
+          currency:       EGP
+          customer_name:  '$state.customer_name'
+          area:           '$state.area'
+          address:        '$state.address'
+          branch:         '$branch.id'
+          branch_label:   '$branch_label'
+          payment_method: '$state.payment_method'
+      bind: order
+      outputs:
+        ok:      [{ goto: placed }]
+        invalid: [{ goto: place_failed }]
+        failed:  [{ goto: place_failed }]
+
+  placed:
+    - do: record_milestone
+      args: { record_id: '$order.record_id', milestone: order_placed }
+      detach: true
+    # Retire the basket lines so the next visit starts clean.
+    - foreach:
+        in: '$live'
+        as: row
+        body:
+          - do: record_save
+            args: { entity: basket_line, record_id: '$row.id', fields: { qty: 0, line_total: 0 } }
+    - render:
+        render_intent: detail_card
+        header: '{$t("basket.placed_header")}'
+        body: '$lines($compact([
+                 $t("basket.placed_ref", { ref: $order.record_number }),
+                 $order_summary,
+                 $t("basket.preview.total", { total: $format_money($order_total, "EGP") }),
+                 $t("basket.placed_branch", { branch: $branch_label }),
+                 $t("basket.placed_eta")
+               ]), "\n")'
+        buttons:
+          - { title: '{$t("basket.btn_track")}', on_select: { invoke: my-orders } }
+          - { title: '{$t("basket.btn_menu")}',  on_select: { invoke: menu } }
+      memory_note: 'Placed food_order #{$order.record_number} — {$order_count} item(s), {$order_total} EGP, {$branch_label}.'
+      data: { order_number: '$order.record_number' }
+    - end: applied
+
+  # ── outcomes that are NOT errors ─────────────────────────────────────────
+  sold_out:
+    - answer:
+        data: { dish: '$dish.fields.name' }
+        instructions: 'That dish is off the menu right now. Say so in one line, name it, and suggest something from the same section. Do NOT add it to the basket.'
+
+  unknown_dish:
+    - answer:
+        instructions: 'That dish code is not on the menu. Do NOT apologise for a system error — call menu so the customer can tap a real dish.'
+
+  aborted:
+    - end: { status: aborted, body: '{$t("basket.aborted")}' }
+
+  place_failed:
+    - answer:
+        instructions: 'The order could not be saved. Say so plainly in one line and offer to try again. Do NOT claim an order was placed.'
+
+  unavailable:
+    - answer:
+        instructions: 'The basket is unavailable for a moment. Apologise in one line and offer to try again shortly. Do NOT claim anything was added or ordered.'

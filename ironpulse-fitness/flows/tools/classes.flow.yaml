@@ -1,0 +1,91 @@
+# classes — the class catalogue as a carousel (each class has a studio photo).
+# `record_search` with an empty query ranks by the entity's `rank_by: popularity`,
+# so the most-attended classes lead.
+
+flow_id:     classes
+version:     1
+description: |-
+  Show the class catalogue. Call when the member asks what classes there are, names a
+  discipline, or asks for something suited to their level. Pass `discipline` (spin,
+  hiit, yoga, boxing, strength, pilates) or `intensity` (beginner, intermediate,
+  advanced) only when they named one.
+
+input:
+  discipline:
+    type:     string
+    optional: true
+    describe: 'One of: spin, hiit, yoga, boxing, strength, pilates.'
+  intensity:
+    type:     string
+    optional: true
+    describe: 'One of: beginner, intermediate, advanced.'
+
+entry:
+  - if:   '$input.discipline != null'
+    goto: load_discipline
+  - if:   '$input.intensity != null'
+    goto: load_intensity
+  - else: true
+    goto: load_all
+
+steps:
+  load_all:
+    - do: record_search
+      args: { entity: session_type, query: '', limit: 10 }
+      bind: page
+      outputs:
+        ok:     [{ goto: show }]
+        empty:  [{ goto: none }]
+        failed: [{ goto: unavailable }]
+
+  load_discipline:
+    - do: record_search
+      args:
+        entity: session_type
+        query:  ''
+        limit:  10
+        where:  { all: [{ field: discipline, op: eq, value: '$input.discipline' }] }
+      bind: page
+      outputs:
+        ok:     [{ goto: show }]
+        # An unmatched discipline is a typo, not an empty timetable.
+        empty:  [{ goto: load_all }]
+        failed: [{ goto: unavailable }]
+
+  load_intensity:
+    - do: record_search
+      args:
+        entity: session_type
+        query:  ''
+        limit:  10
+        where:  { all: [{ field: intensity, op: eq, value: '$input.intensity' }] }
+      bind: page
+      outputs:
+        ok:     [{ goto: show }]
+        empty:  [{ goto: load_all }]
+        failed: [{ goto: unavailable }]
+
+  show:
+    - render:
+        render_intent: carousel
+        body:  '{$t("classes.intro")}'
+        items: '$page.rows'
+        item_template:
+          image_url: '$coalesce($item.fields.photo, "")'
+          body: '$lines($compact([
+                   $item.fields.name,
+                   $enum_lookup($item.fields.intensity, { beginner: $t("classes.int.beginner"), intermediate: $t("classes.int.intermediate"), advanced: $t("classes.int.advanced") }, $item.fields.intensity),
+                   $t("classes.seats", { seats: $item.fields.seats })
+                 ]), "\n")'
+          buttons:
+            - { title: '{$t("classes.btn_book")}', on_select: { invoke: book-class, with: { class_id: '$item.id' } } }
+      memory_note: 'Showed {$length($page.rows)} class type(s).'
+    - end: applied
+
+  none:
+    - answer:
+        instructions: 'No class matched. Say so in one line and offer the whole timetable.'
+
+  unavailable:
+    - answer:
+        instructions: 'The timetable could not be read. Apologise in one line and offer to try again shortly.'

@@ -1,0 +1,87 @@
+# XRM declaration for shield-motor.
+#
+#  • `plan`      — the published products AND their rating factors. The quote multiplies
+#                  these; it never invents a loading. A pricing change is a record edit.
+#  • `quote_req` — a quote enquiry, the sales pipeline.
+#  • `fnol`      — first notification of loss. Its pipeline stops at `assessor_review`;
+#                  everything past that is an assessor decision on the case.
+
+entities:
+  plan:
+    label: { en: 'Plan', ar: 'باقة تأمين' }
+    fields:
+      code:              { type: text, required: true, label: { en: 'Code', ar: 'الرمز' } }
+      name:              { type: text, required: true, label: { en: 'Name', ar: 'الاسم' } }
+      cover:             { type: select, options: [third_party, comprehensive, comprehensive_plus], label: { en: 'Cover', ar: 'نوع التغطية' } }
+      description:       { type: textarea, label: { en: 'Description', ar: 'الوصف' } }
+      # The published rating factors — the quote's only inputs.
+      base_rate_pct:     { type: number, label: { en: 'Base rate % of value', ar: 'النسبة الأساسية من قيمة المركبة %' } }
+      min_premium:       { type: money, label: { en: 'Minimum premium', ar: 'أدنى قسط' } }
+      young_driver_load_pct: { type: number, label: { en: 'Young-driver loading %', ar: 'تحميل السن الصغير %' } }
+      agency_repair:     { type: boolean, label: { en: 'Agency repair', ar: 'إصلاح بالوكالة' } }
+      excess:            { type: money, label: { en: 'Excess', ar: 'مبلغ التحمّل' } }
+      currency:          { type: text, label: { en: 'Currency', ar: 'العملة' }, default: 'AED' }
+      benefits:          { type: text, label: { en: 'Benefits', ar: 'المزايا' } }
+    list: [cover, base_rate_pct, agency_repair]
+    search: { text: [name, benefits], semantic: [name, description] }
+    dedupe_by: code
+
+  quote_req:
+    label: { en: 'Quote enquiry', ar: 'طلب تسعير' }
+    fields:
+      plan:          { type: record, entity: plan, label: { en: 'Plan', ar: 'الباقة' } }
+      plan_label:    { type: text, label: { en: 'Plan', ar: 'الباقة' } }
+      vehicle_value: { type: money, label: { en: 'Vehicle value', ar: 'قيمة المركبة' } }
+      driver_band:   { type: select, options: [under_25, from_25_to_40, over_40], label: { en: 'Driver age band', ar: 'فئة عمر السائق' } }
+      no_claim_years: { type: number, label: { en: 'No-claim years', ar: 'سنوات بدون مطالبات' } }
+      indicative_premium: { type: money, label: { en: 'Indicative premium', ar: 'القسط التقديري' } }
+      currency:      { type: text, label: { en: 'Currency', ar: 'العملة' }, default: 'AED' }
+    list: [plan_label, vehicle_value, indicative_premium]
+    pipeline:
+      stages:   [enquiry, quoted, submitted, issued, lapsed]
+      initial:  enquiry
+      terminal: [issued, lapsed]
+    milestones:
+      quoted: { label: { en: 'Quoted', ar: 'تم التسعير' }, stage: quoted }
+      issued: { label: { en: 'Policy issued', ar: 'صدرت الوثيقة' }, stage: issued, terminal: true }
+
+  fnol:
+    label: { en: 'Claim notification', ar: 'إشعار مطالبة' }
+    fields:
+      policy_number:  { type: text, label: { en: 'Policy number', ar: 'رقم الوثيقة' } }
+      plate:          { type: text, label: { en: 'Plate', ar: 'رقم اللوحة' } }
+      incident_type:  { type: select, options: [own_damage, third_party, theft, injury, windscreen], label: { en: 'Incident', ar: 'نوع الحادث' } }
+      incident_when:  { type: text, label: { en: 'When', ar: 'وقت الحادث' } }
+      emirate:        { type: select, options: [dubai, sharjah, abu_dhabi, ajman, rak], label: { en: 'Emirate', ar: 'الإمارة' } }
+      location:       { type: textarea, label: { en: 'Location', ar: 'مكان الحادث' } }
+      # Stored as the customer described it — never as a fault assessment.
+      description:    { type: textarea, label: { en: 'What happened (customer''s words)', ar: 'وصف الحادث بكلمات العميل' } }
+      police_report:  { type: text, label: { en: 'Police report number', ar: 'رقم تقرير الشرطة' } }
+      damage_photo:   { type: image, label: { en: 'Damage photo', ar: 'صورة الأضرار' } }
+      injuries:       { type: boolean, label: { en: 'Injuries reported', ar: 'يوجد مصابون' } }
+    list: [policy_number, incident_type, emirate]
+    pipeline:
+      # Stops at `assessor_review` — settlement and decline are assessor decisions on the
+      # case, never stages a flow can write.
+      stages:   [notified, documents_pending, assessor_review, closed]
+      initial:  notified
+      terminal: [closed]
+    milestones:
+      notified:        { label: { en: 'Notified', ar: 'تم الإبلاغ' },          stage: notified }
+      under_assessment: { label: { en: 'Under assessment', ar: 'قيد التقييم' }, stage: assessor_review }
+
+segments:
+  open_claims:
+    entity: fnol
+    label: { en: 'Open claims', ar: 'مطالبات قائمة' }
+    where: { all: [{ active: true }] }
+
+demo:
+  - entity: plan
+    fields: { code: 'TPL-BASIC', name: 'تأمين ضد الغير', cover: third_party, description: 'يغطي الأضرار التي تسببها لمركبات وممتلكات الغير — لا يغطي مركبتك. Covers damage you cause to third parties; your own vehicle is not covered.', base_rate_pct: 0, min_premium: 780, young_driver_load_pct: 15, agency_repair: false, excess: 0, currency: AED, benefits: 'تغطية الغير · مساعدة على الطريق' }
+  - entity: plan
+    fields: { code: 'COMP-STD', name: 'تأمين شامل', cover: comprehensive, description: 'يغطي مركبتك والغير، مع ورش معتمدة ومساعدة على الطريق. Covers your vehicle and third parties, with approved workshops and roadside assistance.', base_rate_pct: 2.4, min_premium: 1450, young_driver_load_pct: 20, agency_repair: false, excess: 1000, currency: AED, benefits: 'ورش معتمدة · مساعدة على الطريق · سيارة بديلة ٥ أيام' }
+  - entity: plan
+    fields: { code: 'COMP-AGY', name: 'شامل — إصلاح بالوكالة', cover: comprehensive_plus, description: 'شامل مع إصلاح في وكالة المركبة وسيارة بديلة أطول. Comprehensive with agency repair and a longer courtesy car.', base_rate_pct: 3.2, min_premium: 2100, young_driver_load_pct: 25, agency_repair: true, excess: 1500, currency: AED, benefits: 'إصلاح بالوكالة · سيارة بديلة ١٠ أيام · تغطية عُمان' }
+  - entity: plan
+    fields: { code: 'COMP-EV', name: 'شامل للمركبات الكهربائية', cover: comprehensive_plus, description: 'شامل مخصص للمركبات الكهربائية مع تغطية البطارية والشاحن المنزلي. Comprehensive for EVs, including battery and home-charger cover.', base_rate_pct: 2.9, min_premium: 1900, young_driver_load_pct: 20, agency_repair: true, excess: 1200, currency: AED, benefits: 'تغطية البطارية · الشاحن المنزلي · سحب للشاحن الأقرب' }

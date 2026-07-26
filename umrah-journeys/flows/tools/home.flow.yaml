@@ -1,0 +1,56 @@
+# home — the front door. Reads the pilgrim's live trips AND open visa cases, so a
+# returning family lands on their file rather than the sales menu.
+
+flow_id:     home
+version:     1
+description: Main menu / welcome. Call on a greeting, an unclear or off-topic message, or "what can you do?".
+
+input:
+  message:
+    type:     string
+    optional: true
+    describe: 'Optional ONE short greeting line YOU compose for this pilgrim.'
+
+entry:
+  - else: true
+    goto: count_trips
+
+steps:
+  count_trips:
+    - do: record_aggregate
+      args: { entity: trip, op: count, active_only: true }
+      bind: trips
+      outputs:
+        ok:     [{ goto: count_cases }]
+        failed: [{ goto: count_cases }]
+
+  count_cases:
+    - do: case_list
+      args: { contact_id: '$contact.id' }
+      bind: cases
+      outputs:
+        ok:     [{ goto: show }]
+        empty:  [{ goto: show }]
+        failed: [{ goto: show }]
+
+  show:
+    - assign:
+        live_trips: '$coalesce($trips.value, 0)'
+        open_cases: '$length($coalesce($cases, []))'
+    - render:
+        render_intent: list_picker
+        header: '{$t("home.header")}'
+        body: '$lines($compact([
+                 $coalesce($input.message, $t("home.greeting")),
+                 $live_trips > 0 ? $t("home.live_trips", { count: $live_trips }) : null,
+                 $open_cases > 0 ? $t("home.open_cases", { count: $open_cases }) : null
+               ]), "\n")'
+        cta: '{$t("home.cta")}'
+        items:
+          - { title: '{$t("home.row_packages")}', description: '{$t("home.row_packages_d")}', on_select: { invoke: packages } }
+          - { title: '{$t("home.row_hajj")}',     description: '{$t("home.row_hajj_d")}',     on_select: { invoke: packages, with: { kind: hajj } } }
+          - { title: '{$t("home.row_book")}',     description: '{$t("home.row_book_d")}',     on_select: { invoke: book-package } }
+          - { title: '{$t("home.row_visa")}',     description: '{$t("home.row_visa_d")}',     on_select: { invoke: visa-file } }
+          - { title: '{$t("home.row_trip")}',     description: '{$t("home.row_trip_d")}',     on_select: { invoke: my-trip } }
+      memory_note: 'Showed the Umrah Journeys menu ({$live_trips} live trip(s), {$open_cases} open case(s)).'
+    - end: applied

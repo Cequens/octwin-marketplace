@@ -1,0 +1,92 @@
+# pharmaplus-rx — a community pharmacy chain on WhatsApp.
+#
+# This is the pack where the BOUNDARY is the product. A pharmacy bot that answers "is this
+# safe with my other medicine?" is dangerous, so this one structurally cannot: it reads a
+# prescription photo into structured intake, opens a PHARMACIST REVIEW case, and reports
+# only what the pharmacist decided. It sells over-the-counter items and books refills; it
+# never advises, substitutes, doses, or dispenses a prescription-only medicine on its own.
+
+id:          pharmaplus-rx
+version:     1.0.0
+description: 'Community pharmacy — send a prescription photo for pharmacist review, reorder a repeat, and shop over-the-counter items, with every clinical question routed to a human.'
+
+listing:
+  title:    'PharmaPlus Rx'
+  tagline:  'Prescription intake and refills — every clinical call left to a pharmacist'
+  category: healthcare
+  author:   { name: 'Octwin', url: 'https://octwin.ai' }
+  public:   true
+
+supported_channels: [whatsapp, web]
+required_adapters:  [messaging, vision, storage]
+
+default_settings:
+  locale: ar
+
+default_conversation_context:
+  lang: { type: enum, enum: [ar, en, bilingual], default: ar, describe: 'Reply language.' }
+
+config:
+  policy:
+    delivery_fee: 20
+    currency:     EGP
+
+flows:
+  - home
+  - otc
+  - prescription
+  - my-orders
+
+# The vision prompt is written defensively: it TRANSCRIBES a prescription and refuses to
+# interpret it. That constraint lives in the prompt itself, not only in the agent's
+# instructions, because this is the one place a hallucinated dose could do real harm.
+inbound_preprocessing:
+  image:
+    enabled: true
+    ack: '📄 وصلت الروشتة، جاري قراءتها...'
+    prompt: |-
+      You are a prescription INTAKE assistant for a pharmacy. Your only job is to TRANSCRIBE what is written. You must NOT interpret, validate, correct, substitute, or comment on any medicine, dose, interaction or diagnosis. If a field is unclear, return null — never guess a drug name or a dose.
+
+      Respond with JSON only (no markdown) — an object with an `images` array holding EXACTLY ONE entry per input image, IN ORDER:
+      {
+        "images": [
+          {
+            "media_ref": "<copy the MEDIA- ref for this image, in order>",
+            "doc_type": "prescription" | "medicine_box" | "lab_result" | "insurance_card" | "other",
+            "prescriber": "<prescribing doctor name if legible, else null>",
+            "issued_date": "<YYYY-MM-DD if legible, else null>",
+            "patient_name": "<patient name if legible, else null>",
+            "items_verbatim": "<every medicine line EXACTLY as written, one per line, or null if not legible>",
+            "legible": true,
+            "summary_ar": "<one short Arabic line saying WHAT the document is — never what it means>"
+          }
+        ]
+      }
+      Set "legible": false when the image is too unclear to transcribe reliably. Return entries in the SAME ORDER as provided.
+    note_template: |-
+      $lines($compact([
+        "📄 مستند ({$media_ref}) — النوع: {$doc_type ?? 'غير محدد'}",
+        $patient_name != null   ? "المريض: {$patient_name}" : null,
+        $prescriber != null     ? "الطبيب: {$prescriber}" : null,
+        $items_verbatim != null ? "المكتوب في الروشتة (نصاً): {$items_verbatim}" : null,
+        $legible == false       ? "⚠️ الصورة غير واضحة بما يكفي للقراءة" : null
+      ]))
+  voicenote:
+    mode: transcribe
+    ack: '🎤 وصلت الرسالة الصوتية، جاري تفريغها...'
+    prompt: 'Egyptian Arabic pharmacy request voice note — the item wanted, the address. Do not interpret medical content.'
+    note_template: |-
+      $transcript != null ? "🎤 رسالة صوتية ({$media_ref}): {$transcript}" : "🎤 رسالة صوتية ({$media_ref}) — تعذّر التفريغ"
+
+agents:
+  - id:                counter
+    display_name:      'PharmaPlus Counter'
+    default_model:     'openrouter/google/gemini-3.1-flash-lite-preview'
+    tools:
+      - home
+      - otc
+      - prescription
+      - my-orders
+    include_platform_protocol: true
+    instructions:
+      - file: prompts/identity.md

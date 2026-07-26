@@ -1,0 +1,137 @@
+flow_id:     ticket-status
+version:     2
+description: |-
+  List the customer's after-sales tickets as cards they can act on, and handle a tapped action on
+  ONE ticket. Call with NO arguments when the customer asks about their tickets / a complaint / a
+  request they filed — it lists them, each card carrying its own actions (see the latest update, add
+  a document, or reply / send info to the team). The card buttons re-invoke this tool with `action`
+  + `case_id` set; you (the agent) normally call it argument-less to list.
+
+# The `action` / case_* inputs are set by the ticket-card buttons — a direct-tap `invoke:` starts a
+# FRESH run per tap, so a button never points at a spent run (the resume:$self version went stale the
+# moment one action ended the shared run). Argument-less (no `action`) = list mode.
+input:
+  action:
+    type: enum
+    enum: [details, docs, reply]
+    optional: true
+    describe: 'Set by a ticket-card button — the action to take on ONE ticket. Omit to LIST tickets.'
+  case_id:         { type: string, optional: true, describe: 'The ticket to act on (card-button internal).' }
+  case_number:     { type: number, optional: true, describe: 'The ticket display number (card-button internal).' }
+  case_status:     { type: string, optional: true, describe: 'Status snapshot for the detail card (card-button internal).' }
+  case_type:       { type: string, optional: true, describe: 'Type snapshot for the detail card (card-button internal).' }
+  decision_action: { type: string, optional: true, describe: "The team's last relayed decision, if any (card-button internal)." }
+
+entry:
+  - if: '$input.action == "details"'
+    goto: detail
+  - if: '$input.action == "docs"'
+    goto: gather_doc
+  - if: '$input.action == "reply"'
+    goto: gather_msg
+  - else: true
+    goto: load
+
+steps:
+  load:
+    # case_list rows: { id, case_number, type, status, priority, decision, decision_action, decision_params, … }
+    - do: case_list
+      bind: cases
+      outputs:
+        ok:    [{ goto: show }]
+        empty: [{ goto: none }]
+        # failed → throws → error-net
+
+  show:
+    - if: '$length($cases) == 0'      # defensive: treat an empty ok-payload like the empty port
+      goto: none
+    - render:
+        # carousel so each ticket carries its own action buttons. Each button is a direct-tap
+        # `invoke: ticket-status` → a FRESH run (NOT resume:$self), so the buttons never go stale
+        # after one action ends the run. (list_picker item_template.on_select throws on this build.)
+        render_intent: carousel
+        body: '{$t("ticket-status.intro")}'
+        items: '$cases'
+        item_template:
+          body: "$lines([ '🎫 XP-' + $item.case_number, '📂 ' + $enum_label($item.type, 'cases', ''), '📌 ' + $enum_label($item.status, 'status', $item.status) ])"
+          buttons:
+            - { title: '{$t("ticket-status.btn_details")}', on_select: { invoke: ticket-status, with: { action: details, case_id: '$item.id', case_number: '$item.case_number', case_status: '$item.status', case_type: '$item.type', decision_action: '$coalesce($item.decision_action, "")' } } }
+            - { title: '{$t("ticket-status.btn_docs")}',    on_select: { invoke: ticket-status, with: { action: docs,  case_id: '$item.id', case_number: '$item.case_number' } } }
+            - { title: '{$t("ticket-status.btn_reply")}',   on_select: { invoke: ticket-status, with: { action: reply, case_id: '$item.id', case_number: '$item.case_number' } } }
+      memory_note: 'Listed {$length($cases)} after-sales ticket(s).'
+    - end: applied                    # listing is terminal; each button starts its OWN fresh run
+
+  # ── 🔎 Latest status + the team's last relayed outcome (snapshot carried from the list row) ──
+  detail:
+    - assign:
+        # decision.* strings ARE the customer-facing relay copy (see locale.<lang>.yaml); null-safe.
+        update_line: '$coalesce($state.decision_action, "") != "" ? "📣 " + $enum_label($state.decision_action, "decision", $state.decision_action) : null'
+    - render:
+        render_intent: detail_card
+        body: "$lines([ '🎫 XP-' + $state.case_number, '📂 ' + $enum_label($state.case_type, 'cases', ''), '📌 ' + $enum_label($state.case_status, 'status', $state.case_status), $update_line ])"
+      memory_note: 'Showed XP-{$state.case_number} detail (status {$state.case_status}).'
+    - end: applied
+
+  # ── 📎 Add a document to an existing ticket (case_attach) ──
+  gather_doc:
+    - collect:
+        gap_instructions: '$t("ticket-status.docs_gap")'
+        fields:
+          - field: doc                        # 📷 upload — folds a MEDIA- ref into $state.doc
+            type: media
+            media_kind: image
+            label: '$t("ticket-status.f_doc")'
+        complete: [{ goto: attach }]
+
+  attach:
+    - do: case_attach
+      args:
+        case_id:  '$state.case_id'
+        media_id: '$state.doc'
+        caption:  '$t("ticket-status.cap_doc")'
+      outputs:
+        ok:     [{ goto: done_doc }]
+        failed: [{ goto: op_failed }]
+
+  done_doc:
+    - render:
+        render_intent: text_card
+        body: '{$t("ticket-status.docs_ok", { ref: $state.case_number })}'
+      memory_note: 'Customer added a document to XP-{$state.case_number}.'
+    - end: applied
+
+  # ── 💬 Reply / send info (case_reply — appends to timeline, awaiting_customer → in_progress) ──
+  gather_msg:
+    - collect:
+        gap_instructions: '$t("ticket-status.msg_gap")'
+        fields:
+          - field: message
+            label: '$t("ticket-status.f_message")'
+        complete: [{ goto: relay }]
+
+  relay:
+    - do: case_reply
+      args:
+        case_id: '$state.case_id'
+        message: '$state.message'
+      outputs:
+        ok:     [{ goto: done_msg }]
+        failed: [{ goto: op_failed }]
+
+  done_msg:
+    - render:
+        render_intent: text_card
+        body: '{$t("ticket-status.msg_ok", { ref: $state.case_number })}'
+      memory_note: 'Customer replied to the team on XP-{$state.case_number}.'
+    - end: applied
+
+  op_failed:
+    - render:
+        render_intent: text_card
+        body: '{$t("ticket-status.err")}'
+      memory_note: 'A ticket action failed for XP-{$state.case_number}.'
+    - end: applied
+
+  none:
+    - answer:
+        instructions: "The customer has no after-sales tickets on file. Say so briefly in their language and offer to open one — an issue via open-support, or XPeng App owner activation via activate-app."

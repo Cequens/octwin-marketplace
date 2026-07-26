@@ -1,0 +1,73 @@
+# dentists — the team. Rows carry a portrait, so this is a carousel. The rating
+# shown here is the ROLLUP written back from patient surveys, and `record_search`
+# ranks on it — so the order of this list is decided by patients, not the clinic.
+
+flow_id:     dentists
+version:     1
+description: |-
+  Show the clinic's dentists with specialty and patient rating. Call when the
+  patient asks who the dentists are, asks for a specialist, or names a specialty.
+  Pass `specialty` when they named one (general, orthodontics, periodontics,
+  endodontics, pediatric, cosmetic).
+
+input:
+  specialty:
+    type:     string
+    optional: true
+    describe: 'One of: general, orthodontics, periodontics, endodontics, pediatric, cosmetic.'
+
+entry:
+  - if:   '$input.specialty != null'
+    goto: load_specialty
+  - else: true
+    goto: load_all
+
+steps:
+  load_all:
+    # `record_search` with an empty query ranks by `rank_by: rating`.
+    - do: record_search
+      args: { entity: dentist, query: '', limit: 10 }
+      bind: page
+      outputs:
+        ok:     [{ goto: show }]
+        empty:  [{ goto: none }]
+        failed: [{ goto: unavailable }]
+
+  load_specialty:
+    - do: record_search
+      args:
+        entity: dentist
+        query:  ''
+        limit:  10
+        where:  { all: [{ field: specialty, op: eq, value: '$input.specialty' }] }
+      bind: page
+      outputs:
+        ok:     [{ goto: show }]
+        # An unmatched specialty is a typo, not an empty team.
+        empty:  [{ goto: load_all }]
+        failed: [{ goto: unavailable }]
+
+  show:
+    - render:
+        render_intent: carousel
+        body:  '{$t("dentists.intro")}'
+        items: '$page.rows'
+        item_template:
+          image_url: '$coalesce($item.fields.photo, "")'
+          body: '$lines($compact([
+                   $item.fields.name,
+                   $enum_lookup($item.fields.specialty, { general: $t("dentists.sp.general"), orthodontics: $t("dentists.sp.orthodontics"), periodontics: $t("dentists.sp.periodontics"), endodontics: $t("dentists.sp.endodontics"), pediatric: $t("dentists.sp.pediatric"), cosmetic: $t("dentists.sp.cosmetic") }, $item.fields.specialty),
+                   $item.fields.rating_count > 0 ? $t("dentists.rating", { rating: $item.fields.rating, count: $item.fields.rating_count }) : null
+                 ]), "\n")'
+          buttons:
+            - { title: '{$t("dentists.btn_book")}', on_select: { invoke: book-visit, with: { dentist_id: '$item.id' } } }
+      memory_note: 'Showed {$length($page.rows)} dentist(s){$input.specialty != null ? " in " + $input.specialty : ""}.'
+    - end: applied
+
+  none:
+    - answer:
+        instructions: 'No dentist matched. Say so in one line and offer to show the whole team.'
+
+  unavailable:
+    - answer:
+        instructions: 'The dentist list could not be read. Apologise in one line and offer to try again shortly.'

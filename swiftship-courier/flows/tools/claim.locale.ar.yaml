@@ -1,0 +1,28 @@
+flow_id: claim
+
+strings:
+  status_header:  '🎫 تذاكرك'
+  status_note:    'ℹ️ أي قرار من فريقنا بيوصلك هنا في المحادثة على طول.'
+  btn_new:        '⚠️ مشكلة جديدة'
+  btn_track:      '🔍 تتبّع شحنة'
+  btn_status:     '🎫 تذاكري'
+
+  label.tracking: 'رقم التتبع'
+  label.type:     'نوع المشكلة'
+  label.details:  'تفاصيل المشكلة'
+
+  field_header.type: '⚠️ إيه المشكلة بالظبط؟'
+  field_cta.type:    'اختار'
+
+  type.late_delivery:  '⏰ الشحنة متأخرة'
+  type.damaged_parcel: '📦 الشحنة تالفة'
+  type.lost_parcel:    '❓ الشحنة مفقودة'
+  type.wrong_address:  '📍 عنوان خطأ'
+  type.general_query:  '💬 استفسار عام'
+
+  subject:            'شكوى على شحنة {tn}'
+  opened_header:      '🎫 تم تسجيل شكواك'
+  opened_ref:         '🎫 رقم التذكرة: #{ref}'
+  opened_sla:         '⏱️ فريقنا يرد عليك خلال {hours} ساعة'
+  opened_no_promise:  'ℹ️ فريق الشكاوى يراجع الشحنة والمستندات، وأي تعويض بيتحدد منهم — مش من هنا.'
+  opened_footer:      'ردهم بيوصلك هنا في المحادثة.'

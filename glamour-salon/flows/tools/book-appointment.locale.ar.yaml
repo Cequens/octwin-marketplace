@@ -1,0 +1,41 @@
+flow_id: book-appointment
+
+strings:
+  progress.header:     '📅 حجز موعد'
+  progress.treatment:  '💅 الخدمة: {treatment}'
+  progress.stylist:    '👩‍🎨 الأخصائية: {stylist}'
+  progress.slot:       '🕐 الموعد: {slot}'
+
+  label.treatment:  'الخدمة'
+  label.stylist:    'الأخصائية'
+  label.slot:       'الموعد'
+  label.notes:      'ملاحظات للأخصائية'
+
+  field_header.treatment: '💅 أي خدمة تحبين؟'
+  field_cta.treatment:    'الخدمات'
+  field_header.stylist:   '👩‍🎨 اختاري الأخصائية'
+  field_cta.stylist:      'الفريق'
+  field_header.slot:      '🕐 المواعيد المتاحة'
+  field_cta.slot:         'المواعيد'
+
+  preview.header:     '📋 تأكيد الموعد'
+  preview.treatment:  '💅 الخدمة: {treatment}'
+  preview.stylist:    '👩‍🎨 الأخصائية: {stylist}'
+  preview.slot:       '🕐 الموعد: {slot}'
+  preview.duration:   '⏱️ مدة الخدمة: {min} دقيقة'
+  preview.notes:      '📝 ملاحظات: {notes}'
+  approve_header:     '📅 مراجعة الموعد'
+  approve_footer:     'اضغطي تأكيد لتثبيت الموعد.'
+  confirm_title:      'تأكيد الموعد ✅'
+  cancel_title:       'إلغاء ❌'
+
+  done_header:   '✅ تم تأكيد موعدك'
+  done_body:     '👩‍🎨 {stylist} — 🕐 {slot}'
+  done_ref:      '🧾 رقم الحجز: #{ref}'
+  done_note:     '⏰ بنرسل لك تذكيراً قبل الموعد بيوم.'
+  btn_mine:      '🗓️ مواعيدي'
+  btn_services:  '💅 خدمات أخرى'
+  slot_taken:    '⚠️ هذا الوقت لم يعد متاحاً بالمدة التي تحتاجها الخدمة. اختاري وقتاً آخر ونحجز لك.'
+  aborted:       'تم إلغاء الحجز. تحت أمرك في أي وقت 💐'
+  reminder.body: '⏰ تذكير بموعد {treatment} — {slot}. نتشرف بحضورك 💐'
+  reminder.mine: '🗓️ مواعيدي'

@@ -1,0 +1,239 @@
+# book-package — the committing journey, and the one that decides the agency's
+# month. A `collect:` gathers the party, `approve_apply` shows the priced summary
+# and waits for ✅, then the trip record is written at `reserved`, its milestone
+# fired, and a VISA CASE is opened so a human ops officer picks the file up with an
+# SLA clock running. The agent never claims a visa is granted.
+
+flow_id:     book-package
+version:     1
+description: |-
+  [interactive] Reserve a package for a party of pilgrims. Call when the pilgrim
+  wants to book. Pass `package_id` when they were looking at one; the tool asks for
+  whatever is missing (travellers, departure city, month, room type, lead name).
+
+input:
+  package_id:
+    type:     string
+    optional: true
+    describe: 'Package record id from a card, when known.'
+  lead_name:
+    type:     string
+    optional: true
+    describe: 'Lead traveller name, if already given (may come from a passport photo).'
+
+entry:
+  - else: true
+    goto: collect_party
+
+steps:
+  collect_party:
+    - collect:
+        derive:
+          # The pickers carry real numbers, so the pricing arithmetic never touches
+          # free text. Room type is a multiplier the desk actually uses.
+          room_factor: '$enum_lookup($state.room_type, { double: 1, triple: 0.92, quad: 0.85 }, 1)'
+        before_each:
+          - assign: { pkg_name: null, pkg_code: null, pkg_price: null, pkg_currency: 'SAR' }
+          - if: '$state.package_id != null'
+            then:
+              - do: record_get
+                args: { entity: package, record_id: '$state.package_id' }
+                bind: pkg
+                outputs:
+                  ok:        []
+                  # A stale or hallucinated id would price the trip at zero — drop it
+                  # so the picker re-engages this same turn.
+                  not_found: [{ assign: { state: '$merge($state, { package_id: null })' } }]
+                  failed:    []
+              - if: '$pkg.fields != null'
+                then:
+                  - assign:
+                      pkg_name:     '$pkg.fields.name'
+                      pkg_code:     '$pkg.fields.code'
+                      pkg_currency: '$coalesce($pkg.fields.currency, "SAR")'
+                      pkg_price:    '$pkg.fields.price_pp.value / $pkg.fields.price_pp.offset'
+        before_prompt:
+          - assign:
+              progress_card: '$lines($compact([
+                                $t("book-package.progress.header"),
+                                $pkg_name != null ? $t("book-package.progress.package", { package: $pkg_name }) : null,
+                                $state.travellers != null ? $t("book-package.progress.travellers", { count: $state.travellers }) : null,
+                                $state.travel_month != null ? $t("book-package.progress.month") : null
+                              ]), "\n")'
+        progress: '$progress_card'
+        gap_instructions: 'Ask the pilgrim for the next missing detail ({$collect_field}), one at a time, in their language. Re-call book-package once they answer. Never promise a visa outcome.'
+        fields:
+          - field: package_id
+            when: '$state.package_id == null'
+            label: '$t("book-package.label.package")'
+            options:
+              header: book-package.field_header.package
+              cta:    book-package.field_cta.package
+              fetch:  { do: record_list, args: { entity: package, all: true, limit: 20, sort_by: { field: price_pp, dir: asc } }, bind: pkgs }
+              rows:   '$pkgs.rows'
+              map:
+                value:       '$item.id'
+                label:       '$item.fields.name'
+                description: '$format_money_field($item.fields.price_pp, $coalesce($item.fields.currency, "SAR"))'
+                selection:   { pkg_name: '$item.fields.name' }
+              auto_resolve: true
+          - field: travellers
+            label: '$t("book-package.label.travellers")'
+            options:
+              header: book-package.field_header.travellers
+              cta:    book-package.field_cta.travellers
+              items:
+                - { value: '1', label: book-package.travellers.one }
+                - { value: '2', label: book-package.travellers.two }
+                - { value: '4', label: book-package.travellers.four }
+                - { value: '6', label: book-package.travellers.six }
+          - field: room_type
+            label: '$t("book-package.label.room")'
+            options:
+              header: book-package.field_header.room
+              cta:    book-package.field_cta.room
+              items:
+                - { value: double, label: book-package.room.double }
+                - { value: triple, label: book-package.room.triple }
+                - { value: quad,   label: book-package.room.quad }
+          - field: departure_city
+            label: '$t("book-package.label.city")'
+            options:
+              header: book-package.field_header.city
+              cta:    book-package.field_cta.city
+              items:
+                - { value: riyadh,     label: book-package.city.riyadh }
+                - { value: jeddah,     label: book-package.city.jeddah }
+                - { value: cairo,      label: book-package.city.cairo }
+                - { value: dubai,      label: book-package.city.dubai }
+                - { value: casablanca, label: book-package.city.casablanca }
+                - { value: jakarta,    label: book-package.city.jakarta }
+          - field: travel_month
+            label: '$t("book-package.label.month")'
+            options:
+              header: book-package.field_header.month
+              cta:    book-package.field_cta.month
+              items:
+                - { value: rajab,       label: book-package.month.rajab }
+                - { value: shaaban,     label: book-package.month.shaaban }
+                - { value: ramadan,     label: book-package.month.ramadan }
+                - { value: shawwal,     label: book-package.month.shawwal }
+                - { value: dhul_qadah,  label: book-package.month.dhul_qadah }
+                - { value: dhul_hijjah, label: book-package.month.dhul_hijjah }
+          - field: lead_name
+            label:    '$t("book-package.label.lead")'
+            describe: 'Full name of the person responsible for the booking, as printed in their passport.'
+        complete: [{ goto: price_it }]
+
+  price_it:
+    - assign:
+        n:     '$coalesce($state.travellers, 1)'
+        unit:  '$coalesce($pkg_price, 0)'
+    - assign:
+        total: '$round($unit * $state.room_factor * $n, 0)'
+    - goto: confirm
+
+  confirm:
+    - use: approve_apply
+      with:
+        preview: '$lines($compact([
+                    $t("book-package.preview.header"),
+                    $t("book-package.preview.package", { package: $coalesce($pkg_name, "-") }),
+                    $t("book-package.preview.travellers", { count: $n }),
+                    $t("book-package.preview.room", { room: $enum_lookup($state.room_type, { double: $t("book-package.room.double_plain"), triple: $t("book-package.room.triple_plain"), quad: $t("book-package.room.quad_plain") }, $state.room_type) }),
+                    $t("book-package.preview.city", { city: $enum_lookup($state.departure_city, { riyadh: $t("book-package.city.riyadh_plain"), jeddah: $t("book-package.city.jeddah_plain"), cairo: $t("book-package.city.cairo_plain"), dubai: $t("book-package.city.dubai_plain"), casablanca: $t("book-package.city.casablanca_plain"), jakarta: $t("book-package.city.jakarta_plain") }, $state.departure_city) }),
+                    $t("book-package.preview.total", { total: $format_money($total, $pkg_currency) }),
+                    $t("book-package.preview.note")
+                  ]), "\n")'
+        header:        '{$t("book-package.approve_header")}'
+        footer:        '{$t("book-package.approve_footer")}'
+        confirm_title: '{$t("book-package.confirm_title")}'
+        cancel_title:  '{$t("book-package.cancel_title")}'
+        apply:         reserve
+        abort:         aborted
+        on_other:      collect_party
+        memory_note:   'Trip NOT reserved yet — awaiting the pilgrim''s ✅ on a {$total} {$pkg_currency} booking.'
+
+  reserve:
+    - do: record_save
+      args:
+        entity: trip
+        stage:  reserved
+        fields:
+          package:        '$state.package_id'
+          package_label:  '$pkg_name'
+          package_code:   '$pkg_code'
+          lead_name:      '$state.lead_name'
+          travellers:     '$n'
+          departure_city: '$state.departure_city'
+          travel_month:   '$state.travel_month'
+          room_type:      '$state.room_type'
+          total_price:    '$total'
+          currency:       '$pkg_currency'
+      bind: trip
+      outputs:
+        ok:      [{ goto: open_visa_case }]
+        invalid: [{ goto: reserve_failed }]
+        failed:  [{ goto: reserve_failed }]
+
+  open_visa_case:
+    - do: record_milestone
+      args: { record_id: '$trip.record_id', milestone: trip_reserved }
+      detach: true
+    # The visa file is human work with an SLA — so it becomes a CASE in the
+    # visa_ops queue, not a field on the trip. `sla_hours` comes back from the
+    # queue config, so the promise the pilgrim hears is the real one.
+    - do: case_open
+      args:
+        type: visa_file
+        fields:
+          case_type:      visa_file
+          subject:        '$t("book-package.case_subject", { package: $coalesce($pkg_name, "-") })'
+          trip_number:    '$trip.record_number'
+          travellers:     '$n'
+          lead_name:      '$state.lead_name'
+          departure_city: '$state.departure_city'
+      bind: vcase
+      outputs:
+        ok:     [{ goto: reserved_done }]
+        # The reservation is real even if the case could not open — say so honestly
+        # rather than losing the booking.
+        failed: [{ goto: reserved_no_case }]
+
+  reserved_done:
+    - render:
+        render_intent: detail_card
+        header: '{$t("book-package.done_header")}'
+        body: '$lines($compact([
+                 $t("book-package.done_trip", { ref: $trip.record_number }),
+                 $t("book-package.done_total", { total: $format_money($total, $pkg_currency) }),
+                 $t("book-package.done_case", { ref: $vcase.case_number, hours: $coalesce($vcase.sla_hours, 24) }),
+                 $t("book-package.done_next")
+               ]), "\n")'
+        buttons:
+          - { title: '{$t("book-package.btn_upload")}', on_select: { invoke: visa-file, with: { intent: upload } } }
+          - { title: '{$t("book-package.btn_trip")}',   on_select: { invoke: my-trip } }
+      memory_note: 'Reserved trip #{$trip.record_number} ({$total} {$pkg_currency}) and opened visa case #{$vcase.case_number} in visa_ops.'
+      data: { trip_number: '$trip.record_number', case_number: '$vcase.case_number' }
+    - end: applied
+
+  reserved_no_case:
+    - render:
+        render_intent: detail_card
+        header: '{$t("book-package.done_header")}'
+        body: '$lines($compact([
+                 $t("book-package.done_trip", { ref: $trip.record_number }),
+                 $t("book-package.done_total", { total: $format_money($total, $pkg_currency) }),
+                 $t("book-package.done_no_case")
+               ]), "\n")'
+        buttons:
+          - { title: '{$t("book-package.btn_trip")}', on_select: { invoke: my-trip } }
+      memory_note: 'Reserved trip #{$trip.record_number} but the visa case did NOT open — the desk must open it manually.'
+    - end: applied
+
+  aborted:
+    - end: { status: aborted, body: '{$t("book-package.aborted")}' }
+
+  reserve_failed:
+    - answer:
+        instructions: 'The reservation could not be written. Say so plainly in one line and offer to try again. Do NOT claim a booking exists.'

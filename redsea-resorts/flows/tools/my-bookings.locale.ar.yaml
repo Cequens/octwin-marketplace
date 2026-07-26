@@ -1,0 +1,6 @@
+flow_id: my-bookings
+
+strings:
+  header:      '🧾 حجوزاتك'
+  btn_rooms:   '🛏️ الغرف'
+  btn_book:    '📅 حجز جديد'

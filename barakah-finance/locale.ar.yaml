@@ -1,0 +1,56 @@
+# barakah-finance — pack-wide Arabic strings.
+#
+# `cases.*` / `status.*` / `decision.*` are the boot-enforced CASEWORK LOCALE CONTRACT.
+# Note the decision wording: `pre_approved` says "موافقة مبدئية" — a preliminary approval,
+# because that is what an underwriter's pre-approval actually is, and `declined` is worded
+# so it can be relayed to a customer without a reason the desk did not give.
+pack_id: barakah-finance
+strings:
+  field_picker_footer: 'اختر من القائمة 👆'
+
+  cases.finance_application: 'طلب تمويل'
+  cases.document_review:     'مراجعة مستندات'
+  cases.sharia_question:     'استفسار شرعي'
+  cases.general_query:       'استفسار عام'
+
+  status.open:              'قيد الاستلام'
+  status.in_progress:       'قيد الدراسة'
+  status.awaiting_customer: 'بانتظار مستنداتك'
+  status.resolved:          'صدر القرار'
+  status.closed:            'مغلق'
+  status.reopened:          'أُعيد فتحه'
+
+  priority.low:    'منخفضة'
+  priority.normal: 'عادية'
+  priority.high:   'عالية'
+  priority.urgent: 'عاجلة'
+
+  decision.resolve:           'صدر القرار'
+  decision.reject:            'لم تتم الموافقة'
+  decision.request_more_info: 'مطلوب منك معلومات إضافية'
+  decision.escalate:          'تم التصعيد للمراجعة'
+  decision.pre_approved:      'موافقة مبدئية 🎉'
+  decision.declined:          'لم تتم الموافقة'
+  decision.docs_required:     'مطلوب مستندات إضافية'
+
+  structure.murabaha:  'مرابحة'
+  structure.ijara:     'إجارة منتهية بالتمليك'
+  structure.musharaka: 'مشاركة متناقصة'
+
+  employment.government:    'قطاع حكومي'
+  employment.private:       'قطاع خاص'
+  employment.self_employed: 'عمل حر'
+  employment.retired:       'متقاعد'
+
+  city.riyadh:   'الرياض'
+  city.jeddah:   'جدة'
+  city.dammam:   'الدمام'
+  city.makkah:   'مكة المكرمة'
+  city.madinah:  'المدينة المنورة'
+  city.khobar:   'الخبر'
+
+  stage.enquiry:           'استفسار'
+  stage.estimated:         'تم التقدير'
+  stage.documents_pending: 'بانتظار المستندات'
+  stage.submitted:         'تم التقديم'
+  stage.withdrawn:         'مسحوب'

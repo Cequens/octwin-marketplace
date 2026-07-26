@@ -1,0 +1,93 @@
+# browse-projects — the discovery surface. Rows carry a hero render, so this is a
+# CAROUSEL, not a text picker. Filters are optional and applied through the XRM
+# `where:` AST; the renderer alone decides how many cards a channel shows.
+
+flow_id:     browse-projects
+version:     1
+description: |-
+  Show Gulf developments as image cards. Call when the buyer wants to see projects,
+  or asks about a city / budget ("شقق في دبي", "مشاريع بالرياض"). Pass `city` and/or
+  `max_price` when the buyer stated one; otherwise call with no arguments.
+
+input:
+  city:
+    type:     string
+    optional: true
+    describe: 'One of: dubai, abu_dhabi, riyadh, jeddah, sharjah, cairo — only when the buyer named a city.'
+  max_price:
+    type:     number
+    optional: true
+    describe: 'Upper budget in the local currency, when the buyer stated one.'
+
+# The `where:` AST is structured data, never an expression — and an empty
+# `all: []` is not a valid node. So the filtered and unfiltered reads are two
+# separate steps rather than one call with a computed AST.
+entry:
+  - if:   '$input.city != null'
+    goto: load_filtered
+  - else: true
+    goto: load_all
+
+steps:
+  load_all:
+    - do: record_list
+      args:
+        entity:  development
+        all:     true
+        limit:   20
+        sort_by: { field: from_price, dir: asc }
+      bind: page
+      outputs:
+        ok:     [{ goto: show }]
+        empty:  [{ goto: none }]
+        failed: [{ goto: diag }]
+
+  load_filtered:
+    - do: record_list
+      args:
+        entity:  development
+        all:     true
+        limit:   20
+        where:   { all: [{ field: city, op: eq, value: '$input.city' }] }
+        sort_by: { field: from_price, dir: asc }
+      bind: page
+      outputs:
+        ok:     [{ goto: show }]
+        # An unknown city is a normal domain outcome — fall back to the full list
+        # rather than telling the buyer "nothing found" for a typo.
+        empty:  [{ goto: load_all }]
+        failed: [{ goto: diag }]
+
+  show:
+    - render:
+        render_intent: carousel
+        body:  '{$t("browse-projects.intro", { total: $page.total })}'
+        items: '$page.rows'
+        item_template:
+          # A carousel card has no `title:` — the name leads the body. WhatsApp
+          # clamps a card body to `$caps.text.carouselBodyMax`, so keep it tight
+          # and let project-detail carry the long copy.
+          image_url: '$coalesce($item.fields.hero, "")'
+          body: '$lines($compact([
+                   $item.fields.name,
+                   $item.fields.area != null ? ("📍 " + $item.fields.area + ($item.fields.handover != null ? (" · 🔑 " + $item.fields.handover) : "")) : null,
+                   $item.fields.from_price != null ? $t("browse-projects.from", { price: $format_money_field($item.fields.from_price, $coalesce($item.fields.currency, "AED")) }) : null
+                 ]), "\n")'
+          buttons:
+            - { title: '{$t("browse-projects.btn_detail")}',  on_select: { invoke: project-detail, with: { development_id: '$item.id' } } }
+            - { title: '{$t("browse-projects.btn_viewing")}', on_select: { invoke: book-viewing,   with: { development_id: '$item.id' } } }
+      memory_note: 'Showed {$page.total} development(s){$input.city != null ? " in " + $input.city : ""}.'
+      data: { total: '$page.total' }
+    - end: applied
+
+  # A record_list `failed` is a system fault, not a domain outcome — hand the
+  # reason to the agent so it can nudge instead of rendering a dead-end card.
+  diag:
+    - answer:
+        data: { reason: '$page.reason' }
+        instructions: 'The catalog read failed. Apologise in one line and offer to try again shortly. Do NOT invent projects.'
+
+  none:
+    - answer:
+        data: { city: '$input.city' }
+        instructions: 'No development matched that filter. Say so briefly in the buyer''s language, then offer to show every project instead (they can just say yes) or to note their requirement.'

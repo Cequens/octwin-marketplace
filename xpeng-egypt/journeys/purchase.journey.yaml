@@ -1,0 +1,44 @@
+# purchase.journey.yaml — the XPeng Egypt sales funnel.
+#
+# A journey run IS an XRM record (synthesized `journey_purchase` entity): stages
+# become the pipeline, goals become milestones. Auto-discovered — no manifest key.
+#
+# EMIT MAP (one signal per touchpoint; ids are unique so `journey:` is inferred):
+#   browse-models   → browsed_lineup   → stage browsing
+#   model-details   → viewed_model     → stage considering
+#   capture-lead    → submitted_lead   → stage intent      + goal lead_captured
+#   book-test-drive → booked_test_drive→ stage evaluating  + goal test_drive_booked
+#   lead → won (console/off-channel)   → goal deal_won  (via xrm.yaml pipeline on_enter)
+#
+# The terminal `deal_won` is NOT emitted from chat — a car sale closes off-channel.
+# It fires when a rep marks the `lead` record `won`, valued from lead.expected_value.
+# See craft: journey-guide "Where does the terminal goal come from?" (pattern #2).
+
+id: purchase
+label: { en: 'Purchase journey', ar: 'رحلة الشراء' }
+
+# Forward-only funnel. A buyer who re-engages 90 days after winning starts a fresh
+# run (a second car / referral is a second funnel), so repeat sales count once each.
+lifecycle:
+  progression:   monotonic          # backward track: is a swallowed no-op
+  reentry:       after_exit
+  cooldown_days: 90
+  terminal:      { goal: deal_won }  # reaching deal_won completes the run
+
+stages:
+  - { id: browsing,    order: 10, label: { en: 'Browsing',      ar: 'يتصفّح' } }
+  - { id: considering, order: 20, label: { en: 'Considering',   ar: 'يفاضل' } }
+  - { id: intent,      order: 30, label: { en: 'Intent',        ar: 'نية شراء' } }
+  - { id: evaluating,  order: 40, label: { en: 'Evaluating',    ar: 'تجربة قيادة' } }
+
+goals:
+  - { id: lead_captured,     stage: intent,     label: { en: 'Lead captured',     ar: 'تم تسجيل العميل' } }
+  - { id: test_drive_booked, stage: evaluating, label: { en: 'Test drive booked', ar: 'تم حجز تجربة قيادة' } }
+  # Terminal conversion — value pulled per-lead from expected_value by the on_enter hook.
+  - { id: deal_won,                             label: { en: 'Deal won',          ar: 'تم البيع' } }
+
+events:
+  - { name: browsed_lineup,    advances_to: browsing,    label: { en: 'Browsed the lineup',   ar: 'تصفّح المجموعة' } }
+  - { name: viewed_model,      advances_to: considering, label: { en: 'Viewed a model',       ar: 'شاهد موديل' } }
+  - { name: submitted_lead,    advances_to: intent,      completes: lead_captured,     label: { en: 'Submitted a lead',    ar: 'سجّل بياناته' } }
+  - { name: booked_test_drive, advances_to: evaluating,  completes: test_drive_booked, label: { en: 'Booked a test drive', ar: 'حجز تجربة قيادة' } }

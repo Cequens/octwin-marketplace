@@ -1,0 +1,225 @@
+# book-viewing — the committing journey. `collect:` gathers advisor → slot →
+# party size, `approve_apply` shows a preview and waits for ✅, then
+# `booking_reserve` claims the seat race-free and writes the booking record.
+# The lead is advanced to `viewing_booked` and two reminders are scheduled.
+
+flow_id:     book-viewing
+version:     1
+description: |-
+  [interactive] Book a site viewing with an advisor. Call when the buyer wants to
+  visit a project or meet an advisor. Pass `development_id` when they were looking at
+  a specific project; the tool asks for whatever is missing.
+
+input:
+  development_id:
+    type:     string
+    optional: true
+    describe: 'Development record id from a card, when the viewing is for a specific project.'
+  advisor_id:
+    type:     string
+    optional: true
+    describe: 'Advisor record id — only from a picker result, never a typed name.'
+
+entry:
+  - else: true
+    goto: collect_fields
+
+steps:
+  collect_fields:
+    - collect:
+        before_each:
+          - assign: { advisor_label: null, dev_label: null }
+          - if: '$state.advisor_id != null'
+            then:
+              - do: record_get
+                args: { entity: advisor, record_id: '$state.advisor_id' }
+                bind: adv
+                outputs:
+                  ok:        []
+                  # A stale/hallucinated id would send slot_list at a dead resource —
+                  # drop it so the picker re-engages this same turn.
+                  not_found: [{ assign: { state: '$merge($state, { advisor_id: null })' } }]
+                  failed:    []
+              - if: '$adv.fields != null'
+                then:
+                  - assign: { advisor_label: '$adv.fields.name' }
+          - if: '$state.development_id != null'
+            then:
+              - do: record_get
+                args: { entity: development, record_id: '$state.development_id' }
+                bind: dv
+                outputs:
+                  ok:        []
+                  not_found: [{ assign: { state: '$merge($state, { development_id: null })' } }]
+                  failed:    []
+              - if: '$dv.fields != null'
+                then:
+                  - assign: { dev_label: '$dv.fields.name' }
+        progress: '$lines($compact([
+                     $t("book-viewing.progress.header"),
+                     $dev_label != null ? $t("book-viewing.progress.project", { project: $dev_label }) : null,
+                     $advisor_label != null ? $t("book-viewing.progress.advisor", { advisor: $advisor_label }) : null,
+                     $state.slot_label != null ? $t("book-viewing.progress.slot", { slot: $state.slot_label }) : null
+                   ]), "\n")'
+        gap_instructions: 'Ask the buyer for the next missing detail ({$collect_field}), one at a time, in their language. Re-call book-viewing once they answer.'
+        fields:
+          - field: development_id
+            when: '$state.development_id == null'
+            label: '$t("book-viewing.label.project")'
+            options:
+              header: book-viewing.field_header.project
+              cta:    book-viewing.field_cta.project
+              fetch:  { do: record_list, args: { entity: development, all: true, limit: 20 }, bind: devs }
+              rows:   '$devs.rows'
+              map:
+                value:       '$item.id'
+                label:       '$item.fields.name'
+                description: '$item.fields.area'
+                selection:   { dev_label: '$item.fields.name' }
+              auto_resolve: true
+          - field: advisor_id
+            when: '$state.advisor_id == null'
+            label: '$t("book-viewing.label.advisor")'
+            options:
+              header: book-viewing.field_header.advisor
+              cta:    book-viewing.field_cta.advisor
+              fetch:  { do: record_search, args: { entity: advisor, query: '' }, bind: advisors }
+              rows:   '$advisors.rows'
+              map:
+                value:       '$item.id'
+                label:       '$item.fields.name'
+                description: '$item.fields.title'
+                selection:   { advisor_label: '$item.fields.name' }
+              auto_resolve: true
+          # Slots come straight from the scheduling engine — structured rows only,
+          # the label is composed here (no locale strings in the engine).
+          - field: slot_start
+            label: '$t("book-viewing.label.slot")'
+            options:
+              header: book-viewing.field_header.slot
+              cta:    book-viewing.field_cta.slot
+              fetch:  { do: slot_list, args: { resource_record_id: '$state.advisor_id' }, bind: slots }
+              rows:   '$slots'
+              map:
+                value: '$item.slot_start'
+                label: '$lines($compact([$item.local_date, $item.local_time]), " — ")'
+                selection:
+                  slot_minutes: '$item.slot_minutes'
+                  slot_label:   '$lines($compact([$item.local_date, $item.local_time]), " — ")'
+          - field: party_size
+            label: '$t("book-viewing.label.party")'
+            options:
+              header: book-viewing.field_header.party
+              cta:    book-viewing.field_cta.party
+              items:
+                - { value: '1', label: book-viewing.party.one }
+                - { value: '2', label: book-viewing.party.two }
+                - { value: '4', label: book-viewing.party.four }
+          - field: full_name
+            required: false
+            label:    '$t("book-viewing.label.name")'
+            describe: "The buyer's full name for the site-access pass."
+        complete: [{ goto: confirm }]
+
+  confirm:
+    - assign:
+        preview_body: '$lines($compact([
+                         $t("book-viewing.preview.header"),
+                         $dev_label != null ? $t("book-viewing.preview.project", { project: $dev_label }) : null,
+                         $t("book-viewing.preview.advisor", { advisor: $coalesce($advisor_label, "-") }),
+                         $t("book-viewing.preview.slot",    { slot: $coalesce($state.slot_label, "-") }),
+                         $t("book-viewing.preview.party",   { party: $coalesce($state.party_size, "1") })
+                       ]), "\n")'
+    - use: approve_apply
+      with:
+        preview:       '$preview_body'
+        header:        '{$t("book-viewing.approve_header")}'
+        footer:        '{$t("book-viewing.approve_footer")}'
+        confirm_title: '{$t("book-viewing.confirm_title")}'
+        cancel_title:  '{$t("book-viewing.cancel_title")}'
+        apply:         commit
+        abort:         aborted
+        on_other:      collect_fields
+        memory_note:   'Asked the buyer to confirm the site viewing.'
+
+  commit:
+    - do: booking_reserve
+      args:
+        resource_record_id: '$state.advisor_id'
+        slot_start:         '$state.slot_start'
+        slot_minutes:       '$state.slot_minutes'
+        fields:
+          development:   '$state.development_id'
+          advisor_label: '$advisor_label'
+          slot_label:    '$state.slot_label'
+          party_size:    '$state.party_size'
+      bind: viewing
+      outputs:
+        ok:           [{ goto: booked }]
+        full:         [{ goto: slot_taken }]
+        invalid_slot: [{ goto: slot_taken }]
+        failed:       [{ end: failed }]
+
+  booked:
+    # The lead moves to `viewing_booked` — this is the funnel step operators watch.
+    - do: record_save
+      args:
+        entity: buyer_lead
+        stage:  viewing_booked
+        fields:
+          full_name:   '$state.full_name'
+          development: '$state.development_id'
+          notes:       '$t("book-viewing.lead_note", { slot: $coalesce($state.slot_label, "-"), advisor: $coalesce($advisor_label, "-") })'
+      bind: lead
+      outputs:
+        ok:      [{ goto: remind }]
+        invalid: [{ goto: remind }]
+        failed:  [{ goto: remind }]
+
+  remind:
+    # T-24h and T-2h — the offsets come from scheduling.yaml, the absolute send_at
+    # from booking_reserve. dedupe_key makes a re-run harmless.
+    - if: '$length($coalesce($viewing.reminders, [])) > 0'
+      then:
+        - do: schedule_notify
+          args:
+            to:          { contact_id: '$contact.id' }
+            send_at:     '$viewing.reminders[0].send_at'
+            dedupe_key:  'gulf-realty:viewing:{$viewing.record_id}:{$viewing.reminders[0].key}'
+            memory_note: 'Site-viewing reminder ({$viewing.reminders[0].key})'
+            intent:
+              render_intent: detail_card
+              body: '{$t("book-viewing.reminder.body", { project: $coalesce($dev_label, ""), slot: $coalesce($state.slot_label, "") })}'
+              buttons:
+                - { title: '{$t("book-viewing.reminder.mine")}', on_select: { invoke: my-requests } }
+          detach: true
+    - if: '$length($coalesce($viewing.reminders, [])) > 1'
+      then:
+        - do: schedule_notify
+          args:
+            to:          { contact_id: '$contact.id' }
+            send_at:     '$viewing.reminders[1].send_at'
+            dedupe_key:  'gulf-realty:viewing:{$viewing.record_id}:{$viewing.reminders[1].key}'
+            memory_note: 'Site-viewing reminder ({$viewing.reminders[1].key})'
+            intent:
+              render_intent: detail_card
+              body: '{$t("book-viewing.reminder.body", { project: $coalesce($dev_label, ""), slot: $coalesce($state.slot_label, "") })}'
+              buttons:
+                - { title: '{$t("book-viewing.reminder.mine")}', on_select: { invoke: my-requests } }
+          detach: true
+    - render:
+        render_intent: text_card
+        body: '{$t("book-viewing.success", { advisor: $coalesce($advisor_label, ""), slot: $coalesce($state.slot_label, ""), ref: $viewing.record_number })}'
+      memory_note: 'Booked site viewing {$viewing.record_number}.'
+      data: { viewing_id: '$viewing.record_id' }
+    - end: applied
+
+  slot_taken:
+    - render:
+        render_intent: text_card
+        body: '{$t("book-viewing.slot_taken")}'
+      memory_note: 'Site viewing — the slot was just taken.'
+    - end: aborted
+
+  aborted:
+    - end: { status: aborted, body: '{$t("book-viewing.aborted")}' }

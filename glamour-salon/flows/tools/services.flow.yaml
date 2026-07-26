@@ -1,0 +1,69 @@
+# services — the treatment menu as a carousel (each has a salon photo). The duration is
+# shown because it is what the booking will actually hold the chair for.
+
+flow_id:     services
+version:     1
+description: |-
+  Show the treatment menu with prices and how long each takes. Call when the client
+  asks what you offer, asks a price, or names a treatment. Pass `category` when she
+  named one (hair, colour, nails, skincare, spa, makeup, bridal).
+
+input:
+  category:
+    type:     string
+    optional: true
+    describe: 'One of: hair, colour, nails, skincare, spa, makeup, bridal.'
+
+entry:
+  - if:   '$input.category != null'
+    goto: load_category
+  - else: true
+    goto: load_all
+
+steps:
+  load_all:
+    - do: record_search
+      args: { entity: treatment, query: '', limit: 10 }
+      bind: page
+      outputs:
+        ok:     [{ goto: show }]
+        empty:  [{ goto: none }]
+        failed: [{ goto: unavailable }]
+
+  load_category:
+    - do: record_search
+      args:
+        entity: treatment
+        query:  ''
+        limit:  10
+        where:  { all: [{ field: category, op: eq, value: '$input.category' }] }
+      bind: page
+      outputs:
+        ok:     [{ goto: show }]
+        empty:  [{ goto: load_all }]
+        failed: [{ goto: unavailable }]
+
+  show:
+    - render:
+        render_intent: carousel
+        body:  '{$t("services.intro")}'
+        items: '$page.rows'
+        item_template:
+          image_url: '$coalesce($item.fields.photo, "")'
+          body: '$lines($compact([
+                   $item.fields.name,
+                   $format_money_field($item.fields.price, $coalesce($item.fields.currency, "SAR")),
+                   $t("services.duration", { min: $item.fields.duration_min })
+                 ]), "\n")'
+          buttons:
+            - { title: '{$t("services.btn_book")}', on_select: { invoke: book-appointment, with: { treatment_id: '$item.id' } } }
+      memory_note: 'Showed {$length($page.rows)} treatment(s).'
+    - end: applied
+
+  none:
+    - answer:
+        instructions: 'No treatment matched. Say so in one line and offer the full menu.'
+
+  unavailable:
+    - answer:
+        instructions: 'The menu could not be read. Apologise in one line and offer to try again shortly. NEVER quote a price from memory.'

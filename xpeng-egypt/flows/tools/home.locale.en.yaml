@@ -1,0 +1,24 @@
+flow_id: home
+
+strings:
+  card_header: '🚗 XPeng Egypt — your smart assistant'
+  card_footer: 'You can type any request any time — or pick from the menu.'
+  cta:         'Choose'
+
+  greeting_default: 'Welcome to XPeng Egypt! 👋 I can help you explore our models, book a test drive, or anything else.'
+
+  # Live status lines (shown only when non-zero).
+  status_complaints: '🛠️ You have {count} open support ticket(s)'
+  status_booking:    '🎫 You have {count} upcoming test drive(s)'
+
+  # Menu rows.
+  row_browse_title:    '🚗 See our models'
+  row_browse_desc:     'Browse the full XPENG lineup'
+  row_testdrive_title: '📅 Book a test drive'
+  row_testdrive_desc:  'Pick a branch, model and time'
+  row_quote_title:     '💬 Get a quote'
+  row_quote_desc:      'Leave your details and sales will reach out'
+  row_branches_title:  '🏢 Our showrooms'
+  row_branches_desc:   'Locations, hours and contact numbers'
+  row_aftersales_title: '🛠️ After-sales & owner support'
+  row_aftersales_desc:  'Activate your app, report an issue, or track a ticket'

@@ -1,0 +1,45 @@
+flow_id: book-viewing
+
+strings:
+  progress.header:   '🗓️ حجز معاينة'
+  progress.project:  '🏙️ المشروع: {project}'
+  progress.advisor:  '👤 المستشار: {advisor}'
+  progress.slot:     '🕐 الموعد: {slot}'
+
+  label.project:     'المشروع'
+  label.advisor:     'المستشار العقاري'
+  label.slot:        'الموعد'
+  label.party:       'عدد الحضور'
+  label.name:        'الاسم'
+
+  field_header.project: '🏙️ أي مشروع تود معاينته؟'
+  field_cta.project:    'المشاريع'
+  field_header.advisor: '👤 اختر المستشار'
+  field_cta.advisor:    'المستشارون'
+  field_header.slot:    '🕐 المواعيد المتاحة'
+  field_cta.slot:       'المواعيد'
+  field_header.party:   '👥 كم عدد الحضور؟'
+  field_cta.party:      'اختر'
+
+  party.one:   'شخص واحد'
+  party.two:   'شخصان'
+  party.four:  'عائلة (٣-٤)'
+
+  preview.header:   '📋 تأكيد المعاينة'
+  preview.project:  '🏙️ المشروع: {project}'
+  preview.advisor:  '👤 المستشار: {advisor}'
+  preview.slot:     '🕐 الموعد: {slot}'
+  preview.party:    '👥 عدد الحضور: {party}'
+  approve_header:   '🗓️ مراجعة الحجز'
+  approve_footer:   'اضغط تأكيد لإتمام الحجز.'
+  confirm_title:    'تأكيد الحجز ✅'
+  cancel_title:     'إلغاء ❌'
+
+  lead_note:        'حجز معاينة {slot} مع {advisor}.'
+  # Double-quoted so `\n` is a REAL newline (a single-quoted YAML scalar would
+  # emit the two characters verbatim).
+  success:          "✅ تم تأكيد المعاينة مع {advisor} — {slot}.\nرقم الحجز: {ref}\n⏰ ستصلك رسالة تذكير قبل الموعد."
+  slot_taken:       '⚠️ للأسف تم حجز هذا الموعد قبل لحظات. اختر موعداً آخر وسنكمل الحجز.'
+  aborted:          'تم إلغاء الحجز. تحت أمرك في أي وقت 🌟'
+  reminder.body:    '⏰ تذكير: معاينة {project} — {slot}.'
+  reminder.mine:    '📁 طلباتي'

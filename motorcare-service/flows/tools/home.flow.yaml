@@ -1,0 +1,44 @@
+# home — the front door. Counts the customer's open job cards so a returning
+# customer lands on their car, not the service menu.
+
+flow_id:     home
+version:     1
+description: Main menu / welcome. Call on a greeting, an unclear or off-topic message, or "what can you do?".
+
+input:
+  message:
+    type:     string
+    optional: true
+    describe: 'Optional ONE short greeting line YOU compose for this customer.'
+
+entry:
+  - else: true
+    goto: count_jobs
+
+steps:
+  count_jobs:
+    - do: record_aggregate
+      args: { entity: repair_job, op: count, active_only: true }
+      bind: jobs
+      outputs:
+        ok:     [{ goto: show }]
+        failed: [{ goto: show }]
+
+  show:
+    - assign:
+        open_jobs: '$coalesce($jobs.value, 0)'
+    - render:
+        render_intent: list_picker
+        header: '{$t("home.header")}'
+        body: '$lines($compact([
+                 $coalesce($input.message, $t("home.greeting")),
+                 $open_jobs > 0 ? $t("home.open_jobs", { count: $open_jobs }) : null
+               ]), "\n")'
+        cta: '{$t("home.cta")}'
+        items:
+          - { title: '{$t("home.row_damage")}',   description: '{$t("home.row_damage_d")}',   on_select: { invoke: damage-check } }
+          - { title: '{$t("home.row_services")}', description: '{$t("home.row_services_d")}', on_select: { invoke: services } }
+          - { title: '{$t("home.row_book")}',     description: '{$t("home.row_book_d")}',     on_select: { invoke: book-service } }
+          - { title: '{$t("home.row_garage")}',   description: '{$t("home.row_garage_d")}',   on_select: { invoke: my-garage } }
+      memory_note: 'Showed the MotorCare menu ({$open_jobs} open job card(s)).'
+    - end: applied

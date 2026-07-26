@@ -1,0 +1,84 @@
+# shop — catalog discovery. Reads the platform `product` RECORD (not the commerce
+# projection) because that is where the pack's own `photo` field lives; the system
+# entity already declares text + semantic search over name/description, so the
+# shopper's own words work as a query with nothing extra declared.
+#
+# Rows carry a photo ⇒ carousel. Each card's buttons add to the real cart or open
+# the detail (two per card — `$caps.carousel.buttonsPerCard`).
+
+flow_id:     shop
+version:     1
+description: |-
+  Browse or search the boutique. Pass the shopper's own words as `query`
+  ("عود ثقيل للأعراس", "something light for daytime"); pass `category` when they
+  named one (oud_oil · bakhoor · eau_de_parfum · gift_set · oud_chips).
+
+input:
+  query:
+    type:     string
+    optional: true
+    describe: "The shopper's free-text need, in their own words."
+  category:
+    type:     string
+    optional: true
+    describe: 'One of: oud_oil, bakhoor, eau_de_parfum, gift_set, oud_chips.'
+
+entry:
+  - if:   '$input.category != null'
+    goto: search_category
+  - else: true
+    goto: search
+
+steps:
+  # `all: true` — the catalog is shared, not owned by the shopper's contact.
+  search:
+    - do: record_search
+      args: { entity: fragrance, query: '$coalesce($input.query, "")', limit: 10 }
+      bind: page
+      outputs:
+        ok:     [{ goto: show }]
+        empty:  [{ goto: none }]
+        failed: [{ goto: unavailable }]
+
+  search_category:
+    - do: record_search
+      args:
+        entity: fragrance
+        query:  '$coalesce($input.query, "")'
+        limit:  10
+        where:  { all: [{ field: category, op: eq, value: '$input.category' }] }
+      bind: page
+      outputs:
+        ok:     [{ goto: show }]
+        # An unrecognised category is a typo, not an empty shop — fall back.
+        empty:  [{ goto: search }]
+        failed: [{ goto: unavailable }]
+
+  show:
+    - render:
+        render_intent: carousel
+        body: '{$t("shop.intro", { count: $length($page.rows) })}'
+        items: '$page.rows'
+        item_template:
+          # No `title:` on a carousel card — the name leads the body, and WhatsApp
+          # clamps to `$caps.text.carouselBodyMax`, so keep it to two short lines.
+          image_url: '$coalesce($item.fields.photo, "")'
+          body: '$lines($compact([
+                   $item.fields.name,
+                   $format_money_field($item.fields.price, $coalesce($item.fields.currency, "SAR"))
+                 ]), "\n")'
+          buttons:
+            - { title: '{$t("shop.btn_add")}',    on_select: { invoke: cart,    with: { action: add, product_id: '$item.fields.sku' } } }
+            - { title: '{$t("shop.btn_detail")}', on_select: { invoke: product, with: { product_id: '$item.fields.sku' } } }
+      memory_note: 'Showed {$length($page.rows)} product(s) for query "{$coalesce($input.query, "")}" / category "{$coalesce($input.category, "")}".'
+      data: { count: '$length($page.rows)' }
+    - end: applied
+
+  none:
+    - answer:
+        data: { query: '$input.query', category: '$input.category' }
+        instructions: 'Nothing matched. Say so in one warm line, then offer the fragrance quiz (fragrance-finder) or a broader browse. Never invent a product.'
+
+  unavailable:
+    - answer:
+        instructions: 'The catalog is unavailable for a moment. Apologise in one line and offer to try again shortly.'

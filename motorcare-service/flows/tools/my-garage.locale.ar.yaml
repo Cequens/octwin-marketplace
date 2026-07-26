@@ -1,0 +1,9 @@
+flow_id: my-garage
+
+strings:
+  header:        '🚗 سياراتك'
+  cars_header:   '— المركبات —'
+  jobs_header:   '— بطاقات العمل —'
+  btn_check:     '📸 افحص مشكلة بالصورة'
+  btn_book:      '🗓️ احجز موعد'
+  btn_services:  '🔧 باقات الصيانة'

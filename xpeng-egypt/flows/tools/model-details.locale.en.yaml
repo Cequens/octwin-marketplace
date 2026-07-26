@@ -1,0 +1,14 @@
+flow_id: model-details
+
+strings:
+  intro:   "Here are the full details 👇"
+  gallery: 'More photos of this model 📸'
+  range:   'Range'
+  battery: 'Battery'
+  power:   'Power'
+  accel:   '0–100'
+  seats:   'Seats'
+  from:    'From'
+  km:      'km'
+  sec:     's'
+  egp:     'EGP'

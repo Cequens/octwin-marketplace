@@ -1,0 +1,224 @@
+# book-visit — treatment → dentist → real slot → confirm → reserve → reminders.
+#
+# The slot picker is fed by the scheduling engine, which returns STRUCTURED rows
+# only (no locale strings in SQL) — the human label is composed here. Reservation is
+# a single conditional upsert against the capacity ledger, so two patients tapping
+# the same slot cannot both win.
+
+flow_id:     book-visit
+version:     1
+description: |-
+  [interactive] Book a dental appointment. Call when the patient wants an
+  appointment. Pass `treatment_id` and/or `dentist_id` when they came from a card;
+  pre-fill `complaint` / `insurer` / `member_id` from a voice note or an insurance
+  card photo. The tool asks for whatever is missing.
+
+input:
+  treatment_id:
+    type:     string
+    optional: true
+    describe: 'Treatment record id from a treatments row — never a typed name.'
+  dentist_id:
+    type:     string
+    optional: true
+    describe: 'Dentist record id from a dentists card — never a typed name.'
+
+entry:
+  - else: true
+    goto: collect_fields
+
+steps:
+  collect_fields:
+    - collect:
+        before_each:
+          - assign: { treat_label: null, dent_label: null, treat_minutes: null }
+          - if: '$state.treatment_id != null'
+            then:
+              - do: record_get
+                args: { entity: treatment, record_id: '$state.treatment_id' }
+                bind: tr
+                outputs:
+                  ok:        []
+                  not_found: [{ assign: { state: '$merge($state, { treatment_id: null })' } }]
+                  failed:    []
+              - if: '$tr.fields != null'
+                then:
+                  - assign:
+                      treat_label:   '$tr.fields.name'
+                      treat_minutes: '$tr.fields.duration_min'
+          - if: '$state.dentist_id != null'
+            then:
+              - do: record_get
+                args: { entity: dentist, record_id: '$state.dentist_id' }
+                bind: dt
+                outputs:
+                  ok:        []
+                  # A dead resource id would send slot_list at nothing and fail the
+                  # whole tool — drop it so the picker re-engages this same turn.
+                  not_found: [{ assign: { state: '$merge($state, { dentist_id: null })' } }]
+                  failed:    []
+              - if: '$dt.fields != null'
+                then:
+                  - assign: { dent_label: '$dt.fields.name' }
+        progress: '$lines($compact([
+                     $t("book-visit.progress.header"),
+                     $treat_label != null ? $t("book-visit.progress.treatment", { treatment: $treat_label }) : null,
+                     $dent_label != null ? $t("book-visit.progress.dentist", { dentist: $dent_label }) : null,
+                     $state.slot_label != null ? $t("book-visit.progress.slot", { slot: $state.slot_label }) : null
+                   ]), "\n")'
+        gap_instructions: 'Ask the patient for the next missing detail ({$collect_field}), one at a time, in their language. Re-call book-visit once they answer. NEVER give clinical advice or diagnose.'
+        fields:
+          - field: treatment_id
+            when: '$state.treatment_id == null'
+            label: '$t("book-visit.label.treatment")'
+            options:
+              header: book-visit.field_header.treatment
+              cta:    book-visit.field_cta.treatment
+              fetch:  { do: record_list, args: { entity: treatment, all: true, limit: 20, sort_by: { field: price_from, dir: asc } }, bind: trs }
+              rows:   '$trs.rows'
+              map:
+                value:       '$item.id'
+                label:       '$item.fields.name'
+                description: '$format_money_field($item.fields.price_from, $coalesce($item.fields.currency, "AED"))'
+                selection:   { treat_label: '$item.fields.name' }
+              auto_resolve: true
+          - field: dentist_id
+            when: '$state.dentist_id == null'
+            label: '$t("book-visit.label.dentist")'
+            options:
+              header: book-visit.field_header.dentist
+              cta:    book-visit.field_cta.dentist
+              fetch:  { do: record_search, args: { entity: dentist, query: '', limit: 10 }, bind: dts }
+              rows:   '$dts.rows'
+              map:
+                value:       '$item.id'
+                label:       '$item.fields.name'
+                description: '$item.fields.title'
+                selection:   { dent_label: '$item.fields.name' }
+              auto_resolve: true
+          - field: slot_start
+            label: '$t("book-visit.label.slot")'
+            options:
+              header: book-visit.field_header.slot
+              cta:    book-visit.field_cta.slot
+              fetch:  { do: slot_list, args: { resource_record_id: '$state.dentist_id' }, bind: slots }
+              rows:   '$slots'
+              map:
+                value: '$item.slot_start'
+                label: '$lines($compact([$item.local_date, $item.local_time]), " — ")'
+                selection:
+                  slot_minutes: '$item.slot_minutes'
+                  slot_label:   '$lines($compact([$item.local_date, $item.local_time]), " — ")'
+          # Enrichment — never blocks the booking, folded in when the agent has it
+          # (typically pre-filled from a voice note or an insurance-card photo).
+          - field: complaint
+            required: false
+            label:    '$t("book-visit.label.complaint")'
+            describe: 'What the patient is complaining of, in their words. Logistics only — never a diagnosis.'
+          - field: insurer
+            required: false
+            label:    '$t("book-visit.label.insurer")'
+            describe: 'Insurance company, e.g. Daman — may be pre-filled from an insurance-card photo.'
+          - field: member_id
+            required: false
+            label:    '$t("book-visit.label.member")'
+            describe: 'Insurance member number — may be pre-filled from an insurance-card photo.'
+        complete: [{ goto: confirm }]
+
+  confirm:
+    - use: approve_apply
+      with:
+        preview: '$lines($compact([
+                    $t("book-visit.preview.header"),
+                    $t("book-visit.preview.treatment", { treatment: $coalesce($treat_label, "-") }),
+                    $t("book-visit.preview.dentist", { dentist: $coalesce($dent_label, "-") }),
+                    $t("book-visit.preview.slot", { slot: $coalesce($state.slot_label, "-") }),
+                    $state.complaint != null ? $t("book-visit.preview.complaint", { complaint: $state.complaint }) : null,
+                    $state.insurer != null ? $t("book-visit.preview.insurer", { insurer: $state.insurer }) : null
+                  ]), "\n")'
+        header:        '{$t("book-visit.approve_header")}'
+        footer:        '{$t("book-visit.approve_footer")}'
+        confirm_title: '{$t("book-visit.confirm_title")}'
+        cancel_title:  '{$t("book-visit.cancel_title")}'
+        apply:         commit
+        abort:         aborted
+        on_other:      collect_fields
+        memory_note:   'Asked the patient to confirm the appointment.'
+
+  commit:
+    - do: booking_reserve
+      args:
+        resource_record_id: '$state.dentist_id'
+        slot_start:         '$state.slot_start'
+        slot_minutes:       '$coalesce($state.slot_minutes, $treat_minutes)'
+        fields:
+          treatment:       '$state.treatment_id'
+          dentist:         '$state.dentist_id'
+          treatment_label: '$treat_label'
+          dentist_label:   '$dent_label'
+          slot_label:      '$state.slot_label'
+          complaint:       '$state.complaint'
+          insurer:         '$state.insurer'
+          member_id:       '$state.member_id'
+      bind: visit
+      outputs:
+        ok:           [{ goto: remind }]
+        full:         [{ goto: slot_taken }]
+        invalid_slot: [{ goto: slot_taken }]
+        failed:       [{ end: failed }]
+
+  remind:
+    # T-24h and T-2h. The offsets are declared in scheduling.yaml; the absolute
+    # send_at comes back from the reservation, and dedupe_key makes a re-run safe.
+    - if: '$length($coalesce($visit.reminders, [])) > 0'
+      then:
+        - do: schedule_notify
+          args:
+            to:          { contact_id: '$contact.id' }
+            send_at:     '$visit.reminders[0].send_at'
+            dedupe_key:  'smile-dental:visit:{$visit.record_id}:{$visit.reminders[0].key}'
+            memory_note: 'Appointment reminder ({$visit.reminders[0].key})'
+            intent:
+              render_intent: detail_card
+              body: '{$t("book-visit.reminder.body", { dentist: $coalesce($dent_label, ""), slot: $coalesce($state.slot_label, "") })}'
+              buttons:
+                - { title: '{$t("book-visit.reminder.mine")}', on_select: { invoke: my-visits } }
+          detach: true
+    - if: '$length($coalesce($visit.reminders, [])) > 1'
+      then:
+        - do: schedule_notify
+          args:
+            to:          { contact_id: '$contact.id' }
+            send_at:     '$visit.reminders[1].send_at'
+            dedupe_key:  'smile-dental:visit:{$visit.record_id}:{$visit.reminders[1].key}'
+            memory_note: 'Appointment reminder ({$visit.reminders[1].key})'
+            intent:
+              render_intent: detail_card
+              body: '{$t("book-visit.reminder.body", { dentist: $coalesce($dent_label, ""), slot: $coalesce($state.slot_label, "") })}'
+              buttons:
+                - { title: '{$t("book-visit.reminder.mine")}', on_select: { invoke: my-visits } }
+          detach: true
+    - render:
+        render_intent: detail_card
+        header: '{$t("book-visit.done_header")}'
+        body: '$lines($compact([
+                 $t("book-visit.done_body", { dentist: $coalesce($dent_label, ""), slot: $coalesce($state.slot_label, "") }),
+                 $t("book-visit.done_ref", { ref: $visit.record_number }),
+                 $t("book-visit.done_reminder")
+               ]), "\n")'
+        buttons:
+          - { title: '{$t("book-visit.btn_mine")}',       on_select: { invoke: my-visits } }
+          - { title: '{$t("book-visit.btn_treatments")}', on_select: { invoke: treatments } }
+      memory_note: 'Booked visit #{$visit.record_number} with {$dent_label} at {$state.slot_label}.'
+      data: { visit_id: '$visit.record_id' }
+    - end: applied
+
+  slot_taken:
+    - render:
+        render_intent: text_card
+        body: '{$t("book-visit.slot_taken")}'
+      memory_note: 'Appointment — the slot was just taken by someone else.'
+    - end: aborted
+
+  aborted:
+    - end: { status: aborted, body: '{$t("book-visit.aborted")}' }

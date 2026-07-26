@@ -1,0 +1,48 @@
+flow_id: fragrance-finder
+
+strings:
+  progress.header:   '🔎 اعرف عطرك'
+  progress.family:   '✅ العائلة العطرية'
+  progress.occasion: '✅ المناسبة'
+
+  label.family:   'العائلة العطرية'
+  label.occasion: 'المناسبة'
+  label.budget:   'الميزانية'
+
+  field_header.family:   '🌿 أي عائلة عطرية تحب؟'
+  field_cta.family:      'اختر'
+  field_header.occasion: '🎯 لأي مناسبة؟'
+  field_cta.occasion:    'اختر'
+  field_header.budget:   '💰 ما ميزانيتك؟'
+  field_cta.budget:      'اختر'
+
+  family.oud:    '🪵 عود وخشبي'
+  family.floral: '🌹 ورد وزهري'
+  family.amber:  '🍯 عنبر ومسك'
+  family.fresh:  '🍃 منعش وخفيف'
+
+  occasion.daily:   '☀️ استخدام يومي'
+  occasion.evening: '🌙 مساء ومناسبات'
+  occasion.wedding: '💍 أعراس ومجلس'
+  occasion.gift:    '🎁 هدية'
+
+  budget.b500:  'حتى 500 ريال'
+  budget.b1000: 'حتى 1000 ريال'
+  budget.bopen: 'بدون حد'
+
+  brief.oud:     'عطر عود خشبي راتنجي ثقيل الحضور'
+  brief.floral:  'عطر ورد زهري ناعم'
+  brief.amber:   'عطر عنبر ومسك دافئ شرقي'
+  brief.fresh:   'عطر منعش خفيف للنهار'
+  brief.daily:   'للاستخدام اليومي'
+  brief.evening: 'للمساء والمناسبات'
+  brief.wedding: 'للأعراس والمجلس ويدوم طويلاً'
+  brief.gift:    'مناسب كهدية مع تغليف فاخر'
+  brief.b500:    'بسعر اقتصادي'
+  brief.b1000:   'بسعر متوسط'
+  brief.bopen:   'من الفئة الفاخرة'
+
+  result:          '✨ بناءً على إجاباتك، هذه {count} من أفضل ما يناسبك:'
+  result_widened:  '✨ لم أجد ضمن ميزانيتك بالضبط، لكن هذه {count} الأقرب لذوقك:'
+  btn_add:         '🛒 أضف للسلة'
+  btn_detail:      '📋 التفاصيل'

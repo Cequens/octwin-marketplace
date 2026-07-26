@@ -1,0 +1,157 @@
+# mortgage-estimate — an indicative monthly-instalment quote, and the moment a
+# browser becomes a LEAD. Every numeric input arrives through a picker whose
+# `selection:` carries a real number, so the arithmetic never touches free text.
+#
+# The quote is deliberately flat-rate (murabaha-style) and labelled as indicative —
+# a pack must not imply a bank-approved amortisation it cannot compute.
+
+flow_id:     mortgage-estimate
+version:     1
+description: |-
+  Estimate the monthly instalment for a property and capture the buyer as a lead.
+  Call when the buyer asks about financing, instalments, a payment plan or "كم القسط".
+  Pass `development_id` when they were looking at a specific project.
+
+input:
+  development_id:
+    type:     string
+    optional: true
+    describe: 'Development record id the buyer is asking about, when known.'
+  full_name:
+    type:     string
+    optional: true
+    describe: "The buyer's name, if they already gave it."
+
+entry:
+  - else: true
+    goto: collect_inputs
+
+steps:
+  collect_inputs:
+    - collect:
+        derive:
+          # Resolved from the pickers' numeric selections — never from typed text.
+          down_pct:  '$enum_lookup($state.down_payment, { p10: 0.1, p20: 0.2, p30: 0.3, p50: 0.5 }, 0.2)'
+          years_n:   '$enum_lookup($state.tenor, { y5: 5, y10: 10, y15: 15, y20: 20, y25: 25 }, 20)'
+        before_each:
+          - assign: { dev_name: null, dev_price: null, dev_currency: 'AED' }
+          - if: '$state.development_id != null'
+            then:
+              - do: record_get
+                args: { entity: development, record_id: '$state.development_id' }
+                bind: dev
+                outputs:
+                  ok:        []
+                  not_found: [{ assign: { state: '$merge($state, { development_id: null })' } }]
+                  failed:    []
+              - if: '$dev.fields != null'
+                then:
+                  - assign:
+                      dev_name:     '$dev.fields.name'
+                      dev_currency: '$coalesce($dev.fields.currency, "AED")'
+                      dev_price:    '$dev.fields.from_price.value / $dev.fields.from_price.offset'
+        before_prompt:
+          - assign:
+              progress_card: '$lines($compact([
+                                $t("mortgage-estimate.progress.header"),
+                                $dev_name != null ? $t("mortgage-estimate.progress.project", { project: $dev_name }) : null,
+                                $state.down_payment != null ? $t("mortgage-estimate.progress.down", { pct: $round($state.down_pct * 100, 0) }) : null,
+                                $state.tenor != null ? $t("mortgage-estimate.progress.tenor", { years: $state.years_n }) : null
+                              ]), "\n")'
+        progress: '$progress_card'
+        gap_instructions: 'Ask for the next missing detail ({$collect_field}) in one short line, in the buyer''s language, then re-call mortgage-estimate once they answer. Never quote a bank-approved rate.'
+        fields:
+          # Which project — fetched live, auto-picks when the catalog holds one.
+          - field: development_id
+            when: '$state.development_id == null'
+            label: '$t("mortgage-estimate.label.project")'
+            options:
+              header: mortgage-estimate.field_header.project
+              cta:    mortgage-estimate.field_cta.project
+              fetch:  { do: record_list, args: { entity: development, all: true, limit: 20, sort_by: { field: from_price, dir: asc } }, bind: devs }
+              rows:   '$devs.rows'
+              map:
+                value:       '$item.id'
+                label:       '$item.fields.name'
+                description: '$format_money_field($item.fields.from_price, $coalesce($item.fields.currency, "AED"))'
+              auto_resolve: true
+          - field: down_payment
+            label: '$t("mortgage-estimate.label.down")'
+            options:
+              header: mortgage-estimate.field_header.down
+              cta:    mortgage-estimate.field_cta.down
+              items:
+                - { value: p10, label: mortgage-estimate.down.p10 }
+                - { value: p20, label: mortgage-estimate.down.p20 }
+                - { value: p30, label: mortgage-estimate.down.p30 }
+                - { value: p50, label: mortgage-estimate.down.p50 }
+          - field: tenor
+            label: '$t("mortgage-estimate.label.tenor")'
+            options:
+              header: mortgage-estimate.field_header.tenor
+              cta:    mortgage-estimate.field_cta.tenor
+              items:
+                - { value: y5,  label: mortgage-estimate.tenor.y5 }
+                - { value: y10, label: mortgage-estimate.tenor.y10 }
+                - { value: y15, label: mortgage-estimate.tenor.y15 }
+                - { value: y20, label: mortgage-estimate.tenor.y20 }
+                - { value: y25, label: mortgage-estimate.tenor.y25 }
+          # Enrichment — never blocks the quote, folded into the lead if present.
+          - field: full_name
+            required: false
+            label:    '$t("mortgage-estimate.label.name")'
+            describe: "The buyer's full name."
+          - field: monthly_income
+            required: false
+            label:    '$t("mortgage-estimate.label.income")'
+            describe: 'Monthly income — may be pre-filled from a salary certificate photo.'
+        complete: [{ goto: compute }]
+
+  compute:
+    - assign:
+        rate:      '$coalesce($config.finance.profit_rate, 0.049)'
+        price:     '$coalesce($dev_price, 0)'
+    - assign:
+        down_amt:  '$round($price * $state.down_pct, 0)'
+        principal: '$round($price - ($price * $state.down_pct), 0)'
+    - assign:
+        profit:    '$round($principal * $rate * $state.years_n, 0)'
+    - assign:
+        monthly:   '$round(($principal + ($principal * $rate * $state.years_n)) / ($state.years_n * 12), 0)'
+    # Capture the lead — this is the commercial payload of the whole flow.
+    - do: record_save
+      args:
+        entity: buyer_lead
+        fields:
+          full_name:      '$state.full_name'
+          budget:         '$price'
+          city:           '$dev.fields.city'
+          finance:        mortgage
+          development:    '$state.development_id'
+          monthly_income: '$state.monthly_income'
+          notes:          '$t("mortgage-estimate.lead_note", { pct: $round($state.down_pct * 100, 0), years: $state.years_n, monthly: $format_number($monthly) })'
+      bind: lead
+      outputs:
+        ok:      [{ goto: quote }]
+        invalid: [{ goto: quote }]
+        failed:  [{ goto: quote }]
+
+  quote:
+    - render:
+        render_intent: detail_card
+        header: '{$t("mortgage-estimate.header")}'
+        body: '$lines($compact([
+                 $dev_name != null ? $t("mortgage-estimate.line.project", { project: $dev_name }) : null,
+                 $t("mortgage-estimate.line.price",     { amount: $format_money($price, $dev_currency) }),
+                 $t("mortgage-estimate.line.down",      { pct: $round($state.down_pct * 100, 0), amount: $format_money($down_amt, $dev_currency) }),
+                 $t("mortgage-estimate.line.financed",  { amount: $format_money($principal, $dev_currency) }),
+                 $t("mortgage-estimate.line.tenor",     { years: $state.years_n }),
+                 $t("mortgage-estimate.line.monthly",   { amount: $format_money($monthly, $dev_currency) }),
+                 $t("mortgage-estimate.disclaimer")
+               ]), "\n")'
+        buttons:
+          - { title: '{$t("mortgage-estimate.btn_viewing")}', on_select: { invoke: book-viewing, with: { development_id: '$state.development_id' } } }
+          - { title: '{$t("mortgage-estimate.btn_browse")}',  on_select: { invoke: browse-projects } }
+      memory_note: 'Quoted an indicative instalment of {$monthly} {$dev_currency}/month and saved buyer lead {$lead.record_number}.'
+      data: { monthly: '$monthly', currency: '$dev_currency' }
+    - end: applied

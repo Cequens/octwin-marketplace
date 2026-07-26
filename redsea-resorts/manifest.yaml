@@ -1,0 +1,59 @@
+# redsea-resorts — a Red Sea resort group taking reservations on WhatsApp.
+#
+# Demonstrates a room-inventory booking that a hotel can actually trust: the bookable
+# resource is a ROOM TYPE, not a person, and its slot capacity is the number of rooms of
+# that type — so ten sea-view rooms means ten concurrent stays and the eleventh guest gets
+# the `full` port instead of an oversell. Board basis and guest count are priced from the
+# room record, and add-ons are a second, optional pass so a guest is never blocked.
+
+id:          redsea-resorts
+version:     1.0.0
+description: 'Red Sea resort reservations — room carousel, real room-inventory availability, board-basis pricing, and stay confirmation on WhatsApp.'
+
+listing:
+  title:    'Red Sea Resorts'
+  tagline:  'Room inventory that cannot be oversold, priced by board and party'
+  category: hospitality
+  author:   { name: 'Octwin', url: 'https://octwin.ai' }
+  public:   true
+
+supported_channels: [whatsapp, web]
+required_adapters:  [messaging]
+
+default_settings:
+  locale: ar
+
+default_conversation_context:
+  lang: { type: enum, enum: [ar, en, bilingual], default: ar, describe: 'Reply language.' }
+
+config:
+  policy:
+    child_discount_pct: 50
+    deposit_pct:        25
+
+flows:
+  - home
+  - rooms
+  - book-stay
+  - my-bookings
+
+inbound_preprocessing:
+  voicenote:
+    mode: transcribe
+    ack: '🎤 وصلت الرسالة الصوتية، جاري تفريغها...'
+    prompt: 'Arabic resort booking voice note — dates, party size, board basis.'
+    note_template: |-
+      $transcript != null ? "🎤 رسالة صوتية ({$media_ref}): {$transcript}" : "🎤 رسالة صوتية ({$media_ref}) — تعذّر التفريغ"
+
+agents:
+  - id:                reservations
+    display_name:      'Red Sea Reservations'
+    default_model:     'openrouter/google/gemini-3.1-flash-lite-preview'
+    tools:
+      - home
+      - rooms
+      - book-stay
+      - my-bookings
+    include_platform_protocol: true
+    instructions:
+      - file: prompts/identity.md

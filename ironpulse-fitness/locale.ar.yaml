@@ -1,0 +1,26 @@
+# ironpulse-fitness — pack-wide Arabic strings.
+#
+# `status.*` covers the `booking` system entity's pipeline stages (resolved via
+# `$enum_label` from my-schedule), and `stage.*` the pack's own `member_lead` funnel.
+pack_id: ironpulse-fitness
+strings:
+  field_picker_footer: 'اختر من القائمة 👆'
+
+  status.requested:  'بانتظار التأكيد'
+  status.confirmed:  'مؤكَّد ✅'
+  status.checked_in: 'حاضر'
+  status.completed:  'تمت'
+  status.cancelled:  'ملغى'
+  status.no_show:    'لم يحضر'
+
+  stage.enquiry:        'استفسار'
+  stage.trial_booked:   'حجز حصة تجريبية'
+  stage.trial_attended: 'حضر التجريبية'
+  stage.member:         'عضو 💪'
+  stage.lapsed:         'عضوية منتهية'
+
+  goal.weight_loss:     'نزول وزن'
+  goal.muscle_gain:     'بناء عضل'
+  goal.endurance:       'لياقة وتحمّل'
+  goal.general_fitness: 'لياقة عامة'
+  goal.rehab:           'إعادة تأهيل'

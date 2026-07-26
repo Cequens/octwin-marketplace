@@ -1,0 +1,63 @@
+flow_id: otc
+
+strings:
+  intro:           '🛒 عندنا {total} منتج متاح بدون روشتة — اسحب واختار:'
+  btn_add:         '🛒 ضيف للسلة'
+  btn_basket:      '🧾 سلتي'
+  btn_browse:      '🛒 تصفّح الرف'
+  btn_rx:          '📄 ابعت روشتة'
+  btn_checkout:    '✅ كمّل الطلب'
+  btn_orders:      '📦 طلباتي'
+  btn_confirm:     'أكّد الطلب ✅'
+  btn_cancel:      'إلغاء ❌'
+  basket_header:   '🧾 سلتك'
+  basket_empty:    'السلة فاضية. اختار من الرف أو ابعت روشتة للصيدلي.'
+  # Was: "فرع الصيدلية بيكلّمك لتأكيد الطلب والدفع" — a promise nothing kept, because the
+  # basket created no order and notified nobody. Now it points at the real next step.
+  basket_footer:   'اضغط "كمّل الطلب" وناخد منك بيانات التوصيل.'
+  subtotal:        '💰 إجمالي المنتجات: {subtotal}'
+  fee:             '🛵 التوصيل: {fee}'
+  total:           '📌 الإجمالي: {total}'
+
+  progress.header: '🚚 بيانات التوصيل'
+  progress.total:  '🧾 إجمالي الطلب: {total}'
+  progress.area:   '✅ المنطقة'
+
+  label.name:      'الاسم'
+  label.area:      'المنطقة'
+  label.address:   'العنوان'
+  label.phone:     'رقم الموبايل'
+  label.payment:   'طريقة الدفع'
+
+  field_header.area:    '📍 التوصيل لأي منطقة؟'
+  field_cta.area:       'المناطق'
+  field_header.payment: '💳 هتدفع إزاي؟'
+  field_cta.payment:    'اختار'
+
+  area.nasr_city:   'مدينة نصر'
+  area.maadi:       'المعادي'
+  area.heliopolis:  'مصر الجديدة'
+  area.zamalek:     'الزمالك'
+  area.october:     '٦ أكتوبر'
+  area.giza:        'الجيزة'
+
+  pay.cash:         '💵 كاش عند الاستلام'
+  pay.card:         '💳 فيزا عند الاستلام'
+  pay.cash_plain:   'كاش عند الاستلام'
+  pay.card_plain:   'فيزا عند الاستلام'
+
+  confirm_header:   '📋 تأكيد الطلب'
+  confirm_footer:   'راجع الطلب واضغط تأكيد.'
+  preview.header:   '🧾 طلبك:'
+  preview.to:       '👤 الاسم: {name}'
+  preview.address:  '📍 العنوان: {address}'
+  preview.payment:  '💳 الدفع: {payment}'
+
+  case_subject:     'طلب من الرف #{ref}'
+  placed_header:    '✅ تم تسجيل طلبك'
+  placed_ref:       '🧾 رقم الطلب: #{ref}'
+  placed_sla:       '🛵 الصيدلية بتجهّز الطلب وبتتواصل معاك خلال {hours} ساعة كحد أقصى.'
+  placed_cash:      '💵 جهّز المبلغ كاش لمندوب التوصيل.'
+  placed_card:      '💳 المندوب بيكون معاه ماكينة الدفع.'
+  placed_no_case:   '⚠️ الطلب محفوظ، لكن لم نتمكن من إرساله لقسم التجهيز آلياً — الصيدلية بتتابعه يدوياً.'
+  order_aborted:    'تم إلغاء الطلب — سلتك زي ما هي 🧾'

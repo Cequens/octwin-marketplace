@@ -1,0 +1,58 @@
+# my-orders — the customer's own orders and where each one is. Contact-scoped, so no
+# identity plumbing. The stage hint turns a status word into an expectation.
+
+flow_id:     my-orders
+version:     1
+description: |-
+  Show this customer's orders and their live stage. Call for "أوردري فين", "تتبع",
+  "my order". Never state an order stage from memory — call this.
+
+input:
+  message:
+    type:     string
+    optional: true
+    describe: 'Optional note from the customer.'
+
+entry:
+  - else: true
+    goto: load
+
+steps:
+  load:
+    - do: record_list
+      args: { entity: food_order, limit: 10, active_only: false, sort: created_at }
+      bind: page
+      outputs:
+        ok:     [{ goto: show }]
+        empty:  [{ goto: none }]
+        failed: [{ goto: unavailable }]
+
+  show:
+    - assign:
+        order_lines: '$map($page.rows, $lines($compact([
+                         "🧾 #" + $item.record_number,
+                         $format_money_field($item.fields.total, "EGP"),
+                         $item.fields.branch_label,
+                         $enum_label($item.stage, "stage", $item.stage)
+                       ]), " · "))'
+        latest: '$page.rows[0]'
+    - render:
+        render_intent: detail_card
+        header: '{$t("my-orders.header")}'
+        body: '$lines($compact($concat(
+                 $order_lines,
+                 [$latest != null ? $enum_label($latest.stage, "stage_hint", "") : null]
+               )), "\n")'
+        buttons:
+          - { title: '{$t("my-orders.btn_menu")}',   on_select: { invoke: menu } }
+          - { title: '{$t("my-orders.btn_basket")}', on_select: { invoke: basket, with: { action: view } } }
+      memory_note: 'Showed {$length($page.rows)} order(s); latest stage {$latest.stage}.'
+    - end: applied
+
+  none:
+    - answer:
+        instructions: 'This customer has no order yet. Say so warmly in one line and offer the menu.'
+
+  unavailable:
+    - answer:
+        instructions: 'The order lookup failed. Apologise in one line and offer to try again shortly. Do NOT state a stage from memory.'

@@ -1,0 +1,99 @@
+# gulf-realty — Gulf property brokerage on WhatsApp.
+#
+# Demonstrates: XRM reference catalog (developments + unit types) with
+# AI-generated imagery rendered as a carousel, a qualified-lead pipeline
+# (funnel analytics for free), the scheduling engine for site viewings with
+# T-24h / T-2h reminders, a `collect:` intake with fetched pickers, and
+# `approve_apply` confirm-before-commit. No pack DB, no code — pure YAML.
+
+id:          gulf-realty
+version:     1.0.0
+description: 'Off-plan & ready property brokerage for the Gulf — project carousels, mortgage estimates, and site-viewing bookings on WhatsApp.'
+
+listing:
+  title:    'Gulf Realty'
+  tagline:  'Off-plan tours, payment plans and site viewings — booked in chat'
+  category: real-estate
+  author:   { name: 'Octwin', url: 'https://octwin.ai' }
+  public:   true
+
+supported_channels: [whatsapp, web]
+# No data-store: developments/units/leads are XRM records, viewings are the
+# `booking` system entity, availability is the platform scheduling engine.
+# `vision` powers inbound ID / salary-certificate intake.
+required_adapters:  [messaging, vision]
+
+default_settings:
+  locale: ar
+
+# Pack-level config merged into every flow's `config:` — the indicative profit
+# rate mortgage-estimate quotes on. An operator can change the number without
+# touching a flow.
+config:
+  finance:
+    profit_rate: 0.049
+
+default_conversation_context:
+  lang: { type: enum, enum: [ar, en, bilingual], default: ar, describe: 'Reply language.' }
+
+flows:
+  - home
+  - browse-projects
+  - project-detail
+  - mortgage-estimate
+  - book-viewing
+  - my-requests
+
+# Inbound photo intake — a buyer sends an Emirates ID / salary certificate and the
+# agent pre-fills the finance qualification instead of re-asking. Logistics only.
+inbound_preprocessing:
+  image:
+    enabled: true
+    ack: '📄 وصل المستند، جاري قراءته...'
+    prompt: |-
+      You are a document-intake assistant for a Gulf real-estate brokerage. Classify each image and extract structured fields. Do NOT give financial or legal advice.
+
+      Respond with JSON only (no markdown) — an object with an `images` array holding EXACTLY ONE entry per input image, IN ORDER:
+      {
+        "images": [
+          {
+            "media_ref": "<copy the MEDIA- ref for this image, in order>",
+            "doc_type": "emirates_id" | "passport" | "salary_certificate" | "bank_statement" | "trade_license" | "floor_plan" | "other",
+            "full_name": "<name as printed, else null>",
+            "nationality": "<nationality if shown, else null>",
+            "monthly_income": "<numeric monthly income if a salary certificate, else null>",
+            "employer": "<employer name if shown, else null>",
+            "summary_ar": "<one short Arabic line describing the document>"
+          }
+        ]
+      }
+      Return entries in the SAME ORDER as provided; copy each entry's media_ref from the list.
+    note_template: |-
+      $lines($compact([
+        "📄 مستند ({$media_ref}) — النوع: {$doc_type ?? 'غير محدد'}",
+        $full_name != null      ? "الاسم: {$full_name}" : null,
+        $monthly_income != null ? "الدخل الشهري: {$monthly_income}" : null,
+        $employer != null       ? "جهة العمل: {$employer}" : null,
+        $summary_ar != null     ? "ملخص: {$summary_ar}" : null
+      ]))
+  voicenote:
+    mode: transcribe
+    ack: '🎤 وصلت الرسالة الصوتية، جاري تفريغها...'
+    prompt: 'Gulf Arabic property enquiry voice note — budget, area, bedrooms.'
+    note_template: |-
+      $transcript != null ? "🎤 رسالة صوتية ({$media_ref}): {$transcript}" : "🎤 رسالة صوتية ({$media_ref}) — تعذّر التفريغ"
+
+agents:
+  - id:                broker
+    display_name:      'Gulf Realty Advisor'
+    default_model:     'openrouter/google/gemini-3.1-flash-lite-preview'
+    tools:
+      - home
+      - browse-projects
+      - project-detail
+      - mortgage-estimate
+      - book-viewing
+      - my-requests
+    include_platform_protocol: true
+    instructions:
+      - file: prompts/identity.md

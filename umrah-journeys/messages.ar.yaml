@@ -1,0 +1,16 @@
+# umrah-journeys — platform-emitted envelope copy (Arabic).
+errors:
+  failed:
+    failure: { body: 'عذراً، حدث خطأ غير متوقع. حاول مرة أخرى.' }
+  unhandled_tool_error:
+    failure: { body: 'عذراً، حدث خطأ غير متوقع. حاول مرة أخرى بعد لحظة. 🙏' }
+
+agents:
+  pilgrimage:
+    agentDisabled:    'الخدمة غير متاحة مؤقتاً. حاول مرة أخرى لاحقاً. 🙏'
+    transientError:   'عذراً، حدث خطأ مؤقت. حاول مرة أخرى بعد لحظة. 🙏'
+    workflowExpired:  'انتهت الجلسة. ابدأ من جديد وسأكمل معك.'
+    workflowError:    'عذراً، حدث خطأ أثناء استكمال الطلب. حاول مرة أخرى.'
+    workflowDisabled: 'هذه الميزة غير مفعّلة حالياً.'
+    toolDisabled:     'هذه الميزة غير مفعّلة حالياً.'
+    directTapError:   'عذراً، حدث خطأ. حاول مرة أخرى.'

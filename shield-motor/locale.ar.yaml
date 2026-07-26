@@ -1,0 +1,57 @@
+# shield-motor — pack-wide Arabic strings.
+#
+# `cases.*` / `status.*` / `decision.*` are the boot-enforced casework locale contract. The
+# decision wording is written so it can be relayed verbatim: `claim_declined` says the claim
+# is not covered without the bot adding a reason the assessor did not give.
+pack_id: shield-motor
+strings:
+  field_picker_footer: 'اختر من القائمة 👆'
+
+  cases.own_damage:   'أضرار بالمركبة'
+  cases.third_party:  'حادث مع طرف آخر'
+  cases.theft:        'سرقة'
+  cases.injury:       'حادث بإصابات'
+  cases.windscreen:   'زجاج أمامي'
+  cases.policy_query: 'استفسار عن الوثيقة'
+
+  status.open:              'تم الإبلاغ'
+  status.in_progress:       'قيد التقييم'
+  status.awaiting_customer: 'بانتظار مستنداتك'
+  status.resolved:          'صدر القرار'
+  status.closed:            'مغلقة'
+  status.reopened:          'أُعيد فتحها'
+
+  priority.low:    'منخفضة'
+  priority.normal: 'عادية'
+  priority.high:   'عالية'
+  priority.urgent: 'عاجلة'
+
+  decision.resolve:            'صدر القرار'
+  decision.reject:             'المطالبة غير مشمولة'
+  decision.request_more_info:  'مطلوب منك مستندات إضافية'
+  decision.escalate:           'تم التصعيد للمراجعة'
+  decision.assessor_assigned:  'تم تعيين مُقيِّم'
+  decision.documents_required: 'مطلوب مستندات'
+  decision.settlement_offered: 'عرض تسوية 💰'
+  decision.claim_declined:     'المطالبة غير مشمولة'
+
+  cover.third_party:        'ضد الغير'
+  cover.comprehensive:      'شامل'
+  cover.comprehensive_plus: 'شامل بلس'
+
+  emirate.dubai:      'دبي'
+  emirate.sharjah:    'الشارقة'
+  emirate.abu_dhabi:  'أبوظبي'
+  emirate.ajman:      'عجمان'
+  emirate.rak:        'رأس الخيمة'
+
+  stage.notified:          'تم الإبلاغ'
+  stage.documents_pending: 'بانتظار المستندات'
+  stage.assessor_review:   'قيد تقييم المُقيِّم'
+  stage.closed:            'مغلقة'
+
+  qstage.enquiry:   'استفسار'
+  qstage.quoted:    'تم التسعير'
+  qstage.submitted: 'تم التقديم'
+  qstage.issued:    'صدرت الوثيقة'
+  qstage.lapsed:    'منتهية'

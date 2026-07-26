@@ -1,0 +1,58 @@
+# home — the boutique front door. Reads the LIVE cart so the hub tells the
+# shopper what is waiting for them before they ask.
+
+flow_id:     home
+version:     1
+description: Main menu / welcome. Call on a greeting, an unclear or off-topic message, or "what can you do?".
+
+input:
+  message:
+    type:     string
+    optional: true
+    describe: 'Optional ONE short greeting line YOU compose for this shopper.'
+
+entry:
+  - else: true
+    goto: load_cart
+
+steps:
+  # A live cart count, contact-scoped — the hub tells the shopper what is waiting
+  # before they ask, with no identity plumbing.
+  load_cart:
+    - do: record_aggregate
+      args: { entity: cart_line, op: sum, field: qty }
+      bind: cart_qty
+      outputs:
+        ok:     [{ goto: load_total }]
+        failed: [{ goto: show }]
+
+  load_total:
+    - do: record_aggregate
+      args: { entity: cart_line, op: sum, field: line_total }
+      bind: cart_sum
+      outputs:
+        ok:     [{ goto: show }]
+        failed: [{ goto: show }]
+
+  show:
+    - assign:
+        cart_count: '$coalesce($cart_qty.value, 0)'
+        cart_total: '$coalesce($cart_sum.value, 0)'
+    - assign:
+        has_cart: '$cart_count > 0'
+    - render:
+        render_intent: list_picker
+        header: '{$t("home.header")}'
+        body: '$lines($compact([
+                 $coalesce($input.message, $t("home.greeting")),
+                 $has_cart ? $t("home.cart_waiting", { count: $cart_count, subtotal: $format_money($cart_total, "SAR") }) : null
+               ]), "\n")'
+        cta: '{$t("home.cta")}'
+        items:
+          - { title: '{$t("home.row_shop")}',   description: '{$t("home.row_shop_d")}',   on_select: { invoke: shop } }
+          - { title: '{$t("home.row_quiz")}',   description: '{$t("home.row_quiz_d")}',   on_select: { invoke: fragrance-finder } }
+          - { title: '{$t("home.row_gifts")}',  description: '{$t("home.row_gifts_d")}',  on_select: { invoke: shop, with: { category: gift_set } } }
+          - { title: '{$t("home.row_cart")}',   description: '{$t("home.row_cart_d")}',   on_select: { invoke: cart, with: { action: view } } }
+          - { title: '{$t("home.row_orders")}', description: '{$t("home.row_orders_d")}', on_select: { invoke: orders } }
+      memory_note: 'Showed the Oud Atelier menu (cart: {$cart_count} item(s)).'
+    - end: applied

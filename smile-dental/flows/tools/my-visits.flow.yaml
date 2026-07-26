@@ -1,0 +1,242 @@
+# my-visits — the patient's own appointments, and the RATING LOOP.
+#
+# The loop, end to end: the ⭐ tap submits `visit_feedback` against the booking →
+# the response is stamped with the dentist it was about (a survey's subject is the
+# BOOKING, so the dentist is not derivable from the response alone) →
+# `record_aggregate` averages every response for that dentist → the average is
+# written back onto the dentist record → `record_search rank_by: rating` orders the
+# dentist picker on it. Patient feedback changes what the next patient is offered,
+# with no bespoke SQL anywhere.
+#
+# A second `survey_submit` for the same booking PATCHES the same response (the
+# upsert is on survey_key + subject_ref), which is how the comment can arrive on a
+# later free-text turn without duplicating the rating.
+
+flow_id:     my-visits
+version:     1
+description: |-
+  Show this patient's own appointments, cancel one, or record a visit rating. Call
+  for "مواعيدي", "ألغي الموعد", "my appointments", or when the patient wants to rate
+  a visit. Never state an appointment or its status from memory — call this.
+
+input:
+  action:
+    type:     enum
+    enum:     [list, cancel, rate, comment]
+    optional: true
+    describe: 'list (default) | cancel | rate | comment.'
+  visit_id:
+    type:     string
+    optional: true
+    describe: 'A booking record id from a list row — never invented.'
+  stars:
+    type:     number
+    optional: true
+    describe: 'For action=rate — 1 to 5, only from a rating tap.'
+  comment:
+    type:     string
+    optional: true
+    describe: "For action=comment — the patient's own words about the visit."
+
+entry:
+  - else: true
+    goto: route
+
+steps:
+  route:
+    - dispatch:
+        key: '$coalesce($input.action, "list")'
+        cases:
+          list:    [{ goto: load }]
+          cancel:  [{ goto: do_cancel }]
+          rate:    [{ goto: do_rate }]
+          comment: [{ goto: do_comment }]
+
+  # ── list ─────────────────────────────────────────────────────────────────
+  load:
+    - do: record_list
+      args: { entity: booking, limit: 10, active_only: false, sort: created_at }
+      bind: page
+      outputs:
+        ok:     [{ goto: show }]
+        empty:  [{ goto: none }]
+        failed: [{ goto: unavailable }]
+
+  show:
+    - render:
+        render_intent: list_picker
+        header: '{$t("my-visits.header")}'
+        body:   '{$t("my-visits.intro")}'
+        cta:    '{$t("my-visits.cta")}'
+        items:  '$page.rows'
+        item_template:
+          title:       '{$t("my-visits.row_title", { ref: $item.record_number })}'
+          description: '$lines($compact([
+                          $item.fields.slot_label,
+                          $item.fields.dentist_label,
+                          $enum_lookup($item.stage, { requested: $t("my-visits.st.requested"), confirmed: $t("my-visits.st.confirmed"), checked_in: $t("my-visits.st.checked_in"), completed: $t("my-visits.st.completed"), cancelled: $t("my-visits.st.cancelled"), no_show: $t("my-visits.st.no_show") }, $item.stage)
+                        ]), " · ")'
+          on_select:   { invoke: my-visits, with: { action: rate, visit_id: '$item.id' } }
+      memory_note: 'Showed {$length($page.rows)} visit(s).'
+    - end: applied
+
+  none:
+    - answer:
+        instructions: 'This patient has no appointment yet. Say so warmly in one line and offer to show the treatments or book a visit.'
+
+  # ── cancel ───────────────────────────────────────────────────────────────
+  do_cancel:
+    - do: booking_cancel
+      args: { booking_record_id: '$input.visit_id' }
+      bind: cancelled
+      outputs:
+        ok:              [{ goto: cancelled_ok }]
+        not_cancellable: [{ goto: not_cancellable }]
+        failed:          [{ goto: unavailable }]
+
+  cancelled_ok:
+    - render:
+        render_intent: detail_card
+        header: '{$t("my-visits.cancel_header")}'
+        body:   '{$t("my-visits.cancel_body")}'
+        buttons:
+          - { title: '{$t("my-visits.btn_rebook")}', on_select: { invoke: book-visit } }
+          - { title: '{$t("my-visits.btn_mine")}',   on_select: { invoke: my-visits } }
+      memory_note: 'Cancelled visit {$input.visit_id} and freed the slot.'
+    - end: applied
+
+  not_cancellable:
+    - answer:
+        instructions: 'That appointment can no longer be cancelled from chat (it is too close or already done). Say so in one line and offer to have reception call them.'
+
+  # ── rate ─────────────────────────────────────────────────────────────────
+  do_rate:
+    - if: '$input.stars == null'
+      then:
+        - goto: ask_stars
+    - do: survey_submit
+      args:
+        survey:      visit_feedback
+        subject_ref: '$input.visit_id'
+        answers:     { stars: '$input.stars' }
+      bind: response
+      outputs:
+        ok:     [{ goto: stamp_dentist }]
+        failed: [{ goto: unavailable }]
+
+  ask_stars:
+    - do: record_get
+      args: { entity: booking, record_id: '$input.visit_id' }
+      bind: v
+      outputs:
+        ok:        [{ goto: render_stars }]
+        not_found: [{ goto: none }]
+        failed:    [{ goto: unavailable }]
+
+  render_stars:
+    - render:
+        render_intent: list_picker
+        header: '{$t("my-visits.rate_header")}'
+        body:   '{$t("my-visits.rate_body", { dentist: $coalesce($v.fields.dentist_label, "-"), slot: $coalesce($v.fields.slot_label, "-") })}'
+        cta:    '{$t("my-visits.rate_cta")}'
+        items:
+          - { title: '{$t("my-visits.stars5")}', on_select: { invoke: my-visits, with: { action: rate, visit_id: '$input.visit_id', stars: 5 } } }
+          - { title: '{$t("my-visits.stars4")}', on_select: { invoke: my-visits, with: { action: rate, visit_id: '$input.visit_id', stars: 4 } } }
+          - { title: '{$t("my-visits.stars3")}', on_select: { invoke: my-visits, with: { action: rate, visit_id: '$input.visit_id', stars: 3 } } }
+          - { title: '{$t("my-visits.stars2")}', on_select: { invoke: my-visits, with: { action: rate, visit_id: '$input.visit_id', stars: 2 } } }
+          - { title: '{$t("my-visits.stars1")}', on_select: { invoke: my-visits, with: { action: rate, visit_id: '$input.visit_id', stars: 1 } } }
+      memory_note: 'Offered a 1-5 rating for visit {$input.visit_id}.'
+    - end: applied
+
+  # A survey's subject is the BOOKING, so the rated dentist is not derivable from
+  # the response — stamp it now, or the rollup below has no dimension to group on.
+  stamp_dentist:
+    - do: record_get
+      args: { entity: booking, record_id: '$input.visit_id' }
+      bind: rated
+      outputs:
+        ok:        [{ goto: write_dimension }]
+        not_found: [{ goto: thanks }]
+        failed:    [{ goto: thanks }]
+
+  write_dimension:
+    - do: record_save
+      args:
+        entity:    survey_response
+        record_id: '$response.record_id'
+        fields:    { dentist: '$rated.fields.dentist' }
+      outputs:
+        ok:      [{ goto: rollup }]
+        invalid: [{ goto: thanks }]
+        failed:  [{ goto: thanks }]
+
+  rollup:
+    # Average every response about this dentist, and how many there are.
+    - do: record_aggregate
+      args:
+        entity: survey_response
+        op:     avg
+        field:  score
+        where:  { all: [{ field: dentist, op: eq, value: '$rated.fields.dentist' }] }
+      bind: avg
+      outputs:
+        ok:     [{ goto: rollup_count }]
+        failed: [{ goto: thanks }]
+
+  rollup_count:
+    - do: record_aggregate
+      args:
+        entity: survey_response
+        op:     count
+        where:  { all: [{ field: dentist, op: eq, value: '$rated.fields.dentist' }] }
+      bind: n
+      outputs:
+        ok:     [{ goto: write_rating }]
+        failed: [{ goto: thanks }]
+
+  write_rating:
+    - do: record_save
+      args:
+        entity:    dentist
+        record_id: '$rated.fields.dentist'
+        fields:
+          rating:       '$round($coalesce($avg.value, 0), 1)'
+          rating_count: '$coalesce($n.value, 0)'
+      outputs:
+        ok:      [{ goto: thanks }]
+        invalid: [{ goto: thanks }]
+        failed:  [{ goto: thanks }]
+
+  thanks:
+    - render:
+        render_intent: detail_card
+        header: '{$t("my-visits.thanks_header")}'
+        body:   '{$t("my-visits.thanks_body", { stars: $input.stars })}'
+        footer: '{$t("my-visits.thanks_footer")}'
+        buttons:
+          - { title: '{$t("my-visits.btn_mine")}',   on_select: { invoke: my-visits } }
+          - { title: '{$t("my-visits.btn_rebook")}', on_select: { invoke: book-visit } }
+      memory_note: 'Recorded a {$input.stars}-star rating for visit {$input.visit_id} and rolled it up onto the dentist. If the patient now types a comment, call my-visits with action=comment and the same visit_id.'
+    - end: applied
+
+  # ── comment (a second submit patches the SAME response) ──────────────────
+  do_comment:
+    - do: survey_submit
+      args:
+        survey:      visit_feedback
+        subject_ref: '$input.visit_id'
+        answers:     { comment: '$input.comment' }
+      outputs:
+        ok:     [{ goto: comment_ok }]
+        failed: [{ goto: unavailable }]
+
+  comment_ok:
+    - render:
+        render_intent: text_card
+        body: '{$t("my-visits.comment_thanks")}'
+      memory_note: 'Attached the patient''s comment to their existing rating for visit {$input.visit_id}.'
+    - end: applied
+
+  unavailable:
+    - answer:
+        instructions: 'That could not be completed right now. Apologise in one line and offer to try again shortly. Do NOT claim a cancellation or a rating was recorded.'

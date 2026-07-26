@@ -1,0 +1,15 @@
+flow_id: home
+
+strings:
+  header:          '🏙️ جلف ريالتي'
+  greeting:        'أهلاً بك في جلف ريالتي 👋 اختر من القائمة:'
+  live_viewings:   '📅 لديك {count} معاينة قادمة.'
+  cta:             'اختر'
+  row_browse:      '🏙️ استعرض المشاريع'
+  row_browse_d:    'مشاريع على الخارطة وجاهزة في الخليج'
+  row_mortgage:    '🧮 حاسبة التمويل'
+  row_mortgage_d:  'قسط شهري تقديري في ثوانٍ'
+  row_viewing:     '🗓️ احجز معاينة'
+  row_viewing_d:   'زيارة موقع مع مستشار عقاري'
+  row_mine:        '📁 طلباتي'
+  row_mine_d:      'معايناتك وطلباتك الحالية'

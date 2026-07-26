@@ -1,0 +1,53 @@
+# scheduling.yaml — makes each `branch` a bookable resource for test drives.
+#
+# A test-drive booking is the platform `booking` XRM system entity (extended in
+# xrm.yaml). slot_list expands the availability below into free slots; the flow
+# reserves one with booking_reserve, which returns reminders[].send_at that we
+# fan out via schedule_notify.
+
+timezone: Africa/Cairo
+
+resources:
+  branch:
+    slot:
+      default_minutes:  45      # one test-drive slot = 45 min
+      default_capacity: 2       # 2 concurrent test drives per slot (cars available)
+      window_days:      14      # offer slots up to 2 weeks out
+    reminders:
+      - { key: t24h, seconds: 86400 }   # 24h before
+      - { key: t2h,  seconds: 7200 }    # 2h before
+
+booking:
+  entity: booking
+
+# demo availability — seeded on `octwin deploy --seed`. dow: 0=Sun … 6=Sat.
+# Zayed & Mivida open Sat–Thu 11:00–20:00 (closed Fri=5); DUNE Mall daily 12:00–22:00.
+demo:
+  availability:
+    - resource_match: { entity: branch, field: code, value: zayed }
+      rules:
+        - { dow: 6, start: '11:00', end: '20:00' }
+        - { dow: 0, start: '11:00', end: '20:00' }
+        - { dow: 1, start: '11:00', end: '20:00' }
+        - { dow: 2, start: '11:00', end: '20:00' }
+        - { dow: 3, start: '11:00', end: '20:00' }
+        - { dow: 4, start: '11:00', end: '20:00' }
+
+    - resource_match: { entity: branch, field: code, value: dune }
+      rules:
+        - { dow: 6, start: '12:00', end: '22:00' }
+        - { dow: 0, start: '12:00', end: '22:00' }
+        - { dow: 1, start: '12:00', end: '22:00' }
+        - { dow: 2, start: '12:00', end: '22:00' }
+        - { dow: 3, start: '12:00', end: '22:00' }
+        - { dow: 4, start: '12:00', end: '22:00' }
+        - { dow: 5, start: '12:00', end: '22:00' }
+
+    - resource_match: { entity: branch, field: code, value: mivida }
+      rules:
+        - { dow: 6, start: '11:00', end: '20:00' }
+        - { dow: 0, start: '11:00', end: '20:00' }
+        - { dow: 1, start: '11:00', end: '20:00' }
+        - { dow: 2, start: '11:00', end: '20:00' }
+        - { dow: 3, start: '11:00', end: '20:00' }
+        - { dow: 4, start: '11:00', end: '20:00' }

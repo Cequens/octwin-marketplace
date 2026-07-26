@@ -1,0 +1,88 @@
+# smile-dental — a dental clinic on WhatsApp.
+#
+# Demonstrates the SCHEDULING engine (dentists as bookable resources with real
+# availability, capacity and T-24h/T-2h reminders), the SURVEYS layer (a post-visit
+# rating that ROLLS UP into the dentist's score, which the dentist picker then
+# ranks on — a closed loop, no bespoke SQL), and inbound insurance-card vision.
+# No pack DB, no code — pure YAML.
+
+id:          smile-dental
+version:     1.0.0
+description: 'Dental clinic booking — treatment menu, dentist availability, appointment reminders and a post-visit rating that ranks the dentists.'
+
+listing:
+  title:    'Smile Dental'
+  tagline:  'Treatments, real availability, reminders and a rating that counts'
+  category: healthcare
+  author:   { name: 'Octwin', url: 'https://octwin.ai' }
+  public:   true
+
+supported_channels: [whatsapp, web]
+# `vision` reads insurance cards and X-ray referrals. No data-store: dentists and
+# treatments are XRM records, the visit is the `booking` system entity, and the
+# rating is a `survey_response`.
+required_adapters:  [messaging, vision]
+
+default_settings:
+  locale: ar
+
+default_conversation_context:
+  lang: { type: enum, enum: [ar, en, bilingual], default: ar, describe: 'Reply language.' }
+
+flows:
+  - home
+  - treatments
+  - dentists
+  - book-visit
+  - my-visits
+
+# A patient photographs their insurance card instead of typing a member number.
+inbound_preprocessing:
+  image:
+    enabled: true
+    ack: '📄 وصلت الصورة، جاري قراءتها...'
+    prompt: |-
+      You are an intake assistant for a dental clinic. Classify each image and extract structured fields. Do NOT diagnose, interpret an X-ray, or give any clinical advice — classify and transcribe ONLY.
+
+      Respond with JSON only (no markdown) — an object with an `images` array holding EXACTLY ONE entry per input image, IN ORDER:
+      {
+        "images": [
+          {
+            "media_ref": "<copy the MEDIA- ref for this image, in order>",
+            "doc_type": "insurance_card" | "referral" | "xray" | "prescription" | "other",
+            "insurer": "<insurance company name if an insurance card, else null>",
+            "member_id": "<member/policy number, or null>",
+            "valid_until": "<YYYY-MM-DD if shown, else null>",
+            "summary_ar": "<one short Arabic line describing the document>"
+          }
+        ]
+      }
+      Return entries in the SAME ORDER as provided; copy each entry's media_ref from the list.
+    note_template: |-
+      $lines($compact([
+        "📄 مستند ({$media_ref}) — النوع: {$doc_type ?? 'غير محدد'}",
+        $insurer != null     ? "التأمين: {$insurer}" : null,
+        $member_id != null   ? "رقم العضوية: {$member_id}" : null,
+        $valid_until != null ? "سارٍ حتى: {$valid_until}" : null,
+        $summary_ar != null  ? "ملخص: {$summary_ar}" : null
+      ]))
+  voicenote:
+    mode: transcribe
+    ack: '🎤 وصلت الرسالة الصوتية، جاري تفريغها...'
+    prompt: 'Arabic dental appointment voice note — complaint, preferred time.'
+    note_template: |-
+      $transcript != null ? "🎤 رسالة صوتية ({$media_ref}): {$transcript}" : "🎤 رسالة صوتية ({$media_ref}) — تعذّر التفريغ"
+
+agents:
+  - id:                reception
+    display_name:      'Smile Dental Reception'
+    default_model:     'openrouter/google/gemini-3.1-flash-lite-preview'
+    tools:
+      - home
+      - treatments
+      - dentists
+      - book-visit
+      - my-visits
+    include_platform_protocol: true
+    instructions:
+      - file: prompts/identity.md

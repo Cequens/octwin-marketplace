@@ -1,0 +1,200 @@
+# book-pickup — a collection priced from the LIVE rate card. The price the customer
+# confirms is a `rate` record, looked up by service + route + weight band, so a pricing
+# change is a record edit and never a code change. If no rate covers the route, the flow
+# says so and takes the request unpriced rather than inventing a number.
+
+flow_id:     book-pickup
+version:     1
+description: |-
+  [interactive] Book a parcel collection and quote it from the rate card. Call when the
+  customer wants to send something. The tool asks for service, route, weight and address.
+
+input:
+  service:
+    type:     enum
+    enum:     [same_day, next_day, standard, bulky]
+    optional: true
+    describe: 'The service the customer named, if any.'
+
+entry:
+  - else: true
+    goto: gather
+
+steps:
+  gather:
+    - collect:
+        derive:
+          # The weight band maps to the rate card's `up_to_kg` ceiling — a real number,
+          # so the lookup never depends on parsing free text.
+          kg_ceiling: '$enum_lookup($state.weight_band, { under_1: 1, under_5: 5, under_20: 20, over_20: 50 }, 5)'
+        gap_instructions: 'Ask the customer for the next detail ({$collect_field}) in one short line, in Egyptian Arabic. Re-call book-pickup once they answer. NEVER quote a price yourself — the tool prices it.'
+        fields:
+          - field: service
+            label: '$t("book-pickup.label.service")'
+            options:
+              header: book-pickup.field_header.service
+              cta:    book-pickup.field_cta.service
+              items:
+                - { value: same_day, label: book-pickup.svc.same_day }
+                - { value: next_day, label: book-pickup.svc.next_day }
+                - { value: standard, label: book-pickup.svc.standard }
+                - { value: bulky,    label: book-pickup.svc.bulky }
+          - field: from_region
+            label: '$t("book-pickup.label.from")'
+            options:
+              header: book-pickup.field_header.from
+              cta:    book-pickup.field_cta.region
+              items:
+                - { value: cairo,      label: book-pickup.reg.cairo }
+                - { value: alexandria, label: book-pickup.reg.alexandria }
+                - { value: delta,      label: book-pickup.reg.delta }
+                - { value: upper,      label: book-pickup.reg.upper }
+          - field: to_region
+            label: '$t("book-pickup.label.to")'
+            options:
+              header: book-pickup.field_header.to
+              cta:    book-pickup.field_cta.region
+              items:
+                - { value: cairo,      label: book-pickup.reg.cairo }
+                - { value: alexandria, label: book-pickup.reg.alexandria }
+                - { value: delta,      label: book-pickup.reg.delta }
+                - { value: upper,      label: book-pickup.reg.upper }
+          - field: weight_band
+            label: '$t("book-pickup.label.weight")'
+            options:
+              header: book-pickup.field_header.weight
+              cta:    book-pickup.field_cta.weight
+              items:
+                - { value: under_1,  label: book-pickup.wt.under_1 }
+                - { value: under_5,  label: book-pickup.wt.under_5 }
+                - { value: under_20, label: book-pickup.wt.under_20 }
+                - { value: over_20,  label: book-pickup.wt.over_20 }
+          - field: pickup_address
+            label:    '$t("book-pickup.label.address")'
+            describe: 'Where the courier collects from — street, building, floor and a landmark.'
+          - field: recipient
+            label:    '$t("book-pickup.label.recipient")'
+            describe: "The recipient's name."
+          - field: recipient_phone
+            label:    '$t("book-pickup.label.phone")'
+            describe: "The recipient's mobile number."
+          - field: window
+            label: '$t("book-pickup.label.window")'
+            options:
+              header: book-pickup.field_header.window
+              cta:    book-pickup.field_cta.window
+              items:
+                - { value: morning,   label: book-pickup.win.morning }
+                - { value: afternoon, label: book-pickup.win.afternoon }
+                - { value: evening,   label: book-pickup.win.evening }
+        complete: [{ goto: price_it }]
+
+  price_it:
+    # The cheapest rate that covers this route AND carries the weight. `lte`/`gte` on the
+    # rate card means a heavier band simply falls through to the next row up.
+    - do: record_list
+      args:
+        entity:  rate
+        all:     true
+        limit:   5
+        where:
+          all:
+            - { field: service,     op: eq,  value: '$state.service' }
+            - { field: from_region, op: eq,  value: '$state.from_region' }
+            - { field: to_region,   op: eq,  value: '$state.to_region' }
+            - { field: up_to_kg,    op: gte, value: '$state.kg_ceiling' }
+        sort_by: { field: price, dir: asc }
+      bind: rates
+      outputs:
+        ok:     [{ goto: confirm }]
+        # No published rate for this route — take the request and let the desk price it.
+        empty:  [{ goto: confirm_unpriced }]
+        failed: [{ goto: confirm_unpriced }]
+
+  confirm:
+    - assign:
+        rate:  '$rates.rows[0]'
+    - assign:
+        price: '$rate.fields.price.value / $rate.fields.price.offset'
+        eta:   '$rate.fields.eta_hours'
+    - use: approve_apply
+      with:
+        preview: '$lines($compact([
+                    $t("book-pickup.preview.header"),
+                    $t("book-pickup.preview.service", { service: $enum_label($state.service, "service", $state.service) }),
+                    $t("book-pickup.preview.route", { from: $enum_label($state.from_region, "region", $state.from_region), to: $enum_label($state.to_region, "region", $state.to_region) }),
+                    $t("book-pickup.preview.weight", { weight: $enum_label($state.weight_band, "weight", $state.weight_band) }),
+                    $t("book-pickup.preview.price", { price: $format_money($price, "EGP") }),
+                    $t("book-pickup.preview.eta", { hours: $eta }),
+                    $t("book-pickup.preview.address", { address: $state.pickup_address })
+                  ]), "\n")'
+        header:        '{$t("book-pickup.approve_header")}'
+        footer:        '{$t("book-pickup.approve_footer")}'
+        confirm_title: '{$t("book-pickup.confirm_title")}'
+        cancel_title:  '{$t("book-pickup.cancel_title")}'
+        apply:         save_request
+        abort:         aborted
+        on_other:      gather
+        memory_note:   'Pickup NOT booked yet — awaiting the customer''s ✅ on {$price} EGP.'
+
+  confirm_unpriced:
+    - assign: { price: null, eta: null }
+    - use: approve_apply
+      with:
+        preview: '$lines($compact([
+                    $t("book-pickup.preview.header"),
+                    $t("book-pickup.preview.service", { service: $enum_label($state.service, "service", $state.service) }),
+                    $t("book-pickup.preview.route", { from: $enum_label($state.from_region, "region", $state.from_region), to: $enum_label($state.to_region, "region", $state.to_region) }),
+                    $t("book-pickup.preview.address", { address: $state.pickup_address }),
+                    $t("book-pickup.preview.no_rate")
+                  ]), "\n")'
+        header:        '{$t("book-pickup.approve_header")}'
+        confirm_title: '{$t("book-pickup.confirm_title")}'
+        cancel_title:  '{$t("book-pickup.cancel_title")}'
+        apply:         save_request
+        abort:         aborted
+        on_other:      gather
+        memory_note:   'No published rate covers this route — the desk will price it. NO price was quoted.'
+
+  save_request:
+    - do: record_save
+      args:
+        entity: pickup_request
+        stage:  requested
+        fields:
+          service:         '$state.service'
+          from_region:     '$state.from_region'
+          to_region:       '$state.to_region'
+          weight_band:     '$state.weight_band'
+          pickup_address:  '$state.pickup_address'
+          recipient:       '$state.recipient'
+          recipient_phone: '$state.recipient_phone'
+          window:          '$state.window'
+          quoted_price:    '$price'
+          currency:        EGP
+      bind: req
+      outputs:
+        ok:      [{ goto: booked }]
+        invalid: [{ goto: failed_save }]
+        failed:  [{ goto: failed_save }]
+
+  booked:
+    - render:
+        render_intent: detail_card
+        header: '{$t("book-pickup.done_header")}'
+        body: '$lines($compact([
+                 $t("book-pickup.done_ref", { ref: $req.record_number }),
+                 $price != null ? $t("book-pickup.done_price", { price: $format_money($price, "EGP") }) : $t("book-pickup.done_unpriced"),
+                 $t("book-pickup.done_next")
+               ]), "\n")'
+        buttons:
+          - { title: '{$t("book-pickup.btn_home")}', on_select: { invoke: home } }
+      memory_note: 'Saved pickup_request #{$req.record_number} at {$coalesce($price, 0)} EGP.'
+    - end: applied
+
+  aborted:
+    - end: { status: aborted, body: '{$t("book-pickup.aborted")}' }
+
+  failed_save:
+    - answer:
+        instructions: 'The pickup could not be saved. Say so plainly in one line and give the customer the support line. Do NOT claim a courier is coming.'

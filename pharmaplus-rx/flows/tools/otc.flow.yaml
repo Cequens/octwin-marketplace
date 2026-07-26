@@ -1,0 +1,394 @@
+# otc — the over-the-counter shelf. The filter `rx_required != true` is the guard that
+# matters: a prescription-only line is never returned by this flow at all, so there is no
+# path through the OTC basket that could dispense one, regardless of what the agent is
+# asked to do.
+
+flow_id:     otc
+version:     1
+description: |-
+  Show over-the-counter products the patient can buy without a prescription, or add one to
+  the basket. Call when they ask for a shelf item (painkiller, vitamins, baby care, a
+  device). Pass `category` when they named one. If they ask for a prescription medicine,
+  call `prescription` instead — never search for it here.
+
+input:
+  action:
+    type:     enum
+    enum:     [browse, add, view, checkout]
+    optional: true
+    describe: 'browse (default) | add (needs item_code) | view | checkout. Only call checkout when the customer asked to complete the order.'
+  category:
+    type:     string
+    optional: true
+    describe: 'One of: pain_relief, cold_flu, vitamins, baby, skincare, first_aid, devices.'
+  item_code:
+    type:     string
+    optional: true
+    describe: 'Item code from a card — required for add. Never typed.'
+  qty:
+    type:     number
+    optional: true
+    describe: 'Quantity for add (default 1).'
+
+entry:
+  - else: true
+    goto: route
+
+steps:
+  route:
+    - dispatch:
+        key: '$coalesce($input.action, "browse")'
+        cases:
+          browse:   [{ goto: browse_gate }]
+          add:      [{ goto: load_item }]
+          view:     [{ goto: load_basket }]
+          checkout: [{ goto: checkout_load }]
+
+  browse_gate:
+    - if: '$input.category != null'
+      then:
+        - goto: load_category
+    - goto: load_all
+
+  # `rx_required: false` AND `in_stock: true` — a prescription line can never be listed
+  # here, and neither can something the branch has run out of.
+  #
+  # `eq: false`, NOT `ne: true`: a `boolean` field admits only eq / is_set / not_set
+  # (`OPS_BY_TYPE`, xrm/filters.ts), so `ne` is a compile error that surfaces as this
+  # step's `failed` port. `eq false` also fails SAFE — an item whose flag was never set
+  # is hidden rather than offered, which is the right direction for a pharmacy.
+  load_all:
+    - do: record_list
+      args:
+        entity:  otc_item
+        all:     true
+        limit:   20
+        where:   { all: [{ field: rx_required, op: eq, value: false }, { field: in_stock, op: eq, value: true }] }
+        sort_by: { field: price, dir: asc }
+      bind: page
+      outputs:
+        ok:     [{ goto: show }]
+        empty:  [{ goto: none }]
+        failed: [{ goto: unavailable }]
+
+  load_category:
+    - do: record_list
+      args:
+        entity:  otc_item
+        all:     true
+        limit:   20
+        where:
+          all:
+            - { field: category,    op: eq, value: '$input.category' }
+            - { field: rx_required, op: eq, value: false }
+            - { field: in_stock,    op: eq, value: true }
+        sort_by: { field: price, dir: asc }
+      bind: page
+      outputs:
+        ok:     [{ goto: show }]
+        empty:  [{ goto: load_all }]
+        failed: [{ goto: unavailable }]
+
+  show:
+    - render:
+        render_intent: carousel
+        body:  '{$t("otc.intro", { total: $page.total })}'
+        items: '$page.rows'
+        item_template:
+          image_url: '$coalesce($item.fields.photo, "")'
+          body: '$lines($compact([
+                   $item.fields.name,
+                   $format_money_field($item.fields.price, $coalesce($item.fields.currency, "EGP"))
+                 ]), "\n")'
+          buttons:
+            - { title: '{$t("otc.btn_add")}',    on_select: { invoke: otc, with: { action: add, item_code: '$item.fields.code' } } }
+            - { title: '{$t("otc.btn_basket")}', on_select: { invoke: otc, with: { action: view } } }
+      memory_note: 'Showed {$page.total} OTC item(s). Prescription-only lines are excluded by the query.'
+    - end: applied
+
+  load_item:
+    - do: record_get
+      args: { entity: otc_item, all: true, match: { field: code, value: '$input.item_code' } }
+      bind: item
+      outputs:
+        ok:        [{ goto: rx_gate }]
+        not_found: [{ goto: unknown_item }]
+        failed:    [{ goto: unavailable }]
+
+  # A second, explicit gate. Even if an Rx code reached this flow some other way, it stops
+  # here and is routed to the pharmacist instead of the basket.
+  rx_gate:
+    - if: '$item.fields.rx_required == true'
+      then:
+        - goto: needs_prescription
+    - if: '$item.fields.in_stock != true'
+      then:
+        - goto: out_of_stock
+    - goto: add_line
+
+  add_line:
+    - assign:
+        n:    '$coalesce($input.qty, 1)'
+        unit: '$item.fields.price.value / $item.fields.price.offset'
+    - do: record_save
+      args:
+        entity: basket_line
+        # Deduped per PATIENT, not per item: `findRecord` is not contact-scoped, so a bare
+        # item code let one patient's upsert land on another patient's basket line.
+        match:  { field: line_key, value: '$contact.id + ":" + $input.item_code' }
+        fields:
+          line_key:   '$contact.id + ":" + $input.item_code'
+          item:       '$item.record_id'
+          code:       '$input.item_code'
+          title:      '$item.fields.name'
+          qty:        '$n'
+          unit_price: '$unit'
+          line_total: '$unit * $n'
+      outputs:
+        ok:      [{ goto: load_basket }]
+        invalid: []
+        failed:  [{ goto: unavailable }]
+
+  load_basket:
+    - do: record_list
+      args: { entity: basket_line, limit: 50 }
+      bind: lines
+      outputs:
+        ok:     [{ goto: render_basket }]
+        empty:  [{ goto: empty_basket }]
+        failed: [{ goto: unavailable }]
+
+  render_basket:
+    - assign: { live: '$filter_gte($coalesce($lines.rows, []), "fields.qty", 1)' }
+    - assign:
+        subtotal: '$sum($map($live, $item.fields.line_total.value / $item.fields.line_total.offset))'
+        fee:      '$coalesce($config.policy.delivery_fee, 20)'
+        body_lines: '$map($live, "💊 " + $item.fields.qty + "× " + $item.fields.title + " — " + $format_money_field($item.fields.line_total, "EGP"))'
+    - if: '$length($live) == 0'
+      then:
+        - goto: empty_basket
+    - render:
+        render_intent: detail_card
+        header: '{$t("otc.basket_header")}'
+        body: '$lines($compact($concat(
+                 $body_lines,
+                 [$t("otc.subtotal", { subtotal: $format_money($subtotal, "EGP") })],
+                 [$t("otc.fee", { fee: $format_money($fee, "EGP") })],
+                 [$t("otc.total", { total: $format_money($subtotal + $fee, "EGP") })]
+               )), "\n")'
+        footer: '{$t("otc.basket_footer")}'
+        buttons:
+          - { title: '{$t("otc.btn_checkout")}', on_select: { invoke: otc, with: { action: checkout } } }
+          - { title: '{$t("otc.btn_browse")}',   on_select: { invoke: otc } }
+          - { title: '{$t("otc.btn_rx")}',       on_select: { invoke: prescription } }
+      memory_note: 'OTC basket subtotal {$subtotal} EGP plus a {$fee} EGP delivery fee. NOT ordered yet — the customer still has to complete checkout.'
+    - end: applied
+
+  empty_basket:
+    - render:
+        render_intent: detail_card
+        header: '{$t("otc.basket_header")}'
+        body:   '{$t("otc.basket_empty")}'
+        buttons:
+          - { title: '{$t("otc.btn_browse")}', on_select: { invoke: otc } }
+      memory_note: 'The OTC basket is empty.'
+    - end: applied
+
+  # ── checkout ─────────────────────────────────────────────────────────────
+  # Nothing in an OTC order is a clinical decision, so the bot may complete it: collect
+  # delivery details, confirm, write a real `otc_order`, and open a `dispensing` case so a
+  # human packs and delivers it. The basket card previously ended by PROMISING the branch
+  # would call while creating nothing and notifying no one — that promise is what this
+  # path makes true.
+  checkout_load:
+    - do: record_list
+      args: { entity: basket_line, limit: 50 }
+      bind: lines
+      outputs:
+        ok:     [{ goto: gather_delivery }]
+        empty:  [{ goto: empty_basket }]
+        failed: [{ goto: unavailable }]
+
+  gather_delivery:
+    - collect:
+        before_each:
+          - assign: { live: '$filter_gte($coalesce($lines.rows, []), "fields.qty", 1)' }
+          - assign:
+              order_subtotal: '$sum($map($live, $item.fields.line_total.value / $item.fields.line_total.offset))'
+              order_count:    '$sum($map($live, $item.fields.qty))'
+              order_summary:  '$lines($map($live, $item.fields.qty + "× " + $item.fields.title), ", ")'
+              fee:            '$coalesce($config.policy.delivery_fee, 20)'
+          - assign:
+              order_total: '$order_subtotal + $fee'
+        progress: '$lines($compact([
+                     $t("otc.progress.header"),
+                     $t("otc.progress.total", { total: $format_money($order_total, "EGP") }),
+                     $state.delivery_area != null ? $t("otc.progress.area") : null
+                   ]), "\n")'
+        gap_instructions: 'Ask the customer for the next delivery detail ({$collect_field}) in one short line, in Egyptian Arabic. Re-call otc with action=checkout once they answer. Say nothing clinical about any product.'
+        fields:
+          - field: patient_name
+            label:    '$t("otc.label.name")'
+            describe: "The customer's name for the delivery."
+          - field: delivery_area
+            label: '$t("otc.label.area")'
+            options:
+              header: otc.field_header.area
+              cta:    otc.field_cta.area
+              items:
+                - { value: nasr_city,  label: otc.area.nasr_city }
+                - { value: maadi,      label: otc.area.maadi }
+                - { value: heliopolis, label: otc.area.heliopolis }
+                - { value: zamalek,    label: otc.area.zamalek }
+                - { value: october,    label: otc.area.october }
+                - { value: giza,       label: otc.area.giza }
+          - field: address
+            label:    '$t("otc.label.address")'
+            describe: 'Street, building and flat for the courier.'
+          - field: phone
+            label:    '$t("otc.label.phone")'
+            describe: 'A mobile number the pharmacy can call.'
+          - field: payment_method
+            label: '$t("otc.label.payment")'
+            options:
+              header: otc.field_header.payment
+              cta:    otc.field_cta.payment
+              items:
+                - { value: cash_on_delivery, label: otc.pay.cash }
+                - { value: card_on_delivery, label: otc.pay.card }
+        complete: [{ goto: confirm_order }]
+
+  confirm_order:
+    - use: approve_apply
+      with:
+        preview: '$lines($compact([
+                    $t("otc.preview.header"),
+                    $order_summary,
+                    $t("otc.subtotal", { subtotal: $format_money($order_subtotal, "EGP") }),
+                    $t("otc.fee", { fee: $format_money($fee, "EGP") }),
+                    $t("otc.total", { total: $format_money($order_total, "EGP") }),
+                    $t("otc.preview.to", { name: $state.patient_name }),
+                    $t("otc.preview.address", { address: $state.address }),
+                    $t("otc.preview.payment", { payment: $enum_lookup($state.payment_method, { cash_on_delivery: $t("otc.pay.cash_plain"), card_on_delivery: $t("otc.pay.card_plain") }, $state.payment_method) })
+                  ]), "\n")'
+        header:        '{$t("otc.confirm_header")}'
+        footer:        '{$t("otc.confirm_footer")}'
+        confirm_title: '{$t("otc.btn_confirm")}'
+        cancel_title:  '{$t("otc.btn_cancel")}'
+        apply:         place_order
+        abort:         order_aborted
+        on_other:      gather_delivery
+        memory_note:   'Order NOT placed — awaiting the customer''s ✅ on {$order_total} EGP.'
+
+  place_order:
+    - do: record_save
+      args:
+        entity: otc_order
+        stage:  placed
+        fields:
+          items_summary:  '$order_summary'
+          item_count:     '$order_count'
+          subtotal:       '$order_subtotal'
+          delivery_fee:   '$fee'
+          total:          '$order_total'
+          currency:       EGP
+          patient_name:   '$state.patient_name'
+          delivery_area:  '$state.delivery_area'
+          address:        '$state.address'
+          phone:          '"" + $state.phone'
+          payment_method: '$state.payment_method'
+      bind: order
+      outputs:
+        ok:      [{ goto: open_dispensing }]
+        invalid: [{ goto: order_invalid }]
+        failed:  [{ goto: order_failed }]
+
+  open_dispensing:
+    - do: record_milestone
+      args: { record_id: '$order.record_id', milestone: order_placed }
+      detach: true
+    # The case is what puts the order in front of a human. Without it the record would sit
+    # in a table nobody watches — which is exactly the gap this path closes.
+    - do: case_open
+      args:
+        type: otc_order
+        fields:
+          case_type:     otc_order
+          subject:       '$t("otc.case_subject", { ref: $order.record_number })'
+          order_number:  '$order.record_number'
+          items_summary: '$order_summary'
+          delivery_area: '$state.delivery_area'
+      bind: disp
+      outputs:
+        ok:     [{ goto: order_placed_ok }]
+        failed: [{ goto: order_placed_no_case }]
+
+  order_placed_ok:
+    # Retire the basket lines so the next visit starts clean.
+    - foreach:
+        in: '$live'
+        as: row
+        body:
+          - do: record_save
+            args: { entity: basket_line, record_id: '$row.id', fields: { qty: 0, line_total: 0 } }
+    - render:
+        render_intent: detail_card
+        header: '{$t("otc.placed_header")}'
+        body: '$lines($compact([
+                 $t("otc.placed_ref", { ref: $order.record_number }),
+                 $order_summary,
+                 $t("otc.total", { total: $format_money($order_total, "EGP") }),
+                 $t("otc.placed_sla", { hours: $coalesce($disp.sla_hours, 6) }),
+                 $state.payment_method == "cash_on_delivery" ? $t("otc.placed_cash") : $t("otc.placed_card")
+               ]), "\n")'
+        buttons:
+          - { title: '{$t("otc.btn_orders")}', on_select: { invoke: my-orders } }
+          - { title: '{$t("otc.btn_browse")}', on_select: { invoke: otc } }
+      memory_note: 'Placed otc_order #{$order.record_number} ({$order_total} EGP) and opened dispensing case #{$disp.case_number}. Basket cleared.'
+      data: { order_number: '$order.record_number' }
+    - end: applied
+
+  order_placed_no_case:
+    - render:
+        render_intent: detail_card
+        header: '{$t("otc.placed_header")}'
+        body: '$lines($compact([
+                 $t("otc.placed_ref", { ref: $order.record_number }),
+                 $t("otc.placed_no_case")
+               ]), "\n")'
+      memory_note: 'otc_order #{$order.record_number} saved but the dispensing case did NOT open — the branch must pick it up manually.'
+    - end: applied
+
+  order_aborted:
+    - end: { status: aborted, body: '{$t("otc.order_aborted")}' }
+
+  order_invalid:
+    - answer:
+        data: { reason: '$order.reason' }
+        instructions: 'The order was rejected for the reason in `data.reason`. Fix that one field and call otc with action=checkout again.'
+
+  order_failed:
+    - answer:
+        instructions: 'The order could not be saved. Say so plainly in one line and offer to try again. Do NOT claim an order was placed, and do NOT invent a branch name, number or phone.'
+
+  needs_prescription:
+    - answer:
+        data: { item: '$item.fields.name' }
+        instructions: 'That item is prescription-only. Say so in one line WITHOUT commenting on the medicine itself, and offer to take a photo of the prescription (the prescription tool). Do NOT suggest an alternative medicine — that is a pharmacist''s call.'
+
+  out_of_stock:
+    - answer:
+        data: { item: '$item.fields.name' }
+        instructions: 'That item is out of stock at the moment. Say so in one line and offer to check another branch. Do NOT suggest a substitute medicine.'
+
+  unknown_item:
+    - answer:
+        instructions: 'That item code is not on the shelf list. Call otc so the patient can tap a real product. Do NOT guess what they meant.'
+
+  none:
+    - answer:
+        instructions: 'Nothing matched on the shelf. Say so in one line and offer the full list or the prescription route.'
+
+  unavailable:
+    - answer:
+        instructions: 'The shelf list could not be read. Apologise in one line and offer to try again in a moment. Do NOT invent a branch name, number or phone — this pack holds none. NEVER quote a price or availability from memory.'

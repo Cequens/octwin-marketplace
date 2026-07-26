@@ -1,0 +1,56 @@
+# glamour-salon — a ladies' beauty salon & spa on WhatsApp.
+#
+# Demonstrates DURATION-DRIVEN scheduling: a service's own length decides how long the
+# chair is held, so a 3-hour colour treatment cannot be squeezed into a 30-minute slot.
+# Plus a stylist roster ranked by a post-visit rating (surveys → `record_aggregate`
+# rollup → `rank_by`), package bundles, and a no-show-reducing reminder pair.
+# No pack DB, no code — pure YAML.
+
+id:          glamour-salon
+version:     1.0.0
+description: 'Beauty salon & spa — service menu, stylist booking that respects real treatment lengths, reminders, and a rating that ranks the team.'
+
+listing:
+  title:    'Glamour Salon'
+  tagline:  'Stylist booking that respects how long a treatment really takes'
+  category: services
+  author:   { name: 'Octwin', url: 'https://octwin.ai' }
+  public:   true
+
+supported_channels: [whatsapp, web]
+required_adapters:  [messaging]
+
+default_settings:
+  locale: ar
+
+default_conversation_context:
+  lang: { type: enum, enum: [ar, en, bilingual], default: ar, describe: 'Reply language.' }
+
+flows:
+  - home
+  - services
+  - stylists
+  - book-appointment
+  - my-visits
+
+inbound_preprocessing:
+  voicenote:
+    mode: transcribe
+    ack: '🎤 وصلت الرسالة الصوتية، جاري تفريغها...'
+    prompt: 'Arabic salon booking voice note — the service, the stylist, the preferred time.'
+    note_template: |-
+      $transcript != null ? "🎤 رسالة صوتية ({$media_ref}): {$transcript}" : "🎤 رسالة صوتية ({$media_ref}) — تعذّر التفريغ"
+
+agents:
+  - id:                reception
+    display_name:      'Glamour Salon Reception'
+    default_model:     'openrouter/google/gemini-3.1-flash-lite-preview'
+    tools:
+      - home
+      - services
+      - stylists
+      - book-appointment
+      - my-visits
+    include_platform_protocol: true
+    instructions:
+      - file: prompts/identity.md

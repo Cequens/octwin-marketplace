@@ -1,0 +1,16 @@
+# Surveys declaration — the post-visit rating.
+#
+# `subject: booking` so each response is about one appointment and `survey_submit`
+# upserts on (survey_key, subject_ref) — a re-rating replaces, never duplicates.
+# my-visits stamps the rated STYLIST onto the response, which is what lets
+# `record_aggregate` average a stylist's scores back onto their record. The stylist
+# picker then ranks on that average.
+
+surveys:
+  visit_feedback:
+    label:   { en: 'Visit feedback', ar: 'تقييم الزيارة' }
+    subject: booking
+    questions:
+      - { key: stars,   type: rating, scale: 5, required: true, label: { en: 'Rating', ar: 'التقييم' } }
+      - { key: comment, type: text,                             label: { en: 'Comment', ar: 'ملاحظة' } }
+    score: stars

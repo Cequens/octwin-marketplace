@@ -1,0 +1,93 @@
+# motorcare-service — a car service centre on WhatsApp.
+#
+# Demonstrates the WORKLIST engine on a NON-case entity: a `repair_job` is opened
+# with `work_open`, routed to a workshop queue (mechanical / body / diagnostics) by
+# a FIELD rather than a static queue, given an SLA, and worked by a foreman in the
+# console with real dispositions (quote approved, parts on order, ready for
+# collection). Plus `analyze_image` on a customer's damage photo to produce a
+# structured triage, the scheduling engine for service bays, and a vehicle record
+# the customer never has to re-enter. No pack DB, no code — pure YAML.
+
+id:          motorcare-service
+version:     1.0.0
+description: 'Car service centre — service packages, AI damage triage from a photo, bay booking, and a workshop queue a foreman really works.'
+
+listing:
+  title:    'MotorCare Service'
+  tagline:  'Photo-to-triage, bay booking, and a workshop queue with an SLA'
+  category: automotive
+  author:   { name: 'Octwin', url: 'https://octwin.ai' }
+  public:   true
+
+supported_channels: [whatsapp, web]
+# `vision` is load-bearing here — the damage triage is an image analysis.
+required_adapters:  [messaging, vision, storage]
+
+default_settings:
+  locale: ar
+
+default_conversation_context:
+  lang: { type: enum, enum: [ar, en, bilingual], default: ar, describe: 'Reply language.' }
+
+flows:
+  - home
+  - services
+  - damage-check
+  - book-service
+  - my-garage
+
+# A customer sends a photo of the damage or the dashboard. The platform reads it
+# before the agent's turn so the triage flow starts already informed.
+inbound_preprocessing:
+  image:
+    enabled: true
+    ack: '📸 وصلت الصورة، جاري فحصها...'
+    prompt: |-
+      You are an intake assistant for a car service centre. Classify each image and extract structured fields. Describe only what is VISIBLE — never state a repair cost, and never claim a car is safe or unsafe to drive.
+
+      Respond with JSON only (no markdown) — an object with an `images` array holding EXACTLY ONE entry per input image, IN ORDER:
+      {
+        "images": [
+          {
+            "media_ref": "<copy the MEDIA- ref for this image, in order>",
+            "image_kind": "exterior_damage" | "dashboard_warning" | "tyre" | "fluid_leak" | "registration_card" | "odometer" | "other",
+            "plate": "<licence plate if legible, else null>",
+            "make_model": "<make and model if identifiable, else null>",
+            "visible_damage": "<short factual description of what is visible, or null>",
+            "warning_lights": "<dashboard lights visible, comma separated, or null>",
+            "odometer_km": "<numeric odometer reading if visible, else null>",
+            "summary_ar": "<one short Arabic line describing the image>"
+          }
+        ]
+      }
+      Return entries in the SAME ORDER as provided; copy each entry's media_ref from the list.
+    note_template: |-
+      $lines($compact([
+        "📸 صورة ({$media_ref}) — النوع: {$image_kind ?? 'غير محدد'}",
+        $plate != null           ? "اللوحة: {$plate}" : null,
+        $make_model != null      ? "المركبة: {$make_model}" : null,
+        $visible_damage != null  ? "الأضرار الظاهرة: {$visible_damage}" : null,
+        $warning_lights != null  ? "لمبات التحذير: {$warning_lights}" : null,
+        $odometer_km != null     ? "العداد: {$odometer_km} كم" : null,
+        $summary_ar != null      ? "ملخص: {$summary_ar}" : null
+      ]))
+  voicenote:
+    mode: transcribe
+    ack: '🎤 وصلت الرسالة الصوتية، جاري تفريغها...'
+    prompt: 'Arabic car-trouble voice note — the noise, when it happens, the car model.'
+    note_template: |-
+      $transcript != null ? "🎤 رسالة صوتية ({$media_ref}): {$transcript}" : "🎤 رسالة صوتية ({$media_ref}) — تعذّر التفريغ"
+
+agents:
+  - id:                serviceadvisor
+    display_name:      'MotorCare Service Advisor'
+    default_model:     'openrouter/google/gemini-3.1-flash-lite-preview'
+    tools:
+      - home
+      - services
+      - damage-check
+      - book-service
+      - my-garage
+    include_platform_protocol: true
+    instructions:
+      - file: prompts/identity.md

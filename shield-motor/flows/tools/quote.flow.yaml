@@ -1,0 +1,156 @@
+# quote — arithmetic the bot MAY do, because every input is a published rating factor.
+#
+# premium = max(vehicle_value × base_rate%, min_premium), then the young-driver loading and
+# a no-claim discount — all three read off the `plan` record. The result is labelled
+# indicative and never called an offer; the binding premium comes from underwriting after
+# the vehicle and licence documents are seen.
+
+flow_id:     quote
+version:     1
+description: |-
+  Give an indicative motor premium from the published rating factors. Call when the customer
+  asks a price, asks to insure or renew, or asks about cover. NEVER state a premium, a
+  loading or a discount yourself — this tool is the only source.
+
+input:
+  plan_id:
+    type:     string
+    optional: true
+    describe: 'Plan record id from a plans row — never a typed name.'
+
+entry:
+  - else: true
+    goto: gather
+
+steps:
+  gather:
+    - collect:
+        derive:
+          value_amt: '$enum_lookup($state.value_band, { v50: 50000, v100: 100000, v200: 200000, v400: 400000, v800: 800000 }, 100000)'
+          ncd_years: '$enum_lookup($state.ncd_band, { n0: 0, n1: 1, n3: 3, n5: 5 }, 0)'
+        before_each:
+          - assign: { pl_label: null, pl_rate: null, pl_min: null, pl_load: null, pl_excess: null, pl_agency: null }
+          - if: '$state.plan_id != null'
+            then:
+              - do: record_get
+                args: { entity: plan, record_id: '$state.plan_id' }
+                bind: pl
+                outputs:
+                  ok:        []
+                  not_found: [{ assign: { state: '$merge($state, { plan_id: null })' } }]
+                  failed:    []
+              - if: '$pl.fields != null'
+                then:
+                  - assign:
+                      pl_label:  '$pl.fields.name'
+                      pl_rate:   '$pl.fields.base_rate_pct'
+                      pl_load:   '$pl.fields.young_driver_load_pct'
+                      pl_agency: '$pl.fields.agency_repair'
+                      pl_min:    '$pl.fields.min_premium.value / $pl.fields.min_premium.offset'
+                      pl_excess: '$pl.fields.excess.value / $pl.fields.excess.offset'
+        gap_instructions: 'Ask for the next detail ({$collect_field}) in one short line, in Arabic. Re-call quote once they answer. NEVER state a premium, a loading or a discount yourself.'
+        fields:
+          - field: plan_id
+            when: '$state.plan_id == null'
+            label: '$t("quote.label.plan")'
+            options:
+              header: quote.field_header.plan
+              cta:    quote.field_cta.plan
+              fetch:  { do: record_list, args: { entity: plan, all: true, limit: 10, sort_by: { field: base_rate_pct, dir: asc } }, bind: plans }
+              rows:   '$plans.rows'
+              map:
+                value:       '$item.id'
+                label:       '$item.fields.name'
+                description: '$item.fields.benefits'
+                selection:   { pl_label: '$item.fields.name' }
+              auto_resolve: true
+          - field: value_band
+            label: '$t("quote.label.value")'
+            options:
+              header: quote.field_header.value
+              cta:    quote.field_cta.value
+              items:
+                - { value: v50,  label: quote.value.v50 }
+                - { value: v100, label: quote.value.v100 }
+                - { value: v200, label: quote.value.v200 }
+                - { value: v400, label: quote.value.v400 }
+                - { value: v800, label: quote.value.v800 }
+          - field: driver_band
+            label: '$t("quote.label.driver")'
+            options:
+              header: quote.field_header.driver
+              cta:    quote.field_cta.driver
+              items:
+                - { value: under_25,       label: quote.driver.under_25 }
+                - { value: from_25_to_40,  label: quote.driver.from_25_to_40 }
+                - { value: over_40,        label: quote.driver.over_40 }
+          - field: ncd_band
+            label: '$t("quote.label.ncd")'
+            options:
+              header: quote.field_header.ncd
+              cta:    quote.field_cta.ncd
+              items:
+                - { value: n0, label: quote.ncd.n0 }
+                - { value: n1, label: quote.ncd.n1 }
+                - { value: n3, label: quote.ncd.n3 }
+                - { value: n5, label: quote.ncd.n5 }
+        complete: [{ goto: compute }]
+
+  compute:
+    - assign:
+        rated: '$round($state.value_amt * ($coalesce($pl_rate, 0) / 100), 0)'
+    - assign:
+        # Third-party cover has no rate on value at all — the minimum IS the premium.
+        base: '$rated > $coalesce($pl_min, 0) ? $rated : $coalesce($pl_min, 0)'
+    - assign:
+        load_pct: '$state.driver_band == "under_25" ? $coalesce($pl_load, 0) : 0'
+        # A capped no-claim discount — 5% a year to a maximum of 20%.
+        ncd_pct:  '$state.ncd_years * 5 > 20 ? 20 : $state.ncd_years * 5'
+    - assign:
+        premium: '$round($base + ($base * ($load_pct / 100)) - ($base * ($ncd_pct / 100)), 0)'
+    - do: record_save
+      args:
+        entity: quote_req
+        stage:  quoted
+        fields:
+          plan:               '$state.plan_id'
+          plan_label:         '$coalesce($pl_label, $state.pl_label)'
+          vehicle_value:      '$state.value_amt'
+          driver_band:        '$state.driver_band'
+          no_claim_years:     '$state.ncd_years'
+          indicative_premium: '$premium'
+          currency:           AED
+      bind: q
+      outputs:
+        ok:      [{ goto: mark }]
+        invalid: [{ goto: show }]
+        failed:  [{ goto: show }]
+
+  mark:
+    - do: record_milestone
+      args: { record_id: '$q.record_id', milestone: quoted }
+      detach: true
+    - goto: show
+
+  show:
+    - render:
+        render_intent: detail_card
+        header: '{$t("quote.header")}'
+        body: '$lines($compact([
+                 $t("quote.line.plan", { plan: $coalesce($pl_label, "-") }),
+                 $t("quote.line.value", { value: $format_money($state.value_amt, "AED") }),
+                 $t("quote.line.base", { base: $format_money($base, "AED") }),
+                 $load_pct > 0 ? $t("quote.line.load", { pct: $load_pct }) : null,
+                 $ncd_pct > 0 ? $t("quote.line.ncd", { pct: $ncd_pct }) : null,
+                 $t("quote.line.premium", { premium: $format_money($premium, "AED") }),
+                 $pl_excess > 0 ? $t("quote.line.excess", { excess: $format_money($pl_excess, "AED") }) : null,
+                 $pl_agency == true ? $t("quote.line.agency") : null,
+                 $t("quote.disclaimer")
+               ]), "\n")'
+        footer: '{$t("quote.footer")}'
+        buttons:
+          - { title: '{$t("quote.btn_plans")}', on_select: { invoke: plans } }
+          - { title: '{$t("quote.btn_home")}',  on_select: { invoke: home } }
+      memory_note: 'Gave an INDICATIVE premium of {$premium} AED on {$pl_label} (base {$base}, loading {$load_pct}%, NCD {$ncd_pct}%). Not an offer.'
+      data: { premium: '$premium' }
+    - end: applied

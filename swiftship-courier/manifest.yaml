@@ -1,0 +1,80 @@
+# swiftship-courier — an Egyptian courier / last-mile company on WhatsApp.
+#
+# Demonstrates the two things a courier bot must get right: a TRACKING lookup that is
+# never answered from memory (the stage and its explainer come from the record, every
+# time), and a CLAIMS desk where a lost or damaged parcel becomes a real case with an
+# SLA and a compensation disposition a human decides. Plus a pickup-booking pipeline
+# priced from a live rate card. No pack DB, no code — pure YAML.
+
+id:          swiftship-courier
+version:     1.0.0
+description: 'Courier & last-mile — track a shipment, book a pickup priced from the live rate card, and raise a claim that a real claims officer decides.'
+
+listing:
+  title:    'SwiftShip Courier'
+  tagline:  'Tracking that never guesses, and claims a human actually decides'
+  category: logistics
+  author:   { name: 'Octwin', url: 'https://octwin.ai' }
+  public:   true
+
+supported_channels: [whatsapp, web]
+required_adapters:  [messaging, vision, storage]
+
+default_settings:
+  locale: ar
+
+default_conversation_context:
+  lang: { type: enum, enum: [ar, en, bilingual], default: ar, describe: 'Reply language.' }
+
+flows:
+  - home
+  - track
+  - book-pickup
+  - claim
+
+inbound_preprocessing:
+  image:
+    enabled: true
+    ack: '📸 وصلت الصورة، جاري فحصها...'
+    prompt: |-
+      You are an intake assistant for a courier company. Classify each image and extract structured fields. Describe only what is VISIBLE — never assign blame and never state a compensation amount.
+
+      Respond with JSON only (no markdown) — an object with an `images` array holding EXACTLY ONE entry per input image, IN ORDER:
+      {
+        "images": [
+          {
+            "media_ref": "<copy the MEDIA- ref for this image, in order>",
+            "image_kind": "damaged_parcel" | "waybill" | "id_document" | "delivery_receipt" | "other",
+            "tracking_number": "<tracking or waybill number if legible, else null>",
+            "visible_damage": "<short factual description of visible damage, or null>",
+            "summary_ar": "<one short Arabic line describing the image>"
+          }
+        ]
+      }
+      Return entries in the SAME ORDER as provided; copy each entry's media_ref from the list.
+    note_template: |-
+      $lines($compact([
+        "📸 صورة ({$media_ref}) — النوع: {$image_kind ?? 'غير محدد'}",
+        $tracking_number != null ? "رقم التتبع: {$tracking_number}" : null,
+        $visible_damage != null  ? "الأضرار الظاهرة: {$visible_damage}" : null,
+        $summary_ar != null      ? "ملخص: {$summary_ar}" : null
+      ]))
+  voicenote:
+    mode: transcribe
+    ack: '🎤 وصلت الرسالة الصوتية، جاري تفريغها...'
+    prompt: 'Egyptian Arabic courier enquiry voice note — tracking number, address, complaint.'
+    note_template: |-
+      $transcript != null ? "🎤 رسالة صوتية ({$media_ref}): {$transcript}" : "🎤 رسالة صوتية ({$media_ref}) — تعذّر التفريغ"
+
+agents:
+  - id:                support
+    display_name:      'SwiftShip Support'
+    default_model:     'openrouter/google/gemini-3.1-flash-lite-preview'
+    tools:
+      - home
+      - track
+      - book-pickup
+      - claim
+    include_platform_protocol: true
+    instructions:
+      - file: prompts/identity.md

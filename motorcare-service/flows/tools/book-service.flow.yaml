@@ -1,0 +1,251 @@
+# book-service — package → bay → real slot → confirm → reserve → job card.
+#
+# The bay picker is filtered by the package's own `work_area`, so a paint job can
+# never be booked into a mechanical bay. Confirming both reserves the slot AND opens
+# the job card in the matching workshop queue, so the diary and the shop floor never
+# disagree.
+
+flow_id:     book-service
+version:     1
+description: |-
+  [interactive] Book a service bay slot. Call when the customer wants to bring the
+  car in. Pass `package_id` when they tapped a service card, `work_area` when a
+  triage decided it, and `plate` when known. The tool asks for whatever is missing.
+
+input:
+  package_id:
+    type:     string
+    optional: true
+    describe: 'Service package record id from a services card — never a typed name.'
+  work_area:
+    type:     string
+    optional: true
+    describe: 'mechanical | body | diagnostics — set by a damage-check triage.'
+  plate:
+    type:     string
+    optional: true
+    describe: 'Licence plate, when known.'
+
+entry:
+  - else: true
+    goto: collect_fields
+
+steps:
+  collect_fields:
+    - collect:
+        before_each:
+          - assign: { pkg_label: null, pkg_area: null, pkg_minutes: null, bay_label: null }
+          - if: '$state.package_id != null'
+            then:
+              - do: record_get
+                args: { entity: service_package, record_id: '$state.package_id' }
+                bind: pkg
+                outputs:
+                  ok:        []
+                  not_found: [{ assign: { state: '$merge($state, { package_id: null })' } }]
+                  failed:    []
+              - if: '$pkg.fields != null'
+                then:
+                  - assign:
+                      pkg_label:   '$pkg.fields.name'
+                      pkg_area:    '$pkg.fields.work_area'
+                      pkg_minutes: '$pkg.fields.duration_min'
+          - if: '$state.bay_id != null'
+            then:
+              - do: record_get
+                args: { entity: bay, record_id: '$state.bay_id' }
+                bind: bay
+                outputs:
+                  ok:        []
+                  # A dead bay id would call slot_list on nothing — drop it.
+                  not_found: [{ assign: { state: '$merge($state, { bay_id: null })' } }]
+                  failed:    []
+              - if: '$bay.fields != null'
+                then:
+                  - assign: { bay_label: '$bay.fields.name' }
+          # The effective work area: the package's own, else what the triage decided.
+          - assign: { area: '$coalesce($pkg_area, $state.work_area, "mechanical")' }
+        progress: '$lines($compact([
+                     $t("book-service.progress.header"),
+                     $pkg_label != null ? $t("book-service.progress.package", { package: $pkg_label }) : null,
+                     $bay_label != null ? $t("book-service.progress.bay", { bay: $bay_label }) : null,
+                     $state.slot_label != null ? $t("book-service.progress.slot", { slot: $state.slot_label }) : null
+                   ]), "\n")'
+        gap_instructions: 'Ask the customer for the next missing detail ({$collect_field}), one at a time, in their language. Re-call book-service once they answer. NEVER quote a repair price.'
+        fields:
+          - field: plate
+            label:    '$t("book-service.label.plate")'
+            describe: 'The licence plate, as printed.'
+          - field: package_id
+            when: '$state.package_id == null'
+            label: '$t("book-service.label.package")'
+            options:
+              header: book-service.field_header.package
+              cta:    book-service.field_cta.package
+              fetch:  { do: record_list, args: { entity: service_package, all: true, limit: 20, sort_by: { field: price_from, dir: asc } }, bind: pkgs }
+              rows:   '$pkgs.rows'
+              map:
+                value:       '$item.id'
+                label:       '$item.fields.name'
+                description: '$format_money_field($item.fields.price_from, $coalesce($item.fields.currency, "AED"))'
+                selection:   { pkg_label: '$item.fields.name' }
+              auto_resolve: true
+          # Only bays in the right area are offered — a paint job cannot land on a
+          # mechanical lift. `auto_resolve` skips the tap when the area has one bay.
+          - field: bay_id
+            when: '$state.bay_id == null'
+            label: '$t("book-service.label.bay")'
+            options:
+              header: book-service.field_header.bay
+              cta:    book-service.field_cta.bay
+              fetch:  { do: record_list, args: { entity: bay, all: true, limit: 10, where: { all: [{ field: work_area, op: eq, value: '$area' }] } }, bind: bays }
+              rows:   '$bays.rows'
+              map:
+                value:       '$item.id'
+                label:       '$item.fields.name'
+                description: '$item.fields.branch'
+                selection:   { bay_label: '$item.fields.name' }
+              auto_resolve: true
+          - field: slot_start
+            label: '$t("book-service.label.slot")'
+            options:
+              header: book-service.field_header.slot
+              cta:    book-service.field_cta.slot
+              fetch:  { do: slot_list, args: { resource_record_id: '$state.bay_id' }, bind: slots }
+              rows:   '$slots'
+              map:
+                value: '$item.slot_start'
+                label: '$lines($compact([$item.local_date, $item.local_time]), " — ")'
+                selection:
+                  slot_minutes: '$item.slot_minutes'
+                  slot_label:   '$lines($compact([$item.local_date, $item.local_time]), " — ")'
+          - field: complaint
+            required: false
+            label:    '$t("book-service.label.complaint")'
+            describe: 'Anything the customer wants the workshop to look at, in their words.'
+        complete: [{ goto: confirm }]
+
+  confirm:
+    - use: approve_apply
+      with:
+        preview: '$lines($compact([
+                    $t("book-service.preview.header"),
+                    $t("book-service.preview.package", { package: $coalesce($pkg_label, "-") }),
+                    $t("book-service.preview.plate", { plate: $coalesce($state.plate, "-") }),
+                    $t("book-service.preview.bay", { bay: $coalesce($bay_label, "-") }),
+                    $t("book-service.preview.slot", { slot: $coalesce($state.slot_label, "-") }),
+                    $t("book-service.preview.note")
+                  ]), "\n")'
+        header:        '{$t("book-service.approve_header")}'
+        footer:        '{$t("book-service.approve_footer")}'
+        confirm_title: '{$t("book-service.confirm_title")}'
+        cancel_title:  '{$t("book-service.cancel_title")}'
+        apply:         commit
+        abort:         aborted
+        on_other:      collect_fields
+        memory_note:   'Bay slot NOT reserved yet — awaiting the customer''s ✅.'
+
+  commit:
+    - do: booking_reserve
+      args:
+        resource_record_id: '$state.bay_id'
+        slot_start:         '$state.slot_start'
+        slot_minutes:       '$coalesce($state.slot_minutes, $pkg_minutes)'
+        fields:
+          bay_label:     '$bay_label'
+          package_label: '$pkg_label'
+          plate:         '$state.plate'
+          slot_label:    '$state.slot_label'
+      bind: slot
+      outputs:
+        ok:           [{ goto: save_car }]
+        full:         [{ goto: slot_taken }]
+        invalid_slot: [{ goto: slot_taken }]
+        failed:       [{ end: failed }]
+
+  save_car:
+    - do: record_save
+      args:
+        entity: vehicle
+        match:  { field: plate, value: '$state.plate' }
+        fields: { plate: '$state.plate' }
+      bind: car
+      outputs:
+        ok:      [{ goto: open_job }]
+        invalid: [{ goto: open_job }]
+        failed:  [{ goto: open_job }]
+
+  open_job:
+    # The job card and the diary slot are created together, so the shop floor and
+    # reception never disagree about what is coming in.
+    - do: work_open
+      args:
+        entity: repair_job
+        stage:  received
+        fields:
+          job_type:      periodic_service
+          work_area:     '$area'
+          vehicle:       '$car.record_id'
+          plate:         '$state.plate'
+          complaint:     '$state.complaint'
+          package:       '$state.package_id'
+          package_label: '$pkg_label'
+          slot_label:    '$state.slot_label'
+      bind: job
+      outputs:
+        ok:     [{ goto: remind }]
+        # The slot is real even if the job card failed — say so honestly.
+        failed: [{ goto: booked_no_job }]
+
+  remind:
+    - if: '$length($coalesce($slot.reminders, [])) > 0'
+      then:
+        - do: schedule_notify
+          args:
+            to:          { contact_id: '$contact.id' }
+            send_at:     '$slot.reminders[0].send_at'
+            dedupe_key:  'motorcare:slot:{$slot.record_id}:{$slot.reminders[0].key}'
+            memory_note: 'Service reminder ({$slot.reminders[0].key})'
+            intent:
+              render_intent: detail_card
+              body: '{$t("book-service.reminder.body", { slot: $coalesce($state.slot_label, ""), bay: $coalesce($bay_label, "") })}'
+              buttons:
+                - { title: '{$t("book-service.reminder.garage")}', on_select: { invoke: my-garage } }
+          detach: true
+    - render:
+        render_intent: detail_card
+        header: '{$t("book-service.done_header")}'
+        body: '$lines($compact([
+                 $t("book-service.done_slot", { slot: $coalesce($state.slot_label, ""), bay: $coalesce($bay_label, "") }),
+                 $t("book-service.done_job", { ref: $job.record_number }),
+                 $t("book-service.done_note")
+               ]), "\n")'
+        buttons:
+          - { title: '{$t("book-service.btn_garage")}', on_select: { invoke: my-garage } }
+          - { title: '{$t("book-service.btn_more")}',   on_select: { invoke: services } }
+      memory_note: 'Reserved bay slot #{$slot.record_number} and opened repair_job #{$job.record_number} in queue {$job.queue_key}.'
+      data: { job_number: '$job.record_number' }
+    - end: applied
+
+  booked_no_job:
+    - render:
+        render_intent: detail_card
+        header: '{$t("book-service.done_header")}'
+        body: '$lines($compact([
+                 $t("book-service.done_slot", { slot: $coalesce($state.slot_label, ""), bay: $coalesce($bay_label, "") }),
+                 $t("book-service.done_no_job")
+               ]), "\n")'
+        buttons:
+          - { title: '{$t("book-service.btn_garage")}', on_select: { invoke: my-garage } }
+      memory_note: 'Reserved the slot but the job card did NOT open — the service desk must open it manually.'
+    - end: applied
+
+  slot_taken:
+    - render:
+        render_intent: text_card
+        body: '{$t("book-service.slot_taken")}'
+      memory_note: 'Bay slot was taken a moment before the customer confirmed.'
+    - end: aborted
+
+  aborted:
+    - end: { status: aborted, body: '{$t("book-service.aborted")}' }

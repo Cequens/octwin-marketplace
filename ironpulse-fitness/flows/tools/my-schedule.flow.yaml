@@ -1,0 +1,84 @@
+# my-schedule — the member's own booked classes, with a cancel that frees the seat
+# for someone else (which is the whole reason a gym wants this in chat).
+
+flow_id:     my-schedule
+version:     1
+description: |-
+  Show this member's booked classes, or cancel one. Call for "حصصي", "ألغي الحجز",
+  "my classes". Never state a booking from memory — call this.
+
+input:
+  action:
+    type:     enum
+    enum:     [list, cancel]
+    optional: true
+    describe: 'list (default) | cancel.'
+  booking_id:
+    type:     string
+    optional: true
+    describe: 'A booking record id from a list row — never invented.'
+
+entry:
+  - if:   '$coalesce($input.action, "list") == "cancel"'
+    goto: do_cancel
+  - else: true
+    goto: load
+
+steps:
+  load:
+    - do: record_list
+      args: { entity: booking, limit: 10, active_only: false, sort: created_at }
+      bind: page
+      outputs:
+        ok:     [{ goto: show }]
+        empty:  [{ goto: none }]
+        failed: [{ goto: unavailable }]
+
+  show:
+    - render:
+        render_intent: list_picker
+        header: '{$t("my-schedule.header")}'
+        body:   '{$t("my-schedule.intro")}'
+        cta:    '{$t("my-schedule.cta")}'
+        items:  '$page.rows'
+        item_template:
+          title:       '{$t("my-schedule.row_title", { ref: $item.record_number })}'
+          description: '$lines($compact([
+                          $item.fields.class_label,
+                          $item.fields.slot_label,
+                          $enum_label($item.stage, "status", $item.stage)
+                        ]), " · ")'
+          on_select:   { invoke: my-schedule, with: { action: cancel, booking_id: '$item.id' } }
+      memory_note: 'Showed {$length($page.rows)} booked class(es). Tapping a row CANCELS it — confirm in words first if the member seems unsure.'
+    - end: applied
+
+  do_cancel:
+    - do: booking_cancel
+      args: { booking_record_id: '$input.booking_id' }
+      outputs:
+        ok:              [{ goto: cancelled }]
+        not_cancellable: [{ goto: too_late }]
+        failed:          [{ goto: unavailable }]
+
+  cancelled:
+    - render:
+        render_intent: detail_card
+        header: '{$t("my-schedule.cancel_header")}'
+        body:   '{$t("my-schedule.cancel_body")}'
+        buttons:
+          - { title: '{$t("my-schedule.btn_book")}', on_select: { invoke: book-class } }
+          - { title: '{$t("my-schedule.btn_mine")}', on_select: { invoke: my-schedule } }
+      memory_note: 'Cancelled booking {$input.booking_id} — the seat is back in the pool.'
+    - end: applied
+
+  too_late:
+    - answer:
+        instructions: 'That class can no longer be cancelled from chat (it is too close or already done). Say so in one line and suggest speaking to the front desk.'
+
+  none:
+    - answer:
+        instructions: 'This member has no booked class. Say so warmly in one line and offer the timetable.'
+
+  unavailable:
+    - answer:
+        instructions: 'The schedule lookup failed. Apologise in one line and offer to try again shortly. Do NOT claim a cancellation happened.'

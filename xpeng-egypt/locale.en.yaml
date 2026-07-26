@@ -1,0 +1,50 @@
+# xpeng-egypt — pack-wide English strings (namespaced by pack_id).
+# English sibling of locale.ar.yaml — same keys, translated.
+
+pack_id: xpeng-egypt
+strings:
+  brand: 'XPeng Egypt'
+
+  # Shared iconed CTA labels.
+  cta_browse:     '🚗 See our models'
+  cta_quote:      '💬 Get a quote'
+  cta_test_drive: '📅 Book a test drive'
+  cta_branches:   '🏢 Showrooms'
+  cta_details:    '🔎 Details'
+  cta_call:       '📞 Call us'
+
+  # Shared notes.
+  price_provisional: 'Prices are indicative and confirmed by our sales team.'
+
+  # Weekday names, indexed by slot dow (0=Sun … 6=Sat) via $enum_label(dow, "dow").
+  dow.0: 'Sunday'
+  dow.1: 'Monday'
+  dow.2: 'Tuesday'
+  dow.3: 'Wednesday'
+  dow.4: 'Thursday'
+  dow.5: 'Friday'
+  dow.6: 'Saturday'
+
+  # ── casework: case types (cases.<type>) — must match worklist.yaml exactly ──
+  cases.app_owner_activation: 'XPeng App owner activation'
+  cases.roadside_assistance:  'Roadside assistance'
+  cases.charging_issue:       'Charging issue'
+  cases.other:                'Other after-sales issue'
+
+  # ── casework: case statuses (status.<state>) — the fixed `case` pipeline ──
+  status.open:              'Open'
+  status.in_progress:       'In progress'
+  status.awaiting_customer: 'Awaiting your reply'
+  status.resolved:          'Resolved'
+  status.closed:            'Closed'
+  status.reopened:          'Reopened'
+
+  # ── casework: operator decisions relayed to the customer (decision.<action>) ──
+  # Standard set (auto-merged onto every type):
+  decision.resolve:           'Your issue has been resolved ✅'
+  decision.reject:            'Unfortunately we could not accept this request.'
+  decision.request_more_info: 'We need a little more information to proceed.'
+  decision.escalate:          'Your case has been escalated to a specialist team.'
+  # Custom dispositions (declared in worklist.yaml work.case.actions):
+  decision.activate_account:  'Your XPeng App account has been activated ✅ You can now sign in as a verified owner.'
+  decision.dispatch_roadside: 'Roadside assistance is on its way to you 🚗💨 Please stay safely with your car.'

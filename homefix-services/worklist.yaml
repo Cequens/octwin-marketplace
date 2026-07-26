@@ -1,0 +1,41 @@
+# Worklist declaration — the DISPATCH BOARD, on the pack's own `work_order` entity.
+#
+# The routing key is the EMIRATE, not the trade: a maintenance company runs regional
+# crews, so a Sharjah leak goes to the Sharjah crew regardless of which trade it is.
+# The `map` is explicit rather than relying on the `ops_<value>` convention, so an
+# unexpected value can never mint a phantom queue — it lands on `fallback` instead.
+#
+# The per-type SLA is where the customer promise lives: four hours for an emergency,
+# 48 for routine work. `case_open`-style prose never sets that number; the queue config
+# does, and the flow reads it back so the promise the customer hears is the real one.
+
+queues:
+  - { key: crew_dubai,    name: 'Dubai Crew' }
+  - { key: crew_sharjah,  name: 'Sharjah Crew' }
+  - { key: crew_abudhabi, name: 'Abu Dhabi Crew' }
+  - { key: dispatch_desk, name: 'Dispatch Desk' }
+
+work:
+  work_order:
+    type_field: urgency
+    actions:
+      technician_assigned:
+        label:  { ar: 'تم تعيين فني', en: 'Technician assigned' }
+        params: [{ name: technician, type: text, required: true, label: 'Technician name' }, { name: eta, type: text, required: false, label: 'ETA' }]
+        relay:  true
+      quote_sent:
+        label:  { ar: 'تم إرسال عرض السعر', en: 'Quote sent' }
+        params: [{ name: amount, type: number, required: true, label: 'Quote amount (AED)' }]
+        relay:  true
+      parts_needed:
+        label:  { ar: 'مطلوب قطع غيار', en: 'Parts needed' }
+        params: [{ name: eta_days, type: number, required: true, label: 'ETA (days)' }]
+        relay:  true
+      job_done:
+        label:  { ar: 'تم إنجاز العمل', en: 'Job complete' }
+        params: []
+        relay:  true
+    types:
+      emergency: { route_by: emirate, map: { dubai: crew_dubai, sharjah: crew_sharjah, abu_dhabi: crew_abudhabi }, fallback: dispatch_desk, priority: urgent, actions: [technician_assigned, quote_sent, job_done],               sla: { resolve_within_hours: 4 } }
+      soon:      { route_by: emirate, map: { dubai: crew_dubai, sharjah: crew_sharjah, abu_dhabi: crew_abudhabi }, fallback: dispatch_desk, priority: high,   actions: [technician_assigned, quote_sent, parts_needed, job_done], sla: { resolve_within_hours: 12 } }
+      routine:   { route_by: emirate, map: { dubai: crew_dubai, sharjah: crew_sharjah, abu_dhabi: crew_abudhabi }, fallback: dispatch_desk, priority: normal, actions: [technician_assigned, quote_sent, parts_needed, job_done], sla: { resolve_within_hours: 48 } }

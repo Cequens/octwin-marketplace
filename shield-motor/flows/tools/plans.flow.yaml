@@ -1,0 +1,73 @@
+# plans — the published products with their real excess and repair terms. A text
+# list_picker: an insurance product has no photograph worth showing, and the terms are what
+# the customer is actually comparing.
+
+flow_id:     plans
+version:     1
+description: |-
+  Show the published motor plans with cover type, excess and repair terms. Call when the
+  customer asks what you offer or asks about cover. Pass `cover` (third_party,
+  comprehensive, comprehensive_plus) when they named one. NEVER describe cover from memory.
+
+input:
+  cover:
+    type:     string
+    optional: true
+    describe: 'One of: third_party, comprehensive, comprehensive_plus.'
+
+entry:
+  - if:   '$input.cover != null'
+    goto: load_cover
+  - else: true
+    goto: load_all
+
+steps:
+  load_all:
+    - do: record_list
+      args: { entity: plan, all: true, limit: 10, sort_by: { field: base_rate_pct, dir: asc } }
+      bind: page
+      outputs:
+        ok:     [{ goto: show }]
+        empty:  [{ goto: none }]
+        failed: [{ goto: unavailable }]
+
+  load_cover:
+    - do: record_list
+      args:
+        entity:  plan
+        all:     true
+        limit:   10
+        where:   { all: [{ field: cover, op: eq, value: '$input.cover' }] }
+        sort_by: { field: base_rate_pct, dir: asc }
+      bind: page
+      outputs:
+        ok:     [{ goto: show }]
+        empty:  [{ goto: load_all }]
+        failed: [{ goto: unavailable }]
+
+  show:
+    - render:
+        render_intent: list_picker
+        header: '{$t("plans.header")}'
+        body:   '{$t("plans.intro")}'
+        footer: '{$t("plans.footer")}'
+        cta:    '{$t("plans.cta")}'
+        items:  '$page.rows'
+        item_template:
+          title:       '{$item.fields.name}'
+          description: '$lines($compact([
+                          $enum_label($item.fields.cover, "cover", $item.fields.cover),
+                          $item.fields.agency_repair == true ? $t("plans.agency") : $t("plans.workshop"),
+                          $t("plans.excess", { excess: $format_money_field($item.fields.excess, $coalesce($item.fields.currency, "AED")) })
+                        ]), " · ")'
+          on_select:   { invoke: quote, with: { plan_id: '$item.id' } }
+      memory_note: 'Showed {$page.total} published plan(s).'
+    - end: applied
+
+  none:
+    - answer:
+        instructions: 'No plan is published right now. Say so in one line and offer to have an advisor call. Do NOT describe cover from memory.'
+
+  unavailable:
+    - answer:
+        instructions: 'The plan list could not be read. Apologise in one line and offer to try again shortly. NEVER describe cover or quote a premium from memory.'

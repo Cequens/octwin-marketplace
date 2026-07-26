@@ -1,0 +1,262 @@
+# book-stay — room → arrival date (a real inventory slot) → nights → party → board →
+# priced total → ✅ → the room is HELD and a deposit is quoted.
+#
+# Every number in the total comes from the room record's own board-basis rates and picker
+# selections carrying real numbers; the child discount and deposit percentage come from
+# pack `config:` so a revenue manager changes a number, not a flow. The `full` port is the
+# oversell guard — if the last room of that type went while the guest was reading, they
+# get another date instead of a confirmation the resort cannot honour.
+
+flow_id:     book-stay
+version:     1
+description: |-
+  [interactive] Book a stay. Call when the guest wants to reserve. Pass `room_id` when they
+  tapped a room card. The tool asks for the arrival date, nights, party and board, prices
+  it from the room's own rates, and holds the room on confirmation.
+
+input:
+  room_id:
+    type:     string
+    optional: true
+    describe: 'Room type record id from a rooms card — never a typed name.'
+
+entry:
+  - else: true
+    goto: gather
+
+steps:
+  gather:
+    - collect:
+        derive:
+          nights_n:   '$enum_lookup($state.nights_band, { n3: 3, n5: 5, n7: 7, n10: 10, n14: 14 }, 5)'
+          adults_n:   '$enum_lookup($state.party_band, { a1: 1, a2: 2, a3: 3, a4: 4 }, 2)'
+          children_n: '$enum_lookup($state.children_band, { c0: 0, c1: 1, c2: 2, c3: 3 }, 0)'
+        before_each:
+          - assign: { room_label: null, resort_label: null, rate_bb: null, rate_hb: null, rate_ai: null, max_adults: null }
+          - if: '$state.room_id != null'
+            then:
+              - do: record_get
+                args: { entity: room_type, record_id: '$state.room_id' }
+                bind: rm
+                outputs:
+                  ok:        []
+                  not_found: [{ assign: { state: '$merge($state, { room_id: null })' } }]
+                  failed:    []
+              - if: '$rm.fields != null'
+                then:
+                  - assign:
+                      room_label:   '$rm.fields.name'
+                      resort_label: '$rm.fields.resort_label'
+                      max_adults:   '$rm.fields.max_adults'
+                      rate_bb:      '$rm.fields.nightly_bb.value / $rm.fields.nightly_bb.offset'
+                      rate_hb:      '$rm.fields.nightly_hb.value / $rm.fields.nightly_hb.offset'
+                      rate_ai:      '$rm.fields.nightly_ai.value / $rm.fields.nightly_ai.offset'
+        progress: '$lines($compact([
+                     $t("book-stay.progress.header"),
+                     $room_label != null ? $t("book-stay.progress.room", { room: $room_label }) : null,
+                     $state.slot_label != null ? $t("book-stay.progress.arrival", { arrival: $state.slot_label }) : null
+                   ]), "\n")'
+        gap_instructions: 'Ask the guest for the next detail ({$collect_field}) in one short line, in Arabic. Re-call book-stay once they answer. NEVER quote a nightly rate or a total yourself.'
+        fields:
+          - field: room_id
+            when: '$state.room_id == null'
+            label: '$t("book-stay.label.room")'
+            options:
+              header: book-stay.field_header.room
+              cta:    book-stay.field_cta.room
+              fetch:  { do: record_search, args: { entity: room_type, query: '', limit: 10 }, bind: rooms }
+              rows:   '$rooms.rows'
+              map:
+                value:       '$item.id'
+                label:       '$item.fields.name'
+                description: '$item.fields.resort_label'
+                selection:   { room_label: '$item.fields.name', resort_label: '$item.fields.resort_label' }
+              auto_resolve: true
+          # The arrival date IS the inventory slot — its `remaining` is the number of rooms
+          # of this type still free to release on that date.
+          - field: slot_start
+            label: '$t("book-stay.label.arrival")'
+            options:
+              header: book-stay.field_header.arrival
+              cta:    book-stay.field_cta.arrival
+              fetch:  { do: slot_list, args: { resource_record_id: '$state.room_id' }, bind: slots }
+              rows:   '$slots'
+              map:
+                value:       '$item.slot_start'
+                label:       '$item.local_date'
+                description: '$t("book-stay.rooms_left", { remaining: $item.remaining })'
+                selection:
+                  slot_minutes: '$item.slot_minutes'
+                  slot_label:   '$item.local_date'
+          - field: nights_band
+            label: '$t("book-stay.label.nights")'
+            options:
+              header: book-stay.field_header.nights
+              cta:    book-stay.field_cta.nights
+              items:
+                - { value: n3,  label: book-stay.nights.n3 }
+                - { value: n5,  label: book-stay.nights.n5 }
+                - { value: n7,  label: book-stay.nights.n7 }
+                - { value: n10, label: book-stay.nights.n10 }
+                - { value: n14, label: book-stay.nights.n14 }
+          - field: party_band
+            label: '$t("book-stay.label.adults")'
+            options:
+              header: book-stay.field_header.adults
+              cta:    book-stay.field_cta.party
+              items:
+                - { value: a1, label: book-stay.adults.a1 }
+                - { value: a2, label: book-stay.adults.a2 }
+                - { value: a3, label: book-stay.adults.a3 }
+                - { value: a4, label: book-stay.adults.a4 }
+          - field: children_band
+            label: '$t("book-stay.label.children")'
+            options:
+              header: book-stay.field_header.children
+              cta:    book-stay.field_cta.party
+              items:
+                - { value: c0, label: book-stay.children.c0 }
+                - { value: c1, label: book-stay.children.c1 }
+                - { value: c2, label: book-stay.children.c2 }
+                - { value: c3, label: book-stay.children.c3 }
+          - field: board
+            label: '$t("book-stay.label.board")'
+            options:
+              header: book-stay.field_header.board
+              cta:    book-stay.field_cta.board
+              items:
+                - { value: bb, label: book-stay.board.bb }
+                - { value: hb, label: book-stay.board.hb }
+                - { value: ai, label: book-stay.board.ai }
+          - field: guest_name
+            label:    '$t("book-stay.label.guest")'
+            describe: "The lead guest's name as on their ID."
+        complete: [{ goto: capacity_check }]
+
+  # The room's own occupancy limit — offering a 4-adult party a 2-adult room would be a
+  # booking the resort has to unpick at the desk.
+  capacity_check:
+    - if: '$state.adults_n > $coalesce($max_adults, 99)'
+      then:
+        - goto: too_many_adults
+    - goto: price_it
+
+  price_it:
+    - assign:
+        nightly: '$enum_lookup($state.board, { bb: $rate_bb, hb: $rate_hb, ai: $rate_ai }, $rate_bb)'
+        child_pct: '$coalesce($config.policy.child_discount_pct, 50)'
+    - assign:
+        adult_total: '$round($nightly * $state.nights_n, 0)'
+    - assign:
+        # Children are charged a share of the nightly rate — the percentage is pack config.
+        child_total: '$round($nightly * $state.nights_n * $state.children_n * ($child_pct / 100), 0)'
+    - assign:
+        total: '$adult_total + $child_total'
+    - assign:
+        deposit: '$round(($adult_total + $child_total) * ($coalesce($config.policy.deposit_pct, 25) / 100), 0)'
+    - goto: confirm
+
+  confirm:
+    - use: approve_apply
+      with:
+        preview: '$lines($compact([
+                    $t("book-stay.preview.header"),
+                    $t("book-stay.preview.resort", { resort: $coalesce($resort_label, $state.resort_label, "-") }),
+                    $t("book-stay.preview.room", { room: $coalesce($room_label, $state.room_label, "-") }),
+                    $t("book-stay.preview.arrival", { arrival: $coalesce($state.slot_label, "-"), nights: $state.nights_n }),
+                    $t("book-stay.preview.party", { adults: $state.adults_n, children: $state.children_n }),
+                    $t("book-stay.preview.board", { board: $enum_label($state.board, "board", $state.board) }),
+                    $t("book-stay.preview.total", { total: $format_money($total, "EGP") }),
+                    $t("book-stay.preview.deposit", { deposit: $format_money($deposit, "EGP") }),
+                    $t("book-stay.preview.note")
+                  ]), "\n")'
+        header:        '{$t("book-stay.approve_header")}'
+        footer:        '{$t("book-stay.approve_footer")}'
+        confirm_title: '{$t("book-stay.confirm_title")}'
+        cancel_title:  '{$t("book-stay.cancel_title")}'
+        apply:         hold_room
+        abort:         aborted
+        on_other:      gather
+        memory_note:   'Stay NOT held yet — awaiting the guest''s ✅ on {$total} EGP.'
+
+  hold_room:
+    # The oversell guard. `full` here means the last room of this type went while the guest
+    # was reading the preview — offer another date rather than a booking the resort cannot
+    # honour.
+    - do: booking_reserve
+      args:
+        resource_record_id: '$state.room_id'
+        slot_start:         '$state.slot_start'
+        slot_minutes:       '$state.slot_minutes'
+        fields:
+          room_label:   '$coalesce($room_label, $state.room_label)'
+          resort_label: '$coalesce($resort_label, $state.resort_label)'
+          slot_label:   '$state.slot_label'
+          guest_name:   '$state.guest_name'
+      bind: night
+      outputs:
+        ok:           [{ goto: write_stay }]
+        full:         [{ goto: sold_out }]
+        invalid_slot: [{ goto: sold_out }]
+        failed:       [{ end: failed }]
+
+  write_stay:
+    - do: record_save
+      args:
+        entity: stay
+        stage:  held
+        fields:
+          guest_name:     '$state.guest_name'
+          resort_label:   '$coalesce($resort_label, $state.resort_label)'
+          room_label:     '$coalesce($room_label, $state.room_label)'
+          check_in_label: '$state.slot_label'
+          nights:         '$state.nights_n'
+          adults:         '$state.adults_n'
+          children:       '$state.children_n'
+          board:          '$state.board'
+          total:          '$total'
+          deposit:        '$deposit'
+          currency:       EGP
+      bind: stay
+      outputs:
+        ok:      [{ goto: held }]
+        invalid: [{ goto: held }]
+        failed:  [{ goto: held }]
+
+  held:
+    - if: '$stay.record_id != null'
+      then:
+        - do: record_milestone
+          args: { record_id: '$stay.record_id', milestone: stay_held }
+          detach: true
+    - render:
+        render_intent: detail_card
+        header: '{$t("book-stay.done_header")}'
+        body: '$lines($compact([
+                 $t("book-stay.done_ref", { ref: $coalesce($stay.record_number, $night.record_number) }),
+                 $t("book-stay.done_stay", { resort: $coalesce($resort_label, ""), room: $coalesce($room_label, ""), arrival: $coalesce($state.slot_label, ""), nights: $state.nights_n }),
+                 $t("book-stay.done_total", { total: $format_money($total, "EGP") }),
+                 $t("book-stay.done_deposit", { deposit: $format_money($deposit, "EGP") })
+               ]), "\n")'
+        footer: '{$t("book-stay.done_footer")}'
+        buttons:
+          - { title: '{$t("book-stay.btn_mine")}',  on_select: { invoke: my-bookings } }
+          - { title: '{$t("book-stay.btn_rooms")}', on_select: { invoke: rooms } }
+      memory_note: 'Held a room for {$state.nights_n} night(s) at {$total} EGP (deposit {$deposit}) — stage `held`, NOT confirmed until the deposit is received.'
+      data: { total: '$total', deposit: '$deposit' }
+    - end: applied
+
+  sold_out:
+    - render:
+        render_intent: text_card
+        body: '{$t("book-stay.sold_out")}'
+      memory_note: 'The last room of that type went before the guest confirmed — offered another date.'
+    - end: aborted
+
+  too_many_adults:
+    - answer:
+        data: { max_adults: '$max_adults', room: '$room_label' }
+        instructions: 'That room does not take this many adults. State its limit in one line and offer a larger room type or a second room. Do NOT book it.'
+
+  aborted:
+    - end: { status: aborted, body: '{$t("book-stay.aborted")}' }

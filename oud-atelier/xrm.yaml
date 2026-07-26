@@ -1,0 +1,171 @@
+# XRM declaration for oud-atelier — a complete boutique in three entities.
+#
+# WHY NOT the platform `product`/`cart`/`order` commerce entities? Two constraints
+# meet here. (1) An external pack may ship only text (.yaml/.md/.sql), so
+# `commerce_catalog_seed` — which uploads COMMITTED image files — cannot carry
+# photography. (2) A `demo:` seed validates its rows against the PACK's declared
+# fields, and an `extends: system` entity may only ADD fields, never restate the
+# platform's — so a demo row cannot fill `product.name`/`price` either.
+#
+# So the catalog is the pack's own entity, whose `photo` is a first-class `image`
+# field seeded with a `generate:` prompt. That is fully portable: the imagery is
+# produced on the INSTALLING tenant's workspace at `--seed`, and the pack stays
+# text-only. A boutique that later syncs a Meta catalog swaps `shop` over to the
+# commerce primitives without touching the rest.
+
+entities:
+  # ── The catalog: reference records, no pipeline ⇒ always listable ──────────
+  fragrance:
+    label: { en: 'Fragrance', ar: 'عطر' }
+    fields:
+      sku:         { type: text, required: true, label: { en: 'SKU', ar: 'الرمز' } }
+      name:        { type: text, required: true, label: { en: 'Name', ar: 'الاسم' } }
+      description: { type: textarea, label: { en: 'Description', ar: 'الوصف' } }
+      price:       { type: money, label: { en: 'Price', ar: 'السعر' } }
+      currency:    { type: text, label: { en: 'Currency', ar: 'العملة' }, default: 'SAR' }
+      category:    { type: select, options: [oud_oil, bakhoor, eau_de_parfum, gift_set, oud_chips], label: { en: 'Category', ar: 'الفئة' } }
+      scent_notes: { type: text, label: { en: 'Notes', ar: 'المكوّنات العطرية' } }
+      longevity:   { type: select, options: [light, moderate, long, very_long], label: { en: 'Longevity', ar: 'الثبات' } }
+      stock:       { type: number, label: { en: 'Stock', ar: 'المخزون' }, default: 0 }
+      photo:       { type: image, label: { en: 'Photo', ar: 'الصورة' } }
+      rating:      { type: number, label: { en: 'Popularity', ar: 'الأكثر طلباً' }, default: 0 }
+    list: [category, price, stock]
+    # `semantic:` is what makes the fragrance quiz work — the quiz composes a
+    # sentence and this entity is searched by MEANING, not keywords.
+    search: { text: [name, scent_notes], semantic: [name, description], rank_by: rating }
+    dedupe_by: sku
+
+  # ── The shopping cart: one record per line, scoped to the shopper's contact ─
+  cart_line:
+    label: { en: 'Cart line', ar: 'سطر السلة' }
+    fields:
+      # A per-contact UNIQUENESS key: `<contact-id>:<item>`. `dedupe_by` resolves through
+      # `findRecord`, which scopes to project + entity + field value and NOT to the
+      # contact — so dedupe_by on a bare item code made one shopper's `record_save match:`
+      # update ANOTHER shopper's line (their basket silently changed; this one looked
+      # empty, because the row belonged to someone else). Folding the contact into the key
+      # restores per-customer isolation.
+      line_key:   { type: text, label: { en: 'Line key', ar: 'مفتاح السطر' } }
+      fragrance:  { type: record, entity: fragrance, label: { en: 'Item', ar: 'المنتج' } }
+      sku:        { type: text, label: { en: 'SKU', ar: 'الرمز' } }
+      title:      { type: text, label: { en: 'Item', ar: 'المنتج' } }
+      qty:        { type: number, label: { en: 'Qty', ar: 'الكمية' }, default: 1 }
+      unit_price: { type: money, label: { en: 'Unit price', ar: 'سعر الوحدة' } }
+      line_total: { type: money, label: { en: 'Line total', ar: 'إجمالي السطر' } }
+    list: [title, qty, line_total]
+    # One line per SKU per SHOPPER — see the `line_key` note above.
+    dedupe_by: line_key
+
+  # ── The order: a pipeline, so the console charts the fulfilment funnel ─────
+  purchase:
+    label: { en: 'Order', ar: 'طلب' }
+    fields:
+      items_summary:  { type: textarea, label: { en: 'Items', ar: 'المنتجات' } }
+      item_count:     { type: number, label: { en: 'Items', ar: 'عدد المنتجات' } }
+      total:          { type: money, label: { en: 'Total', ar: 'الإجمالي' } }
+      currency:       { type: text, label: { en: 'Currency', ar: 'العملة' }, default: 'SAR' }
+      recipient:      { type: text, label: { en: 'Recipient', ar: 'المستلم' } }
+      city:           { type: select, options: [riyadh, jeddah, dammam, makkah, madinah, abha], label: { en: 'City', ar: 'المدينة' } }
+      address:        { type: textarea, label: { en: 'Address', ar: 'العنوان' } }
+      payment_method: { type: select, options: [cash_on_delivery, bank_transfer], label: { en: 'Payment', ar: 'الدفع' } }
+      gift_wrap:      { type: boolean, label: { en: 'Gift wrap', ar: 'تغليف هدية' } }
+    list: [item_count, total, city]
+    pipeline:
+      stages:   [placed, packed, shipped, delivered, cancelled]
+      initial:  placed
+      terminal: [delivered, cancelled]
+    milestones:
+      order_placed:    { label: { en: 'Order placed', ar: 'تم الطلب' },   stage: placed }
+      order_delivered: { label: { en: 'Delivered', ar: 'تم التسليم' },     stage: delivered, terminal: true }
+
+segments:
+  open_orders:
+    entity: purchase
+    label: { en: 'Open orders', ar: 'طلبات قائمة' }
+    where: { all: [{ active: true }] }
+  low_stock:
+    entity: fragrance
+    label: { en: 'Low stock', ar: 'مخزون منخفض' }
+    where: { all: [{ field: stock, op: lte, value: 5 }] }
+
+# The demo collection — six products, each with an AI-generated photo produced on
+# the installing workspace at `octwin deploy --seed` and REUSED by later seeds.
+demo:
+  - entity: fragrance
+    fields:
+      sku:  'OUD-ROYAL-001'
+      name: 'دهن العود الملكي الكمبودي'
+      description: 'دهن عود كمبودي معتّق ثلاث سنوات — رأس راتنجي دافئ يتحول إلى قاعدة خشبية حلوة تدوم أكثر من اثنتي عشرة ساعة. للمجلس والأعراس. Aged Cambodian oud oil: a warm resinous opening drying down to a sweet woody base — heavy, long-lasting, for the majlis and for weddings.'
+      price: 1450
+      currency: SAR
+      category: oud_oil
+      scent_notes: 'عود كمبودي · صندل · جلد'
+      longevity: very_long
+      stock: 12
+      rating: 4.9
+      photo: 'generate:Luxury product photograph of a crystal bottle of Cambodian oud oil with a gold cap, dark resinous agarwood chips scattered beside it, black velvet background, dramatic studio lighting, ultra detailed.'
+  - entity: fragrance
+    fields:
+      sku:  'OUD-MUKH-002'
+      name: 'مخلط بخور العود الفاخر'
+      description: 'مخلط بخور من رقائق العود والعنبر وزيت الصندل — يُبخّر في المجلس أو على الملابس فيترك أثراً دافئاً طويلاً. Premium bakhoor blend of oud chips, amber and sandalwood oil for the majlis.'
+      price: 320
+      currency: SAR
+      category: bakhoor
+      scent_notes: 'عود · عنبر · صندل'
+      longevity: long
+      stock: 40
+      rating: 4.6
+      photo: 'generate:Luxury product photograph of an Arabian bakhoor incense blend in an ornate gold-trimmed box, thin wisps of fragrant smoke rising, dark marble background, warm studio lighting.'
+  - entity: fragrance
+    fields:
+      sku:  'PERF-AMBER-003'
+      name: 'عطر العنبر والمسك'
+      description: 'عطر شرقي دافئ من العنبر والمسك الأبيض وحبة الفانيليا — ثقيل الحضور، مناسب للمساء والشتاء. A warm oriental eau de parfum: amber, white musk and vanilla — an evening and winter signature.'
+      price: 690
+      currency: SAR
+      category: eau_de_parfum
+      scent_notes: 'عنبر · مسك أبيض · فانيليا'
+      longevity: long
+      stock: 25
+      rating: 4.7
+      photo: 'generate:Luxury product photograph of an amber-and-musk eau de parfum in a faceted amber glass bottle with a gold cap, soft golden backlight, beige silk background.'
+  - entity: fragrance
+    fields:
+      sku:  'PERF-ROSE-004'
+      name: 'عطر الورد الطائفي'
+      description: 'ورد طائفي نقي مع لمسة زعفران وقاعدة عود خفيفة — خفيف ومنعش، مناسب للاستخدام اليومي وللإهداء. Pure Taif rose with a saffron accent over light oud — fresh, light, everyday, and a favourite gift.'
+      price: 540
+      currency: SAR
+      category: eau_de_parfum
+      scent_notes: 'ورد طائفي · زعفران · عود خفيف'
+      longevity: moderate
+      stock: 30
+      rating: 4.8
+      photo: 'generate:Luxury product photograph of a Taif rose perfume in a slim rose-gold bottle, fresh pink damascus roses beside it, soft pastel background, elegant studio lighting.'
+  - entity: fragrance
+    fields:
+      sku:  'GIFT-SET-005'
+      name: 'طقم الهدايا الفاخر'
+      description: 'علبة هدايا تجمع دهن عود ومبخرة بخور وعطر عنبر، مع تغليف فاخر وبطاقة إهداء — الأكثر طلباً في العيد والأعراس. Luxury gift box: oud oil, bakhoor and an amber perfume, gift-wrapped with a card — the Eid and wedding favourite.'
+      price: 1290
+      currency: SAR
+      category: gift_set
+      scent_notes: 'عود · عنبر · بخور'
+      longevity: long
+      stock: 15
+      rating: 4.9
+      photo: 'generate:A luxury Arabian perfume gift box presented open on cream satin, containing a small oud oil vial, a bakhoor tin and a glass perfume bottle, gold foil accents, elegant top-down studio photograph.'
+  - entity: fragrance
+    fields:
+      sku:  'OUD-CHIPS-006'
+      name: 'رقائق العود الماليزي'
+      description: 'رقائق عود ماليزي مختارة يدوياً، غنية بالراتنج ورائحتها حلوة عند التبخير — خمسون غراماً في علبة محكمة. Hand-picked Malaysian agarwood chips, resin-rich and sweet on the burner — 50g in a sealed tin.'
+      price: 480
+      currency: SAR
+      category: oud_chips
+      scent_notes: 'عود ماليزي راتنجي'
+      longevity: very_long
+      stock: 20
+      rating: 4.5
+      photo: 'generate:Macro product photograph of premium Malaysian agarwood oud chips in a small brass bowl, rich dark resinous grain visible, dark textured background, studio lighting.'

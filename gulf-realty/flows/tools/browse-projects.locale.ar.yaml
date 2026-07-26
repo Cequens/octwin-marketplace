@@ -1,0 +1,9 @@
+flow_id: browse-projects
+
+strings:
+  intro:        '🏙️ لدينا {total} مشروع متاح — اسحب لاستعراضها:'
+  by:           '🏗️ المطوّر: {developer}'
+  handover:     '🔑 التسليم: {handover}'
+  from:         '💰 يبدأ من {price}'
+  btn_detail:   '📋 التفاصيل'
+  btn_viewing:  '🗓️ احجز معاينة'

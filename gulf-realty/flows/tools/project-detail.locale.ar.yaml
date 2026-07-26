@@ -1,0 +1,15 @@
+flow_id: project-detail
+
+strings:
+  developer:     '🏗️ المطوّر: {developer}'
+  area:          '📍 المنطقة: {area}'
+  handover:      '🔑 التسليم: {handover}'
+  from:          '💰 يبدأ من {price}'
+  plan:          '📆 خطة السداد: {plan}'
+  highlights:    '✨ {highlights}'
+  units_header:     '— الوحدات المتاحة —'
+  bedrooms_suffix:  ' غرف'
+  sqft_suffix:      ' قدم²'
+  btn_viewing:   '🗓️ احجز معاينة'
+  btn_mortgage:  '🧮 احسب القسط'
+  btn_back:      '↩️ باقي المشاريع'

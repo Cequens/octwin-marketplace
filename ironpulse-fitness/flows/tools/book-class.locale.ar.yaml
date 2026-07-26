@@ -1,0 +1,45 @@
+flow_id: book-class
+
+strings:
+  progress.header:   '📅 حجز حصة'
+  progress.class:    '🏋️ الحصة: {class}'
+  progress.trainer:  '🧑‍🏫 المدرب: {trainer}'
+  progress.slot:     '🕐 الموعد: {slot}'
+
+  label.class:    'الحصة'
+  label.trainer:  'المدرب'
+  label.slot:     'الموعد'
+
+  field_header.class:   '🏋️ أي حصة تريد؟'
+  field_cta.class:      'الحصص'
+  field_header.trainer: '🧑‍🏫 اختر المدرب'
+  field_cta.trainer:    'المدربون'
+  field_header.slot:    '🕐 المواعيد المتاحة'
+  field_cta.slot:       'المواعيد'
+  seats_left:           'متبقٍ {remaining} مقعد'
+
+  preview.header:     '📋 تأكيد الحجز'
+  preview.class:      '🏋️ الحصة: {class}'
+  preview.trainer:    '🧑‍🏫 المدرب: {trainer}'
+  preview.slot:       '🕐 الموعد: {slot}'
+  preview.remaining:  '🎟️ المقاعد المتبقية: {remaining}'
+  preview.trial:      '🎁 هذه حصة تجريبية مجانية.'
+  approve_header:     '📅 مراجعة الحجز'
+  approve_footer:     'اضغط تأكيد لحجز مقعدك.'
+  confirm_title:      'تأكيد الحجز ✅'
+  cancel_title:       'إلغاء ❌'
+
+  done_header:    '✅ تم حجز مقعدك'
+  done_body:      '🏋️ {class} مع {trainer} — 🕐 {slot}'
+  done_ref:       '🎟️ رقم الحجز: #{ref}'
+  done_arrive:    '⏰ احضر ١٠ دقائق قبل البداية، وبنرسل لك تذكيراً قبل الحصة بساعتين.'
+  btn_mine:       '🗓️ حصصي'
+  btn_classes:    '🏋️ حصص أخرى'
+  btn_retry:      '🕐 مواعيد أخرى'
+
+  full_header:    '😔 اكتمل العدد'
+  full_body:      'آخر مقعد في هذا الموعد اتحجز قبل لحظات. اختر موعداً آخر ونحجز لك على طول.'
+  aborted:        'تم إلغاء الحجز. تحت أمرك في أي وقت 💪'
+  trial_note:     'حصة تجريبية: {class} — {slot}.'
+  reminder.body:  '⏰ تذكير: حصة {class} — {slot}. لا تنسَ ملابس التمرين والماء!'
+  reminder.mine:  '🗓️ حصصي'

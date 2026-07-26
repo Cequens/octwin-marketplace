@@ -1,0 +1,17 @@
+flow_id: home
+
+strings:
+  header:          '🕌 عود أتيليه'
+  greeting:        'أهلاً بك في عود أتيليه 🌟 عطور ودهن عود مختارة بعناية.'
+  cart_waiting:    '🛒 في سلتك {count} منتج — الإجمالي {subtotal}.'
+  cta:             'اختر'
+  row_shop:        '🛍️ تصفّح المنتجات'
+  row_shop_d:      'دهن عود · بخور · عطور'
+  row_quiz:        '🔎 اعرف عطرك'
+  row_quiz_d:      'أسئلة سريعة ونوصي لك'
+  row_gifts:       '🎁 هدايا'
+  row_gifts_d:     'أطقم مغلّفة مع بطاقة إهداء'
+  row_cart:        '🛒 سلة المشتريات'
+  row_cart_d:      'راجع سلتك وأكمل الطلب'
+  row_orders:      '📦 طلباتي'
+  row_orders_d:    'حالة طلباتك السابقة'

@@ -1,0 +1,71 @@
+# services — the service menu. Packages carry a workshop photo, so this is a
+# carousel; tapping a card books that package.
+
+flow_id:     services
+version:     1
+description: |-
+  Show the service packages with indicative prices. Call when the customer asks what
+  the centre offers, asks a price, or names a service. Pass `work_area` when they
+  named one (mechanical, body, diagnostics).
+
+input:
+  work_area:
+    type:     string
+    optional: true
+    describe: 'One of: mechanical, body, diagnostics.'
+
+entry:
+  - if:   '$input.work_area != null'
+    goto: load_area
+  - else: true
+    goto: load_all
+
+steps:
+  load_all:
+    - do: record_list
+      args: { entity: service_package, all: true, limit: 20, sort_by: { field: price_from, dir: asc } }
+      bind: page
+      outputs:
+        ok:     [{ goto: show }]
+        empty:  [{ goto: none }]
+        failed: [{ goto: unavailable }]
+
+  load_area:
+    - do: record_list
+      args:
+        entity:  service_package
+        all:     true
+        limit:   20
+        where:   { all: [{ field: work_area, op: eq, value: '$input.work_area' }] }
+        sort_by: { field: price_from, dir: asc }
+      bind: page
+      outputs:
+        ok:     [{ goto: show }]
+        empty:  [{ goto: load_all }]
+        failed: [{ goto: unavailable }]
+
+  show:
+    - render:
+        render_intent: carousel
+        body:  '{$t("services.intro", { total: $page.total })}'
+        items: '$page.rows'
+        item_template:
+          image_url: '$coalesce($item.fields.photo, "")'
+          body: '$lines($compact([
+                   $item.fields.name,
+                   $t("services.from", { price: $format_money_field($item.fields.price_from, $coalesce($item.fields.currency, "AED")) }),
+                   $item.fields.duration_min != null ? $t("services.duration", { min: $item.fields.duration_min }) : null
+                 ]), "\n")'
+          buttons:
+            - { title: '{$t("services.btn_book")}', on_select: { invoke: book-service, with: { package_id: '$item.id' } } }
+            - { title: '{$t("services.btn_check")}', on_select: { invoke: damage-check } }
+      memory_note: 'Showed {$page.total} service package(s).'
+    - end: applied
+
+  none:
+    - answer:
+        instructions: 'The service menu is empty. Say so in one line and offer to take the customer''s complaint so the desk can call them.'
+
+  unavailable:
+    - answer:
+        instructions: 'The service menu could not be read. Apologise in one line and offer to try again shortly. NEVER quote a price from memory.'

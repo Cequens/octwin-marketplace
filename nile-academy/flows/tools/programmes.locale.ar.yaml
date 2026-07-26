@@ -1,0 +1,8 @@
+flow_id: programmes
+
+strings:
+  intro:       '📚 عندنا {total} برنامج — اسحب لاستعراضها:'
+  seats:       '💡 متبقٍ {seats} مقعد'
+  full:        '⚠️ المقاعد مكتملة'
+  btn_apply:   '📝 قدّم طلب'
+  btn_tour:    '🏫 احجز زيارة'

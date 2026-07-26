@@ -1,0 +1,73 @@
+# products — the published product list. A text list_picker (no photos on a finance
+# product), showing each structure's published rate, minimum down payment and max term —
+# so the customer compares real terms rather than a sales pitch.
+
+flow_id:     products
+version:     1
+description: |-
+  Show the published finance products with their real terms. Call when the customer asks
+  what you offer, asks about murabaha / ijara / musharaka, or asks about rates. NEVER
+  state a rate from memory.
+
+input:
+  structure:
+    type:     string
+    optional: true
+    describe: 'One of: murabaha, ijara, musharaka — only when the customer named one.'
+
+entry:
+  - if:   '$input.structure != null'
+    goto: load_structure
+  - else: true
+    goto: load_all
+
+steps:
+  load_all:
+    - do: record_list
+      args: { entity: finance_product, all: true, limit: 10, sort_by: { field: profit_rate_pct, dir: asc } }
+      bind: page
+      outputs:
+        ok:     [{ goto: show }]
+        empty:  [{ goto: none }]
+        failed: [{ goto: unavailable }]
+
+  load_structure:
+    - do: record_list
+      args:
+        entity:  product
+        all:     true
+        limit:   10
+        where:   { all: [{ field: structure, op: eq, value: '$input.structure' }] }
+        sort_by: { field: profit_rate_pct, dir: asc }
+      bind: page
+      outputs:
+        ok:     [{ goto: show }]
+        empty:  [{ goto: load_all }]
+        failed: [{ goto: unavailable }]
+
+  show:
+    - render:
+        render_intent: list_picker
+        header: '{$t("products.header")}'
+        body:   '{$t("products.intro")}'
+        footer: '{$t("products.footer")}'
+        cta:    '{$t("products.cta")}'
+        items:  '$page.rows'
+        item_template:
+          title:       '{$item.fields.name}'
+          description: '$lines($compact([
+                          $t("products.rate", { rate: $item.fields.profit_rate_pct }),
+                          $t("products.down", { pct: $item.fields.min_down_pct }),
+                          $t("products.term", { years: $item.fields.max_years })
+                        ]), " · ")'
+          on_select:   { invoke: estimate, with: { product_id: '$item.id' } }
+      memory_note: 'Showed {$page.total} published product(s).'
+    - end: applied
+
+  none:
+    - answer:
+        instructions: 'No product is published right now. Say so in one line and offer to have an advisor call. Do NOT describe a product from memory.'
+
+  unavailable:
+    - answer:
+        instructions: 'The product list could not be read. Apologise in one line and offer to try again shortly. NEVER state a rate from memory.'

@@ -1,0 +1,36 @@
+# Worklist declaration — how a `case` is routed, SLA'd and decided.
+#
+# A visa file is genuinely human work: an ops officer checks the passport scan
+# against the ministry rules, and no bot should pretend otherwise. So the flow
+# opens a CASE and the agent's job becomes narrating it. The casework preset
+# merges the standard decision set (resolve / reject / request_more_info /
+# escalate) into every type, so only the CUSTOM decisions appear here.
+
+queues:
+  - { key: visa_ops,     name: 'Visa Operations' }
+  - { key: booking_ops,  name: 'Booking Desk' }
+  - { key: finance_ops,  name: 'Finance' }
+
+work:
+  case:
+    type_field: case_type
+    actions:
+      # Custom dispositions — each relays its outcome to the pilgrim through the
+      # platform notify path, so the agent has context on their next turn.
+      visa_approved:
+        label:  { ar: 'تمت الموافقة على التأشيرة', en: 'Visa approved' }
+        params: [{ name: visa_number, type: text, required: true, label: 'Visa number' }]
+        relay:  true
+      docs_incomplete:
+        label:  { ar: 'المستندات غير مكتملة', en: 'Documents incomplete' }
+        params: [{ name: missing, type: text, required: true, label: 'What is missing' }]
+        relay:  true
+      payment_confirmed:
+        label:  { ar: 'تم تأكيد الدفع', en: 'Payment confirmed' }
+        params: []
+        relay:  true
+    types:
+      visa_file:      { queue: visa_ops,    priority: high,   actions: [visa_approved, docs_incomplete], sla: { resolve_within_hours: 24 } }
+      booking_change: { queue: booking_ops, priority: normal, sla: { resolve_within_hours: 12 } }
+      payment_proof:  { queue: finance_ops, priority: normal, actions: [payment_confirmed],              sla: { resolve_within_hours: 8 } }
+      general_query:  { queue: booking_ops, priority: low,    sla: { resolve_within_hours: 48 } }

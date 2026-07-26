@@ -1,0 +1,23 @@
+flow_id: orders
+
+strings:
+  header:           '📦 طلباتك'
+  intro:            'اختر طلباً لعرض تفاصيله:'
+  cta:              'الطلبات'
+  row_title:        '📦 طلب #{ref}'
+  detail_header:    '📦 طلب #{ref}'
+  detail_total:     '💰 الإجمالي: {total}'
+  detail_status:    '🚚 الحالة: {status}'
+  detail_address:   '📍 العنوان: {address}'
+  detail_payment:   '💳 الدفع: {payment}'
+  btn_back:         '↩️ باقي الطلبات'
+  btn_shop:         '🛍️ تصفّح المزيد'
+
+  stage.placed:     'تم الطلب'
+  stage.packed:     'تم التجهيز'
+  stage.shipped:    'في الطريق 🚚'
+  stage.delivered:  'تم التسليم ✅'
+  stage.cancelled:  'ملغى'
+
+  pay.cash:         'الدفع عند الاستلام'
+  pay.transfer:     'تحويل بنكي'

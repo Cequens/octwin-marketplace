@@ -1,0 +1,192 @@
+# visa-file — the casework surface. Three modes on one tool:
+#
+#   status  (default) — read the pilgrim's open cases back with their real SLA and
+#                       whatever the ops officer last decided. Nothing is invented.
+#   upload            — a `collect:` with `type: media` UPLOAD fields. The engine
+#                       adopts the next inbound photo of the right kind into the
+#                       field itself, so the fold never depends on the agent naming
+#                       the ref correctly; then `case_attach` files it as evidence.
+#   query             — open a general_query case so a human answers what the bot
+#                       must not guess (ministry rules, eligibility, refunds).
+
+flow_id:     visa-file
+version:     1
+description: |-
+  The pilgrim's visa file. Call with `intent: status` (or no intent) to report the
+  real status of their open files, `intent: upload` when they want to send passport
+  photos, and `intent: query` for a question about visa rules, eligibility or a
+  refund that needs a human. Never answer a visa-rule question yourself.
+
+input:
+  intent:
+    type:     enum
+    enum:     [status, upload, query]
+    optional: true
+    describe: 'status (default) | upload | query.'
+  question:
+    type:     string
+    optional: true
+    describe: 'For intent=query — the pilgrim''s question, in their own words.'
+
+entry:
+  - else: true
+    goto: route
+
+steps:
+  route:
+    - dispatch:
+        key: '$coalesce($input.intent, "status")'
+        cases:
+          status: [{ goto: load_cases }]
+          upload: [{ goto: gather_docs }]
+          query:  [{ goto: open_query }]
+
+  # ── status ───────────────────────────────────────────────────────────────
+  load_cases:
+    - do: case_list
+      args: { contact_id: '$contact.id' }
+      bind: cases
+      outputs:
+        ok:     [{ goto: show_cases }]
+        empty:  [{ goto: no_cases }]
+        failed: [{ goto: unavailable }]
+
+  show_cases:
+    - assign:
+        # A per-row scalar mapper — `$item` is bound per row, so this yields strings.
+        case_lines: '$map($cases, $lines($compact([
+                        "📂 #" + $item.case_number,
+                        $enum_label($item.type, "cases", $item.type),
+                        $enum_label($item.status, "status", $item.status)
+                      ]), " · "))'
+    - render:
+        render_intent: detail_card
+        header: '{$t("visa-file.status_header")}'
+        body: '$lines($compact($concat($case_lines, [$t("visa-file.status_note")])), "\n")'
+        buttons:
+          - { title: '{$t("visa-file.btn_upload")}', on_select: { invoke: visa-file, with: { intent: upload } } }
+          - { title: '{$t("visa-file.btn_query")}',  on_select: { invoke: visa-file, with: { intent: query } } }
+          - { title: '{$t("visa-file.btn_trip")}',   on_select: { invoke: my-trip } }
+      memory_note: 'Reported {$length($cases)} open case(s) to the pilgrim.'
+    - end: applied
+
+  no_cases:
+    - answer:
+        instructions: 'This pilgrim has no open file yet. Say so in one line and explain that a visa file opens automatically when they reserve a package — offer to show the packages.'
+
+  # ── upload ───────────────────────────────────────────────────────────────
+  gather_docs:
+    - do: case_list
+      args: { contact_id: '$contact.id', status: open }
+      bind: open_cases
+      outputs:
+        ok:     [{ goto: collect_docs }]
+        # No open file means nothing to attach evidence to — a normal outcome.
+        empty:  [{ goto: no_cases }]
+        failed: [{ goto: unavailable }]
+
+  collect_docs:
+    - collect:
+        fields:
+          - field: traveller_name
+            label:    '$t("visa-file.label.name")'
+            describe: 'The traveller this passport belongs to, as printed.'
+          # An UPLOAD field: its gap prompt asks for a photo, and on the next turn
+          # the engine adopts the first unconsumed inbound image into the field
+          # deterministically — no reliance on the agent passing the ref.
+          - field: passport_scan
+            type:       media
+            media_kind: image
+            label:      '$t("visa-file.label.passport")'
+          - field: personal_photo
+            type:       media
+            media_kind: image
+            required:   false
+            # `skip_title` is an EXPRESSION (evalExpr), so it needs the `$t(...)` call
+            # form — a bare `visa-file.skip` parses as arithmetic and renders NaN, and a
+            # `{$t(...)}` template is rejected inside the field-spec object.
+            skip_title: '$t("visa-file.skip")'
+            label:      '$t("visa-file.label.photo")'
+        gap_instructions: 'Ask the pilgrim for the next item ({$collect_field}) in one short line. For a passport, ask for a clear photo of the data page. Re-call visa-file with intent=upload once they send it.'
+        complete: [{ goto: save_docs }]
+
+  save_docs:
+    # Keep the traveller as a record (so the family's details persist for the next
+    # trip) AND attach the scan to the live case as evidence the officer can open.
+    - do: record_save
+      args:
+        entity: pilgrim
+        match:  { field: full_name, value: '$state.traveller_name' }
+        fields:
+          full_name:     '$state.traveller_name'
+          passport_scan: '$state.passport_scan'
+      bind: person
+      outputs:
+        ok:      [{ goto: attach }]
+        invalid: [{ goto: attach }]
+        failed:  [{ goto: attach }]
+
+  attach:
+    # `case_list` rows key the id as `id` (not `case_id`) and the type as `type`
+    # (not `case_type`) — see the case_list contract in the primitives catalog.
+    - assign: { first_case: '$open_cases[0]' }
+    - do: case_attach
+      args:
+        case_id:  '$first_case.id'
+        media_id: '$state.passport_scan'
+        caption:  '{$t("visa-file.caption", { name: $state.traveller_name })}'
+      outputs:
+        ok:     [{ goto: attached }]
+        failed: [{ goto: attach_failed }]
+
+  attached:
+    - do: case_reply
+      args:
+        case_id: '$first_case.id'
+        message: '{$t("visa-file.reply", { name: $state.traveller_name })}'
+      detach: true
+    - render:
+        render_intent: detail_card
+        header: '{$t("visa-file.uploaded_header")}'
+        body: '$lines($compact([
+                 $t("visa-file.uploaded_body", { name: $state.traveller_name, ref: $first_case.case_number }),
+                 $t("visa-file.uploaded_next")
+               ]), "\n")'
+        buttons:
+          - { title: '{$t("visa-file.btn_more")}',   on_select: { invoke: visa-file, with: { intent: upload } } }
+          - { title: '{$t("visa-file.btn_status")}', on_select: { invoke: visa-file, with: { intent: status } } }
+      memory_note: 'Attached {$state.traveller_name}''s passport to case #{$first_case.case_number}.'
+    - end: applied
+
+  attach_failed:
+    - answer:
+        instructions: 'The passport was received but could not be filed against the case. Say so honestly in one line and tell the pilgrim the desk will follow up — do NOT claim it was filed.'
+
+  # ── query ────────────────────────────────────────────────────────────────
+  open_query:
+    - do: case_open
+      args:
+        type: general_query
+        fields:
+          case_type: general_query
+          subject:   '$coalesce($input.question, $t("visa-file.default_question"))'
+          question:  '$input.question'
+      bind: qcase
+      outputs:
+        ok:     [{ goto: query_open }]
+        failed: [{ goto: unavailable }]
+
+  query_open:
+    - render:
+        render_intent: detail_card
+        header: '{$t("visa-file.query_header")}'
+        body: '{$t("visa-file.query_body", { ref: $qcase.case_number, hours: $coalesce($qcase.sla_hours, 48) })}'
+        buttons:
+          - { title: '{$t("visa-file.btn_status")}', on_select: { invoke: visa-file, with: { intent: status } } }
+          - { title: '{$t("visa-file.btn_home")}',   on_select: { invoke: home } }
+      memory_note: 'Opened general_query case #{$qcase.case_number} for the pilgrim — a human will answer.'
+    - end: applied
+
+  unavailable:
+    - answer:
+        instructions: 'The case system is unavailable for a moment. Apologise in one line and offer to try again shortly. Do NOT answer a visa-rule question yourself.'

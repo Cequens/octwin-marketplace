@@ -1,0 +1,77 @@
+# pharmaplus-rx — pack-wide Arabic strings.
+#
+# The wording here is part of the safety design. `stage_hint.pharmacist_review` says a
+# pharmacist is READING the prescription — never that it is approved — and
+# `decision.needs_clarification` is phrased so it can be relayed verbatim without the bot
+# adding a clinical gloss.
+pack_id: pharmaplus-rx
+strings:
+  field_picker_footer: 'اختار من القائمة 👆'
+
+  cases.prescription_review: 'مراجعة روشتة'
+  cases.repeat_request:      'طلب صرف متكرر'
+  cases.insurance_query:     'استفسار تأمين'
+  cases.general_query:       'استفسار عام'
+  cases.otc_order:           'طلب من الرف'
+
+  status.open:              'وصلت للصيدلي'
+  status.in_progress:       'قيد المراجعة'
+  status.awaiting_customer: 'بانتظار ردّك'
+  status.resolved:          'تمت المراجعة'
+  status.closed:            'مغلق'
+  status.reopened:          'أُعيد فتحه'
+
+  priority.low:    'منخفضة'
+  priority.normal: 'عادية'
+  priority.high:   'عالية'
+  priority.urgent: 'عاجلة'
+
+  decision.resolve:                 'تمت المراجعة'
+  decision.reject:                  'تعذّر الصرف'
+  decision.request_more_info:       'مطلوب منك توضيح'
+  decision.escalate:                'تم التصعيد للصيدلي المسؤول'
+  decision.approved_for_dispensing: 'تمت الموافقة على الصرف ✅'
+  decision.needs_clarification:     'الروشتة تحتاج توضيحاً'
+  decision.item_unavailable:        'الدواء غير متوفر'
+  decision.refer_to_prescriber:     'يُراجع الطبيب المعالج'
+  decision.order_dispatched:        'الطلب في الطريق 🛵'
+
+  stage.received:          'وصل الطلب'
+  stage.pharmacist_review: 'الصيدلي يراجع الروشتة'
+  stage.approved:          'تمت الموافقة على الصرف'
+  stage.dispensed:         'تم التحضير'
+  stage.delivered:         'تم التسليم ✅'
+  stage.rejected:          'تعذّر الصرف'
+
+  stage_hint.received:          'ℹ️ استلمنا الطلب وهو في طريقه للصيدلي.'
+  stage_hint.pharmacist_review: 'ℹ️ الصيدلي بيراجع الروشتة الآن — ده مش موافقة، بنبلّغك بقراره أول ما يخلص.'
+  stage_hint.approved:          'ℹ️ الصيدلي وافق على الصرف، وجاري تحضير الطلب.'
+  stage_hint.dispensed:         'ℹ️ الطلب جاهز وفي طريقه إليك.'
+  stage_hint.delivered:         'ℹ️ تم التسليم. سلامتك 🌿'
+  stage_hint.rejected:          'ℹ️ الصيدلي ما قدرش يصرف الروشتة — راجع رسالته وتواصل مع طبيبك.'
+
+  # `otc_order` pipeline (shelf orders — no clinical review involved)
+  stage.placed:           'اتسجّل'
+  stage.packed:           'تم التجهيز'
+  stage.out_for_delivery: 'مع المندوب 🛵'
+  stage.cancelled:        'ملغي'
+
+  stage_hint.placed:           'ℹ️ الطلب وصل الصيدلية وبيتم تجهيزه.'
+  stage_hint.packed:           'ℹ️ الطلب جاهز وبيطلع مع المندوب.'
+  stage_hint.out_for_delivery: 'ℹ️ المندوب في الطريق — جهّز المبلغ لو كاش.'
+  stage_hint.cancelled:        'ℹ️ الطلب ده ملغي.'
+
+  area.nasr_city:   'مدينة نصر'
+  area.maadi:       'المعادي'
+  area.heliopolis:  'مصر الجديدة'
+  area.zamalek:     'الزمالك'
+  area.october:     '٦ أكتوبر'
+  area.giza:        'الجيزة'
+
+  category.pain_relief: 'مسكنات'
+  category.cold_flu:    'برد وإنفلونزا'
+  category.vitamins:    'فيتامينات'
+  category.baby:        'مستلزمات أطفال'
+  category.skincare:    'العناية بالبشرة'
+  category.first_aid:   'إسعافات أولية'
+  category.devices:     'أجهزة طبية'

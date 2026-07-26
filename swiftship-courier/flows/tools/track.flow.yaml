@@ -1,0 +1,70 @@
+# track — the lookup a courier bot lives or dies by. Everything it says comes from the
+# record: the stage, its plain-language explainer, the last scan, the COD amount. There
+# is no path through this flow that lets the agent narrate a status it did not read.
+#
+# `all: true` is deliberate — a waybill is looked up by NUMBER, not by who is asking, so
+# a recipient can track a parcel a shop sent them.
+
+flow_id:     track
+version:     1
+description: |-
+  Look up a shipment by its tracking number and report the real status. Call whenever the
+  customer asks where a parcel is, or gives a tracking number. NEVER state a shipment
+  status without calling this.
+
+input:
+  tracking_number:
+    type:     string
+    describe: 'The tracking / waybill number, exactly as the customer gave it (or as read from a photo).'
+
+entry:
+  - else: true
+    goto: normalise
+
+steps:
+  normalise:
+    # Customers type Arabic-Indic digits and stray spaces — normalise before the lookup
+    # so a perfectly valid waybill is not reported as "not found".
+    - assign:
+        tn: '$upper($trim($normalize_digits($input.tracking_number)))'
+    - goto: lookup
+
+  lookup:
+    - do: record_get
+      args:
+        entity: shipment
+        all:    true
+        match:  { field: tracking_number, value: '$tn' }
+      bind: shp
+      outputs:
+        ok:        [{ goto: show }]
+        not_found: [{ goto: unknown }]
+        failed:    [{ goto: unavailable }]
+
+  show:
+    - render:
+        render_intent: detail_card
+        header: '{$t("track.header", { tn: $tn })}'
+        body: '$lines($compact([
+                 $t("track.status", { status: $enum_label($shp.stage, "stage", $shp.stage) }),
+                 $enum_label($shp.stage, "stage_hint", ""),
+                 $shp.fields.last_scan != null ? $t("track.last_scan", { scan: $shp.fields.last_scan }) : null,
+                 $shp.fields.recipient != null ? $t("track.recipient", { recipient: $shp.fields.recipient }) : null,
+                 $shp.fields.cod_amount != null ? $t("track.cod", { amount: $format_money_field($shp.fields.cod_amount, "EGP") }) : null
+               ]), "\n")'
+        footer: '{$t("track.footer")}'
+        buttons:
+          - { title: '{$t("track.btn_problem")}', on_select: { invoke: claim, with: { tracking_number: '$tn' } } }
+          - { title: '{$t("track.btn_pickup")}',  on_select: { invoke: book-pickup } }
+      memory_note: 'Reported shipment {$tn} at stage {$shp.stage} (last scan: {$coalesce($shp.fields.last_scan, "-")}).'
+      data: { stage: '$shp.stage' }
+    - end: applied
+
+  unknown:
+    - answer:
+        data: { tracking_number: '$tn' }
+        instructions: 'No shipment carries that number. Say so plainly in one line, repeat the number back so they can check a digit, and offer to raise a query if they are sure it is right. Do NOT guess a status and do NOT say it is "probably in transit".'
+
+  unavailable:
+    - answer:
+        instructions: 'Tracking is unavailable for a moment. Apologise in one line and offer to try again shortly. Do NOT state a status from memory.'

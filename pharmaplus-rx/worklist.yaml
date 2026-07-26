@@ -1,0 +1,47 @@
+# Worklist declaration — the PHARMACIST REVIEW desk, on the `case` system entity.
+#
+# Every dispensing decision is a disposition only a pharmacist may pick, and each relays to
+# the patient automatically. There is deliberately no action the bot can reach that
+# approves, substitutes or doses anything — the flow can open a review and report it.
+#
+# Prescription review carries the shortest SLA in this pack because a patient waiting on
+# medicine is not waiting on a convenience.
+
+queues:
+  - { key: pharmacist_review, name: 'Pharmacist Review' }
+  - { key: dispensing,        name: 'Dispensing & Delivery' }
+  - { key: insurance_desk,    name: 'Insurance Desk' }
+
+work:
+  case:
+    type_field: case_type
+    actions:
+      approved_for_dispensing:
+        label:  { ar: 'تمت مراجعة الروشتة والموافقة على الصرف', en: 'Approved for dispensing' }
+        params: [{ name: total, type: number, required: false, label: 'Total (EGP)' }]
+        relay:  true
+      needs_clarification:
+        label:  { ar: 'الروشتة تحتاج توضيحاً', en: 'Prescription needs clarification' }
+        params: [{ name: question, type: text, required: true, label: 'What is unclear' }]
+        relay:  true
+      item_unavailable:
+        label:  { ar: 'الدواء غير متوفر', en: 'Item unavailable' }
+        params: [{ name: item, type: text, required: true, label: 'Which item' }, { name: eta_days, type: number, required: false, label: 'ETA (days)' }]
+        relay:  true
+      refer_to_prescriber:
+        label:  { ar: 'يُراجع الطبيب المعالج', en: 'Refer back to prescriber' }
+        params: [{ name: reason, type: text, required: true, label: 'Reason' }]
+        relay:  true
+      order_dispatched:
+        label:  { ar: 'الطلب في الطريق', en: 'Order dispatched' }
+        params: [{ name: eta, type: text, required: false, label: 'ETA' }]
+        relay:  true
+    types:
+      # A shelf order is not a clinical decision, but it IS work someone must do — pack it
+      # and deliver it. Routed to `dispensing` (a queue this pack declared and, until the
+      # basket could actually check out, never used).
+      otc_order:           { queue: dispensing,        priority: normal, actions: [order_dispatched, item_unavailable],                                                sla: { resolve_within_hours: 6 } }
+      prescription_review: { queue: pharmacist_review, priority: high,   actions: [approved_for_dispensing, needs_clarification, item_unavailable, refer_to_prescriber], sla: { resolve_within_hours: 2 } }
+      repeat_request:      { queue: pharmacist_review, priority: normal, actions: [approved_for_dispensing, item_unavailable, refer_to_prescriber],                    sla: { resolve_within_hours: 6 } }
+      insurance_query:     { queue: insurance_desk,    priority: normal,                                                                                              sla: { resolve_within_hours: 24 } }
+      general_query:       { queue: dispensing,        priority: low,                                                                                                 sla: { resolve_within_hours: 24 } }

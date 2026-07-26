@@ -1,0 +1,44 @@
+# home — the front door. A patient with a prescription under review lands on that, because
+# that is what they are actually waiting for.
+
+flow_id:     home
+version:     1
+description: Main menu / welcome. Call on a greeting, an unclear or off-topic message, or "what can you do?".
+
+input:
+  message:
+    type:     string
+    optional: true
+    describe: 'Optional ONE short greeting line YOU compose for this patient.'
+
+entry:
+  - else: true
+    goto: count
+
+steps:
+  count:
+    - do: case_list
+      args: { contact_id: '$contact.id' }
+      bind: cases
+      outputs:
+        ok:     [{ goto: show }]
+        empty:  [{ goto: show }]
+        failed: [{ goto: show }]
+
+  show:
+    - assign: { reviews: '$length($coalesce($cases, []))' }
+    - render:
+        render_intent: list_picker
+        header: '{$t("home.header")}'
+        body: '$lines($compact([
+                 $coalesce($input.message, $t("home.greeting")),
+                 $reviews > 0 ? $t("home.in_review", { count: $reviews }) : null
+               ]), "\n")'
+        cta: '{$t("home.cta")}'
+        items:
+          - { title: '{$t("home.row_rx")}',     description: '{$t("home.row_rx_d")}',     on_select: { invoke: prescription } }
+          - { title: '{$t("home.row_status")}', description: '{$t("home.row_status_d")}', on_select: { invoke: prescription, with: { mode: status } } }
+          - { title: '{$t("home.row_otc")}',    description: '{$t("home.row_otc_d")}',    on_select: { invoke: otc } }
+          - { title: '{$t("home.row_orders")}', description: '{$t("home.row_orders_d")}', on_select: { invoke: my-orders } }
+      memory_note: 'Showed the PharmaPlus menu ({$reviews} review(s) in progress).'
+    - end: applied

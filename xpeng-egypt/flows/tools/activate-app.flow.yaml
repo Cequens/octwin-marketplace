@@ -1,0 +1,77 @@
+flow_id:     activate-app
+version:     1
+description: |-
+  [interactive Tool] Activate the customer's XPeng App account as a verified owner. The customer
+  must upload a photo of their car registration (رخصة السيارة) AND a photo of the owner's national
+  ID; both are attached to a support ticket for the team to verify. Call when the customer wants to
+  activate / register / sign up their XPeng App, or verify car ownership. Pass name/phone if known.
+
+input:
+  full_name:
+    type: string
+    optional: true
+    describe: "The owner's full name, if the customer already gave it."
+  phone:
+    type: string
+    optional: true
+    describe: 'The owner phone number, if already stated.'
+
+entry:
+  - else: true
+    goto: gather
+
+steps:
+  gather:
+    - collect:
+        gap_instructions: '$t("activate-app.gap")'
+        fields:
+          - field: phone
+            label: '$t("activate-app.f_phone")'
+          - field: car_registration          # 📷 upload — folds a MEDIA- ref into $state.car_registration
+            type: media
+            media_kind: image
+            label: '$t("activate-app.f_registration")'
+          - field: owner_id                   # 📷 upload — owner national ID photo
+            type: media
+            media_kind: image
+            label: '$t("activate-app.f_id")'
+        complete: [{ goto: open }]
+
+  open:
+    - do: case_open
+      args:
+        type: app_owner_activation
+        fields:
+          full_name: '$coalesce($state.full_name, "")'
+          phone:     '$state.phone'
+      bind: c
+      outputs:
+        ok: [{ goto: attach_registration }]
+        # failed → throws → error-net
+
+  attach_registration:
+    - do: case_attach
+      args:
+        case_id:  '$c.case_id'
+        media_id: '$state.car_registration'
+        caption:  '$t("activate-app.cap_registration")'
+      outputs:
+        ok: [{ goto: attach_id }]
+        # failed → throws → error-net
+
+  attach_id:
+    - do: case_attach
+      args:
+        case_id:  '$c.case_id'
+        media_id: '$state.owner_id'
+        caption:  '$t("activate-app.cap_id")'
+      outputs:
+        ok: [{ goto: confirm }]
+        # failed → throws → error-net
+
+  confirm:
+    - render:
+        render_intent: text_card
+        body: '{$t("activate-app.confirm", { ref: $c.case_number, sla: $coalesce($c.sla_hours, 24) })}'
+      memory_note: 'Opened app-owner-activation case XP-{$c.case_number} (case_id {$c.case_id}); attached car registration + owner ID.'
+    - end: applied

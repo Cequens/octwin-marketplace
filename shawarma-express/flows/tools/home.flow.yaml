@@ -1,0 +1,54 @@
+# home — the front door. Reads the live basket AND any order already on its way, so a
+# returning customer lands on their food, not the menu.
+
+flow_id:     home
+version:     1
+description: Main menu / welcome. Call on a greeting, an unclear or off-topic message, or "what can you do?".
+
+input:
+  message:
+    type:     string
+    optional: true
+    describe: 'Optional ONE short greeting line YOU compose for this customer.'
+
+entry:
+  - else: true
+    goto: count_basket
+
+steps:
+  count_basket:
+    - do: record_aggregate
+      args: { entity: basket_line, op: sum, field: qty }
+      bind: bq
+      outputs:
+        ok:     [{ goto: count_orders }]
+        failed: [{ goto: show }]
+
+  count_orders:
+    - do: record_aggregate
+      args: { entity: food_order, op: count, active_only: true }
+      bind: oc
+      outputs:
+        ok:     [{ goto: show }]
+        failed: [{ goto: show }]
+
+  show:
+    - assign:
+        in_basket: '$coalesce($bq.value, 0)'
+        live:      '$coalesce($oc.value, 0)'
+    - render:
+        render_intent: list_picker
+        header: '{$t("home.header")}'
+        body: '$lines($compact([
+                 $coalesce($input.message, $t("home.greeting")),
+                 $in_basket > 0 ? $t("home.in_basket", { count: $in_basket }) : null,
+                 $live > 0 ? $t("home.live_order", { count: $live }) : null
+               ]), "\n")'
+        cta: '{$t("home.cta")}'
+        items:
+          - { title: '{$t("home.row_menu")}',    description: '{$t("home.row_menu_d")}',    on_select: { invoke: menu } }
+          - { title: '{$t("home.row_best")}',    description: '{$t("home.row_best_d")}',    on_select: { invoke: menu, with: { bestsellers: true } } }
+          - { title: '{$t("home.row_basket")}',  description: '{$t("home.row_basket_d")}',  on_select: { invoke: basket, with: { action: view } } }
+          - { title: '{$t("home.row_track")}',   description: '{$t("home.row_track_d")}',   on_select: { invoke: my-orders } }
+      memory_note: 'Showed the Shawarma Express menu ({$in_basket} in basket, {$live} live order(s)).'
+    - end: applied

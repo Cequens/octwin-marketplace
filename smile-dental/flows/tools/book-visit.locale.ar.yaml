@@ -1,0 +1,43 @@
+flow_id: book-visit
+
+strings:
+  progress.header:    '🗓️ حجز موعد'
+  progress.treatment: '🦷 الإجراء: {treatment}'
+  progress.dentist:   '👩‍⚕️ الطبيب: {dentist}'
+  progress.slot:      '🕐 الموعد: {slot}'
+
+  label.treatment: 'الإجراء'
+  label.dentist:   'الطبيب'
+  label.slot:      'الموعد'
+  label.complaint: 'الشكوى'
+  label.insurer:   'شركة التأمين'
+  label.member:    'رقم العضوية'
+
+  field_header.treatment: '🦷 أي إجراء تحتاج؟'
+  field_cta.treatment:    'الإجراءات'
+  field_header.dentist:   '👩‍⚕️ اختر الطبيب'
+  field_cta.dentist:      'الأطباء'
+  field_header.slot:      '🕐 المواعيد المتاحة'
+  field_cta.slot:         'المواعيد'
+
+  preview.header:    '📋 تأكيد الموعد'
+  preview.treatment: '🦷 الإجراء: {treatment}'
+  preview.dentist:   '👩‍⚕️ الطبيب: {dentist}'
+  preview.slot:      '🕐 الموعد: {slot}'
+  preview.complaint: '📝 الشكوى: {complaint}'
+  preview.insurer:   '🪪 التأمين: {insurer}'
+  approve_header:    '🗓️ مراجعة الموعد'
+  approve_footer:    'اضغط تأكيد لتثبيت الموعد.'
+  confirm_title:     'تأكيد الموعد ✅'
+  cancel_title:      'إلغاء ❌'
+
+  done_header:       '✅ تم تأكيد موعدك'
+  done_body:         '👩‍⚕️ {dentist} — 🕐 {slot}'
+  done_ref:          '🧾 رقم الحجز: #{ref}'
+  done_reminder:     '⏰ بنرسل لك تذكيراً قبل الموعد بيوم وبساعتين.'
+  btn_mine:          '📋 مواعيدي'
+  btn_treatments:    '🦷 الإجراءات'
+  slot_taken:        '⚠️ للأسف تم حجز هذا الموعد قبل لحظات. اختر موعداً آخر ونكمل.'
+  aborted:           'تم إلغاء الحجز. تحت أمرك في أي وقت 🦷'
+  reminder.body:     '⏰ تذكير بموعدك مع {dentist} — {slot}.'
+  reminder.mine:     '📋 مواعيدي'

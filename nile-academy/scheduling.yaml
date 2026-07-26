@@ -1,0 +1,27 @@
+# Scheduling declaration — a CAMPUS is the bookable resource for tours, and a tour slot
+# has capacity because an open day takes several families at once. The grid step matches a
+# real guided tour (60 minutes), so one claimed seat is one family on one tour.
+
+timezone: Africa/Cairo
+
+resources:
+  campus:
+    slot: { default_minutes: 60, default_capacity: 6, window_days: 21 }
+    reminders:
+      - { key: t24, seconds: 86400 }
+      - { key: t2,  seconds: 7200 }
+
+booking:
+  entity: booking
+
+demo:
+  availability:
+    - resource_match: { entity: campus, field: name, value: 'مقر التجمع الخامس' }
+      rules:
+        - { dow: 0, start: '09:00', end: '13:00', slot_minutes: 60, capacity: 6 }
+        - { dow: 2, start: '09:00', end: '13:00', slot_minutes: 60, capacity: 6 }
+        - { dow: 6, start: '10:00', end: '14:00', slot_minutes: 60, capacity: 8 }
+    - resource_match: { entity: campus, field: name, value: 'مقر الشيخ زايد' }
+      rules:
+        - { dow: 1, start: '09:00', end: '13:00', slot_minutes: 60, capacity: 6 }
+        - { dow: 3, start: '09:00', end: '13:00', slot_minutes: 60, capacity: 6 }

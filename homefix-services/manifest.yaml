@@ -1,0 +1,88 @@
+# homefix-services — a home-maintenance company on WhatsApp.
+#
+# Demonstrates DISPATCH: a request becomes a queue-routed work order whose queue is
+# derived from the customer's EMIRATE (`route_by: emirate` + an explicit map), with a
+# per-trade SLA and a technician assigned in the console. Plus a `geo` location field
+# (a WhatsApp location pin lands straight on the record), a photo of the fault, and a
+# recurring-maintenance contract pipeline. No pack DB, no code — pure YAML.
+
+id:          homefix-services
+version:     1.0.0
+description: 'Home maintenance & handyman dispatch — describe the fault, send a photo and a location pin, and get a routed work order with a real response window.'
+
+listing:
+  title:    'HomeFix Services'
+  tagline:  'Fault to dispatched technician, routed by emirate with an SLA'
+  category: services
+  author:   { name: 'Octwin', url: 'https://octwin.ai' }
+  public:   true
+
+supported_channels: [whatsapp, web]
+required_adapters:  [messaging, vision, storage]
+
+default_settings:
+  locale: ar
+
+default_conversation_context:
+  lang: { type: enum, enum: [ar, en, bilingual], default: ar, describe: 'Reply language.' }
+
+# Call-out fee and the emergency surcharge live here so an operations manager can
+# change a number without touching a flow.
+config:
+  pricing:
+    callout_fee:        150
+    emergency_surcharge: 250
+    currency:           AED
+
+flows:
+  - home
+  - services
+  - request-visit
+  - my-requests
+
+inbound_preprocessing:
+  image:
+    enabled: true
+    ack: '📸 وصلت الصورة، جاري فحصها...'
+    prompt: |-
+      You are an intake assistant for a home-maintenance company. Classify each image and extract structured fields. Describe only what is VISIBLE. Never state a repair cost, and never say whether something is safe.
+
+      Respond with JSON only (no markdown) — an object with an `images` array holding EXACTLY ONE entry per input image, IN ORDER:
+      {
+        "images": [
+          {
+            "media_ref": "<copy the MEDIA- ref for this image, in order>",
+            "trade": "plumbing" | "electrical" | "ac" | "carpentry" | "painting" | "appliance" | "other",
+            "urgency": "routine" | "soon" | "emergency",
+            "visible_issue": "<short factual description of what is visible>",
+            "summary_ar": "<one short Arabic line describing the image>"
+          }
+        ]
+      }
+      Return entries in the SAME ORDER as provided; copy each entry's media_ref from the list.
+    note_template: |-
+      $lines($compact([
+        "📸 صورة ({$media_ref}) — التخصص المرجّح: {$trade ?? 'غير محدد'}",
+        $urgency != null      ? "درجة الاستعجال: {$urgency}" : null,
+        $visible_issue != null ? "المشكلة الظاهرة: {$visible_issue}" : null,
+        $summary_ar != null   ? "ملخص: {$summary_ar}" : null
+      ]))
+  voicenote:
+    mode: transcribe
+    ack: '🎤 وصلت الرسالة الصوتية، جاري تفريغها...'
+    prompt: 'Arabic home-maintenance voice note — the fault, the room, how urgent.'
+    note_template: |-
+      $transcript != null ? "🎤 رسالة صوتية ({$media_ref}): {$transcript}" : "🎤 رسالة صوتية ({$media_ref}) — تعذّر التفريغ"
+
+agents:
+  - id:                dispatcher
+    display_name:      'HomeFix Dispatch'
+    default_model:     'openrouter/google/gemini-3.1-flash-lite-preview'
+    tools:
+      - home
+      - services
+      - request-visit
+      - my-requests
+    include_platform_protocol: true
+    instructions:
+      - file: prompts/identity.md

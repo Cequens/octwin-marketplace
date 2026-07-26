@@ -1,0 +1,24 @@
+flow_id: home
+
+strings:
+  card_header: '🚗 إكس بينج مصر — مساعدك الذكي'
+  card_footer: 'تقدر تكتبلي أي طلب نصياً في أي وقت — أو اختار من القائمة.'
+  cta:         'اختار'
+
+  greeting_default: 'أهلاً بك في إكس بينج مصر! 👋 أقدر أساعدك تعرف موديلاتنا، تحجز تجربة قيادة، أو أي حاجة تانية.'
+
+  # Live status lines (shown only when non-zero).
+  status_complaints: '🛠️ عندك {count} تذكرة دعم مفتوحة'
+  status_booking:    '🎫 عندك {count} موعد تجربة قيادة قادم'
+
+  # Menu rows.
+  row_browse_title:    '🚗 شوف الموديلات'
+  row_browse_desc:     'تصفّح تشكيلة إكس بينج بالكامل'
+  row_testdrive_title: '📅 احجز تجربة قيادة'
+  row_testdrive_desc:  'اختار الفرع والموديل والموعد'
+  row_quote_title:     '💬 اطلب عرض سعر'
+  row_quote_desc:      'سجّل بياناتك وفريق المبيعات هيتواصل معاك'
+  row_branches_title:  '🏢 فروعنا'
+  row_branches_desc:   'العناوين والمواعيد وأرقام التواصل'
+  row_aftersales_title: '🛠️ خدمة ما بعد البيع'
+  row_aftersales_desc:  'فعّل تطبيقك، بلّغ عن مشكلة، أو تابع تذكرة'

@@ -1,0 +1,50 @@
+# homefix-services — pack-wide Arabic strings.
+#
+# `urgency.*` / `emirate.*` / `window.*` label the select values the flows echo back,
+# and `stage.*` / `stage_hint.*` the `work_order` pipeline — all resolved through
+# `$enum_label`, so no flow hardcodes a value's wording. `decision.*` labels the
+# dispatch dispositions declared in worklist.yaml.
+pack_id: homefix-services
+strings:
+  field_picker_footer: 'اختر من القائمة 👆'
+
+  urgency.emergency:  'طارئ 🚨'
+  urgency.soon:       'عاجل ⚡'
+  urgency.routine:    'عادي 🗓️'
+
+  emirate.dubai:      'دبي'
+  emirate.sharjah:    'الشارقة'
+  emirate.abu_dhabi:  'أبوظبي'
+  emirate.ajman:      'عجمان'
+  emirate.rak:        'رأس الخيمة'
+
+  window.morning:     'صباحاً'
+  window.afternoon:   'بعد الظهر'
+  window.evening:     'مساءً'
+
+  trade.plumbing:     'سباكة'
+  trade.electrical:   'كهرباء'
+  trade.ac:           'تكييف'
+  trade.carpentry:    'نجارة'
+  trade.painting:     'دهان'
+  trade.appliance:    'أجهزة منزلية'
+  trade.other:        'أخرى'
+
+  stage.received:       'وصل الطلب'
+  stage.dispatched:     'تم إرسال فني 👷'
+  stage.on_site:        'الفني في الموقع'
+  stage.awaiting_parts: 'بانتظار قطع غيار'
+  stage.completed:      'تم الإنجاز ✅'
+  stage.cancelled:      'ملغى'
+
+  stage_hint.received:       'ℹ️ الطلب عند فريق منطقتك ويتم تعيين فني له.'
+  stage_hint.dispatched:     'ℹ️ تم تعيين فني — بيتواصل معك قبل الوصول.'
+  stage_hint.on_site:        'ℹ️ الفني في الموقع الآن.'
+  stage_hint.awaiting_parts: 'ℹ️ مطلوب قطع غيار — بنبلّغك بموعد الوصول أول ما تتوفر.'
+  stage_hint.completed:      'ℹ️ تم إنجاز العمل. لو ظهرت المشكلة تاني تواصل معنا فوراً.'
+  stage_hint.cancelled:      'ℹ️ هذا الطلب ملغى.'
+
+  decision.technician_assigned: 'تم تعيين فني'
+  decision.quote_sent:          'تم إرسال عرض السعر'
+  decision.parts_needed:        'مطلوب قطع غيار'
+  decision.job_done:            'تم إنجاز العمل'

@@ -1,0 +1,53 @@
+# package-detail — the drill-down. detail_card carries the long copy and the three
+# next actions (`$caps.buttons.max`); the photo was already seen on the carousel.
+
+flow_id:     package-detail
+version:     1
+description: |-
+  Show one package in full — hotels, distance to the Haram, what is included, and
+  the per-person price. Call with `package_id` from a packages card. If the pilgrim
+  only NAMED a package, call packages first and let them tap.
+
+input:
+  package_id:
+    type:     string
+    describe: 'The package record id from a packages card — never a typed name.'
+
+entry:
+  - else: true
+    goto: load
+
+steps:
+  load:
+    - do: record_get
+      args: { entity: package, record_id: '$input.package_id' }
+      bind: pkg
+      outputs:
+        ok:        [{ goto: show }]
+        not_found: [{ goto: missing }]
+        failed:    [{ goto: missing }]
+
+  show:
+    - render:
+        render_intent: detail_card
+        header: '{$pkg.fields.name}'
+        body: '$lines($compact([
+                 $t("package-detail.nights", { nights: $pkg.fields.nights }),
+                 $pkg.fields.makkah_hotel != null ? $t("package-detail.makkah", { hotel: $pkg.fields.makkah_hotel }) : null,
+                 $pkg.fields.madinah_hotel != null ? $t("package-detail.madinah", { hotel: $pkg.fields.madinah_hotel }) : null,
+                 $pkg.fields.distance_haram != null ? $t("package-detail.distance", { distance: $pkg.fields.distance_haram }) : null,
+                 $pkg.fields.transport != null ? $t("package-detail.transport", { transport: $pkg.fields.transport }) : null,
+                 $pkg.fields.includes != null ? $t("package-detail.includes", { includes: $pkg.fields.includes }) : null,
+                 $t("package-detail.price", { price: $format_money_field($pkg.fields.price_pp, $coalesce($pkg.fields.currency, "SAR")) })
+               ]), "\n")'
+        footer: '{$t("package-detail.footer")}'
+        buttons:
+          - { title: '{$t("package-detail.btn_book")}', on_select: { invoke: book-package, with: { package_id: '$input.package_id' } } }
+          - { title: '{$t("package-detail.btn_ask")}',  on_select: { invoke: visa-file,    with: { intent: query } } }
+          - { title: '{$t("package-detail.btn_back")}', on_select: { invoke: packages } }
+      memory_note: 'Showed package {$pkg.fields.name} ({$pkg.fields.code}).'
+    - end: applied
+
+  missing:
+    - answer:
+        instructions: 'That package id does not resolve. Apologise in one line and call packages so the pilgrim can pick from the live list.'

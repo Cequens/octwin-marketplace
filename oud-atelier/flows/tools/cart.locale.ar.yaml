@@ -1,0 +1,54 @@
+flow_id: cart
+
+strings:
+  header:          '🛒 سلة المشتريات'
+  empty:           'سلتك فاضية حالياً. تصفّح المجموعة أو خلّينا نساعدك تختار عطرك ✨'
+  subtotal:        'الإجمالي: {subtotal}'
+  btn_checkout:    '✅ إتمام الطلب'
+  btn_shop:        '🛍️ تصفّح المزيد'
+  btn_clear:       '🗑️ تفريغ السلة'
+  btn_quiz:        '🔎 اعرف عطرك'
+  btn_orders:      '📦 طلباتي'
+  btn_confirm:     'تأكيد الطلب ✅'
+  btn_cancel:      'إلغاء ❌'
+
+  progress.header: '🚚 بيانات التوصيل'
+  progress.total:  '🧾 إجمالي الطلب: {total}'
+  progress.city:   '✅ المدينة'
+
+  label.recipient: 'اسم المستلم'
+  label.city:      'المدينة'
+  label.address:   'العنوان'
+  label.payment:   'طريقة الدفع'
+
+  field_header.city:    '🏙️ لأي مدينة نوصّل الطلب؟'
+  field_cta.city:       'المدن'
+  field_header.payment: '💳 كيف تفضّل الدفع؟'
+  field_cta.payment:    'اختر'
+
+  city.riyadh:   'الرياض'
+  city.jeddah:   'جدة'
+  city.dammam:   'الدمام'
+  city.makkah:   'مكة المكرمة'
+  city.madinah:  'المدينة المنورة'
+  city.abha:     'أبها'
+
+  payment.cash:           '💵 الدفع عند الاستلام'
+  payment.transfer:       '🏦 تحويل بنكي'
+  payment.cash_plain:     'الدفع عند الاستلام'
+  payment.transfer_plain: 'تحويل بنكي'
+
+  confirm_header:  '📋 تأكيد الطلب'
+  confirm_footer:  'راجع التفاصيل واضغط تأكيد لإتمام الطلب.'
+  preview.header:  '🧾 ملخص طلبك:'
+  preview.total:   '💰 الإجمالي: {total}'
+  preview.to:      '👤 المستلم: {recipient}'
+  preview.address: '📍 العنوان: {address}'
+  preview.payment: '💳 الدفع: {payment}'
+
+  placed_header:   '✅ تم تسجيل طلبك'
+  placed_body:     'رقم الطلب: #{ref}'
+  placed_cash:     '💵 الدفع عند الاستلام — جهّز المبلغ لمندوب التوصيل.'
+  placed_transfer: '🏦 سيصلك رقم الحساب للتحويل، ويُشحن الطلب بعد تأكيد التحويل.'
+  placed_footer:   'تقدر تسألني عن حالة طلبك في أي وقت 📦'
+  aborted:         'تم إلغاء الطلب — سلتك محفوظة كما هي 🛒'

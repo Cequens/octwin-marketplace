@@ -1,0 +1,44 @@
+flow_id: book-tour
+
+strings:
+  progress.header:  '🏫 حجز زيارة'
+  progress.campus:  '🏫 المقر: {campus}'
+  progress.slot:    '🕐 الموعد: {slot}'
+
+  label.campus:    'المقر'
+  label.slot:      'الموعد'
+  label.guardian:  'اسم ولي الأمر'
+  label.party:     'عدد الحضور'
+
+  field_header.campus: '🏫 أي مقر تحب تزور؟'
+  field_cta.campus:    'المقرات'
+  field_header.slot:   '🕐 مواعيد الجولات المتاحة'
+  field_cta.slot:      'المواعيد'
+  field_header.party:  '👥 كم عدد الحضور؟'
+  field_cta.party:     'اختار'
+  places_left:         'متبقٍ {remaining} مكان'
+
+  party.one:    'شخص واحد'
+  party.two:    'شخصان'
+  party.three:  'ثلاثة'
+
+  preview.header:  '📋 تأكيد الزيارة'
+  preview.campus:  '🏫 المقر: {campus}'
+  preview.slot:    '🕐 الموعد: {slot}'
+  preview.party:   '👥 عدد الحضور: {party}'
+  approve_header:  '🏫 مراجعة الزيارة'
+  approve_footer:  'اضغط تأكيد لحجز مكانك في الجولة.'
+  confirm_title:   'تأكيد الزيارة ✅'
+  cancel_title:    'إلغاء ❌'
+
+  done_header:    '✅ تم حجز زيارتك'
+  done_body:      '🏫 {campus} — 🕐 {slot}'
+  done_ref:       '🧾 رقم الحجز: #{ref}'
+  done_bring:     '📎 احضر معاك شهادة الميلاد وآخر شهادة درجات لو أمكن.'
+  btn_apply:      '📝 قدّم طلب'
+  btn_progs:      '📚 البرامج'
+  full:           '⚠️ اكتمل عدد هذه الجولة قبل لحظات. اختار موعد تاني ونحجزلك.'
+  aborted:        'تم إلغاء الحجز. تحت أمرك في أي وقت 🎓'
+  enquiry_note:   'استفسار مع حجز زيارة {campus} — {slot}.'
+  reminder.body:  '⏰ تذكير بزيارة {campus} — {slot}. في انتظارك!'
+  reminder.progs: '📚 البرامج'

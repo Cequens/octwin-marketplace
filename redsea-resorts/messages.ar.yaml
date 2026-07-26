@@ -1,0 +1,16 @@
+# redsea-resorts — platform-emitted envelope copy (Arabic).
+errors:
+  failed:
+    failure: { body: 'حصل خطأ غير متوقع. حاول تاني.' }
+  unhandled_tool_error:
+    failure: { body: 'حصل خطأ غير متوقع. حاول تاني بعد لحظة. 🙏' }
+
+agents:
+  reservations:
+    agentDisabled:    'الخدمة مش متاحة مؤقتاً. حاول تاني بعد شوية. 🙏'
+    transientError:   'حصل خطأ مؤقت. حاول تاني بعد لحظة. 🙏'
+    workflowExpired:  'الجلسة انتهت. ابدأ من جديد وأنا أكمل معاك.'
+    workflowError:    'حصل خطأ وإحنا بنكمّل الأوردر. حاول تاني.'
+    workflowDisabled: 'الميزة دي مش مفعّلة حالياً.'
+    toolDisabled:     'الميزة دي مش مفعّلة حالياً.'
+    directTapError:   'حصل خطأ. حاول تاني.'

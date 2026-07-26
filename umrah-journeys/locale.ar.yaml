@@ -1,0 +1,62 @@
+# umrah-journeys — pack-wide Arabic strings.
+#
+# The `cases.*` / `status.*` / `decision.*` blocks are the CASEWORK LOCALE
+# CONTRACT: a pack that works the `case` entity must cover, per language, one
+# label per declared `work.case.types` id, all six `case` pipeline stages, and
+# every decision (the standard preset ∪ this pack's customs). Coverage is checked
+# at boot in BOTH directions — a missing key and an orphan key naming an
+# undeclared value both fail — so this file is load-bearing, not decoration.
+#
+# `stage.*` / `stage_hint.*` are the pack's own `trip` pipeline, resolved through
+# `$enum_label` so the flows never hardcode a stage word.
+
+pack_id: umrah-journeys
+strings:
+  field_picker_footer: 'اختر من القائمة 👆'
+
+  # Case types (category `cases`) — one per worklist.yaml work.case.types id
+  cases.visa_file:      'ملف تأشيرة'
+  cases.booking_change: 'تعديل حجز'
+  cases.payment_proof:  'إثبات دفع'
+  cases.general_query:  'استفسار عام'
+
+  # Case pipeline stages (category `status`) — all six, none optional
+  status.open:              'قيد المراجعة'
+  status.in_progress:       'قيد المعالجة'
+  status.awaiting_customer: 'بانتظار ردّك'
+  status.resolved:          'تم الإنجاز'
+  status.closed:            'مغلق'
+  status.reopened:          'أُعيد فتحه'
+
+  # Priority (category `priority`)
+  priority.low:    'منخفضة'
+  priority.normal: 'عادية'
+  priority.high:   'عالية'
+  priority.urgent: 'عاجلة'
+
+  # Decisions (category `decision`) — the standard preset + this pack's customs
+  decision.resolve:           'تم الإنجاز'
+  decision.reject:            'تم الرفض'
+  decision.request_more_info: 'مطلوب منك مستندات إضافية'
+  decision.escalate:          'تم التصعيد'
+  decision.visa_approved:     'تمت الموافقة على التأشيرة 🎉'
+  decision.docs_incomplete:   'المستندات غير مكتملة'
+  decision.payment_confirmed: 'تم تأكيد الدفع'
+
+  # Trip pipeline (category `stage`) — the pack's own xrm.yaml pipeline
+  stage.enquiry:      'استفسار'
+  stage.reserved:     'حجز مثبّت'
+  stage.docs_pending: 'بانتظار المستندات'
+  stage.visa_issued:  'صدرت التأشيرة'
+  stage.ticketed:     'تم إصدار التذاكر'
+  stage.travelled:    'تمت الرحلة'
+  stage.cancelled:    'ملغى'
+
+  # Per-stage explainer (category `stage_hint`) — what the pilgrim should do next
+  stage_hint.enquiry:      'ℹ️ لسه ما ثبّتنا الحجز — قول لي الباقة وأكمل معك.'
+  stage_hint.reserved:     'ℹ️ الحجز مثبّت. الخطوة القادمة: رفع صور الجوازات.'
+  stage_hint.docs_pending: 'ℹ️ ناقص مستندات — ارفع الجوازات حتى نبدأ إجراءات التأشيرة.'
+  stage_hint.visa_issued:  'ℹ️ التأشيرة صدرت 🎉 نجهّز التذاكر وبنرسل لك التفاصيل.'
+  stage_hint.ticketed:     'ℹ️ التذاكر صدرت — بنرسل لك جدول الرحلة وتفاصيل التجمّع.'
+  stage_hint.travelled:    'ℹ️ تقبّل الله طاعتكم 🌙'
+  stage_hint.cancelled:    'ℹ️ هذا الحجز ملغى. تحت أمرك لو أردت حجزاً جديداً.'

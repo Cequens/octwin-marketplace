@@ -1,0 +1,104 @@
+# XRM declaration for homefix-services.
+#
+#  • `trade_service` — the service list (reference, no pipeline ⇒ always listable).
+#  • `property`      — the customer's home, contact-scoped, carrying a `geo` field. A
+#                      WhatsApp location pin lands straight on it, so a technician gets
+#                      coordinates instead of "the building next to the bakery".
+#  • `work_order`    — the DISPATCH item, worked through worklist.yaml. `emirate` is the
+#                      routing key and `urgency` the type discriminator (which is what
+#                      sets the SLA).
+#  • `contract`      — recurring maintenance, a pipeline the company sells against.
+
+entities:
+  trade_service:
+    label: { en: 'Service', ar: 'خدمة' }
+    fields:
+      code:        { type: text, required: true, label: { en: 'Code', ar: 'الرمز' } }
+      name:        { type: text, required: true, label: { en: 'Name', ar: 'الاسم' } }
+      trade:       { type: select, options: [plumbing, electrical, ac, carpentry, painting, appliance, other], label: { en: 'Trade', ar: 'التخصص' } }
+      description: { type: textarea, label: { en: 'Description', ar: 'الوصف' } }
+      price_from:  { type: money, label: { en: 'From', ar: 'يبدأ من' } }
+      currency:    { type: text, label: { en: 'Currency', ar: 'العملة' }, default: 'AED' }
+      photo:       { type: image, label: { en: 'Photo', ar: 'الصورة' } }
+      popularity:  { type: number, label: { en: 'Popularity', ar: 'الأكثر طلباً' }, default: 0 }
+    list: [trade, price_from]
+    search: { text: [name, description], semantic: [name, description], rank_by: popularity }
+    dedupe_by: code
+
+  property:
+    label: { en: 'Property', ar: 'العقار' }
+    fields:
+      label:        { type: text, required: true, label: { en: 'Label', ar: 'الاسم' } }
+      emirate:      { type: select, options: [dubai, sharjah, abu_dhabi, ajman, rak], label: { en: 'Emirate', ar: 'الإمارة' } }
+      area:         { type: text, label: { en: 'Area', ar: 'المنطقة' } }
+      address:      { type: textarea, label: { en: 'Address', ar: 'العنوان' } }
+      # A WhatsApp location pin lands here — the technician gets coordinates, not prose.
+      pin:          { type: geo, label: { en: 'Location pin', ar: 'الموقع على الخريطة' } }
+      property_type: { type: select, options: [apartment, villa, office, shop], label: { en: 'Type', ar: 'النوع' } }
+    list: [emirate, area, property_type]
+    dedupe_by: label
+
+  work_order:
+    label: { en: 'Work order', ar: 'أمر عمل' }
+    fields:
+      # The TYPE discriminator — it is what selects the SLA in worklist.yaml.
+      urgency:      { type: select, options: [routine, soon, emergency], label: { en: 'Urgency', ar: 'الاستعجال' } }
+      # The ROUTING key — worklist.yaml maps it to a regional crew.
+      emirate:      { type: select, options: [dubai, sharjah, abu_dhabi, ajman, rak], label: { en: 'Emirate', ar: 'الإمارة' } }
+      trade:        { type: select, options: [plumbing, electrical, ac, carpentry, painting, appliance, other], label: { en: 'Trade', ar: 'التخصص' } }
+      service:      { type: record, entity: trade_service, label: { en: 'Service', ar: 'الخدمة' } }
+      service_label: { type: text, label: { en: 'Service', ar: 'الخدمة' } }
+      property:     { type: record, entity: property, label: { en: 'Property', ar: 'العقار' } }
+      address:      { type: textarea, label: { en: 'Address', ar: 'العنوان' } }
+      pin:          { type: geo, label: { en: 'Location pin', ar: 'الموقع' } }
+      fault:        { type: textarea, label: { en: 'Fault', ar: 'وصف المشكلة' } }
+      fault_photo:  { type: image, label: { en: 'Photo', ar: 'صورة المشكلة' } }
+      preferred_window: { type: select, options: [morning, afternoon, evening], label: { en: 'Preferred window', ar: 'الوقت المفضل' } }
+      contact_name: { type: text, label: { en: 'Contact', ar: 'اسم المتواصل' } }
+      quoted_amount: { type: money, label: { en: 'Quote', ar: 'عرض السعر' } }
+    list: [urgency, trade, emirate]
+    pipeline:
+      stages:   [received, dispatched, on_site, awaiting_parts, completed, cancelled]
+      initial:  received
+      terminal: [completed, cancelled]
+    milestones:
+      dispatched: { label: { en: 'Dispatched', ar: 'تم الإرسال' }, stage: dispatched }
+      completed:  { label: { en: 'Completed', ar: 'تم الإنجاز' },   stage: completed, terminal: true }
+
+  contract:
+    label: { en: 'Maintenance contract', ar: 'عقد صيانة' }
+    fields:
+      plan:       { type: select, options: [ac_annual, full_home_annual, pool_monthly], label: { en: 'Plan', ar: 'الباقة' } }
+      property:   { type: record, entity: property, label: { en: 'Property', ar: 'العقار' } }
+      price:      { type: money, label: { en: 'Price', ar: 'السعر' } }
+      currency:   { type: text, label: { en: 'Currency', ar: 'العملة' }, default: 'AED' }
+      visits_per_year: { type: number, label: { en: 'Visits / year', ar: 'عدد الزيارات سنوياً' } }
+    list: [plan, price]
+    pipeline:
+      stages:   [proposed, active, expired, cancelled]
+      initial:  proposed
+      terminal: [expired, cancelled]
+
+segments:
+  open_orders:
+    entity: work_order
+    label: { en: 'Open work orders', ar: 'أوامر عمل قائمة' }
+    where: { all: [{ active: true }] }
+  emergencies:
+    entity: work_order
+    label: { en: 'Emergencies', ar: 'حالات طارئة' }
+    where: { all: [{ field: urgency, op: eq, value: emergency }, { active: true }] }
+
+demo:
+  - entity: trade_service
+    fields: { code: 'PLM-LEAK', name: 'إصلاح تسريب مياه', trade: plumbing, description: 'كشف وإصلاح تسريب في المواسير أو الخلاطات مع اختبار الضغط. Leak detection and repair with a pressure test.', price_from: 250, currency: AED, popularity: 5, photo: 'generate:Photograph of a plumber in uniform tightening a pipe fitting under a modern bathroom sink with a wrench, tools laid out on a cloth, clean bright bathroom, photorealistic.' }
+  - entity: trade_service
+    fields: { code: 'AC-SVC', name: 'صيانة وتنظيف مكيّفات', trade: ac, description: 'تنظيف فلاتر ومجاري ومراوح وشحن فريون لكل الوحدات. Filter, duct and coil cleaning plus a refrigerant top-up.', price_from: 300, currency: AED, popularity: 5, photo: 'generate:Photograph of an HVAC technician on a step ladder servicing a wall-mounted split air conditioner in a bright apartment living room, filter removed, photorealistic.' }
+  - entity: trade_service
+    fields: { code: 'ELC-FAULT', name: 'إصلاح أعطال كهرباء', trade: electrical, description: 'فحص القواطع والأسلاك والمقابس وإصلاح الأعطال. Breaker, wiring and socket fault finding and repair.', price_from: 220, currency: AED, popularity: 4, photo: 'generate:Photograph of a licensed electrician testing a distribution board with a multimeter, safety gloves on, tidy utility cupboard, photorealistic.' }
+  - entity: trade_service
+    fields: { code: 'CRP-DOOR', name: 'أعمال نجارة وأبواب', trade: carpentry, description: 'ضبط وإصلاح الأبواب والخزائن والمفصلات. Door, cabinet and hinge adjustment and repair.', price_from: 180, currency: AED, popularity: 3, photo: 'generate:Photograph of a carpenter adjusting a wooden door hinge with a screwdriver in a modern apartment hallway, toolbox on the floor, photorealistic.' }
+  - entity: trade_service
+    fields: { code: 'PNT-ROOM', name: 'دهان غرفة', trade: painting, description: 'تحضير الجدران ودهان غرفة كاملة بدهان مضاد للبكتيريا. Wall preparation and a full room repaint.', price_from: 650, currency: AED, popularity: 3, photo: 'generate:Photograph of a painter rolling fresh white paint onto an interior wall with masking tape along the skirting, drop sheets on the floor, bright daylight, photorealistic.' }
+  - entity: trade_service
+    fields: { code: 'APP-WM', name: 'إصلاح غسالة / ثلاجة', trade: appliance, description: 'فحص وإصلاح الغسالات والثلاجات والأفران. Washing machine, fridge and oven diagnosis and repair.', price_from: 200, currency: AED, popularity: 4, photo: 'generate:Photograph of an appliance technician kneeling beside an open washing machine with a diagnostic tool, kitchen setting, photorealistic.' }

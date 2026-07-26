@@ -1,0 +1,37 @@
+flow_id:     after-sales
+version:     1
+description: |-
+  After-sales & owner support hub for XPeng Egypt. Call when an existing owner wants help
+  AFTER buying — activating their XPeng App, reporting a problem (breakdown / charging / other),
+  or checking a ticket they already filed. Surfaces their open-ticket count and routes to the
+  right owner-service tool. (For browsing models, quotes or test drives, use the sales tools.)
+
+input: {}
+
+entry:
+  - else: true
+    goto: load
+
+steps:
+  load:
+    # Live, contact-scoped state — same bare-bind pattern as home.
+    - do: case_list
+      bind: cases
+    - assign:
+        open_count: '$length($cases) - $length($filter($cases, { status: "resolved" })) - $length($filter($cases, { status: "closed" }))'
+    - assign:
+        # null when zero → $lines drops it, keeping the card clean for owners with no open tickets
+        open_line: '$open_count > 0 ? $t("after-sales.status_open", { count: $open_count }) : null'
+    - render:
+        render_intent: list_picker
+        header: '{$t("after-sales.card_header")}'
+        body:   '$lines([$t("after-sales.card_body"), $open_line])'
+        footer: '{$t("after-sales.card_footer")}'
+        cta:    '{$t("after-sales.cta")}'
+        items:
+          - { title: '{$t("after-sales.row_activate_title")}', description: '{$t("after-sales.row_activate_desc")}', on_select: { invoke: activate-app } }
+          - { title: '{$t("after-sales.row_support_title")}',  description: '{$t("after-sales.row_support_desc")}',  on_select: { invoke: open-support } }
+          - { title: '{$t("after-sales.row_status_title")}',   description: '{$t("after-sales.row_status_desc")}',   on_select: { invoke: ticket-status } }
+      memory_note: 'Showed after-sales menu — {$open_count} open ticket(s).'
+      data: { open_count: '$open_count' }
+    - end: applied

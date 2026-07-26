@@ -1,0 +1,56 @@
+# oud-atelier — a luxury oud & perfume boutique on WhatsApp.
+#
+# Demonstrates the PLATFORM COMMERCE stack end to end, plus `extends: system`:
+# the built-in `product` entity is WIDENED (xrm.yaml) with a real `image` field so
+# the demo catalog can carry AI-generated photography and stay a text-only pack.
+# Browsing reads the RECORD (semantic `record_search` → an image carousel);
+# transacting uses the COMMERCE primitives (`cart_*`, `cart_submit` → a real
+# order, `payment_request` whose PORTS decide card-checkout vs pay-on-delivery).
+# A `collect:`-driven fragrance quiz turns a browser into a recommendation.
+# No pack DB, no code — pure YAML.
+
+id:          oud-atelier
+version:     1.0.0
+description: 'Luxury oud & perfume boutique — fragrance quiz, product carousel, cart and checkout on WhatsApp, Arabic-first for the Gulf.'
+
+listing:
+  title:    'Oud Atelier'
+  tagline:  'A perfume boutique in chat — quiz, carousel, cart and checkout'
+  category: retail
+  author:   { name: 'Octwin', url: 'https://octwin.ai' }
+  public:   true
+
+supported_channels: [whatsapp, web]
+# `embedding` — product_search embeds the shopper's free text. `storage` — the
+# catalog images. No data-store: the catalog, cart and orders are platform
+# system entities.
+required_adapters:  [messaging, embedding, storage]
+
+default_settings:
+  locale: ar
+
+default_conversation_context:
+  lang: { type: enum, enum: [ar, en, bilingual], default: ar, describe: 'Reply language.' }
+
+flows:
+  - home
+  - shop
+  - product
+  - fragrance-finder
+  - cart
+  - orders
+
+agents:
+  - id:                boutique
+    display_name:      'Oud Atelier Concierge'
+    default_model:     'openrouter/google/gemini-3.1-flash-lite-preview'
+    tools:
+      - home
+      - shop
+      - product
+      - fragrance-finder
+      - cart
+      - orders
+    include_platform_protocol: true
+    instructions:
+      - file: prompts/identity.md

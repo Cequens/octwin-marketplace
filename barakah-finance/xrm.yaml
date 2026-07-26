@@ -1,0 +1,110 @@
+# XRM declaration for barakah-finance.
+#
+#  • `finance_product` — the published finance products (NOT named `product`: that is a
+#                 platform system entity and a pack may not reuse the key). Every rate and cap the customer is
+#                 quoted comes from one of these rows, so a rate change is a record edit
+#                 and the bot can never quote something the provider did not publish.
+#  • `applicant`— the application, a pipeline the provider measures. The stages stop at
+#                 `submitted`: the DECISION stages belong to the underwriter's case.
+
+entities:
+  finance_product:
+    label: { en: 'Finance product', ar: 'منتج تمويلي' }
+    fields:
+      code:            { type: text, required: true, label: { en: 'Code', ar: 'الرمز' } }
+      name:            { type: text, required: true, label: { en: 'Name', ar: 'الاسم' } }
+      structure:       { type: select, options: [murabaha, ijara, musharaka], label: { en: 'Structure', ar: 'الصيغة' } }
+      description:     { type: textarea, label: { en: 'Description', ar: 'الوصف' } }
+      # Published, not computed — the estimate multiplies by this and says it is indicative.
+      profit_rate_pct: { type: number, label: { en: 'Profit rate %', ar: 'نسبة الربح %' } }
+      min_down_pct:    { type: number, label: { en: 'Min down payment %', ar: 'أقل دفعة مقدمة %' } }
+      max_years:       { type: number, label: { en: 'Max term (years)', ar: 'أقصى مدة (سنة)' } }
+      max_amount:      { type: money, label: { en: 'Max amount', ar: 'أقصى مبلغ' } }
+      currency:        { type: text, label: { en: 'Currency', ar: 'العملة' }, default: 'SAR' }
+      supports_rege:   { type: boolean, label: { en: 'REDF supported', ar: 'مدعوم من صندوق التنمية العقارية' } }
+    list: [structure, profit_rate_pct, max_years]
+    search: { text: [name, description], semantic: [name, description] }
+    dedupe_by: code
+
+  applicant:
+    label: { en: 'Application', ar: 'طلب تمويل' }
+    fields:
+      full_name:       { type: text, label: { en: 'Name', ar: 'الاسم' } }
+      product:         { type: record, entity: finance_product, label: { en: 'Product', ar: 'المنتج' } }
+      product_label:   { type: text, label: { en: 'Product', ar: 'المنتج' } }
+      employment:      { type: select, options: [government, private, self_employed, retired], label: { en: 'Employment', ar: 'جهة العمل' } }
+      monthly_income:  { type: number, label: { en: 'Monthly income', ar: 'الدخل الشهري' } }
+      existing_obligations: { type: number, label: { en: 'Existing obligations', ar: 'الالتزامات الحالية' } }
+      property_price:  { type: money, label: { en: 'Property price', ar: 'سعر العقار' } }
+      down_payment:    { type: money, label: { en: 'Down payment', ar: 'الدفعة المقدمة' } }
+      term_years:      { type: number, label: { en: 'Term (years)', ar: 'المدة (سنة)' } }
+      city:            { type: select, options: [riyadh, jeddah, dammam, makkah, madinah, khobar], label: { en: 'City', ar: 'المدينة' } }
+      indicative_instalment: { type: money, label: { en: 'Indicative instalment', ar: 'القسط التقديري' } }
+      currency:        { type: text, label: { en: 'Currency', ar: 'العملة' }, default: 'SAR' }
+      notes:           { type: textarea, label: { en: 'Notes', ar: 'ملاحظات' } }
+    list: [full_name, product_label, property_price]
+    pipeline:
+      # Deliberately ends at `submitted` — an approval is the underwriter's case decision,
+      # never a stage this bot can move a record into.
+      stages:   [enquiry, estimated, documents_pending, submitted, withdrawn]
+      initial:  enquiry
+      terminal: [submitted, withdrawn]
+    milestones:
+      estimated: { label: { en: 'Estimate given', ar: 'تم التقدير' },   stage: estimated }
+      submitted: { label: { en: 'Submitted', ar: 'تم التقديم' },        stage: submitted, terminal: true }
+
+segments:
+  live_applications:
+    entity: applicant
+    label: { en: 'Live applications', ar: 'طلبات قائمة' }
+    where: { all: [{ active: true }] }
+
+demo:
+  - entity: finance_product
+    fields:
+      code: 'MUR-HOME'
+      name: 'مرابحة تمويل عقاري'
+      structure: murabaha
+      description: 'تمويل شراء مسكن بصيغة المرابحة — البنك يشتري العقار ويبيعه لك بربح معلوم مقسّط. Home purchase via murabaha: the financier buys the property and resells it to you at a disclosed profit, paid in instalments.'
+      profit_rate_pct: 4.9
+      min_down_pct: 10
+      max_years: 25
+      max_amount: 5000000
+      currency: SAR
+      supports_rege: true
+  - entity: finance_product
+    fields:
+      code: 'IJARA-HOME'
+      name: 'إجارة منتهية بالتمليك'
+      structure: ijara
+      description: 'إجارة منتهية بالتمليك — تستأجر العقار وتنتقل الملكية إليك في نهاية المدة. Lease-to-own: you lease the property and ownership transfers at the end of the term.'
+      profit_rate_pct: 5.2
+      min_down_pct: 15
+      max_years: 20
+      max_amount: 4000000
+      currency: SAR
+      supports_rege: true
+  - entity: finance_product
+    fields:
+      code: 'MUSH-HOME'
+      name: 'مشاركة متناقصة'
+      structure: musharaka
+      description: 'مشاركة متناقصة — تشترك مع الجهة الممولة في ملكية العقار وتزيد حصتك تدريجياً. Diminishing musharaka: you co-own the property and buy out the financier''s share over time.'
+      profit_rate_pct: 5.5
+      min_down_pct: 20
+      max_years: 15
+      max_amount: 3000000
+      currency: SAR
+      supports_rege: false
+  - entity: finance_product
+    fields:
+      code: 'MUR-SELF'
+      name: 'مرابحة لأصحاب الأعمال'
+      structure: murabaha
+      description: 'مرابحة عقارية لأصحاب الأعمال والمهن الحرة مع متطلبات مستندات مختلفة. Murabaha for self-employed applicants, with a different document set.'
+      profit_rate_pct: 5.9
+      min_down_pct: 25
+      max_years: 20
+      max_amount: 3500000
+      currency: SAR
+      supports_rege: false

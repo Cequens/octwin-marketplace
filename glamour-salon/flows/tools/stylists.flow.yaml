@@ -1,0 +1,71 @@
+# stylists — the team, ordered by the rating rolled up from client surveys. The order of
+# this list is decided by clients, not by the salon.
+
+flow_id:     stylists
+version:     1
+description: |-
+  Show the salon's specialists with their client rating. Call when the client asks who
+  is available, asks for a specialist, or names a specialty (hair, colour, nails,
+  skincare, spa, makeup, bridal).
+
+input:
+  specialty:
+    type:     string
+    optional: true
+    describe: 'One of: hair, colour, nails, skincare, spa, makeup, bridal.'
+
+entry:
+  - if:   '$input.specialty != null'
+    goto: load_specialty
+  - else: true
+    goto: load_all
+
+steps:
+  load_all:
+    - do: record_search
+      args: { entity: stylist, query: '', limit: 10 }
+      bind: page
+      outputs:
+        ok:     [{ goto: show }]
+        empty:  [{ goto: none }]
+        failed: [{ goto: unavailable }]
+
+  # `specialties` is a multi_select, so the `has` op is the right test — `eq` would
+  # only match a stylist whose entire list is that one value.
+  load_specialty:
+    - do: record_search
+      args:
+        entity: stylist
+        query:  ''
+        limit:  10
+        where:  { all: [{ field: specialties, op: has, value: '$input.specialty' }] }
+      bind: page
+      outputs:
+        ok:     [{ goto: show }]
+        empty:  [{ goto: load_all }]
+        failed: [{ goto: unavailable }]
+
+  show:
+    - render:
+        render_intent: carousel
+        body:  '{$t("stylists.intro")}'
+        items: '$page.rows'
+        item_template:
+          image_url: '$coalesce($item.fields.photo, "")'
+          body: '$lines($compact([
+                   $item.fields.name,
+                   $item.fields.title,
+                   $item.fields.rating_count > 0 ? $t("stylists.rating", { rating: $item.fields.rating, count: $item.fields.rating_count }) : null
+                 ]), "\n")'
+          buttons:
+            - { title: '{$t("stylists.btn_book")}', on_select: { invoke: book-appointment, with: { stylist_id: '$item.id' } } }
+      memory_note: 'Showed {$length($page.rows)} stylist(s).'
+    - end: applied
+
+  none:
+    - answer:
+        instructions: 'No specialist matched. Say so in one line and offer the whole team.'
+
+  unavailable:
+    - answer:
+        instructions: 'The team list could not be read. Apologise in one line and offer to try again shortly.'

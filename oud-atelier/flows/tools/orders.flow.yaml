@@ -1,0 +1,78 @@
+# orders — the shopper's own order history. Contact-scoped `record_list`, so no
+# identity plumbing. Two modes on one flow: no `order_id` lists, an `order_id` opens.
+
+flow_id:     orders
+version:     1
+description: |-
+  Show this shopper's orders, or one order in detail. Call for "طلباتي", "وين طلبي",
+  "order status". Pass `order_id` only when it came from a list row.
+
+input:
+  order_id:
+    type:     string
+    optional: true
+    describe: 'A purchase record id from a list row — never invented.'
+
+entry:
+  - if:   '$input.order_id != null'
+    goto: load_one
+  - else: true
+    goto: load_list
+
+steps:
+  load_list:
+    - do: record_list
+      args: { entity: purchase, limit: 10, active_only: false, sort: created_at }
+      bind: page
+      outputs:
+        ok:     [{ goto: show_list }]
+        empty:  [{ goto: none }]
+        failed: [{ goto: unavailable }]
+
+  show_list:
+    - render:
+        render_intent: list_picker
+        header: '{$t("orders.header")}'
+        body:   '{$t("orders.intro")}'
+        cta:    '{$t("orders.cta")}'
+        items:  '$page.rows'
+        item_template:
+          title:       '{$t("orders.row_title", { ref: $item.record_number })}'
+          description: '$lines($compact([$format_money_field($item.fields.total, "SAR"), $enum_lookup($item.stage, { placed: $t("orders.stage.placed"), packed: $t("orders.stage.packed"), shipped: $t("orders.stage.shipped"), delivered: $t("orders.stage.delivered"), cancelled: $t("orders.stage.cancelled") }, $item.stage)]), " · ")'
+          on_select:   { invoke: orders, with: { order_id: '$item.id' } }
+      memory_note: 'Listed {$length($page.rows)} order(s).'
+    - end: applied
+
+  load_one:
+    - do: record_get
+      args: { entity: purchase, record_id: '$input.order_id' }
+      bind: order
+      outputs:
+        ok:        [{ goto: show_one }]
+        not_found: [{ goto: none }]
+        failed:    [{ goto: unavailable }]
+
+  show_one:
+    - render:
+        render_intent: detail_card
+        header: '{$t("orders.detail_header", { ref: $order.record_number })}'
+        body: '$lines($compact([
+                 $order.fields.items_summary,
+                 $t("orders.detail_total", { total: $format_money_field($order.fields.total, "SAR") }),
+                 $t("orders.detail_status", { status: $enum_lookup($order.stage, { placed: $t("orders.stage.placed"), packed: $t("orders.stage.packed"), shipped: $t("orders.stage.shipped"), delivered: $t("orders.stage.delivered"), cancelled: $t("orders.stage.cancelled") }, $order.stage) }),
+                 $order.fields.address != null ? $t("orders.detail_address", { address: $order.fields.address }) : null,
+                 $t("orders.detail_payment", { payment: $enum_lookup($order.fields.payment_method, { cash_on_delivery: $t("orders.pay.cash"), bank_transfer: $t("orders.pay.transfer") }, $order.fields.payment_method) })
+               ]), "\n")'
+        buttons:
+          - { title: '{$t("orders.btn_back")}', on_select: { invoke: orders } }
+          - { title: '{$t("orders.btn_shop")}', on_select: { invoke: shop } }
+      memory_note: 'Showed order #{$order.record_number} at stage {$order.stage}.'
+    - end: applied
+
+  none:
+    - answer:
+        instructions: 'This shopper has no orders yet (or that reference does not resolve). Say so warmly in one line and offer to browse the collection. Never invent an order or a status.'
+
+  unavailable:
+    - answer:
+        instructions: 'Order lookup is unavailable for a moment. Apologise in one line and offer to try again shortly.'

@@ -1,0 +1,42 @@
+# home — the front door. Surfaces any live application so a returning guardian lands on
+# their own file rather than the brochure.
+
+flow_id:     home
+version:     1
+description: Main menu / welcome. Call on a greeting, an unclear or off-topic message, or "what can you do?".
+
+input:
+  message:
+    type:     string
+    optional: true
+    describe: 'Optional ONE short greeting line YOU compose for this guardian.'
+
+entry:
+  - else: true
+    goto: count
+
+steps:
+  count:
+    - do: record_aggregate
+      args: { entity: application, op: count, active_only: true }
+      bind: apps
+      outputs:
+        ok:     [{ goto: show }]
+        failed: [{ goto: show }]
+
+  show:
+    - assign: { live: '$coalesce($apps.value, 0)' }
+    - render:
+        render_intent: list_picker
+        header: '{$t("home.header")}'
+        body: '$lines($compact([
+                 $coalesce($input.message, $t("home.greeting")),
+                 $live > 0 ? $t("home.live", { count: $live }) : null
+               ]), "\n")'
+        cta: '{$t("home.cta")}'
+        items:
+          - { title: '{$t("home.row_programmes")}', description: '{$t("home.row_programmes_d")}', on_select: { invoke: programmes } }
+          - { title: '{$t("home.row_tour")}',       description: '{$t("home.row_tour_d")}',       on_select: { invoke: book-tour } }
+          - { title: '{$t("home.row_apply")}',      description: '{$t("home.row_apply_d")}',      on_select: { invoke: apply } }
+      memory_note: 'Showed the Nile Academy menu ({$live} live application(s)).'
+    - end: applied

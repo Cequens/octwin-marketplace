@@ -1,0 +1,33 @@
+# motorcare-service — pack-wide Arabic strings.
+#
+# `stage.*` / `stage_hint.*` are the `repair_job` pipeline, resolved via
+# `$enum_label` so no flow hardcodes a stage word. `decision.*` labels the workshop
+# dispositions declared in worklist.yaml.
+pack_id: motorcare-service
+strings:
+  field_picker_footer: 'اختر من القائمة 👆'
+
+  stage.received:   'وصلت البطاقة'
+  stage.inspecting: 'جاري الفحص'
+  stage.quoted:     'تم إرسال عرض السعر'
+  stage.in_repair:  'قيد الإصلاح'
+  stage.ready:      'جاهزة للاستلام'
+  stage.collected:  'تم الاستلام'
+  stage.cancelled:  'ملغاة'
+
+  stage_hint.received:   'ℹ️ بطاقتك في طابور الورشة وسيتم فحص السيارة.'
+  stage_hint.inspecting: 'ℹ️ الفنّي يفحص السيارة الآن وبنرسل لك عرض السعر بعد الفحص.'
+  stage_hint.quoted:     'ℹ️ وصلك عرض السعر — ردّك يبدأ العمل.'
+  stage_hint.in_repair:  'ℹ️ العمل جارٍ على سيارتك.'
+  stage_hint.ready:      'ℹ️ سيارتك جاهزة للاستلام 🎉'
+  stage_hint.collected:  'ℹ️ تم استلام السيارة. شكراً لثقتك.'
+  stage_hint.cancelled:  'ℹ️ هذه البطاقة ملغاة.'
+
+  area.mechanical:  'الميكانيكا'
+  area.body:        'السمكرة والدهان'
+  area.diagnostics: 'الفحص بالكمبيوتر'
+
+  decision.quote_ready:          'عرض السعر جاهز'
+  decision.parts_ordered:        'تم طلب قطع الغيار'
+  decision.ready_for_collection: 'السيارة جاهزة للاستلام'
+  decision.declined_by_customer: 'العميل رفض العرض'

@@ -1,0 +1,15 @@
+flow_id: open-support
+
+strings:
+  # Type picker (shown only when the agent didn't already classify the issue).
+  pick_header:  '🛠️ After-sales support'
+  pick_body:    'What kind of help do you need?'
+  pick_cta:     'Choose'
+  opt_roadside: '🚨 Roadside / breakdown'
+  opt_charging: '🔌 Charging problem'
+  opt_other:    '🗂️ Something else'
+
+  gap:       'Politely ask the customer for the issue details in their language.'
+  f_details: 'Please describe the problem in detail?'
+  f_phone:   'Your phone number? (so after-sales support can reach you)'
+  confirm:   'Your support ticket has been logged as XP-{ref} 🎫 Our team will contact you within {sla} hours. You can ask me about its status any time.'

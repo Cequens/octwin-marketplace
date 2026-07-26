@@ -1,0 +1,77 @@
+# nile-academy — a private academy in Cairo taking admissions on WhatsApp.
+#
+# Demonstrates MILESTONES as the thing an admissions office actually manages. A long
+# funnel (enquiry → tour → application → assessment → offer → enrolled) is useless as a
+# list of stages; what a registrar needs is "how many reached assessment this intake, and
+# where do we lose them". Each money moment is a declared `milestone:` and the flows fire
+# `record_milestone` when it really happens — so the console funnel and the completion
+# rates are real, with no reporting code. Campus tours ride the scheduling engine.
+
+id:          nile-academy
+version:     1.0.0
+description: 'Private academy admissions — programmes and fees, campus-tour booking, and an application funnel with real milestones from enquiry to enrolment.'
+
+listing:
+  title:    'Nile Academy'
+  tagline:  'Admissions from enquiry to enrolment, with a funnel that is real'
+  category: education
+  author:   { name: 'Octwin', url: 'https://octwin.ai' }
+  public:   true
+
+supported_channels: [whatsapp, web]
+required_adapters:  [messaging, vision, storage]
+
+default_settings:
+  locale: ar
+
+default_conversation_context:
+  lang: { type: enum, enum: [ar, en, bilingual], default: ar, describe: 'Reply language.' }
+
+flows:
+  - home
+  - programmes
+  - book-tour
+  - apply
+
+inbound_preprocessing:
+  image:
+    enabled: true
+    ack: '📄 وصل المستند، جاري قراءته...'
+    prompt: |-
+      You are an admissions document-intake assistant for a private school. Classify each image and extract structured fields. Do NOT assess the student, do NOT comment on whether they will be accepted, and do NOT interpret grades.
+
+      Respond with JSON only (no markdown) — an object with an `images` array holding EXACTLY ONE entry per input image, IN ORDER:
+      {
+        "images": [
+          {
+            "media_ref": "<copy the MEDIA- ref for this image, in order>",
+            "doc_type": "birth_certificate" | "report_card" | "national_id" | "vaccination" | "transfer_certificate" | "other",
+            "student_name": "<student name as printed, else null>",
+            "school_year": "<the year or grade shown, else null>",
+            "previous_school": "<previous school name if shown, else null>",
+            "summary_ar": "<one short Arabic line describing the document>"
+          }
+        ]
+      }
+      Return entries in the SAME ORDER as provided; copy each entry's media_ref from the list.
+    note_template: |-
+      $lines($compact([
+        "📄 مستند ({$media_ref}) — النوع: {$doc_type ?? 'غير محدد'}",
+        $student_name != null    ? "الطالب: {$student_name}" : null,
+        $school_year != null     ? "الصف: {$school_year}" : null,
+        $previous_school != null ? "المدرسة السابقة: {$previous_school}" : null,
+        $summary_ar != null      ? "ملخص: {$summary_ar}" : null
+      ]))
+
+agents:
+  - id:                admissions
+    display_name:      'Nile Academy Admissions'
+    default_model:     'openrouter/google/gemini-3.1-flash-lite-preview'
+    tools:
+      - home
+      - programmes
+      - book-tour
+      - apply
+    include_platform_protocol: true
+    instructions:
+      - file: prompts/identity.md

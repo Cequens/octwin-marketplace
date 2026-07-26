@@ -1,0 +1,48 @@
+flow_id:     home
+version:     1
+description: |-
+  Main menu / welcome hub for XPeng Egypt. Call on a greeting, a vague or off-topic
+  message, or "what can you do?". Greets the customer, surfaces their open after-sales
+  complaints and any upcoming test drive, and shows a menu that routes to every capability.
+
+input:
+  message:
+    type: string
+    optional: true
+    describe: 'ONE short, warm contextual line YOU compose for THIS customer (optional). The tool fills the menu and status lines.'
+
+entry:
+  - else: true
+    goto: load
+
+steps:
+  load:
+    # Live, contact-scoped state (bare binds — the kaiian home pattern).
+    - do: case_list
+      bind: cases
+    - do: record_list
+      args: { entity: booking, active_only: true, sort_by: { field: slot_start, dir: asc } }
+      bind: bk
+    - assign:
+        open_count:    '$length($cases) - $length($filter($cases, { status: "resolved" })) - $length($filter($cases, { status: "closed" }))'
+        booking_count: '$length($bk.rows)'
+        greeting:      '$coalesce($input.message, $t("home.greeting_default"))'
+    - assign:
+        # null when zero → $lines drops it, keeping the card clean for new customers
+        complaints_line: '$open_count > 0 ? $t("home.status_complaints", { count: $open_count }) : null'
+        booking_line:    '$booking_count > 0 ? $t("home.status_booking", { count: $booking_count }) : null'
+    - render:
+        render_intent: list_picker
+        header: '{$t("home.card_header")}'
+        body:   '$lines([$greeting, $complaints_line, $booking_line])'
+        footer: '{$t("home.card_footer")}'
+        cta:    '{$t("home.cta")}'
+        items:
+          - { title: '{$t("home.row_browse_title")}',    description: '{$t("home.row_browse_desc")}',    on_select: { invoke: browse-models } }
+          - { title: '{$t("home.row_testdrive_title")}', description: '{$t("home.row_testdrive_desc")}', on_select: { invoke: book-test-drive } }
+          - { title: '{$t("home.row_quote_title")}',     description: '{$t("home.row_quote_desc")}',     on_select: { invoke: capture-lead } }
+          - { title: '{$t("home.row_branches_title")}',  description: '{$t("home.row_branches_desc")}',  on_select: { invoke: list-branches } }
+          - { title: '{$t("home.row_aftersales_title")}', description: '{$t("home.row_aftersales_desc")}', on_select: { invoke: after-sales } }
+      memory_note: 'Showed home menu — {$open_count} open ticket(s), {$booking_count} upcoming test drive(s).'
+      data: { open_count: '$open_count', booking_count: '$booking_count' }
+    - end: applied

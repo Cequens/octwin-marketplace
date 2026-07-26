@@ -1,0 +1,32 @@
+# Worklist declaration — the CREDIT QUEUE, on the `case` system entity.
+#
+# Every custom disposition here is a decision only an underwriter may make, and each one
+# relays to the customer by itself. There is deliberately no "approve" the bot can reach:
+# the flow can open a review and report its status, and that is the entire surface.
+
+queues:
+  - { key: credit_review,  name: 'Credit Review' }
+  - { key: docs_desk,      name: 'Documents Desk' }
+  - { key: sharia_desk,    name: 'Sharia Compliance' }
+
+work:
+  case:
+    type_field: case_type
+    actions:
+      pre_approved:
+        label:  { ar: 'موافقة مبدئية', en: 'Pre-approved' }
+        params: [{ name: amount, type: number, required: true, label: 'Approved amount (SAR)' }, { name: valid_days, type: number, required: false, label: 'Offer valid (days)' }]
+        relay:  true
+      declined:
+        label:  { ar: 'لم تتم الموافقة', en: 'Declined' }
+        params: [{ name: reason, type: text, required: true, label: 'Reason (customer-safe wording)' }]
+        relay:  true
+      docs_required:
+        label:  { ar: 'مطلوب مستندات', en: 'Documents required' }
+        params: [{ name: documents, type: text, required: true, label: 'Which documents' }]
+        relay:  true
+    types:
+      finance_application: { queue: credit_review, priority: high,   actions: [pre_approved, declined, docs_required], sla: { resolve_within_hours: 48 } }
+      document_review:     { queue: docs_desk,     priority: normal, actions: [docs_required],                         sla: { resolve_within_hours: 24 } }
+      sharia_question:     { queue: sharia_desk,   priority: normal,                                                   sla: { resolve_within_hours: 48 } }
+      general_query:       { queue: credit_review, priority: low,                                                      sla: { resolve_within_hours: 48 } }

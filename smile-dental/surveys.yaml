@@ -1,0 +1,20 @@
+# Surveys declaration — the post-visit rating.
+#
+# `subject: booking` means each response is ABOUT one visit, and `survey_submit`
+# upserts on (survey_key, subject_ref) — so a patient who re-rates updates their
+# answer instead of stacking a duplicate, and the stars can arrive from a tap while
+# the comment arrives on the next free-text turn (two submits, one response).
+#
+# The rated DENTIST is stamped onto the response by my-visits (xrm.yaml widens
+# `survey_response` with a `dentist` ref). That one field is what lets
+# `record_aggregate` average a dentist's scores back onto their record — which the
+# dentist picker then ranks on.
+
+surveys:
+  visit_feedback:
+    label:   { en: 'Visit feedback', ar: 'تقييم الزيارة' }
+    subject: booking
+    questions:
+      - { key: stars,   type: rating, scale: 5, required: true, label: { en: 'Rating', ar: 'التقييم' } }
+      - { key: comment, type: text,                             label: { en: 'Comment', ar: 'ملاحظة' } }
+    score: stars

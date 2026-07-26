@@ -1,0 +1,11 @@
+flow_id: track
+
+strings:
+  header:       '📦 شحنة {tn}'
+  status:       '📍 الحالة: {status}'
+  last_scan:    '🕐 آخر تحديث: {scan}'
+  recipient:    '👤 المستلم: {recipient}'
+  cod:          '💵 مطلوب تحصيل: {amount}'
+  footer:       'الحالة محدّثة من نظام الشحن لحظة بلحظة.'
+  btn_problem:  '⚠️ في مشكلة'
+  btn_pickup:   '🚚 اطلب استلام'

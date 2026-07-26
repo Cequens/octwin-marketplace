@@ -1,0 +1,60 @@
+# my-trip — the pilgrim's own booking(s) with a stage explainer. Contact-scoped,
+# so no identity plumbing. The stage hint is what turns a bare status word into
+# something a pilgrim can act on.
+
+flow_id:     my-trip
+version:     1
+description: |-
+  Show this pilgrim's own bookings and where each one stands. Call for "حجزي",
+  "وين وصلت التأشيرة", "my booking". Never state a stage from memory — call this.
+
+input:
+  message:
+    type:     string
+    optional: true
+    describe: 'Optional note from the pilgrim.'
+
+entry:
+  - else: true
+    goto: load
+
+steps:
+  load:
+    - do: record_list
+      args: { entity: trip, limit: 10, active_only: false, sort: created_at }
+      bind: page
+      outputs:
+        ok:     [{ goto: show }]
+        empty:  [{ goto: none }]
+        failed: [{ goto: unavailable }]
+
+  show:
+    - assign:
+        trip_lines: '$map($page.rows, $lines($compact([
+                        "🧾 #" + $item.record_number,
+                        $item.fields.package_label,
+                        $item.fields.travellers != null ? ($item.fields.travellers + $t("my-trip.pax_suffix")) : null,
+                        $enum_label($item.stage, "stage", $item.stage)
+                      ]), " · "))'
+        latest: '$page.rows[0]'
+    - render:
+        render_intent: detail_card
+        header: '{$t("my-trip.header")}'
+        body: '$lines($compact($concat(
+                 $trip_lines,
+                 [$latest != null ? $enum_label($latest.stage, "stage_hint", "") : null]
+               )), "\n")'
+        buttons:
+          - { title: '{$t("my-trip.btn_visa")}',     on_select: { invoke: visa-file, with: { intent: status } } }
+          - { title: '{$t("my-trip.btn_upload")}',   on_select: { invoke: visa-file, with: { intent: upload } } }
+          - { title: '{$t("my-trip.btn_packages")}', on_select: { invoke: packages } }
+      memory_note: 'Showed {$length($page.rows)} trip(s); latest stage {$latest.stage}.'
+    - end: applied
+
+  none:
+    - answer:
+        instructions: 'This pilgrim has no booking yet. Say so warmly in one line and offer to show the packages.'
+
+  unavailable:
+    - answer:
+        instructions: 'The booking lookup failed. Apologise in one line and offer to try again shortly. Do NOT state a stage from memory.'

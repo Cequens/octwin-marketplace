@@ -1,0 +1,41 @@
+# nile-academy — pack-wide Arabic strings.
+# `stage.*` / `stage_hint.*` are the admissions funnel, resolved via `$enum_label`.
+# `status.*` covers the `booking` system entity (campus tours).
+pack_id: nile-academy
+strings:
+  field_picker_footer: 'اختار من القائمة 👆'
+
+  status.requested:  'بانتظار التأكيد'
+  status.confirmed:  'مؤكَّدة ✅'
+  status.checked_in: 'في المدرسة'
+  status.completed:  'تمت الزيارة'
+  status.cancelled:  'ملغاة'
+  status.no_show:    'لم يتم الحضور'
+
+  stage.enquiry:              'استفسار'
+  stage.tour_booked:          'حجز زيارة'
+  stage.application_started:  'الطلب قيد الاستكمال'
+  stage.documents_complete:   'المستندات مكتملة'
+  stage.assessment_scheduled: 'تحديد موعد التقييم'
+  stage.offer_made:           'صدر القبول 🎉'
+  stage.enrolled:             'تم التسجيل'
+  stage.declined:             'لم يتم القبول'
+
+  stage_hint.enquiry:              'ℹ️ لسه ما بدأنا الطلب — قول لي البرنامج وأكمل معاك.'
+  stage_hint.tour_booked:          'ℹ️ زيارتك محجوزة. بعد الجولة نكمل الطلب.'
+  stage_hint.application_started:  'ℹ️ ناقص المستندات — ابعث شهادة الميلاد وآخر شهادة درجات.'
+  stage_hint.documents_complete:   'ℹ️ الملف مكتمل، وفريق القبول بيحدد موعد التقييم.'
+  stage_hint.assessment_scheduled: 'ℹ️ موعد التقييم متحدد — بنبعتلك التفاصيل.'
+  stage_hint.offer_made:           'ℹ️ صدر القبول 🎉 راجع خطوات التسجيل والمصروفات.'
+  stage_hint.enrolled:             'ℹ️ تم التسجيل. أهلاً بكم في أكاديمية النيل!'
+  stage_hint.declined:             'ℹ️ للأسف لم يتم القبول هذه المرة.'
+
+  stage_level.kg:          'روضة'
+  stage_level.primary:     'ابتدائي'
+  stage_level.preparatory: 'إعدادي'
+  stage_level.secondary:   'ثانوي'
+
+  curriculum.national: 'وطني'
+  curriculum.british:  'بريطاني'
+  curriculum.american: 'أمريكي'
+  curriculum.ib:       'بكالوريا دولية'

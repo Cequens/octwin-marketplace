@@ -1,0 +1,102 @@
+# XRM declaration for swiftship-courier.
+#
+#  • `rate` — the live rate card (reference). Pickup pricing reads it rather than
+#             hardcoding a number, so a price change is a record edit.
+#  • `shipment` — the parcel. Its PIPELINE is the tracking status the customer sees, and
+#             `dedupe_by: tracking_number` is what makes a lookup by waybill work.
+#  • `pickup_request` — a booked collection, its own small pipeline.
+
+entities:
+  rate:
+    label: { en: 'Rate', ar: 'سعر' }
+    fields:
+      code:        { type: text, required: true, label: { en: 'Code', ar: 'الرمز' } }
+      service:     { type: select, options: [same_day, next_day, standard, bulky], label: { en: 'Service', ar: 'الخدمة' } }
+      from_region: { type: select, options: [cairo, alexandria, delta, upper], label: { en: 'From', ar: 'من' } }
+      to_region:   { type: select, options: [cairo, alexandria, delta, upper], label: { en: 'To', ar: 'إلى' } }
+      up_to_kg:    { type: number, label: { en: 'Up to (kg)', ar: 'حتى (كجم)' } }
+      price:       { type: money, label: { en: 'Price', ar: 'السعر' } }
+      currency:    { type: text, label: { en: 'Currency', ar: 'العملة' }, default: 'EGP' }
+      eta_hours:   { type: number, label: { en: 'ETA (hours)', ar: 'مدة التوصيل (ساعة)' } }
+    list: [service, from_region, to_region, price]
+    dedupe_by: code
+
+  shipment:
+    label: { en: 'Shipment', ar: 'شحنة' }
+    fields:
+      tracking_number: { type: text, required: true, unique: true, label: { en: 'Tracking number', ar: 'رقم التتبع' } }
+      service:         { type: select, options: [same_day, next_day, standard, bulky], label: { en: 'Service', ar: 'الخدمة' } }
+      region:          { type: select, options: [cairo, alexandria, delta, upper], label: { en: 'Region', ar: 'المنطقة' } }
+      recipient:       { type: text, label: { en: 'Recipient', ar: 'المستلم' } }
+      recipient_phone: { type: text, label: { en: 'Recipient phone', ar: 'هاتف المستلم' } }
+      address:         { type: textarea, label: { en: 'Address', ar: 'العنوان' } }
+      weight_kg:       { type: number, label: { en: 'Weight (kg)', ar: 'الوزن (كجم)' } }
+      cod_amount:      { type: money, label: { en: 'COD amount', ar: 'التحصيل عند التسليم' } }
+      currency:        { type: text, label: { en: 'Currency', ar: 'العملة' }, default: 'EGP' }
+      last_scan:       { type: text, label: { en: 'Last scan', ar: 'آخر تحديث' } }
+    list: [tracking_number, region, service]
+    search: { text: [tracking_number, recipient] }
+    # The lookup key — `record_get match: { field: tracking_number }` resolves on it.
+    dedupe_by: tracking_number
+    pipeline:
+      stages:   [created, picked_up, in_transit, at_hub, out_for_delivery, delivered, failed_attempt, returned]
+      initial:  created
+      terminal: [delivered, returned]
+    milestones:
+      collected: { label: { en: 'Collected', ar: 'تم الاستلام' }, stage: picked_up }
+      delivered: { label: { en: 'Delivered', ar: 'تم التسليم' },  stage: delivered, terminal: true }
+
+  pickup_request:
+    label: { en: 'Pickup request', ar: 'طلب استلام' }
+    fields:
+      service:      { type: select, options: [same_day, next_day, standard, bulky], label: { en: 'Service', ar: 'الخدمة' } }
+      from_region:  { type: select, options: [cairo, alexandria, delta, upper], label: { en: 'From', ar: 'من' } }
+      to_region:    { type: select, options: [cairo, alexandria, delta, upper], label: { en: 'To', ar: 'إلى' } }
+      weight_band:  { type: select, options: [under_1, under_5, under_20, over_20], label: { en: 'Weight band', ar: 'وزن الشحنة' } }
+      pickup_address: { type: textarea, label: { en: 'Pickup address', ar: 'عنوان الاستلام' } }
+      recipient:    { type: text, label: { en: 'Recipient', ar: 'المستلم' } }
+      recipient_phone: { type: text, label: { en: 'Recipient phone', ar: 'هاتف المستلم' } }
+      window:       { type: select, options: [morning, afternoon, evening], label: { en: 'Window', ar: 'وقت الاستلام' } }
+      quoted_price: { type: money, label: { en: 'Quoted price', ar: 'السعر' } }
+      currency:     { type: text, label: { en: 'Currency', ar: 'العملة' }, default: 'EGP' }
+      cod_amount:   { type: money, label: { en: 'COD amount', ar: 'التحصيل عند التسليم' } }
+    list: [service, from_region, to_region, quoted_price]
+    pipeline:
+      stages:   [requested, scheduled, collected, cancelled]
+      initial:  requested
+      terminal: [collected, cancelled]
+
+segments:
+  live_shipments:
+    entity: shipment
+    label: { en: 'In flight', ar: 'شحنات جارية' }
+    where: { all: [{ active: true }] }
+
+demo:
+  # A small but real rate card — the pickup flow prices from these rows.
+  - entity: rate
+    fields: { code: 'SD-CAI-CAI-5',  service: same_day, from_region: cairo, to_region: cairo, up_to_kg: 5, price: 75, currency: EGP, eta_hours: 8 }
+  - entity: rate
+    fields: { code: 'ND-CAI-ALX-5',  service: next_day, from_region: cairo, to_region: alexandria, up_to_kg: 5, price: 95, currency: EGP, eta_hours: 24 }
+  - entity: rate
+    fields: { code: 'ST-CAI-DEL-5',  service: standard, from_region: cairo, to_region: delta, up_to_kg: 5, price: 70, currency: EGP, eta_hours: 48 }
+  - entity: rate
+    fields: { code: 'ST-CAI-UPP-5',  service: standard, from_region: cairo, to_region: upper, up_to_kg: 5, price: 85, currency: EGP, eta_hours: 72 }
+  - entity: rate
+    fields: { code: 'ST-CAI-CAI-20', service: standard, from_region: cairo, to_region: cairo, up_to_kg: 20, price: 120, currency: EGP, eta_hours: 48 }
+  - entity: rate
+    fields: { code: 'BK-CAI-CAI-50', service: bulky,    from_region: cairo, to_region: cairo, up_to_kg: 50, price: 260, currency: EGP, eta_hours: 72 }
+
+  # Demo shipments at different stages, so `track` has something honest to report.
+  - entity: shipment
+    fields: { tracking_number: 'SS100200301', service: next_day, region: cairo, recipient: 'منى سعيد', recipient_phone: '01001112233', address: 'مدينة نصر، شارع مصطفى النحاس، عمارة ١٢', weight_kg: 2, cod_amount: 850, currency: EGP, last_scan: 'مركز فرز مدينة نصر' }
+    stage: out_for_delivery
+  - entity: shipment
+    fields: { tracking_number: 'SS100200302', service: standard, region: alexandria, recipient: 'أحمد فؤاد', recipient_phone: '01004445566', address: 'سيدي جابر، شارع أبو قير، برج النور', weight_kg: 8, currency: EGP, last_scan: 'مركز فرز سموحة' }
+    stage: in_transit
+  - entity: shipment
+    fields: { tracking_number: 'SS100200303', service: same_day, region: cairo, recipient: 'سلمى حسن', recipient_phone: '01007778899', address: 'المعادي، شارع ٩، عمارة ٤', weight_kg: 1, currency: EGP, last_scan: 'تم التسليم للمستلم' }
+    stage: delivered
+  - entity: shipment
+    fields: { tracking_number: 'SS100200304', service: standard, region: delta, recipient: 'كريم عبد الله', recipient_phone: '01002223344', address: 'المنصورة، شارع الجمهورية، عمارة ٧', weight_kg: 4, cod_amount: 400, currency: EGP, last_scan: 'محاولة تسليم — المستلم غير متواجد' }
+    stage: failed_attempt

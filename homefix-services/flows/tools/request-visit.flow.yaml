@@ -1,0 +1,225 @@
+# request-visit — the dispatch journey. Trade → urgency → emirate → address → photo →
+# confirm → a routed work order with a real response window.
+#
+# Two things carry the weight here. First, the URGENCY the customer picks is the work
+# type, which is what selects the SLA in worklist.yaml — so the response window quoted
+# back is the queue's own number, never prose. Second, the EMIRATE is the routing key,
+# so the order lands with the regional crew rather than a central inbox.
+
+flow_id:     request-visit
+version:     1
+description: |-
+  [interactive] Raise a maintenance work order and dispatch it. Call when the customer
+  reports a fault or asks for a technician. Pass `service_id` when they tapped a
+  service card, and pre-fill `trade` / `urgency` / `fault` from a photo or voice note
+  the platform already read.
+
+input:
+  service_id:
+    type:     string
+    optional: true
+    describe: 'Service record id from a services card — never a typed name.'
+  trade:
+    type:     enum
+    enum:     [plumbing, electrical, ac, carpentry, painting, appliance, other]
+    optional: true
+    describe: 'The trade, from the briefing the platform gave you after reading a photo. Omit if unsure.'
+  urgency:
+    type:     enum
+    enum:     [routine, soon, emergency]
+    optional: true
+    describe: 'Only pass `emergency` when the customer describes water flooding, no power, a gas smell, or a security risk — it puts a 4-hour promise on the company.'
+  fault:
+    type:     string
+    optional: true
+    describe: "The fault in the customer's own words (may come from a voice note)."
+  fault_photo:
+    type:     string
+    optional: true
+    describe: 'The MEDIA- ref of a photo the customer already sent of the fault, if there is one. NEVER invent a ref.'
+
+entry:
+  - else: true
+    goto: collect_fields
+
+steps:
+  collect_fields:
+    - collect:
+        before_each:
+          - assign: { svc_label: null, svc_trade: null }
+          - if: '$state.service_id != null'
+            then:
+              - do: record_get
+                args: { entity: trade_service, record_id: '$state.service_id' }
+                bind: svc
+                outputs:
+                  ok:        []
+                  not_found: [{ assign: { state: '$merge($state, { service_id: null })' } }]
+                  failed:    []
+              - if: '$svc.fields != null'
+                then:
+                  - assign:
+                      svc_label: '$svc.fields.name'
+                      svc_trade: '$svc.fields.trade'
+          - assign: { eff_trade: '$coalesce($svc_trade, $state.trade)' }
+        before_prompt:
+          - assign:
+              progress_card: '$lines($compact([
+                                $t("request-visit.progress.header"),
+                                $svc_label != null ? $t("request-visit.progress.service", { service: $svc_label }) : null,
+                                $state.urgency != null ? $t("request-visit.progress.urgency") : null,
+                                $state.emirate != null ? $t("request-visit.progress.emirate") : null
+                              ]), "\n")'
+        progress: '$progress_card'
+        gap_instructions: 'Ask the customer for the next missing detail ({$collect_field}), one at a time, in their language. Re-call request-visit once they answer. NEVER quote a repair price.'
+        fields:
+          - field: service_id
+            when: '$state.service_id == null'
+            label: '$t("request-visit.label.service")'
+            options:
+              header: request-visit.field_header.service
+              cta:    request-visit.field_cta.service
+              fetch:  { do: record_search, args: { entity: trade_service, query: '', limit: 10 }, bind: svcs }
+              rows:   '$svcs.rows'
+              map:
+                value:       '$item.id'
+                label:       '$item.fields.name'
+                description: '$format_money_field($item.fields.price_from, $coalesce($item.fields.currency, "AED"))'
+                selection:   { svc_label: '$item.fields.name', svc_trade: '$item.fields.trade' }
+              auto_resolve: true
+          # The urgency IS the work type — it sets the SLA, so the customer chooses
+          # their own response window knowingly.
+          - field: urgency
+            label: '$t("request-visit.label.urgency")'
+            options:
+              header: request-visit.field_header.urgency
+              cta:    request-visit.field_cta.urgency
+              items:
+                - { value: emergency, label: request-visit.urg.emergency }
+                - { value: soon,      label: request-visit.urg.soon }
+                - { value: routine,   label: request-visit.urg.routine }
+          - field: emirate
+            label: '$t("request-visit.label.emirate")'
+            options:
+              header: request-visit.field_header.emirate
+              cta:    request-visit.field_cta.emirate
+              items:
+                - { value: dubai,     label: request-visit.em.dubai }
+                - { value: sharjah,   label: request-visit.em.sharjah }
+                - { value: abu_dhabi, label: request-visit.em.abu_dhabi }
+                - { value: ajman,     label: request-visit.em.ajman }
+                - { value: rak,       label: request-visit.em.rak }
+          - field: address
+            label:    '$t("request-visit.label.address")'
+            describe: 'Building, flat/villa number and a landmark the technician can find.'
+          - field: contact_name
+            label:    '$t("request-visit.label.contact")'
+            describe: 'Who the technician should ask for on arrival.'
+          - field: preferred_window
+            label: '$t("request-visit.label.window")'
+            options:
+              header: request-visit.field_header.window
+              cta:    request-visit.field_cta.window
+              items:
+                - { value: morning,   label: request-visit.win.morning }
+                - { value: afternoon, label: request-visit.win.afternoon }
+                - { value: evening,   label: request-visit.win.evening }
+          - field: fault
+            label:    '$t("request-visit.label.fault")'
+            describe: "What is wrong, in the customer's own words."
+        complete: [{ goto: save_property }]
+
+  save_property:
+    # Deduped on the label, so a returning customer's home is updated in place and the
+    # technician's notes stay attached to one property.
+    - do: record_save
+      args:
+        entity: property
+        match:  { field: label, value: '$state.address' }
+        fields:
+          label:   '$state.address'
+          emirate: '$state.emirate'
+          address: '$state.address'
+      bind: prop
+      outputs:
+        ok:      [{ goto: confirm }]
+        invalid: [{ goto: confirm }]
+        failed:  [{ goto: confirm }]
+
+  confirm:
+    - assign:
+        callout: '$coalesce($config.pricing.callout_fee, 150)'
+        surcharge: '$state.urgency == "emergency" ? $coalesce($config.pricing.emergency_surcharge, 250) : 0'
+    - use: approve_apply
+      with:
+        preview: '$lines($compact([
+                    $t("request-visit.preview.header"),
+                    $t("request-visit.preview.service", { service: $coalesce($svc_label, $state.svc_label, "-") }),
+                    $t("request-visit.preview.urgency", { urgency: $enum_label($state.urgency, "urgency", $state.urgency) }),
+                    $t("request-visit.preview.emirate", { emirate: $enum_label($state.emirate, "emirate", $state.emirate) }),
+                    $t("request-visit.preview.address", { address: $state.address }),
+                    $t("request-visit.preview.window", { window: $enum_label($state.preferred_window, "window", $state.preferred_window) }),
+                    $t("request-visit.preview.callout", { fee: $format_money($callout, "AED") }),
+                    $surcharge > 0 ? $t("request-visit.preview.surcharge", { fee: $format_money($surcharge, "AED") }) : null,
+                    $t("request-visit.preview.note")
+                  ]), "\n")'
+        header:        '{$t("request-visit.approve_header")}'
+        footer:        '{$t("request-visit.approve_footer")}'
+        confirm_title: '{$t("request-visit.confirm_title")}'
+        cancel_title:  '{$t("request-visit.cancel_title")}'
+        apply:         raise_order
+        abort:         aborted
+        on_other:      collect_fields
+        memory_note:   'Work order NOT raised yet — awaiting the customer''s ✅.'
+
+  raise_order:
+    # `work_open` writes the record AND enrols it: the queue comes from `route_by:
+    # emirate`, the SLA from the `urgency` type. `sla_due_at` comes back, so the window
+    # quoted below is the queue's own number.
+    - do: work_open
+      args:
+        entity: work_order
+        stage:  received
+        fields:
+          urgency:          '$state.urgency'
+          emirate:          '$state.emirate'
+          trade:            '$coalesce($eff_trade, $state.svc_trade, "other")'
+          service:          '$state.service_id'
+          service_label:    '$coalesce($svc_label, $state.svc_label)'
+          property:         '$prop.record_id'
+          address:          '$state.address'
+          fault:            '$state.fault'
+          fault_photo:      '$state.fault_photo'   # an agent-supplied MEDIA- ref, or absent
+          preferred_window: '$state.preferred_window'
+          contact_name:     '$state.contact_name'
+      bind: order
+      outputs:
+        ok:     [{ goto: dispatched }]
+        failed: [{ goto: raise_failed }]
+
+  dispatched:
+    - assign:
+        window_hours: '$enum_lookup($state.urgency, { emergency: 4, soon: 12, routine: 48 }, 48)'
+    - render:
+        render_intent: detail_card
+        header: '{$t("request-visit.done_header")}'
+        body: '$lines($compact([
+                 $t("request-visit.done_ref", { ref: $order.record_number }),
+                 $t("request-visit.done_crew", { emirate: $enum_label($state.emirate, "emirate", $state.emirate) }),
+                 $t("request-visit.done_window", { hours: $window_hours }),
+                 $t("request-visit.done_next")
+               ]), "\n")'
+        footer: '{$t("request-visit.done_footer")}'
+        buttons:
+          - { title: '{$t("request-visit.btn_mine")}',     on_select: { invoke: my-requests } }
+          - { title: '{$t("request-visit.btn_services")}', on_select: { invoke: services } }
+      memory_note: 'Raised work_order #{$order.record_number} — urgency {$state.urgency}, queue {$order.queue_key}, SLA due {$order.sla_due_at}. NO repair price was quoted.'
+      data: { order_number: '$order.record_number' }
+    - end: applied
+
+  aborted:
+    - end: { status: aborted, body: '{$t("request-visit.aborted")}' }
+
+  raise_failed:
+    - answer:
+        instructions: 'The work order could not be raised. Say so plainly in one line and give the customer the dispatch line to call. Do NOT claim a technician is coming.'

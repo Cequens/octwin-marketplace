@@ -1,0 +1,40 @@
+# Worklist declaration — the CLAIMS DESK, on the `case` system entity (so the casework
+# preset merges the standard resolve / reject / request_more_info / escalate set in).
+#
+# A lost or damaged parcel is not something a bot may settle: it needs evidence, a
+# policy, and a person. So the flow opens a case, and the only compensation path is a
+# human picking `compensation_approved` with an amount — which relays to the customer on
+# its own. The agent's job is to state the ticket number and the real SLA, nothing more.
+
+queues:
+  - { key: claims_desk,   name: 'Claims Desk' }
+  - { key: ops_cairo,     name: 'Cairo Operations' }
+  - { key: ops_alex,      name: 'Alexandria Operations' }
+  - { key: ops_delta,     name: 'Delta Operations' }
+  - { key: ops_upper,     name: 'Upper Egypt Operations' }
+
+work:
+  case:
+    type_field: case_type
+    actions:
+      compensation_approved:
+        label:  { ar: 'تمت الموافقة على التعويض', en: 'Compensation approved' }
+        params: [{ name: amount, type: number, required: true, label: 'Compensation (EGP)' }]
+        relay:  true
+      reschedule_delivery:
+        label:  { ar: 'إعادة جدولة التسليم', en: 'Delivery rescheduled' }
+        params: [{ name: date, type: text, required: true, label: 'New delivery date' }]
+        relay:  true
+      returned_to_sender:
+        label:  { ar: 'أُعيد للراسل', en: 'Returned to sender' }
+        params: []
+        relay:  true
+    types:
+      # Damage and loss are decided centrally — one policy, one desk.
+      damaged_parcel:  { queue: claims_desk, priority: high,   actions: [compensation_approved, returned_to_sender], sla: { resolve_within_hours: 24 } }
+      lost_parcel:     { queue: claims_desk, priority: urgent,  actions: [compensation_approved],                    sla: { resolve_within_hours: 12 } }
+      # A late or failed delivery is a REGIONAL problem — route it by region so the
+      # branch that holds the parcel is the one that answers.
+      late_delivery:   { route_by: region, map: { cairo: ops_cairo, alexandria: ops_alex, delta: ops_delta, upper: ops_upper }, fallback: claims_desk, priority: normal, actions: [reschedule_delivery], sla: { resolve_within_hours: 8 } }
+      wrong_address:   { route_by: region, map: { cairo: ops_cairo, alexandria: ops_alex, delta: ops_delta, upper: ops_upper }, fallback: claims_desk, priority: normal, actions: [reschedule_delivery, returned_to_sender], sla: { resolve_within_hours: 8 } }
+      general_query:   { queue: claims_desk, priority: low,    sla: { resolve_within_hours: 48 } }

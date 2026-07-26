@@ -1,0 +1,58 @@
+# my-orders — the patient's own prescription requests and their stage. The stage hint is
+# careful: `pharmacist_review` says a pharmacist is reading it, not that it is approved.
+
+flow_id:     my-orders
+version:     1
+description: |-
+  Show this patient's prescription requests and where each one stands. Call for "طلباتي",
+  "الروشتة وصلت فين". Never state a stage or an approval from memory — call this.
+
+input:
+  message:
+    type:     string
+    optional: true
+    describe: 'Optional note from the patient.'
+
+entry:
+  - else: true
+    goto: load
+
+steps:
+  load:
+    - do: record_list
+      args: { entity: rx_request, limit: 10, active_only: false, sort: created_at }
+      bind: page
+      outputs:
+        ok:     [{ goto: show }]
+        empty:  [{ goto: none }]
+        failed: [{ goto: unavailable }]
+
+  show:
+    - assign:
+        rx_lines: '$map($page.rows, $lines($compact([
+                      "🧾 #" + $item.record_number,
+                      $item.fields.patient_name,
+                      $enum_label($item.fields.delivery_area, "area", $item.fields.delivery_area),
+                      $enum_label($item.stage, "stage", $item.stage)
+                    ]), " · "))'
+        latest: '$page.rows[0]'
+    - render:
+        render_intent: detail_card
+        header: '{$t("my-orders.header")}'
+        body: '$lines($compact($concat(
+                 $rx_lines,
+                 [$latest != null ? $enum_label($latest.stage, "stage_hint", "") : null]
+               )), "\n")'
+        buttons:
+          - { title: '{$t("my-orders.btn_rx")}',  on_select: { invoke: prescription } }
+          - { title: '{$t("my-orders.btn_otc")}', on_select: { invoke: otc } }
+      memory_note: 'Showed {$length($page.rows)} prescription request(s); latest stage {$latest.stage}.'
+    - end: applied
+
+  none:
+    - answer:
+        instructions: 'This patient has no prescription request yet. Say so in one line and offer to take a photo of one, or to shop the shelf.'
+
+  unavailable:
+    - answer:
+        instructions: 'The lookup failed. Apologise in one line and offer to try again shortly. Do NOT invent a branch name, number or phone — this pack holds none. Do NOT state a stage from memory.'

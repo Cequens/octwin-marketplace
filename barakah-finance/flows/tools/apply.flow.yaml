@@ -1,0 +1,202 @@
+# apply — collect a complete application, then hand the DECISION to a human.
+#
+# The flow's last act is `case_open` into the credit queue, and the card it renders says
+# exactly two things the customer can rely on: their application number, and the real SLA
+# from the queue config. It states no outcome and no likelihood, because it has none.
+#
+# The application record stops at `submitted`. There is no stage in `applicant` an
+# approval could be written into, by design.
+
+flow_id:     apply
+version:     1
+description: |-
+  [interactive] Take a full finance application and open a credit review. Call when the
+  customer wants to apply. Pre-fill `full_name` / `monthly_income` from a document the
+  platform already read. NEVER tell the customer whether they will be approved.
+
+input:
+  product_id:
+    type:     string
+    optional: true
+    describe: 'Product record id from a products card or an estimate.'
+  full_name:
+    type:     string
+    optional: true
+    describe: "The applicant's name, if already known (may come from an ID photo)."
+  monthly_income:
+    type:     number
+    optional: true
+    describe: 'Monthly income in SAR — may come from a salary certificate the platform read. Never invent it.'
+
+entry:
+  - else: true
+    goto: gather
+
+steps:
+  gather:
+    - collect:
+        before_each:
+          - assign: { p_label: null }
+          - if: '$state.product_id != null'
+            then:
+              - do: record_get
+                args: { entity: finance_product, record_id: '$state.product_id' }
+                bind: prod
+                outputs:
+                  ok:        []
+                  not_found: [{ assign: { state: '$merge($state, { product_id: null })' } }]
+                  failed:    []
+              - if: '$prod.fields != null'
+                then:
+                  - assign: { p_label: '$prod.fields.name' }
+        progress: '$lines($compact([
+                     $t("apply.progress.header"),
+                     $p_label != null ? $t("apply.progress.product", { product: $p_label }) : null,
+                     $state.employment != null ? $t("apply.progress.employment") : null,
+                     $state.city != null ? $t("apply.progress.city") : null
+                   ]), "\n")'
+        gap_instructions: 'Ask for the next detail ({$collect_field}) in one short line, in Arabic. Re-call apply once they answer. NEVER comment on their chances, and never ask for a password, an OTP or a card number.'
+        fields:
+          - field: product_id
+            when: '$state.product_id == null'
+            label: '$t("apply.label.product")'
+            options:
+              header: apply.field_header.product
+              cta:    apply.field_cta.product
+              fetch:  { do: record_list, args: { entity: finance_product, all: true, limit: 10 }, bind: prods }
+              rows:   '$prods.rows'
+              map:
+                value:     '$item.id'
+                label:     '$item.fields.name'
+                selection: { p_label: '$item.fields.name' }
+              auto_resolve: true
+          - field: full_name
+            label:    '$t("apply.label.name")'
+            describe: 'Full name as printed on the national ID.'
+          - field: employment
+            label: '$t("apply.label.employment")'
+            options:
+              header: apply.field_header.employment
+              cta:    apply.field_cta.employment
+              items:
+                - { value: government,    label: apply.emp.government }
+                - { value: private,       label: apply.emp.private }
+                - { value: self_employed, label: apply.emp.self_employed }
+                - { value: retired,       label: apply.emp.retired }
+          - field: city
+            label: '$t("apply.label.city")'
+            options:
+              header: apply.field_header.city
+              cta:    apply.field_cta.city
+              items:
+                - { value: riyadh,  label: apply.city.riyadh }
+                - { value: jeddah,  label: apply.city.jeddah }
+                - { value: dammam,  label: apply.city.dammam }
+                - { value: makkah,  label: apply.city.makkah }
+                - { value: madinah, label: apply.city.madinah }
+                - { value: khobar,  label: apply.city.khobar }
+          - field: monthly_income
+            label:    '$t("apply.label.income")'
+            describe: 'Monthly income in SAR. Take the figure from the salary certificate when one was sent.'
+          - field: existing_obligations
+            required: false
+            label:    '$t("apply.label.obligations")'
+            describe: 'Total monthly instalments the applicant already pays, if they say.'
+        complete: [{ goto: confirm }]
+
+  confirm:
+    - use: approve_apply
+      with:
+        preview: '$lines($compact([
+                    $t("apply.preview.header"),
+                    $t("apply.preview.product", { product: $coalesce($p_label, $state.p_label, "-") }),
+                    $t("apply.preview.name", { name: $state.full_name }),
+                    $t("apply.preview.employment", { employment: $enum_label($state.employment, "employment", $state.employment) }),
+                    $t("apply.preview.city", { city: $enum_label($state.city, "city", $state.city) }),
+                    $t("apply.preview.income", { income: $format_money($state.monthly_income, "SAR") }),
+                    $t("apply.preview.consent")
+                  ]), "\n")'
+        header:        '{$t("apply.approve_header")}'
+        footer:        '{$t("apply.approve_footer")}'
+        confirm_title: '{$t("apply.confirm_title")}'
+        cancel_title:  '{$t("apply.cancel_title")}'
+        apply:         submit_application
+        abort:         aborted
+        on_other:      gather
+        memory_note:   'Application NOT submitted yet — awaiting the applicant''s explicit ✅ (it is also their consent to a credit check).'
+
+  submit_application:
+    - do: record_save
+      args:
+        entity: applicant
+        stage:  submitted
+        fields:
+          full_name:            '$state.full_name'
+          product:              '$state.product_id'
+          product_label:        '$coalesce($p_label, $state.p_label)'
+          employment:           '$state.employment'
+          city:                 '$state.city'
+          monthly_income:       '$state.monthly_income'
+          existing_obligations: '$state.existing_obligations'
+          currency:             SAR
+      bind: app
+      outputs:
+        ok:      [{ goto: open_review }]
+        invalid: [{ goto: save_failed }]
+        failed:  [{ goto: save_failed }]
+
+  open_review:
+    - do: record_milestone
+      args: { record_id: '$app.record_id', milestone: submitted }
+      detach: true
+    # The decision lives here — in a queue, with an SLA, owned by an underwriter.
+    - do: case_open
+      args:
+        type: finance_application
+        fields:
+          case_type:          finance_application
+          subject:            '$t("apply.case_subject", { name: $state.full_name })'
+          application_number: '$app.record_number'
+          product:            '$coalesce($p_label, $state.p_label)'
+          employment:         '$state.employment'
+          city:               '$state.city'
+      bind: review
+      outputs:
+        ok:     [{ goto: submitted_ok }]
+        failed: [{ goto: submitted_no_case }]
+
+  submitted_ok:
+    - render:
+        render_intent: detail_card
+        header: '{$t("apply.done_header")}'
+        body: '$lines($compact([
+                 $t("apply.done_ref", { ref: $app.record_number }),
+                 $t("apply.done_case", { ref: $review.case_number, hours: $coalesce($review.sla_hours, 48) }),
+                 $t("apply.done_docs"),
+                 $t("apply.done_no_promise")
+               ]), "\n")'
+        footer: '{$t("apply.done_footer")}'
+        buttons:
+          - { title: '{$t("apply.btn_products")}', on_select: { invoke: products } }
+          - { title: '{$t("apply.btn_home")}',     on_select: { invoke: home } }
+      memory_note: 'Submitted application #{$app.record_number} and opened credit review #{$review.case_number} in credit_review. NO decision was stated.'
+      data: { application_number: '$app.record_number', case_number: '$review.case_number' }
+    - end: applied
+
+  submitted_no_case:
+    - render:
+        render_intent: detail_card
+        header: '{$t("apply.done_header")}'
+        body: '$lines($compact([
+                 $t("apply.done_ref", { ref: $app.record_number }),
+                 $t("apply.done_no_case")
+               ]), "\n")'
+      memory_note: 'Application #{$app.record_number} saved but the credit review did NOT open — the desk must open it manually.'
+    - end: applied
+
+  aborted:
+    - end: { status: aborted, body: '{$t("apply.aborted")}' }
+
+  save_failed:
+    - answer:
+        instructions: 'The application could not be saved. Say so plainly in one line and give the branch line. Do NOT claim an application exists.'

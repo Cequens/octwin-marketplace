@@ -1,0 +1,26 @@
+# shawarma-express — pack-wide Arabic strings.
+#
+# `stage.*` / `stage_hint.*` are the `food_order` pipeline, resolved via `$enum_label`
+# so no flow hardcodes a stage word.
+pack_id: shawarma-express
+strings:
+  field_picker_footer: 'اختار من القائمة 👆'
+
+  stage.placed:           'اتسجّل'
+  stage.preparing:        'بيتجهّز في المطبخ 👨‍🍳'
+  stage.out_for_delivery: 'مع الدليفري 🛵'
+  stage.delivered:        'اتسلّم ✅'
+  stage.cancelled:        'ملغي'
+
+  stage_hint.placed:           'ℹ️ الأوردر وصل للفرع وبيتم تجهيزه.'
+  stage_hint.preparing:        'ℹ️ المطبخ بيجهّز أوردرك دلوقتي.'
+  stage_hint.out_for_delivery: 'ℹ️ الدليفري في الطريق ليك — جهّز الفلوس لو كاش.'
+  stage_hint.delivered:        'ℹ️ بالهنا والشفا 🌯'
+  stage_hint.cancelled:        'ℹ️ الأوردر ده ملغي. تحت أمرك في أي وقت.'
+
+  area.nasr_city:   'مدينة نصر'
+  area.maadi:       'المعادي'
+  area.zamalek:     'الزمالك'
+  area.heliopolis:  'مصر الجديدة'
+  area.october:     '٦ أكتوبر'
+  area.giza:        'الجيزة'

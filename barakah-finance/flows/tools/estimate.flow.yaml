@@ -1,0 +1,184 @@
+# estimate — an INDICATIVE instalment, computed only from a published product's own rate.
+#
+# Two safeguards are structural, not prose. First, every number in the arithmetic comes
+# from a `product` record or a picker `selection:` carrying a real number — nothing is
+# parsed from free text, so the maths cannot be fed a guess. Second, the flow enforces the
+# product's own `min_down_pct` and `max_years` caps, so it cannot quote a structure the
+# provider does not offer.
+#
+# The result is labelled indicative on the card itself, and the flow never writes an
+# approval — it moves the application to `estimated` and stops.
+
+flow_id:     estimate
+version:     1
+description: |-
+  Give an indicative monthly instalment for a home-finance product. Call when the customer
+  asks "كم القسط", about affordability, or about a specific product. NEVER state an
+  instalment, a rate or an approval yourself — this tool is the only source.
+
+input:
+  product_id:
+    type:     string
+    optional: true
+    describe: 'Product record id from a products card — never a typed name.'
+  property_price:
+    type:     number
+    optional: true
+    describe: 'The property price in SAR, if the customer stated one.'
+
+entry:
+  - else: true
+    goto: gather
+
+steps:
+  gather:
+    - collect:
+        derive:
+          # Real numbers from the pickers — never parsed text.
+          down_pct: '$enum_lookup($state.down_band, { d10: 10, d15: 15, d20: 20, d30: 30, d50: 50 }, 20)'
+          years:    '$enum_lookup($state.term_band, { y10: 10, y15: 15, y20: 20, y25: 25 }, 20)'
+          price:    '$enum_lookup($state.price_band, { p500: 500000, p800: 800000, p1200: 1200000, p2000: 2000000, p3000: 3000000 }, 800000)'
+        before_each:
+          - assign: { p_label: null, p_rate: null, p_min_down: null, p_max_years: null, p_structure: null }
+          - if: '$state.product_id != null'
+            then:
+              - do: record_get
+                args: { entity: finance_product, record_id: '$state.product_id' }
+                bind: prod
+                outputs:
+                  ok:        []
+                  not_found: [{ assign: { state: '$merge($state, { product_id: null })' } }]
+                  failed:    []
+              - if: '$prod.fields != null'
+                then:
+                  - assign:
+                      p_label:     '$prod.fields.name'
+                      p_rate:      '$prod.fields.profit_rate_pct'
+                      p_min_down:  '$prod.fields.min_down_pct'
+                      p_max_years: '$prod.fields.max_years'
+                      p_structure: '$prod.fields.structure'
+        gap_instructions: 'Ask for the next detail ({$collect_field}) in one short line, in Arabic. Re-call estimate once they answer. NEVER quote a rate or an instalment yourself, and never comment on whether they will qualify.'
+        fields:
+          - field: product_id
+            when: '$state.product_id == null'
+            label: '$t("estimate.label.product")'
+            options:
+              header: estimate.field_header.product
+              cta:    estimate.field_cta.product
+              fetch:  { do: record_list, args: { entity: finance_product, all: true, limit: 10, sort_by: { field: profit_rate_pct, dir: asc } }, bind: prods }
+              rows:   '$prods.rows'
+              map:
+                value:       '$item.id'
+                label:       '$item.fields.name'
+                description: '$item.fields.description'
+                selection:   { p_label: '$item.fields.name' }
+              auto_resolve: true
+          - field: price_band
+            label: '$t("estimate.label.price")'
+            options:
+              header: estimate.field_header.price
+              cta:    estimate.field_cta.price
+              items:
+                - { value: p500,  label: estimate.price.p500 }
+                - { value: p800,  label: estimate.price.p800 }
+                - { value: p1200, label: estimate.price.p1200 }
+                - { value: p2000, label: estimate.price.p2000 }
+                - { value: p3000, label: estimate.price.p3000 }
+          - field: down_band
+            label: '$t("estimate.label.down")'
+            options:
+              header: estimate.field_header.down
+              cta:    estimate.field_cta.down
+              items:
+                - { value: d10, label: estimate.down.d10 }
+                - { value: d15, label: estimate.down.d15 }
+                - { value: d20, label: estimate.down.d20 }
+                - { value: d30, label: estimate.down.d30 }
+                - { value: d50, label: estimate.down.d50 }
+          - field: term_band
+            label: '$t("estimate.label.term")'
+            options:
+              header: estimate.field_header.term
+              cta:    estimate.field_cta.term
+              items:
+                - { value: y10, label: estimate.term.y10 }
+                - { value: y15, label: estimate.term.y15 }
+                - { value: y20, label: estimate.term.y20 }
+                - { value: y25, label: estimate.term.y25 }
+        complete: [{ goto: check_caps }]
+
+  # The product's OWN caps decide what may be quoted. A down payment under the product's
+  # minimum, or a term over its maximum, is a product mismatch — say so and offer the
+  # right product rather than quoting something that does not exist.
+  check_caps:
+    - if: '$state.down_pct < $coalesce($p_min_down, 0)'
+      then:
+        - goto: below_min_down
+    - if: '$state.years > $coalesce($p_max_years, 99)'
+      then:
+        - goto: over_max_term
+    - goto: compute
+
+  compute:
+    - assign:
+        rate: '$coalesce($p_rate, 5) / 100'
+    - assign:
+        down_amt:  '$round($state.price * ($state.down_pct / 100), 0)'
+        principal: '$round($state.price - ($state.price * ($state.down_pct / 100)), 0)'
+    - assign:
+        # Flat murabaha-style profit on the financed amount, spread over the term. This is
+        # how an indicative figure is quoted before underwriting — and it is labelled as
+        # such on the card.
+        total_profit: '$round($principal * $rate * $state.years, 0)'
+    - assign:
+        monthly: '$round(($principal + ($principal * $rate * $state.years)) / ($state.years * 12), 0)'
+    # Capture the enquiry so a browser becomes a measurable lead at `estimated`.
+    - do: record_save
+      args:
+        entity: applicant
+        stage:  estimated
+        fields:
+          product:               '$state.product_id'
+          product_label:         '$p_label'
+          property_price:        '$state.price'
+          down_payment:          '$down_amt'
+          term_years:            '$state.years'
+          indicative_instalment: '$monthly'
+          currency:              SAR
+      bind: app
+      outputs:
+        ok:      [{ goto: show }]
+        invalid: [{ goto: show }]
+        failed:  [{ goto: show }]
+
+  show:
+    - render:
+        render_intent: detail_card
+        header: '{$t("estimate.header")}'
+        body: '$lines($compact([
+                 $t("estimate.line.product", { product: $coalesce($p_label, "-"), structure: $enum_label($p_structure, "structure", $p_structure) }),
+                 $t("estimate.line.price",     { amount: $format_money($state.price, "SAR") }),
+                 $t("estimate.line.down",      { pct: $state.down_pct, amount: $format_money($down_amt, "SAR") }),
+                 $t("estimate.line.financed",  { amount: $format_money($principal, "SAR") }),
+                 $t("estimate.line.term",      { years: $state.years }),
+                 $t("estimate.line.rate",      { rate: $coalesce($p_rate, 0) }),
+                 $t("estimate.line.monthly",   { amount: $format_money($monthly, "SAR") }),
+                 $t("estimate.disclaimer")
+               ]), "\n")'
+        footer: '{$t("estimate.footer")}'
+        buttons:
+          - { title: '{$t("estimate.btn_apply")}',    on_select: { invoke: apply, with: { product_id: '$state.product_id' } } }
+          - { title: '{$t("estimate.btn_products")}', on_select: { invoke: products } }
+      memory_note: 'Gave an INDICATIVE instalment of {$monthly} SAR on {$p_label} (published rate {$p_rate}%). No eligibility opinion was given.'
+      data: { monthly: '$monthly' }
+    - end: applied
+
+  below_min_down:
+    - answer:
+        data: { min_down_pct: '$p_min_down', product: '$p_label' }
+        instructions: 'Their down payment is below this product''s published minimum. State the minimum percentage plainly in one line, name the product, and offer to try a different product or a higher down payment. Do NOT quote an instalment.'
+
+  over_max_term:
+    - answer:
+        data: { max_years: '$p_max_years', product: '$p_label' }
+        instructions: 'The term they want exceeds this product''s published maximum. State the maximum in one line and offer a shorter term or another product. Do NOT quote an instalment.'

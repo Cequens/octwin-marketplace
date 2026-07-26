@@ -1,0 +1,113 @@
+# XRM declaration for motorcare-service.
+#
+#  • `service_package` — the menu (reference, no pipeline ⇒ always listable).
+#  • `bay`             — the bookable resource (see scheduling.yaml). A bay, not a
+#                        mechanic: capacity is the constraint a garage actually has.
+#  • `vehicle`         — the customer's car, contact-scoped and deduped on plate, so
+#                        a returning customer never re-enters it.
+#  • `repair_job`      — the JOB CARD, worked through worklist.yaml. It carries both
+#                        a `pipeline` (what the customer sees) and work columns
+#                        (queue / assignee / SLA — the platform's, not fields here).
+
+entities:
+  service_package:
+    label: { en: 'Service package', ar: 'باقة صيانة' }
+    fields:
+      code:         { type: text, required: true, label: { en: 'Code', ar: 'الرمز' } }
+      name:         { type: text, required: true, label: { en: 'Name', ar: 'الاسم' } }
+      description:  { type: textarea, label: { en: 'Description', ar: 'الوصف' } }
+      work_area:    { type: select, options: [mechanical, body, diagnostics], label: { en: 'Work area', ar: 'قسم العمل' } }
+      duration_min: { type: number, label: { en: 'Duration (min)', ar: 'المدة (دقيقة)' } }
+      price_from:   { type: money, label: { en: 'From', ar: 'يبدأ من' } }
+      currency:     { type: text, label: { en: 'Currency', ar: 'العملة' }, default: 'AED' }
+      photo:        { type: image, label: { en: 'Photo', ar: 'الصورة' } }
+    list: [work_area, duration_min, price_from]
+    search: { text: [name, description], semantic: [name, description] }
+    dedupe_by: code
+
+  bay:
+    label: { en: 'Service bay', ar: 'منصة صيانة' }
+    fields:
+      name:      { type: text, required: true, label: { en: 'Name', ar: 'الاسم' } }
+      work_area: { type: select, options: [mechanical, body, diagnostics], label: { en: 'Work area', ar: 'قسم العمل' } }
+      branch:    { type: text, label: { en: 'Branch', ar: 'الفرع' } }
+      timezone:  { type: text, label: { en: 'Timezone', ar: 'المنطقة الزمنية' }, default: 'Asia/Dubai' }
+    list: [work_area, branch]
+    search: { text: [name, branch] }
+    dedupe_by: name
+
+  vehicle:
+    label: { en: 'Vehicle', ar: 'مركبة' }
+    fields:
+      plate:        { type: text, required: true, label: { en: 'Plate', ar: 'رقم اللوحة' } }
+      make_model:   { type: text, label: { en: 'Make & model', ar: 'الماركة والطراز' } }
+      year:         { type: number, label: { en: 'Year', ar: 'سنة الصنع' } }
+      odometer_km:  { type: number, label: { en: 'Odometer (km)', ar: 'العداد (كم)' } }
+      last_service: { type: date, label: { en: 'Last service', ar: 'آخر صيانة' } }
+    list: [make_model, year, odometer_km]
+    dedupe_by: plate
+
+  repair_job:
+    label: { en: 'Job card', ar: 'بطاقة عمل' }
+    fields:
+      job_type:        { type: select, options: [periodic_service, body_repair, diagnostic_check, breakdown], label: { en: 'Job type', ar: 'نوع العمل' } }
+      # The ROUTING FIELD — worklist.yaml maps it to a queue.
+      work_area:       { type: select, options: [mechanical, body, diagnostics], label: { en: 'Work area', ar: 'قسم العمل' } }
+      vehicle:         { type: record, entity: vehicle, label: { en: 'Vehicle', ar: 'المركبة' } }
+      plate:           { type: text, label: { en: 'Plate', ar: 'رقم اللوحة' } }
+      complaint:       { type: textarea, label: { en: 'Complaint', ar: 'الشكوى' } }
+      # What the vision pass actually saw — kept verbatim so the foreman can judge
+      # the photo rather than trusting a summary.
+      triage_notes:    { type: textarea, label: { en: 'Triage notes', ar: 'ملاحظات الفحص المبدئي' } }
+      damage_photo:    { type: image, label: { en: 'Damage photo', ar: 'صورة الضرر' } }
+      package:         { type: record, entity: service_package, label: { en: 'Package', ar: 'الباقة' } }
+      package_label:   { type: text, label: { en: 'Package', ar: 'الباقة' } }
+      slot_label:      { type: text, label: { en: 'Slot', ar: 'الموعد' } }
+      quoted_amount:   { type: money, label: { en: 'Quote', ar: 'عرض السعر' } }
+      currency:        { type: text, label: { en: 'Currency', ar: 'العملة' }, default: 'AED' }
+    list: [job_type, plate, work_area]
+    pipeline:
+      stages:   [received, inspecting, quoted, in_repair, ready, collected, cancelled]
+      initial:  received
+      terminal: [collected, cancelled]
+    milestones:
+      job_quoted:    { label: { en: 'Quoted', ar: 'تم التسعير' },     stage: quoted }
+      job_completed: { label: { en: 'Collected', ar: 'تم الاستلام' }, stage: collected, terminal: true }
+
+  booking:
+    extends: system
+    label: { en: 'Bay slot', ar: 'موعد المنصة' }
+    fields:
+      bay_label:     { type: text, label: { en: 'Bay', ar: 'المنصة' } }
+      package_label: { type: text, label: { en: 'Package', ar: 'الباقة' } }
+      plate:         { type: text, label: { en: 'Plate', ar: 'رقم اللوحة' } }
+      slot_label:    { type: text, label: { en: 'Slot', ar: 'الموعد' } }
+
+segments:
+  open_jobs:
+    entity: repair_job
+    label: { en: 'Open jobs', ar: 'أعمال قائمة' }
+    where: { all: [{ active: true }] }
+
+demo:
+  - entity: service_package
+    fields: { code: 'SVC-MINOR', name: 'صيانة دورية صغرى', work_area: mechanical, description: 'تغيير زيت وفلتر زيت وفلتر هواء، فحص ٢٥ نقطة. Oil, oil filter and air filter with a 25-point check.', duration_min: 60, price_from: 380, currency: AED, photo: 'generate:Photograph of a clean modern car service bay with a silver sedan on a lift, a technician in navy overalls changing the oil filter, bright workshop lighting, photorealistic.' }
+  - entity: service_package
+    fields: { code: 'SVC-MAJOR', name: 'صيانة دورية كبرى', work_area: mechanical, description: 'زيت وفلاتر وبواجي وسيور وفحص ناقل الحركة والفرامل. Oil, all filters, spark plugs, belts plus transmission and brake inspection.', duration_min: 180, price_from: 1250, currency: AED, photo: 'generate:Photograph of a car raised on a two-post lift in a bright service workshop, two technicians inspecting the underside with a torch, tools neatly arranged, photorealistic.' }
+  - entity: service_package
+    fields: { code: 'AC-SVC', name: 'صيانة مكيّف', work_area: mechanical, description: 'شحن فريون وتنظيف المبخر وفحص الضاغط — مهم قبل الصيف. Refrigerant recharge, evaporator clean and compressor check.', duration_min: 90, price_from: 450, currency: AED, photo: 'generate:Photograph of a technician servicing a car air-conditioning system with a refrigerant recharge machine beside an open car bonnet, workshop setting, photorealistic.' }
+  - entity: service_package
+    fields: { code: 'DIAG-ECU', name: 'فحص كمبيوتر شامل', work_area: diagnostics, description: 'قراءة أكواد الأعطال من جميع الوحدات مع تقرير مكتوب. Full multi-module fault-code read with a written report.', duration_min: 60, price_from: 300, currency: AED, photo: 'generate:Photograph of an automotive diagnostic tablet connected to a car OBD port showing fault codes, technician hands visible, modern workshop, photorealistic.' }
+  - entity: service_package
+    fields: { code: 'BODY-DENT', name: 'إصلاح صدمات وسمكرة', work_area: body, description: 'سمكرة ودهان الجزء المتضرر مع مطابقة اللون. Panel repair and refinishing with colour matching.', duration_min: 480, price_from: 900, currency: AED, photo: 'generate:Photograph of a car body-shop technician sanding a repaired door panel before painting, masking tape on the surrounding panels, spray booth behind, photorealistic.' }
+  - entity: service_package
+    fields: { code: 'BRAKE', name: 'فحص وتغيير فرامل', work_area: mechanical, description: 'تغيير فحمات وتخريط هوبات وفحص الزيت. Pad replacement, disc skimming and fluid check.', duration_min: 120, price_from: 620, currency: AED, photo: 'generate:Photograph of a mechanic replacing a brake pad on a car wheel hub with the wheel removed, clean workshop floor, photorealistic.' }
+
+  - entity: bay
+    fields: { name: 'المنصة الميكانيكية ١', work_area: mechanical, branch: 'الفرع الرئيسي — القوز', timezone: 'Asia/Dubai' }
+  - entity: bay
+    fields: { name: 'المنصة الميكانيكية ٢', work_area: mechanical, branch: 'الفرع الرئيسي — القوز', timezone: 'Asia/Dubai' }
+  - entity: bay
+    fields: { name: 'ورشة السمكرة والدهان', work_area: body, branch: 'فرع راس الخور', timezone: 'Asia/Dubai' }
+  - entity: bay
+    fields: { name: 'منصة الفحص بالكمبيوتر', work_area: diagnostics, branch: 'الفرع الرئيسي — القوز', timezone: 'Asia/Dubai' }

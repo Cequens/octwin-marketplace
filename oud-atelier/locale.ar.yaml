@@ -1,0 +1,4 @@
+# oud-atelier — pack-wide Arabic strings shared across flows.
+pack_id: oud-atelier
+strings:
+  greeting: 'أهلاً بك في عود أتيليه 🕌 كيف أخدمك؟'

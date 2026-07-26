@@ -1,0 +1,54 @@
+# Scheduling declaration — the ROOM TYPE is the bookable resource, and its slot capacity
+# is the number of rooms of that type.
+#
+# That single choice is what makes overselling impossible: ten sea-view rooms means ten
+# guests can hold the same arrival date, and the eleventh gets the `full` port. A resort
+# that manages this in a spreadsheet oversells; here the capacity ledger refuses.
+#
+# The slot grid is DAILY (1440 minutes) because a reservation is claimed per arrival date.
+# One important honesty note: the ledger claims the ARRIVAL slot only, so a multi-night
+# stay does not consume the following nights — the pack therefore treats availability as
+# "a room of this type is released on this arrival date", which is how a small resort's
+# allocation model actually works, and the resort's PMS remains the system of record for
+# the full night-by-night picture.
+
+timezone: Africa/Cairo
+
+resources:
+  room_type:
+    slot: { default_minutes: 1440, default_capacity: 4, window_days: 60 }
+    reminders:
+      - { key: t48, seconds: 172800 }
+
+booking:
+  entity: booking
+
+demo:
+  availability:
+    # Capacity per rule = the room count for that type (see xrm.yaml `room_count`).
+    - resource_match: { entity: room_type, field: name, value: 'غرفة مزدوجة بإطلالة على البحر' }
+      rules:
+        - { dow: 0, start: '14:00', end: '15:00', slot_minutes: 1440, capacity: 10 }
+        - { dow: 1, start: '14:00', end: '15:00', slot_minutes: 1440, capacity: 10 }
+        - { dow: 2, start: '14:00', end: '15:00', slot_minutes: 1440, capacity: 10 }
+        - { dow: 3, start: '14:00', end: '15:00', slot_minutes: 1440, capacity: 10 }
+        - { dow: 4, start: '14:00', end: '15:00', slot_minutes: 1440, capacity: 10 }
+        - { dow: 5, start: '14:00', end: '15:00', slot_minutes: 1440, capacity: 10 }
+        - { dow: 6, start: '14:00', end: '15:00', slot_minutes: 1440, capacity: 10 }
+    - resource_match: { entity: room_type, field: name, value: 'سويت عائلي بإطلالة على البحيرة' }
+      rules:
+        - { dow: 0, start: '14:00', end: '15:00', slot_minutes: 1440, capacity: 4 }
+        - { dow: 2, start: '14:00', end: '15:00', slot_minutes: 1440, capacity: 4 }
+        - { dow: 4, start: '14:00', end: '15:00', slot_minutes: 1440, capacity: 4 }
+        - { dow: 6, start: '14:00', end: '15:00', slot_minutes: 1440, capacity: 4 }
+    - resource_match: { entity: room_type, field: name, value: 'غرفة مزدوجة بإطلالة على المسبح' }
+      rules:
+        - { dow: 0, start: '14:00', end: '15:00', slot_minutes: 1440, capacity: 14 }
+        - { dow: 1, start: '14:00', end: '15:00', slot_minutes: 1440, capacity: 14 }
+        - { dow: 3, start: '14:00', end: '15:00', slot_minutes: 1440, capacity: 14 }
+        - { dow: 5, start: '14:00', end: '15:00', slot_minutes: 1440, capacity: 14 }
+    - resource_match: { entity: room_type, field: name, value: 'شاليه حديقة' }
+      rules:
+        - { dow: 1, start: '14:00', end: '15:00', slot_minutes: 1440, capacity: 6 }
+        - { dow: 4, start: '14:00', end: '15:00', slot_minutes: 1440, capacity: 6 }
+        - { dow: 6, start: '14:00', end: '15:00', slot_minutes: 1440, capacity: 6 }

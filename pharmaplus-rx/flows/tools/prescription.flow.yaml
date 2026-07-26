@@ -1,0 +1,201 @@
+# prescription — the pack's core journey, and a deliberate exercise in NOT deciding.
+#
+# The chain: the platform has already TRANSCRIBED the prescription photo (the manifest's
+# vision prompt is written to transcribe and refuse to interpret) → the flow stores that
+# text VERBATIM on an `rx_request` → it opens a `prescription_review` case on the
+# pharmacist queue with a 2-hour SLA → it tells the patient the reference and the SLA, and
+# nothing else.
+#
+# Three things this flow structurally will not do: name a medicine the transcript did not
+# contain, state a price for a prescription item, or say the prescription is valid. All
+# three are the pharmacist's, and each has a disposition that relays on its own.
+
+flow_id:     prescription
+version:     1
+description: |-
+  [interactive] Submit a prescription for pharmacist review, or report the status of an
+  existing one. Call when the patient sends a prescription photo, asks to fill a
+  prescription, or asks about a repeat. Pass `items_verbatim` EXACTLY as the platform
+  transcribed it — never your own reading. Use `mode: status` to report existing reviews.
+
+input:
+  mode:
+    type:     enum
+    enum:     [submit, status]
+    optional: true
+    describe: 'submit (default) or status.'
+  rx_photo:
+    type:     string
+    optional: true
+    describe: 'The MEDIA- ref of the prescription photo the patient sent. Never invent one.'
+  items_verbatim:
+    type:     string
+    optional: true
+    describe: 'The prescription lines EXACTLY as the platform transcribed them. Do NOT correct, complete, normalise or translate them, and never supply this from your own reading of the image.'
+  patient_name:
+    type:     string
+    optional: true
+    describe: 'Patient name, if the transcription found one.'
+  prescriber:
+    type:     string
+    optional: true
+    describe: 'Prescribing doctor, if the transcription found one.'
+
+entry:
+  - if:   '$coalesce($input.mode, "submit") == "status"'
+    goto: load_cases
+  - else: true
+    goto: gather
+
+steps:
+  load_cases:
+    - do: case_list
+      args: { contact_id: '$contact.id' }
+      bind: cases
+      outputs:
+        ok:     [{ goto: show_cases }]
+        empty:  [{ goto: no_cases }]
+        failed: [{ goto: unavailable }]
+
+  show_cases:
+    - assign:
+        case_lines: '$map($cases, $lines($compact([
+                        "🧾 #" + $item.case_number,
+                        $enum_label($item.type, "cases", $item.type),
+                        $enum_label($item.status, "status", $item.status),
+                        $item.decision_action != null ? $enum_label($item.decision_action, "decision", $item.decision_action) : null
+                      ]), " · "))'
+    - render:
+        render_intent: detail_card
+        header: '{$t("prescription.status_header")}'
+        body: '$lines($compact($concat($case_lines, [$t("prescription.status_note")])), "\n")'
+        buttons:
+          - { title: '{$t("prescription.btn_new")}',  on_select: { invoke: prescription } }
+          - { title: '{$t("prescription.btn_home")}', on_select: { invoke: home } }
+      memory_note: 'Reported {$length($cases)} pharmacist review(s). Only the recorded decision was stated.'
+    - end: applied
+
+  no_cases:
+    - answer:
+        instructions: 'This patient has no prescription under review. Say so in one line and offer to take a photo of one.'
+
+  gather:
+    - collect:
+        gap_instructions: 'Ask the patient for the next item ({$collect_field}) in one short line, in Egyptian Arabic. For the prescription, ask for a clear photo of the whole page. Re-call prescription once they send it. NEVER read the prescription aloud, name a medicine, or say whether it can be filled.'
+        fields:
+          - field: patient_name
+            label:    '$t("prescription.label.patient")'
+            describe: "The patient's name."
+          - field: delivery_area
+            label: '$t("prescription.label.area")'
+            options:
+              header: prescription.field_header.area
+              cta:    prescription.field_cta.area
+              items:
+                - { value: nasr_city,  label: prescription.area.nasr_city }
+                - { value: maadi,      label: prescription.area.maadi }
+                - { value: heliopolis, label: prescription.area.heliopolis }
+                - { value: zamalek,    label: prescription.area.zamalek }
+                - { value: october,    label: prescription.area.october }
+                - { value: giza,       label: prescription.area.giza }
+          - field: address
+            label:    '$t("prescription.label.address")'
+            describe: 'Street, building and flat for the delivery.'
+          - field: phone
+            label:    '$t("prescription.label.phone")'
+            describe: 'A mobile number the pharmacist can call.'
+        complete: [{ goto: save_request }]
+
+  save_request:
+    - do: record_save
+      args:
+        entity: rx_request
+        stage:  pharmacist_review
+        fields:
+          patient_name:   '$state.patient_name'
+          prescriber:     '$state.prescriber'
+          # Verbatim — the pharmacist reads the paper, not our paraphrase.
+          items_verbatim: '$state.items_verbatim'
+          rx_photo:       '$state.rx_photo'
+          delivery_area:  '$state.delivery_area'
+          address:        '$state.address'
+          phone:          '"" + $state.phone'
+      bind: rx
+      outputs:
+        ok:      [{ goto: open_review }]
+        invalid: [{ goto: save_invalid }]
+        failed:  [{ goto: save_failed }]
+
+  open_review:
+    - do: record_milestone
+      args: { record_id: '$rx.record_id', milestone: submitted_for_review }
+      detach: true
+    - do: case_open
+      args:
+        type: prescription_review
+        fields:
+          case_type:      prescription_review
+          subject:        '$t("prescription.case_subject", { patient: $coalesce($state.patient_name, "-") })'
+          rx_number:      '$rx.record_number'
+          items_verbatim: '$state.items_verbatim'
+          delivery_area:  '$state.delivery_area'
+      bind: review
+      outputs:
+        ok:     [{ goto: attach_photo }]
+        failed: [{ goto: submitted_no_case }]
+
+  # The photo goes on the case as evidence the pharmacist opens directly — a transcription
+  # is never the thing they dispense against.
+  attach_photo:
+    - if: '$state.rx_photo != null'
+      then:
+        - do: case_attach
+          args:
+            case_id:  '$review.case_id'
+            media_id: '$state.rx_photo'
+            caption:  '{$t("prescription.caption", { patient: $coalesce($state.patient_name, "-") })}'
+          outputs:
+            ok:     []
+            failed: []
+    - goto: submitted_ok
+
+  submitted_ok:
+    - render:
+        render_intent: detail_card
+        header: '{$t("prescription.done_header")}'
+        body: '$lines($compact([
+                 $t("prescription.done_ref", { ref: $rx.record_number }),
+                 $t("prescription.done_case", { ref: $review.case_number, hours: $coalesce($review.sla_hours, 2) }),
+                 $t("prescription.done_no_advice")
+               ]), "\n")'
+        footer: '{$t("prescription.done_footer")}'
+        buttons:
+          - { title: '{$t("prescription.btn_status")}', on_select: { invoke: prescription, with: { mode: status } } }
+          - { title: '{$t("prescription.btn_otc")}',    on_select: { invoke: otc } }
+      memory_note: 'Opened prescription_review #{$review.case_number} for rx_request #{$rx.record_number}. NO medicine, dose, price or validity was stated.'
+      data: { rx_number: '$rx.record_number', case_number: '$review.case_number' }
+    - end: applied
+
+  submitted_no_case:
+    - render:
+        render_intent: detail_card
+        header: '{$t("prescription.done_header")}'
+        body: '$lines($compact([
+                 $t("prescription.done_ref", { ref: $rx.record_number }),
+                 $t("prescription.done_no_case")
+               ]), "\n")'
+      memory_note: 'rx_request #{$rx.record_number} saved but the pharmacist review did NOT open — the branch must pick it up manually.'
+    - end: applied
+
+  save_invalid:
+    - answer:
+        data: { reason: '$rx.reason' }
+        instructions: 'The request was rejected for the reason in `data.reason`. Fix that one field and call prescription again.'
+
+  save_failed:
+    - answer:
+        instructions: 'The prescription could not be submitted. Say so plainly in one line and tell the patient to call the pharmacy directly using the number they already have for us, or to try again in a moment. Do NOT invent a branch name, number or phone — this pack holds none. Do NOT claim it was sent.'
+
+  unavailable:
+    - answer:
+        instructions: 'The review system is unavailable for a moment. Apologise in one line and offer to try again shortly. Do NOT invent a branch name, number or phone — this pack holds none. Do NOT answer any clinical question yourself.'

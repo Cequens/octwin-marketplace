@@ -1,0 +1,74 @@
+# packages — the catalog carousel. Rows carry a hero photo, so this is a carousel,
+# not a text picker. The `kind` filter is a separate step because a `where:` AST is
+# structured data, never a computed expression.
+
+flow_id:     packages
+version:     1
+description: |-
+  Show Umrah / Hajj packages as image cards. Call when the pilgrim wants to see
+  packages or asks about a type ("عمرة رمضان", "حج"). Pass `kind` (umrah, hajj,
+  ramadan_umrah, ziyarah) only when they named one; otherwise call with no arguments.
+
+input:
+  kind:
+    type:     string
+    optional: true
+    describe: 'One of: umrah, hajj, ramadan_umrah, ziyarah — only when the pilgrim named a type.'
+
+entry:
+  - if:   '$input.kind != null'
+    goto: load_kind
+  - else: true
+    goto: load_all
+
+steps:
+  load_all:
+    - do: record_list
+      args: { entity: package, all: true, limit: 20, sort_by: { field: price_pp, dir: asc } }
+      bind: page
+      outputs:
+        ok:     [{ goto: show }]
+        empty:  [{ goto: none }]
+        failed: [{ goto: unavailable }]
+
+  load_kind:
+    - do: record_list
+      args:
+        entity:  package
+        all:     true
+        limit:   20
+        where:   { all: [{ field: kind, op: eq, value: '$input.kind' }] }
+        sort_by: { field: price_pp, dir: asc }
+      bind: page
+      outputs:
+        ok:     [{ goto: show }]
+        # An unrecognised kind is a typo, not an empty catalog.
+        empty:  [{ goto: load_all }]
+        failed: [{ goto: unavailable }]
+
+  show:
+    - render:
+        render_intent: carousel
+        body:  '{$t("packages.intro", { total: $page.total })}'
+        items: '$page.rows'
+        item_template:
+          image_url: '$coalesce($item.fields.hero, "")'
+          body: '$lines($compact([
+                   $item.fields.name,
+                   $item.fields.distance_haram,
+                   $t("packages.from", { price: $format_money_field($item.fields.price_pp, $coalesce($item.fields.currency, "SAR")) })
+                 ]), "\n")'
+          buttons:
+            - { title: '{$t("packages.btn_detail")}', on_select: { invoke: package-detail, with: { package_id: '$item.id' } } }
+            - { title: '{$t("packages.btn_book")}',   on_select: { invoke: book-package,   with: { package_id: '$item.id' } } }
+      memory_note: 'Showed {$page.total} package(s){$input.kind != null ? " of kind " + $input.kind : ""}.'
+      data: { total: '$page.total' }
+    - end: applied
+
+  none:
+    - answer:
+        instructions: 'The package catalog is empty. Say so in one line and offer to take the pilgrim''s requirements so the desk can call them.'
+
+  unavailable:
+    - answer:
+        instructions: 'The catalog read failed. Apologise in one line and offer to try again shortly. Do NOT invent a package or a price.'

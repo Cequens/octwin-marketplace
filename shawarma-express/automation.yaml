@@ -1,0 +1,33 @@
+# Standing automation jobs — consumed by the platform automation engine and upserted
+# into the project's automation_jobs at install (idempotent by `key`). These run on
+# the platform ticker: no flow, no turn, no customer message required.
+#
+# This is the capability a restaurant actually feels: baskets left half-full and
+# orders nobody marked as delivered.
+
+jobs:
+  # A basket left idle for a day gets ONE nudge, then at most one more every 48h.
+  # `cooldown_hours` is what stops a nudge becoming spam — without it a segment job
+  # would message the same customer on every tick.
+  - key: basket_nudge
+    kind: segment
+    entity: basket_line
+    interval_seconds: 3600
+    config:
+      where:
+        all:
+          - { field: qty, op: gte, value: 1 }
+          - { not: { updated_within_days: 1 } }
+      action:
+        type: notify
+        message: 'لسه في أكل مستنيك في السلة 🌯 تحب نكمّل الأوردر؟'
+        cooldown_hours: 48
+
+  # An order still sitting at `placed` after a day is not a live order — move it to
+  # `cancelled` so the kitchen board and the funnel both stay honest. `stale_records`
+  # reads the entity's own declared `auto_transition`, so the rule lives with the
+  # data (xrm.yaml), not duplicated here.
+  - key: stale_order_sweep
+    kind: stale_records
+    entity: food_order
+    interval_seconds: 3600

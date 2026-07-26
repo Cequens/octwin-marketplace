@@ -1,0 +1,43 @@
+flow_id: book-service
+
+strings:
+  progress.header:   '🗓️ حجز موعد صيانة'
+  progress.package:  '🔧 الباقة: {package}'
+  progress.bay:      '🏭 المنصة: {bay}'
+  progress.slot:     '🕐 الموعد: {slot}'
+
+  label.plate:      'رقم اللوحة'
+  label.package:    'باقة الصيانة'
+  label.bay:        'المنصة'
+  label.slot:       'الموعد'
+  label.complaint:  'ملاحظات للورشة'
+
+  field_header.package: '🔧 أي باقة صيانة؟'
+  field_cta.package:    'الباقات'
+  field_header.bay:     '🏭 اختر المنصة'
+  field_cta.bay:        'المنصات'
+  field_header.slot:    '🕐 المواعيد المتاحة'
+  field_cta.slot:       'المواعيد'
+
+  preview.header:   '📋 تأكيد الموعد'
+  preview.package:  '🔧 الباقة: {package}'
+  preview.plate:    '🚗 اللوحة: {plate}'
+  preview.bay:      '🏭 المنصة: {bay}'
+  preview.slot:     '🕐 الموعد: {slot}'
+  preview.note:     'ℹ️ الأسعار تبدأ من المذكور، والسعر النهائي بعد الفحص.'
+  approve_header:   '🗓️ مراجعة الموعد'
+  approve_footer:   'اضغط تأكيد لتثبيت الموعد وفتح بطاقة العمل.'
+  confirm_title:    'تأكيد الموعد ✅'
+  cancel_title:     'إلغاء ❌'
+
+  done_header:      '✅ تم تثبيت موعدك'
+  done_slot:        '🕐 {slot} — 🏭 {bay}'
+  done_job:         '🧾 رقم بطاقة العمل: #{ref}'
+  done_note:        '⏰ بنرسل لك تذكيراً قبل الموعد.'
+  done_no_job:      '⚠️ الموعد مثبّت، لكن لم نتمكن من فتح بطاقة العمل آلياً — خدمة العملاء تفتحها يدوياً.'
+  btn_garage:       '🚗 سياراتي'
+  btn_more:         '🔧 باقات أخرى'
+  slot_taken:       '⚠️ للأسف امتلأ هذا الموعد قبل لحظات. اختر موعداً آخر ونكمل.'
+  aborted:          'تم إلغاء الحجز. تحت أمرك في أي وقت 🔧'
+  reminder.body:    '⏰ تذكير بموعد صيانة سيارتك — {slot} في {bay}.'
+  reminder.garage:  '🚗 سياراتي'

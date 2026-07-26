@@ -1,0 +1,74 @@
+# treatments — the price list. No photos on a treatment, so this is a text
+# list_picker (the litmus: photos → carousel, text choices → list_picker).
+# Tapping a row starts a booking for that treatment.
+
+flow_id:     treatments
+version:     1
+description: |-
+  Show the treatment menu with indicative prices. Call when the patient asks what
+  the clinic does, asks a price, or names a procedure. Pass `category` only when
+  they named one (preventive, restorative, cosmetic, orthodontic, surgical).
+
+input:
+  category:
+    type:     string
+    optional: true
+    describe: 'One of: preventive, restorative, cosmetic, orthodontic, surgical.'
+
+entry:
+  - if:   '$input.category != null'
+    goto: load_category
+  - else: true
+    goto: load_all
+
+steps:
+  load_all:
+    - do: record_list
+      args: { entity: treatment, all: true, limit: 20, sort_by: { field: price_from, dir: asc } }
+      bind: page
+      outputs:
+        ok:     [{ goto: show }]
+        empty:  [{ goto: none }]
+        failed: [{ goto: unavailable }]
+
+  load_category:
+    - do: record_list
+      args:
+        entity:  treatment
+        all:     true
+        limit:   20
+        where:   { all: [{ field: category, op: eq, value: '$input.category' }] }
+        sort_by: { field: price_from, dir: asc }
+      bind: page
+      outputs:
+        ok:     [{ goto: show }]
+        empty:  [{ goto: load_all }]
+        failed: [{ goto: unavailable }]
+
+  show:
+    - render:
+        render_intent: list_picker
+        header: '{$t("treatments.header")}'
+        body:   '{$t("treatments.intro", { total: $page.total })}'
+        footer: '{$t("treatments.footer")}'
+        cta:    '{$t("treatments.cta")}'
+        items:  '$page.rows'
+        item_template:
+          title:       '{$item.fields.name}'
+          description: '$lines($compact([
+                          $format_money_field($item.fields.price_from, $coalesce($item.fields.currency, "AED")),
+                          $item.fields.duration_min != null ? ($item.fields.duration_min + $t("treatments.min_suffix")) : null,
+                          $item.fields.insured == true ? $t("treatments.covered") : null
+                        ]), " · ")'
+          on_select:   { invoke: book-visit, with: { treatment_id: '$item.id' } }
+      memory_note: 'Showed {$page.total} treatment(s).'
+      data: { total: '$page.total' }
+    - end: applied
+
+  none:
+    - answer:
+        instructions: 'The treatment list is empty. Say so in one line and offer to take the patient''s complaint so reception can call them.'
+
+  unavailable:
+    - answer:
+        instructions: 'The price list could not be read. Apologise in one line and offer to try again shortly. NEVER quote a price from memory.'

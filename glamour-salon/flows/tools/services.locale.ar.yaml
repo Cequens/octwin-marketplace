@@ -1,0 +1,6 @@
+flow_id: services
+
+strings:
+  intro:      '💅 خدماتنا — اسحبي لاستعراضها:'
+  duration:   '⏱️ المدة حوالي {min} دقيقة'
+  btn_book:   '📅 احجزي'

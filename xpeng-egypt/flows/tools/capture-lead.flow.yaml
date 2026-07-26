@@ -1,0 +1,98 @@
+flow_id:     capture-lead
+version:     1
+description: |-
+  [interactive Tool] Capture a sales lead — name, phone, and what they want — so
+  the XPeng sales team can follow up. Call whenever the customer wants a quote,
+  more info, or a call back. Pass interested_model / interest_type if already known
+  (interest_type: quote | info | test_drive | callback).
+
+input:
+  interested_model:
+    type: enum
+    enum: [m03, p7, p7_plus, g6, g9, x9]
+    optional: true
+  interest_type:
+    type: enum
+    enum: [info, quote, test_drive, callback]
+    optional: true
+    describe: 'Why they are interested. Infer from the conversation; defaults to info.'
+  name:  { type: string, optional: true, describe: 'Customer name, if already given.' }
+  phone: { type: string, optional: true, describe: 'Customer phone, if already given.' }
+  email: { type: string, optional: true }
+
+entry:
+  - else: true
+    goto: gather
+
+steps:
+  gather:
+    - collect:
+        gap_instructions: '$t("capture-lead.gap")'
+        fields:
+          - field: name
+            label: '$t("capture-lead.f_name")'
+          - field: phone
+            label: '$t("capture-lead.f_phone")'
+          - field: email
+            required: false
+            label: '$t("capture-lead.f_email")'
+        complete: [{ goto: resolve_value }]
+
+  # Seed the lead's expected_value from the interested model's price so the
+  # purchase-journey deal_won conversion has a real EGP value when sales wins it.
+  resolve_value:
+    - if: '$state.interested_model == null'
+      goto: save
+    - do: record_get
+      args:
+        entity: model
+        match: { field: code, value: '$state.interested_model' }
+      bind: mp
+      outputs:
+        ok:        [{ goto: set_value }]
+        not_found: [{ goto: save }]
+        # failed → throws → error-net
+
+  set_value:
+    - assign:
+        'state.expected_value': '$mp.fields.price_from'
+    - goto: save
+
+  save:
+    - do: record_save
+      args:
+        entity: lead
+        match: { value: '$state.phone' }
+        fields:
+          name:             '$state.name'
+          phone:            '$state.phone'
+          email:            '$state.email'
+          interest_type:    '$coalesce($state.interest_type, "info")'
+          interested_model: '$state.interested_model'
+          expected_value:   '$state.expected_value'
+      bind: saved
+      outputs:
+        ok:      [{ goto: task }]
+        invalid: []          # agent-correctable → reason handed back to the agent
+        # failed → throws → error-net
+
+  task:
+    - do: task_open
+      args:
+        title:     '{$t("capture-lead.task_title", { name: $state.name })}'
+        body:      '{$t("capture-lead.task_body", { phone: $state.phone })}'
+        record_id: '$saved.record_id'
+        due_in_hours: 24
+      bind: t
+      outputs:
+        ok:     [{ goto: confirm }]
+        failed: [{ goto: confirm }]    # lead is already saved; task is best-effort
+
+  confirm:
+    - render:
+        render_intent: text_card
+        body: '{$t("capture-lead.confirm", { name: $state.name })}'
+      memory_note: 'Lead #{$saved.record_number} saved for {$state.name} ({$state.phone}) (record_id {$saved.record_id}).'
+    # Purchase funnel: reached buying intent + completed the lead_captured goal.
+    - track: { journey: purchase, event: submitted_lead, metadata: { model: '$state.interested_model', interest: '$coalesce($state.interest_type, "info")' } }
+    - end: applied

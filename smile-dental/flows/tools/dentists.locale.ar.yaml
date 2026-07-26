@@ -1,0 +1,12 @@
+flow_id: dentists
+
+strings:
+  intro:              '👩‍⚕️ فريق الأطباء — مرتّب بحسب تقييم المرضى:'
+  rating:             '⭐ {rating} من {count} تقييم'
+  btn_book:           '🗓️ احجز معه'
+  sp.general:         '🦷 أسنان عام'
+  sp.orthodontics:    '😁 تقويم'
+  sp.periodontics:    '🩹 لثة'
+  sp.endodontics:     '🔬 علاج جذور'
+  sp.pediatric:       '🧒 أسنان أطفال'
+  sp.cosmetic:        '✨ تجميل الأسنان'

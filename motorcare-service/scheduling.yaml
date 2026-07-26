@@ -1,0 +1,38 @@
+# Scheduling declaration — a BAY is the bookable resource, not a mechanic. Capacity
+# is what a garage actually runs out of, and the mechanical bays take two cars at
+# once while the paint booth takes one.
+
+timezone: Asia/Dubai
+
+resources:
+  bay:
+    slot: { default_minutes: 60, default_capacity: 2, window_days: 14 }
+    reminders:
+      - { key: t24, seconds: 86400 }
+      - { key: t2,  seconds: 7200 }
+
+booking:
+  entity: booking
+
+demo:
+  availability:
+    # A SHARED-field match fans the same shift out to every bay in the area — the
+    # mechanical rota is declared once, not per bay.
+    - resource_match: { entity: bay, field: work_area, value: mechanical }
+      rules:
+        - { dow: 0, start: '08:00', end: '18:00', slot_minutes: 60, capacity: 2 }
+        - { dow: 1, start: '08:00', end: '18:00', slot_minutes: 60, capacity: 2 }
+        - { dow: 2, start: '08:00', end: '18:00', slot_minutes: 60, capacity: 2 }
+        - { dow: 3, start: '08:00', end: '18:00', slot_minutes: 60, capacity: 2 }
+        - { dow: 6, start: '09:00', end: '14:00', slot_minutes: 60, capacity: 1 }
+    - resource_match: { entity: bay, field: work_area, value: body }
+      rules:
+        - { dow: 0, start: '08:00', end: '16:00', slot_minutes: 120, capacity: 1 }
+        - { dow: 2, start: '08:00', end: '16:00', slot_minutes: 120, capacity: 1 }
+        - { dow: 4, start: '08:00', end: '16:00', slot_minutes: 120, capacity: 1 }
+    - resource_match: { entity: bay, field: work_area, value: diagnostics }
+      rules:
+        - { dow: 0, start: '09:00', end: '17:00', slot_minutes: 60, capacity: 1 }
+        - { dow: 1, start: '09:00', end: '17:00', slot_minutes: 60, capacity: 1 }
+        - { dow: 3, start: '09:00', end: '17:00', slot_minutes: 60, capacity: 1 }
+        - { dow: 5, start: '10:00', end: '15:00', slot_minutes: 60, capacity: 1 }

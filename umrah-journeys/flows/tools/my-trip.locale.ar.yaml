@@ -1,0 +1,8 @@
+flow_id: my-trip
+
+strings:
+  header:        '🧾 حجزك'
+  pax_suffix:    ' مسافر'
+  btn_visa:      '📂 حالة التأشيرة'
+  btn_upload:    '📎 ارفع مستنداً'
+  btn_packages:  '🕋 الباقات'

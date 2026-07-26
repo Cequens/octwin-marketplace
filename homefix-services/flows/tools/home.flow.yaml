@@ -1,0 +1,57 @@
+# home — the front door. Counts open work orders, and flags an emergency separately so
+# a customer with a live emergency lands on it rather than the service menu.
+
+flow_id:     home
+version:     1
+description: Main menu / welcome. Call on a greeting, an unclear or off-topic message, or "what can you do?".
+
+input:
+  message:
+    type:     string
+    optional: true
+    describe: 'Optional ONE short greeting line YOU compose for this customer.'
+
+entry:
+  - else: true
+    goto: count_open
+
+steps:
+  count_open:
+    - do: record_aggregate
+      args: { entity: work_order, op: count, active_only: true }
+      bind: open
+      outputs:
+        ok:     [{ goto: count_emergency }]
+        failed: [{ goto: show }]
+
+  count_emergency:
+    # A declared SEGMENT — the definition lives in xrm.yaml, so operations can change
+    # what counts as an emergency without a redeploy.
+    - do: record_list
+      args: { segment: emergencies, limit: 5 }
+      bind: emg
+      outputs:
+        ok:     [{ goto: show }]
+        empty:  [{ goto: show }]
+        failed: [{ goto: show }]
+
+  show:
+    - assign:
+        open_orders: '$coalesce($open.value, 0)'
+        emergencies: '$length($coalesce($emg.rows, []))'
+    - render:
+        render_intent: list_picker
+        header: '{$t("home.header")}'
+        body: '$lines($compact([
+                 $coalesce($input.message, $t("home.greeting")),
+                 $emergencies > 0 ? $t("home.emergency", { count: $emergencies }) : null,
+                 $open_orders > 0 && $emergencies == 0 ? $t("home.open", { count: $open_orders }) : null
+               ]), "\n")'
+        cta: '{$t("home.cta")}'
+        items:
+          - { title: '{$t("home.row_request")}',   description: '{$t("home.row_request_d")}',   on_select: { invoke: request-visit } }
+          - { title: '{$t("home.row_emergency")}', description: '{$t("home.row_emergency_d")}', on_select: { invoke: request-visit, with: { urgency: emergency } } }
+          - { title: '{$t("home.row_services")}',  description: '{$t("home.row_services_d")}',  on_select: { invoke: services } }
+          - { title: '{$t("home.row_mine")}',      description: '{$t("home.row_mine_d")}',      on_select: { invoke: my-requests } }
+      memory_note: 'Showed the HomeFix menu ({$open_orders} open order(s), {$emergencies} emergency).'
+    - end: applied

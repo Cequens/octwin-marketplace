@@ -1,0 +1,6 @@
+flow_id: rooms
+
+strings:
+  intro:      '🛏️ غرفنا المتاحة — اسحب لاستعراضها:'
+  from:       '💰 الليلة من {price} (إفطار)'
+  btn_book:   '📅 احجز'

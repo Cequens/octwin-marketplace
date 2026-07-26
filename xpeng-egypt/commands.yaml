@@ -1,0 +1,14 @@
+# Pack-level slash-command declarations (OPTIONAL but recommended).
+#
+# The platform's default `systemCommand` matches inbound text against these
+# BEFORE normal agent dispatch. Without a `commands.yaml`, a pack has NO slash
+# commands — e.g. `/clear` silently does nothing (it just goes to the agent as
+# text). Ship this file if you want `/clear` (and friends) to work like the
+# other packs.
+#
+# action: `close_conversation` (reset the conversation) | `noop` (reply only).
+
+- match:    '/clear'
+  action:   close_conversation
+  reply:    'تم مسح المحادثة ✅ تقدر تبدأ من جديد. — Conversation cleared, start fresh.'
+  source:   '/clear'

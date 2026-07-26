@@ -1,0 +1,106 @@
+# membership — the price list AND the point where a browser becomes a tracked lead.
+# The enquiry is written at `enquiry`, so the club can measure enquiry → trial →
+# member conversion in the console funnel with nothing else to set up.
+
+flow_id:     membership
+version:     1
+description: |-
+  Show membership plans and capture the enquiry. Call when the member asks about
+  prices, joining, or a plan. Pass `goal` when they stated one (weight_loss,
+  muscle_gain, endurance, general_fitness, rehab).
+
+input:
+  goal:
+    type:     string
+    optional: true
+    describe: 'One of: weight_loss, muscle_gain, endurance, general_fitness, rehab.'
+  full_name:
+    type:     string
+    optional: true
+    describe: "The prospective member's name, if given."
+
+entry:
+  - else: true
+    goto: gather
+
+steps:
+  gather:
+    - collect:
+        gap_instructions: 'Ask for the next detail ({$collect_field}) in one short warm line, then re-call membership once they answer. Never prescribe a training or diet plan.'
+        fields:
+          - field: goal
+            label: '$t("membership.label.goal")'
+            options:
+              header: membership.field_header.goal
+              cta:    membership.field_cta.goal
+              items:
+                - { value: weight_loss,     label: membership.goal.weight_loss }
+                - { value: muscle_gain,     label: membership.goal.muscle_gain }
+                - { value: endurance,       label: membership.goal.endurance }
+                - { value: general_fitness, label: membership.goal.general_fitness }
+                - { value: rehab,           label: membership.goal.rehab }
+          - field: experience
+            label: '$t("membership.label.experience")'
+            options:
+              header: membership.field_header.experience
+              cta:    membership.field_cta.experience
+              items:
+                - { value: none,    label: membership.exp.none }
+                - { value: some,    label: membership.exp.some }
+                - { value: regular, label: membership.exp.regular }
+          - field: full_name
+            required: false
+            label:    '$t("membership.label.name")'
+            describe: 'Their name, for the front desk to greet them by.'
+        complete: [{ goto: load_plans }]
+
+  load_plans:
+    - do: record_list
+      args: { entity: plan, all: true, limit: 10, sort_by: { field: price, dir: asc } }
+      bind: page
+      outputs:
+        ok:     [{ goto: save_lead }]
+        empty:  [{ goto: no_plans }]
+        failed: [{ goto: unavailable }]
+
+  save_lead:
+    - do: record_save
+      args:
+        entity: member_lead
+        stage:  enquiry
+        fields:
+          full_name:  '$state.full_name'
+          goal:       '$state.goal'
+          experience: '$state.experience'
+      bind: lead
+      outputs:
+        ok:      [{ goto: show }]
+        invalid: [{ goto: show }]
+        failed:  [{ goto: show }]
+
+  show:
+    - render:
+        render_intent: list_picker
+        header: '{$t("membership.header")}'
+        body:   '{$t("membership.intro")}'
+        footer: '{$t("membership.footer")}'
+        cta:    '{$t("membership.cta")}'
+        items:  '$page.rows'
+        item_template:
+          title:       '{$item.fields.name}'
+          description: '$lines($compact([
+                          $format_money_field($item.fields.price, $coalesce($item.fields.currency, "AED")),
+                          $item.fields.classes_included == true ? $t("membership.classes_in") : null
+                        ]), " · ")'
+          # A plan tap books the free trial — the club's actual conversion step.
+          on_select:   { invoke: book-class, with: { is_trial: true } }
+      memory_note: 'Showed {$page.total} plan(s) and logged enquiry {$lead.record_number} (goal {$state.goal}).'
+    - end: applied
+
+  no_plans:
+    - answer:
+        instructions: 'No plans are published yet. Say so in one line and offer to have the front desk call them. Do NOT invent a price.'
+
+  unavailable:
+    - answer:
+        instructions: 'The plan list could not be read. Apologise in one line and offer to try again shortly. NEVER quote a price from memory.'

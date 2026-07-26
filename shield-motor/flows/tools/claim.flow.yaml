@@ -1,0 +1,211 @@
+# claim — first notification of loss, and a deliberate refusal to decide.
+#
+# The flow records what the customer said (verbatim), files the photo, opens a case on the
+# right queue, and quotes the real SLA. It never states coverage, never assigns fault, and
+# never estimates a settlement — those are the assessor's dispositions, each of which
+# relays its own wording.
+#
+# The `injury` path is treated as the emergency it is: the type routes to the senior queue
+# with a 2-hour SLA, and the agent is instructed (prompt) to tell the customer to call the
+# police and ambulance FIRST rather than finishing a form.
+
+flow_id:     claim
+version:     1
+description: |-
+  [interactive] File a claim notification (FNOL), or report the status of an existing claim.
+  Call when the customer reports an accident, theft, damage or a cracked windscreen, or asks
+  about a claim. Use `mode: status` for progress. NEVER say whether something is covered.
+
+input:
+  mode:
+    type:     enum
+    enum:     [notify, status]
+    optional: true
+    describe: 'notify (default) or status.'
+  incident_type:
+    type:     enum
+    enum:     [own_damage, third_party, theft, injury, windscreen]
+    optional: true
+    describe: 'The kind of incident, when the customer already made it clear.'
+  damage_photo:
+    type:     string
+    optional: true
+    describe: 'The MEDIA- ref of a damage photo the customer already sent. Never invent one.'
+
+entry:
+  - if:   '$coalesce($input.mode, "notify") == "status"'
+    goto: load_cases
+  - else: true
+    goto: gather
+
+steps:
+  load_cases:
+    - do: case_list
+      args: { contact_id: '$contact.id' }
+      bind: cases
+      outputs:
+        ok:     [{ goto: show_cases }]
+        empty:  [{ goto: no_cases }]
+        failed: [{ goto: unavailable }]
+
+  show_cases:
+    - assign:
+        case_lines: '$map($cases, $lines($compact([
+                        "🧾 #" + $item.case_number,
+                        $enum_label($item.type, "cases", $item.type),
+                        $enum_label($item.status, "status", $item.status),
+                        $item.decision_action != null ? $enum_label($item.decision_action, "decision", $item.decision_action) : null
+                      ]), " · "))'
+    - render:
+        render_intent: detail_card
+        header: '{$t("claim.status_header")}'
+        body: '$lines($compact($concat($case_lines, [$t("claim.status_note")])), "\n")'
+        buttons:
+          - { title: '{$t("claim.btn_new")}',  on_select: { invoke: claim } }
+          - { title: '{$t("claim.btn_home")}', on_select: { invoke: home } }
+      memory_note: 'Reported {$length($cases)} claim(s), stating only the recorded decision.'
+    - end: applied
+
+  no_cases:
+    - answer:
+        instructions: 'This customer has no claim on file. Say so in one line and offer to file one if they need to.'
+
+  gather:
+    - collect:
+        gap_instructions: 'Ask for the next detail ({$collect_field}) in one short line, in Arabic. Re-call claim once they answer. NEVER say whether the incident is covered, never assign fault, and never estimate an amount.'
+        fields:
+          - field: incident_type
+            label: '$t("claim.label.type")'
+            options:
+              header: claim.field_header.type
+              cta:    claim.field_cta.type
+              items:
+                - { value: own_damage,  label: claim.type.own_damage }
+                - { value: third_party, label: claim.type.third_party }
+                - { value: windscreen,  label: claim.type.windscreen }
+                - { value: theft,       label: claim.type.theft }
+                - { value: injury,      label: claim.type.injury }
+          - field: policy_number
+            label:    '$t("claim.label.policy")'
+            describe: 'The policy number on the certificate.'
+          - field: plate
+            label:    '$t("claim.label.plate")'
+            describe: 'The licence plate.'
+          - field: emirate
+            label: '$t("claim.label.emirate")'
+            options:
+              header: claim.field_header.emirate
+              cta:    claim.field_cta.emirate
+              items:
+                - { value: dubai,     label: claim.em.dubai }
+                - { value: sharjah,   label: claim.em.sharjah }
+                - { value: abu_dhabi, label: claim.em.abu_dhabi }
+                - { value: ajman,     label: claim.em.ajman }
+                - { value: rak,       label: claim.em.rak }
+          - field: incident_when
+            label:    '$t("claim.label.when")'
+            describe: 'When it happened, as the customer says it (date and rough time).'
+          - field: description
+            label:    '$t("claim.label.description")'
+            describe: "What happened, in the CUSTOMER'S OWN WORDS. Record it, do not summarise it into a fault assessment."
+          - field: police_report
+            required: false
+            label:    '$t("claim.label.police")'
+            describe: 'Police report number, if they have one.'
+        complete: [{ goto: save_fnol }]
+
+  save_fnol:
+    - do: record_save
+      args:
+        entity: fnol
+        stage:  assessor_review
+        fields:
+          policy_number: '"" + $state.policy_number'
+          plate:         '$state.plate'
+          incident_type: '$state.incident_type'
+          incident_when: '$state.incident_when'
+          emirate:       '$state.emirate'
+          description:   '$state.description'
+          police_report: '$state.police_report'
+          damage_photo:  '$state.damage_photo'
+          injuries:      '$state.incident_type == "injury"'
+      bind: fnol
+      outputs:
+        ok:      [{ goto: open_case }]
+        invalid: [{ goto: save_invalid }]
+        failed:  [{ goto: save_failed }]
+
+  open_case:
+    - do: record_milestone
+      args: { record_id: '$fnol.record_id', milestone: under_assessment }
+      detach: true
+    # The case type IS the routing + SLA decision: injury and theft go to the senior queue.
+    - do: case_open
+      args:
+        type: '$state.incident_type'
+        fields:
+          case_type:     '$state.incident_type'
+          subject:       '$t("claim.case_subject", { plate: $coalesce($state.plate, "-") })'
+          fnol_number:   '$fnol.record_number'
+          policy_number: '$state.policy_number'
+          emirate:       '$state.emirate'
+          description:   '$state.description'
+      bind: c
+      outputs:
+        ok:     [{ goto: attach }]
+        failed: [{ goto: filed_no_case }]
+
+  attach:
+    - if: '$state.damage_photo != null'
+      then:
+        - do: case_attach
+          args:
+            case_id:  '$c.case_id'
+            media_id: '$state.damage_photo'
+            caption:  '{$t("claim.caption", { plate: $coalesce($state.plate, "-") })}'
+          outputs:
+            ok:     []
+            failed: []
+    - goto: filed
+
+  filed:
+    - render:
+        render_intent: detail_card
+        header: '{$t("claim.done_header")}'
+        body: '$lines($compact([
+                 $t("claim.done_ref", { ref: $fnol.record_number }),
+                 $t("claim.done_case", { ref: $c.case_number, hours: $coalesce($c.sla_hours, 8) }),
+                 $t("claim.done_no_coverage"),
+                 $state.incident_type == "injury" ? $t("claim.done_injury") : null
+               ]), "\n")'
+        footer: '{$t("claim.done_footer")}'
+        buttons:
+          - { title: '{$t("claim.btn_status")}', on_select: { invoke: claim, with: { mode: status } } }
+          - { title: '{$t("claim.btn_home")}',   on_select: { invoke: home } }
+      memory_note: 'Filed FNOL #{$fnol.record_number} and opened a {$state.incident_type} claim #{$c.case_number}. NO coverage opinion, fault or amount was stated.'
+      data: { fnol_number: '$fnol.record_number', case_number: '$c.case_number' }
+    - end: applied
+
+  filed_no_case:
+    - render:
+        render_intent: detail_card
+        header: '{$t("claim.done_header")}'
+        body: '$lines($compact([
+                 $t("claim.done_ref", { ref: $fnol.record_number }),
+                 $t("claim.done_no_case")
+               ]), "\n")'
+      memory_note: 'FNOL #{$fnol.record_number} recorded but the claim case did NOT open — the desk must pick it up manually.'
+    - end: applied
+
+  save_invalid:
+    - answer:
+        data: { reason: '$fnol.reason' }
+        instructions: 'The notification was rejected for the reason in `data.reason`. Fix that one field and call claim again.'
+
+  save_failed:
+    - answer:
+        instructions: 'The claim could not be filed. Say so plainly in one line and give the 24-hour claims line so the customer is not stranded. Do NOT claim it was filed.'
+
+  unavailable:
+    - answer:
+        instructions: 'The claims system is unavailable for a moment. Apologise in one line, give the 24-hour claims line, and do NOT comment on coverage.'

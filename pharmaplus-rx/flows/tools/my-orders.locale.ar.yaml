@@ -1,0 +1,6 @@
+flow_id: my-orders
+
+strings:
+  header:   '📦 طلباتك'
+  btn_rx:   '📄 ابعت روشتة'
+  btn_otc:  '🛒 منتجات بدون روشتة'

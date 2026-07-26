@@ -1,0 +1,40 @@
+# Scheduling declaration — dentists become bookable resources. Availability rules,
+# the race-free capacity ledger and slot expansion are the platform's; a visit is
+# the `booking` XRM system entity. No pack DB.
+#
+# Chairs are single-capacity, so `default_capacity: 1` — two patients can never be
+# handed the same slot even if they tap at the same instant.
+
+timezone: Asia/Dubai
+
+resources:
+  dentist:
+    slot: { default_minutes: 30, default_capacity: 1, window_days: 14 }
+    reminders:
+      - { key: t24, seconds: 86400 }
+      - { key: t2,  seconds: 7200 }
+
+booking:
+  entity: booking
+
+demo:
+  availability:
+    - resource_match: { entity: dentist, field: name, value: 'د. ليلى منصور' }
+      rules:
+        - { dow: 0, start: '10:00', end: '18:00', slot_minutes: 30, capacity: 1 }
+        - { dow: 1, start: '10:00', end: '18:00', slot_minutes: 30, capacity: 1 }
+        - { dow: 3, start: '14:00', end: '20:00', slot_minutes: 30, capacity: 1 }
+    - resource_match: { entity: dentist, field: name, value: 'د. عمر الحداد' }
+      rules:
+        - { dow: 1, start: '09:00', end: '15:00', slot_minutes: 45, capacity: 1 }
+        - { dow: 2, start: '09:00', end: '15:00', slot_minutes: 45, capacity: 1 }
+        - { dow: 4, start: '09:00', end: '13:00', slot_minutes: 45, capacity: 1 }
+    - resource_match: { entity: dentist, field: name, value: 'د. ريما القاسم' }
+      rules:
+        - { dow: 0, start: '09:00', end: '14:00', slot_minutes: 30, capacity: 1 }
+        - { dow: 2, start: '09:00', end: '14:00', slot_minutes: 30, capacity: 1 }
+        - { dow: 6, start: '10:00', end: '15:00', slot_minutes: 30, capacity: 1 }
+    - resource_match: { entity: dentist, field: name, value: 'د. سامي درويش' }
+      rules:
+        - { dow: 3, start: '16:00', end: '21:00', slot_minutes: 60, capacity: 1 }
+        - { dow: 5, start: '16:00', end: '21:00', slot_minutes: 60, capacity: 1 }

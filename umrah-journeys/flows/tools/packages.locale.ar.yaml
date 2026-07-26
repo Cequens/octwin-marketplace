@@ -1,0 +1,7 @@
+flow_id: packages
+
+strings:
+  intro:       '🕋 لدينا {total} باقة متاحة — اسحب لاستعراضها:'
+  from:        '💰 للفرد {price}'
+  btn_detail:  '📋 التفاصيل'
+  btn_book:    '📝 احجز'

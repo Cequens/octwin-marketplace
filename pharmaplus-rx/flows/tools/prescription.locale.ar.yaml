@@ -1,0 +1,33 @@
+flow_id: prescription
+
+strings:
+  status_header:    '🧾 روشتاتك'
+  status_note:      'ℹ️ قرار الصيدلي بيوصلك هنا في المحادثة أول ما يخلص المراجعة.'
+  btn_new:          '📄 ابعت روشتة'
+  btn_home:         '🏠 القائمة الرئيسية'
+  btn_status:       '🧾 حالة روشتتي'
+  btn_otc:          '🛒 منتجات بدون روشتة'
+
+  label.patient:    'اسم المريض'
+  label.area:       'منطقة التوصيل'
+  label.address:    'العنوان'
+  label.phone:      'رقم الموبايل'
+
+  field_header.area: '📍 التوصيل لأي منطقة؟'
+  field_cta.area:    'المناطق'
+
+  area.nasr_city:   'مدينة نصر'
+  area.maadi:       'المعادي'
+  area.heliopolis:  'مصر الجديدة'
+  area.zamalek:     'الزمالك'
+  area.october:     '٦ أكتوبر'
+  area.giza:        'الجيزة'
+
+  case_subject:     'مراجعة روشتة — {patient}'
+  caption:          'روشتة {patient}'
+  done_header:      '✅ وصلت الروشتة للصيدلي'
+  done_ref:         '🧾 رقم الطلب: #{ref}'
+  done_case:        '👨‍⚕️ رقم المراجعة: #{ref} — الصيدلي بيرد خلال {hours} ساعة'
+  done_no_advice:   'ℹ️ مش بنقدر نعلّق على الدواء أو الجرعة — الصيدلي هو اللي يراجع ويقرر، وقراره بيوصلك هنا.'
+  done_footer:      'لو الروشتة محتاجة توضيح، الصيدلي بيسألك من خلال المحادثة.'
+  done_no_case:     '⚠️ الطلب محفوظ، لكن لم نتمكن من إرساله للصيدلي آلياً — اتصل بالفرع ونحن نتابعه فوراً.'

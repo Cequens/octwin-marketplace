@@ -1,0 +1,73 @@
+# swiftship-courier — pack-wide Arabic strings.
+#
+# The `cases.*` / `status.*` / `decision.*` blocks are the CASEWORK LOCALE CONTRACT
+# (boot-enforced in both directions: a missing key AND an orphan key both fail). The
+# `stage.*` / `stage_hint.*` blocks are the `shipment` tracking pipeline — the explainer
+# is what turns a status word into an expectation, and `track` renders it straight from
+# `$enum_label`, so no flow hardcodes a status sentence.
+pack_id: swiftship-courier
+strings:
+  field_picker_footer: 'اختار من القائمة 👆'
+
+  # Case types (one per worklist.yaml work.case.types id)
+  cases.damaged_parcel: 'شحنة تالفة'
+  cases.lost_parcel:    'شحنة مفقودة'
+  cases.late_delivery:  'تأخير في التسليم'
+  cases.wrong_address:  'عنوان خطأ'
+  cases.general_query:  'استفسار عام'
+
+  # Case pipeline stages — all six
+  status.open:              'قيد المراجعة'
+  status.in_progress:       'قيد المعالجة'
+  status.awaiting_customer: 'بانتظار ردّك'
+  status.resolved:          'تم الحل'
+  status.closed:            'مغلقة'
+  status.reopened:          'أُعيد فتحها'
+
+  priority.low:    'منخفضة'
+  priority.normal: 'عادية'
+  priority.high:   'عالية'
+  priority.urgent: 'عاجلة'
+
+  # Decisions — the standard preset + this pack's customs
+  decision.resolve:               'تم الحل'
+  decision.reject:                'تم رفض الشكوى'
+  decision.request_more_info:     'مطلوب منك معلومات إضافية'
+  decision.escalate:              'تم التصعيد'
+  decision.compensation_approved: 'تمت الموافقة على التعويض 💰'
+  decision.reschedule_delivery:   'تم تحديد موعد تسليم جديد'
+  decision.returned_to_sender:    'أُعيدت للراسل'
+
+  # Shipment tracking pipeline
+  stage.created:          'تم إنشاء الشحنة'
+  stage.picked_up:        'تم الاستلام'
+  stage.in_transit:       'في الطريق 🚚'
+  stage.at_hub:           'في مركز الفرز'
+  stage.out_for_delivery: 'مع مندوب التسليم 🛵'
+  stage.delivered:        'تم التسليم ✅'
+  stage.failed_attempt:   'محاولة تسليم فاشلة ⚠️'
+  stage.returned:         'أُعيدت للراسل'
+
+  stage_hint.created:          'ℹ️ الشحنة مسجّلة وبننتظر استلامها من الراسل.'
+  stage_hint.picked_up:        'ℹ️ استلمنا الشحنة وهي في طريقها لمركز الفرز.'
+  stage_hint.in_transit:       'ℹ️ الشحنة بين الفروع — بنحدّثك أول ما توصل منطقتك.'
+  stage_hint.at_hub:           'ℹ️ الشحنة في مركز الفرز وبتتجهز للتسليم.'
+  stage_hint.out_for_delivery: 'ℹ️ مع المندوب النهارده — خليك متاح على الموبايل.'
+  stage_hint.delivered:        'ℹ️ تم التسليم. لو في مشكلة سجّل شكوى وفريقنا يراجعها.'
+  stage_hint.failed_attempt:   'ℹ️ حاولنا التسليم ومحصلش — سجّل شكوى ونعيد الجدولة.'
+  stage_hint.returned:         'ℹ️ الشحنة رجعت للراسل.'
+
+  service.same_day:  'نفس اليوم'
+  service.next_day:  'اليوم التالي'
+  service.standard:  'عادي'
+  service.bulky:     'شحنة كبيرة'
+
+  region.cairo:       'القاهرة والجيزة'
+  region.alexandria:  'الإسكندرية'
+  region.delta:       'الدلتا'
+  region.upper:       'الصعيد'
+
+  weight.under_1:   'أقل من كيلو'
+  weight.under_5:   'حتى ٥ كيلو'
+  weight.under_20:  'حتى ٢٠ كيلو'
+  weight.over_20:   'أكثر من ٢٠ كيلو'

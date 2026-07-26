@@ -1,0 +1,91 @@
+# XRM declaration for glamour-salon.
+#
+#  • `treatment` — the menu. `duration_min` is load-bearing: the booking flow passes it
+#                  to `booking_reserve` as `slot_minutes`, so a long colour job holds
+#                  the chair for its real length instead of one nominal slot.
+#  • `stylist`   — the bookable resource, ranked by a rating rolled up from surveys.
+#  • `booking`   — the appointment (system entity, widened with display snapshots).
+#  • `survey_response` — widened with the rated `stylist`, the rollup dimension.
+
+entities:
+  treatment:
+    label: { en: 'Treatment', ar: 'خدمة' }
+    fields:
+      code:         { type: text, required: true, label: { en: 'Code', ar: 'الرمز' } }
+      name:         { type: text, required: true, label: { en: 'Name', ar: 'الاسم' } }
+      category:     { type: select, options: [hair, colour, nails, skincare, spa, makeup, bridal], label: { en: 'Category', ar: 'القسم' } }
+      description:  { type: textarea, label: { en: 'Description', ar: 'الوصف' } }
+      # The real chair time — this is what the booking passes as `slot_minutes`.
+      duration_min: { type: number, label: { en: 'Duration (min)', ar: 'المدة (دقيقة)' } }
+      price:        { type: money, label: { en: 'Price', ar: 'السعر' } }
+      currency:     { type: text, label: { en: 'Currency', ar: 'العملة' }, default: 'SAR' }
+      photo:        { type: image, label: { en: 'Photo', ar: 'الصورة' } }
+      popularity:   { type: number, label: { en: 'Popularity', ar: 'الأكثر طلباً' }, default: 0 }
+    list: [category, duration_min, price]
+    search: { text: [name, description], semantic: [name, description], rank_by: popularity }
+    dedupe_by: code
+
+  stylist:
+    label: { en: 'Stylist', ar: 'أخصائية' }
+    fields:
+      name:         { type: text, required: true, label: { en: 'Name', ar: 'الاسم' } }
+      title:        { type: text, label: { en: 'Title', ar: 'المسمى' } }
+      specialties:  { type: multi_select, options: [hair, colour, nails, skincare, spa, makeup, bridal], label: { en: 'Specialties', ar: 'التخصصات' } }
+      languages:    { type: text, label: { en: 'Languages', ar: 'اللغات' } }
+      bio:          { type: textarea, label: { en: 'Bio', ar: 'نبذة' } }
+      photo:        { type: image, label: { en: 'Photo', ar: 'الصورة' } }
+      timezone:     { type: text, label: { en: 'Timezone', ar: 'المنطقة الزمنية' }, default: 'Asia/Riyadh' }
+      # Rolled up from the post-visit survey — never typed by hand.
+      rating:       { type: number, label: { en: 'Rating', ar: 'التقييم' }, default: 0 }
+      rating_count: { type: number, label: { en: 'Ratings', ar: 'عدد التقييمات' }, default: 0 }
+    list: [title, languages, rating]
+    search: { text: [name, languages], rank_by: rating }
+    dedupe_by: name
+
+  booking:
+    extends: system
+    label: { en: 'Appointment', ar: 'موعد' }
+    fields:
+      treatment:       { type: record, entity: treatment, label: { en: 'Treatment', ar: 'الخدمة' } }
+      stylist:         { type: record, entity: stylist, label: { en: 'Stylist', ar: 'الأخصائية' } }
+      treatment_label: { type: text, label: { en: 'Treatment', ar: 'الخدمة' } }
+      stylist_label:   { type: text, label: { en: 'Stylist', ar: 'الأخصائية' } }
+      slot_label:      { type: text, label: { en: 'Slot', ar: 'الموعد' } }
+      notes:           { type: textarea, label: { en: 'Notes', ar: 'ملاحظات' } }
+
+  survey_response:
+    extends: system
+    fields:
+      stylist: { type: record, entity: stylist, label: { en: 'Stylist', ar: 'الأخصائية' } }
+    list: [survey_key, score, stylist]
+
+segments:
+  upcoming:
+    entity: booking
+    label: { en: 'Upcoming', ar: 'المواعيد القادمة' }
+    where: { all: [{ active: true }] }
+
+demo:
+  - entity: treatment
+    fields: { code: 'CUT-BLOW', name: 'قص وتصفيف', category: hair, description: 'قص وغسيل وتصفيف بالسيشوار. Cut, wash and blow-dry.', duration_min: 60, price: 180, currency: SAR, popularity: 5, photo: 'generate:Photograph of a modern upscale hair salon interior with a stylist blow-drying a client hair at a mirrored station, warm lighting, elegant decor, photorealistic.' }
+  - entity: treatment
+    fields: { code: 'COLOUR-FULL', name: 'صبغة كاملة مع علاج', category: colour, description: 'صبغة كاملة مع علاج مرمم وتصفيف — تستغرق ثلاث ساعات. Full colour with a repair treatment and styling; takes three hours.', duration_min: 180, price: 650, currency: SAR, popularity: 5, photo: 'generate:Photograph of a hair colourist applying colour to a client long hair with a brush and foils in an elegant salon, soft lighting, photorealistic.' }
+  - entity: treatment
+    fields: { code: 'KERATIN', name: 'بروتين وكيراتين', category: colour, description: 'علاج كيراتين لفرد وتنعيم الشعر — أربع ساعات. Keratin smoothing treatment; four hours.', duration_min: 240, price: 900, currency: SAR, popularity: 4, photo: 'generate:Photograph of a keratin hair treatment being flat-ironed section by section in a bright modern salon, photorealistic.' }
+  - entity: treatment
+    fields: { code: 'MANI-PEDI', name: 'مناكير وباديكير', category: nails, description: 'مناكير وباديكير مع تدليك وطلاء. Manicure and pedicure with massage and polish.', duration_min: 90, price: 220, currency: SAR, popularity: 5, photo: 'generate:Photograph of a nail technician giving a manicure at a clean modern nail station, pastel polish bottles arranged, soft daylight, photorealistic.' }
+  - entity: treatment
+    fields: { code: 'FACIAL-HYD', name: 'تنظيف بشرة مرطّب', category: skincare, description: 'تنظيف عميق وترطيب مع ماسك مناسب لنوع البشرة. Deep cleanse and hydrating mask suited to the skin type.', duration_min: 75, price: 380, currency: SAR, popularity: 4, photo: 'generate:Photograph of a facial treatment room with a therapist applying a hydrating mask to a relaxed client, calm spa lighting, photorealistic.' }
+  - entity: treatment
+    fields: { code: 'SPA-MASSAGE', name: 'مساج استرخاء ٦٠ دقيقة', category: spa, description: 'مساج سويدي للاسترخاء بزيوت عطرية. Swedish relaxation massage with aromatic oils.', duration_min: 60, price: 300, currency: SAR, popularity: 4, photo: 'generate:Photograph of a serene spa massage room with soft towels, candles and orchids, warm dim lighting, photorealistic.' }
+  - entity: treatment
+    fields: { code: 'BRIDAL', name: 'باكج العروس', category: bridal, description: 'مكياج وتصفيف وعناية بالبشرة والأظافر لليوم الكبير — تُحجز مبكراً. Bridal makeup, hair, skin and nails; book early.', duration_min: 300, price: 3500, currency: SAR, popularity: 3, photo: 'generate:Photograph of a bridal makeup session in an elegant salon suite, makeup artist working with brushes, soft glamorous lighting, white flowers, photorealistic.' }
+
+  - entity: stylist
+    fields: { name: 'ريهام', title: 'أخصائية شعر أولى', specialties: [hair, colour], languages: 'العربية، الإنجليزية', bio: 'خبرة ١٢ سنة في الصبغات والعلاجات.', timezone: 'Asia/Riyadh', rating: 4.9, rating_count: 74, photo: 'generate:Professional portrait of a female hair stylist in a black salon apron holding styling scissors, elegant salon blurred behind, warm lighting.' }
+  - entity: stylist
+    fields: { name: 'سُمية', title: 'أخصائية عناية بالبشرة', specialties: [skincare, spa], languages: 'العربية، الإنجليزية', bio: 'أخصائية بشرة معتمدة، تركّز على البشرة الحساسة.', timezone: 'Asia/Riyadh', rating: 4.8, rating_count: 52, photo: 'generate:Professional portrait of a female skincare therapist in clean white spa uniform, serene treatment room blurred behind, soft lighting.' }
+  - entity: stylist
+    fields: { name: 'لمى', title: 'أخصائية أظافر', specialties: [nails], languages: 'العربية', bio: 'تصميم أظافر وعناية، خبرة ٧ سنوات.', timezone: 'Asia/Riyadh', rating: 4.7, rating_count: 61, photo: 'generate:Professional portrait of a female nail artist at a nail station holding a fine brush, colourful polish display blurred behind, bright lighting.' }
+  - entity: stylist
+    fields: { name: 'دانية', title: 'خبيرة مكياج وعرائس', specialties: [makeup, bridal, hair], languages: 'العربية، الإنجليزية', bio: 'خبيرة مكياج عرائس ومناسبات.', timezone: 'Asia/Riyadh', rating: 4.9, rating_count: 38, photo: 'generate:Professional portrait of a female bridal makeup artist holding a makeup brush palette, glamorous salon suite blurred behind, soft flattering light.' }

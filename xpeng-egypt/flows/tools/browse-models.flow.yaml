@@ -1,0 +1,46 @@
+flow_id:     browse-models
+version:     1
+description: |-
+  Show the full XPENG Egypt lineup as an image carousel. Call when the customer
+  wants to see the available cars/models, or asks what's on offer.
+
+input: {}
+
+entry:
+  - else: true
+    goto: load
+
+steps:
+  load:
+    - do: record_list
+      args:
+        entity: model
+        all: true
+        sort_by: { field: price_from, dir: asc }
+      bind: page
+      outputs:
+        ok:    [{ goto: show }]
+        empty: [{ goto: none }]
+        # failed → throws → platform error-net composes an apology
+
+  show:
+    - if: '$length($page.rows) == 0'    # all:true returns ok+[] for 0 rows, not the empty port
+      goto: none
+    - render:
+        render_intent: carousel
+        body: '{$t("browse-models.intro")}'
+        items: '$page.rows'
+        item_template:
+          image_url: '$coalesce($item.fields.photo, "")'
+          body: "$lines([ '🚗 ' + $loc($item.fields.name), $loc($item.fields.tagline), '⚡ ' + $format_number($item.fields.range_km) + ' ' + $t('browse-models.km'), '💰 ' + $t('browse-models.from') + ' ' + $format_number($item.fields.price_from) + ' ' + $t('browse-models.egp') ])"
+          buttons:
+            - { title: '{$t("xpeng-egypt.cta_details")}',     on_select: { invoke: model-details,   with: { model_code: '$item.fields.code' } } }
+            - { title: '{$t("xpeng-egypt.cta_test_drive")}',  on_select: { invoke: book-test-drive, with: { model_code: '$item.fields.code' } } }
+      memory_note: 'Showed the XPENG lineup ({$page.total} models).'
+    # Purchase funnel: entering the top of the funnel.
+    - track: { journey: purchase, event: browsed_lineup }
+    - end: applied
+
+  none:
+    - answer:
+        instructions: "The lineup could not be loaded right now. Apologize briefly in the customer's language and offer to take their name and phone via capture-lead so sales can help."

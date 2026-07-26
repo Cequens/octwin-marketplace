@@ -1,0 +1,91 @@
+# programmes — what is on offer, as a carousel (each programme has a campus photo). The
+# seat count is shown because it is what makes an application worth starting.
+
+flow_id:     programmes
+version:     1
+description: |-
+  Show the programmes with fees and remaining seats. Call when the guardian asks what you
+  offer, asks about fees, or names a stage or curriculum. Pass `stage_level` (kg, primary,
+  preparatory, secondary) or `curriculum` (national, british, american, ib) when named.
+
+input:
+  stage_level:
+    type:     string
+    optional: true
+    describe: 'One of: kg, primary, preparatory, secondary.'
+  curriculum:
+    type:     string
+    optional: true
+    describe: 'One of: national, british, american, ib.'
+
+entry:
+  - if:   '$input.stage_level != null'
+    goto: load_stage
+  - if:   '$input.curriculum != null'
+    goto: load_curriculum
+  - else: true
+    goto: load_all
+
+steps:
+  load_all:
+    - do: record_list
+      args: { entity: programme, all: true, limit: 10, sort_by: { field: annual_fee, dir: asc } }
+      bind: page
+      outputs:
+        ok:     [{ goto: show }]
+        empty:  [{ goto: none }]
+        failed: [{ goto: unavailable }]
+
+  load_stage:
+    - do: record_list
+      args:
+        entity:  programme
+        all:     true
+        limit:   10
+        where:   { all: [{ field: stage_level, op: eq, value: '$input.stage_level' }] }
+        sort_by: { field: annual_fee, dir: asc }
+      bind: page
+      outputs:
+        ok:     [{ goto: show }]
+        empty:  [{ goto: load_all }]
+        failed: [{ goto: unavailable }]
+
+  load_curriculum:
+    - do: record_list
+      args:
+        entity:  programme
+        all:     true
+        limit:   10
+        where:   { all: [{ field: curriculum, op: eq, value: '$input.curriculum' }] }
+        sort_by: { field: annual_fee, dir: asc }
+      bind: page
+      outputs:
+        ok:     [{ goto: show }]
+        empty:  [{ goto: load_all }]
+        failed: [{ goto: unavailable }]
+
+  show:
+    - render:
+        render_intent: carousel
+        body:  '{$t("programmes.intro", { total: $page.total })}'
+        items: '$page.rows'
+        item_template:
+          image_url: '$coalesce($item.fields.photo, "")'
+          body: '$lines($compact([
+                   $item.fields.name,
+                   $format_money_field($item.fields.annual_fee, $coalesce($item.fields.currency, "EGP")),
+                   $item.fields.seats_left > 0 ? $t("programmes.seats", { seats: $item.fields.seats_left }) : $t("programmes.full")
+                 ]), "\n")'
+          buttons:
+            - { title: '{$t("programmes.btn_apply")}', on_select: { invoke: apply, with: { programme_id: '$item.id' } } }
+            - { title: '{$t("programmes.btn_tour")}',  on_select: { invoke: book-tour } }
+      memory_note: 'Showed {$page.total} programme(s).'
+    - end: applied
+
+  none:
+    - answer:
+        instructions: 'No programme matched. Say so in one line and offer the full list.'
+
+  unavailable:
+    - answer:
+        instructions: 'The programme list could not be read. Apologise in one line and offer to try again shortly. NEVER quote a fee from memory.'

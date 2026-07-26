@@ -1,0 +1,43 @@
+# home — the front door. State-aware: counts the buyer's live viewings and
+# folds the number into the greeting before rendering the hub.
+
+flow_id:     home
+version:     1
+description: Main menu / welcome. Call on a greeting, an unclear or off-topic message, or "what can you do?".
+
+input:
+  message:
+    type:     string
+    optional: true
+    describe: 'Optional ONE short greeting line YOU compose for this buyer (e.g. greet them by name).'
+
+entry:
+  - else: true
+    goto: count_viewings
+
+steps:
+  count_viewings:
+    # A live count makes the hub feel personal without needing identity.
+    - do: record_aggregate
+      args: { entity: booking, op: count, active_only: true }
+      bind: viewings
+      outputs:
+        ok:     [{ goto: show }]
+        failed: [{ goto: show }]
+
+  show:
+    - assign:
+        body_line: '$coalesce($input.message, $t("home.greeting"))'
+        live: '$coalesce($viewings.value, 0)'
+    - render:
+        render_intent: list_picker
+        header: '{$t("home.header")}'
+        body:   '$lines($compact([$body_line, $live > 0 ? $t("home.live_viewings", { count: $live }) : null]), "\n")'
+        cta:    '{$t("home.cta")}'
+        items:
+          - { title: '{$t("home.row_browse")}',   description: '{$t("home.row_browse_d")}',   on_select: { invoke: browse-projects } }
+          - { title: '{$t("home.row_mortgage")}', description: '{$t("home.row_mortgage_d")}', on_select: { invoke: mortgage-estimate } }
+          - { title: '{$t("home.row_viewing")}',  description: '{$t("home.row_viewing_d")}',  on_select: { invoke: book-viewing } }
+          - { title: '{$t("home.row_mine")}',     description: '{$t("home.row_mine_d")}',     on_select: { invoke: my-requests } }
+      memory_note: 'Showed the Gulf Realty home menu ({$live} live viewing(s)).'
+    - end: applied

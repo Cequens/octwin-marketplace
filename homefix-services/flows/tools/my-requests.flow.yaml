@@ -1,0 +1,59 @@
+# my-requests — the customer's own work orders with the real crew, stage and what
+# happens next. Contact-scoped, so no identity plumbing.
+
+flow_id:     my-requests
+version:     1
+description: |-
+  Show this customer's work orders and where each one stands. Call for "طلباتي",
+  "الفني وصل فين", "my request". Never state a stage or an ETA from memory — call this.
+
+input:
+  message:
+    type:     string
+    optional: true
+    describe: 'Optional note from the customer.'
+
+entry:
+  - else: true
+    goto: load
+
+steps:
+  load:
+    - do: record_list
+      args: { entity: work_order, limit: 10, active_only: false, sort: created_at }
+      bind: page
+      outputs:
+        ok:     [{ goto: show }]
+        empty:  [{ goto: none }]
+        failed: [{ goto: unavailable }]
+
+  show:
+    - assign:
+        order_lines: '$map($page.rows, $lines($compact([
+                         "🧾 #" + $item.record_number,
+                         $item.fields.service_label,
+                         $enum_label($item.fields.emirate, "emirate", $item.fields.emirate),
+                         $enum_label($item.fields.urgency, "urgency", $item.fields.urgency),
+                         $enum_label($item.stage, "stage", $item.stage)
+                       ]), " · "))'
+        latest: '$page.rows[0]'
+    - render:
+        render_intent: detail_card
+        header: '{$t("my-requests.header")}'
+        body: '$lines($compact($concat(
+                 $order_lines,
+                 [$latest != null ? $enum_label($latest.stage, "stage_hint", "") : null]
+               )), "\n")'
+        buttons:
+          - { title: '{$t("my-requests.btn_new")}',      on_select: { invoke: request-visit } }
+          - { title: '{$t("my-requests.btn_services")}', on_select: { invoke: services } }
+      memory_note: 'Showed {$length($page.rows)} work order(s); latest stage {$latest.stage}.'
+    - end: applied
+
+  none:
+    - answer:
+        instructions: 'This customer has no work order yet. Say so warmly in one line and offer to raise one.'
+
+  unavailable:
+    - answer:
+        instructions: 'The request lookup failed. Apologise in one line and offer to try again shortly. Do NOT state a stage or an ETA from memory.'
