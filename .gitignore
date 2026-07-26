@@ -13,3 +13,16 @@ node_modules/
 # gaps and workarounds, written for the platform team. Useful locally, not something to
 # publish under the company org on a public repo. Delete this line to include it.
 FEEDBACK.md
+
+# Per-developer CLI deploy config, NOT part of a pack.
+#
+# `pack.json` supplies `platform_url` (+ optional tenant/project pins) to `octwin deploy`, and it
+# is excluded from the uploaded bundle by the CLI and from the artifact by the platform's own
+# `classifyPackPath` — so the platform has never seen it. What a committed copy DID do was ship our
+# dev machine's pins to everyone: every pack in this repo carried
+# `http://localhost:3000` + workspace `test`, so a cloner running `octwin deploy` in a pack
+# directory silently targeted a machine and a workspace that were not theirs.
+#
+# Keep yours locally; `octwin init` writes one, and `--url` / `PACK_PLATFORM_URL` cover the case
+# where you have none.
+pack.json
