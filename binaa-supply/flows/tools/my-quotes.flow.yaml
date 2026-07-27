@@ -1,0 +1,65 @@
+# my-quotes — the caller's own RFQs and where each one has got to.
+#
+# Purely LOCAL: reads the xrm records, no integration call. The stage shown here is
+# whatever the last inbound webhook set, so this is where seam 4 becomes visible to
+# the customer — they see "شُحن" because someone edited a cell in the workbook.
+
+flow_id:     my-quotes
+version:     1
+description: The caller's own quote requests and their current status. Call on "طلباتي" / "وين وصل طلبي" / "my quotes" / a status question.
+
+input: {}
+
+entry:
+  - else: true
+    goto: load
+
+steps:
+
+  load:
+    - do: record_list
+      args: { entity: quote, limit: 10, sort: record_number, order: desc }
+      bind: quotes
+      outputs:
+        ok:     [{ goto: show }]
+        empty:  [{ goto: none }]
+        failed: [{ end: failed }]
+
+  show:
+    - assign:
+        rows: '$map($quotes.rows, {
+                 ref:      $item.record_number,
+                 material: $item.fields.material_name,
+                 qty:      $item.fields.qty,
+                 unit:     $coalesce($item.fields.unit, ""),
+                 total:    $item.fields.total,
+                 currency: $coalesce($item.fields.currency, "SAR"),
+                 stage:    $enum_label($item.stage, "stage")
+               })'
+    - render:
+        render_intent: list_picker
+        header: '{$t("my-quotes.header")}'
+        body:   '$t("my-quotes.intro", { count: $length($rows) })'
+        cta:    '{$t("my-quotes.cta")}'
+        items:  '$rows'
+        item_template:
+          title:       '$t("my-quotes.row_title", { ref: $item.ref, material: $item.material })'
+          description: '$lines($compact([
+                          $item.stage,
+                          $item.qty != null ? $t("my-quotes.row_qty", { qty: $item.qty, unit: $item.unit }) : null,
+                          $item.total != null ? $format_money($item.total, $item.currency) : null
+                        ]), " · ")'
+          on_select:   { invoke: price-list }
+      memory_note: 'Listed {$length($rows)} quote(s) for this contractor.'
+    - end: applied
+
+  none:
+    - render:
+        render_intent: detail_card
+        header: '{$t("my-quotes.none_header")}'
+        body:   '{$t("my-quotes.none_body")}'
+        buttons:
+          - { title: '{$t("my-quotes.btn_prices")}', on_select: { invoke: price-list } }
+          - { title: '{$t("my-quotes.btn_rfq")}',    on_select: { invoke: request-quote } }
+      memory_note: 'Contractor has no quotes yet.'
+    - end: applied

@@ -1,0 +1,34 @@
+flow_id: request-quote
+
+strings:
+  label.material:      'الصنف المطلوب'
+  label.qty:           'الكمية'
+  label.site:          'موقع التسليم'
+  label.name:          'اسم العميل'
+  unit_generic:        'وحدة'
+
+  field_header.site:   '📍 موقع التسليم'
+  field_body.site:     'وين تحب نوصّل الطلب؟'
+  field_cta.site:      'اختر الموقع'
+
+  confirm_header:      '📝 مراجعة الطلب'
+  confirm_footer:      'أكّد عشان نسجّل الطلب عند المبيعات.'
+  preview.material:    '🧱 الصنف: {material}'
+  preview.sku:         '🏷️ الكود: {sku}'
+  preview.qty:         '🔢 الكمية: {qty} {unit}'
+  preview.total:       '💰 الإجمالي التقديري: {total}'
+  preview.no_price:    '💰 السعر يُعتمد من المبيعات ونرسله لك.'
+  preview.site:        '📍 التسليم: {site}'
+  preview.name:        '👤 باسم: {name}'
+  btn_confirm:         '✅ أكّد الطلب'
+  btn_cancel:          '❌ إلغاء'
+
+  filed_header:        '✅ تم تسجيل طلبك'
+  filed_ref:           '🧾 رقم الطلب: {ref}'
+  filed_line:          '🧱 {material} — {qty} {unit}'
+  filed_total:         '💰 الإجمالي التقديري: {total}'
+  filed_next:          'المبيعات بيراجعوا الطلب ويرجعوا لك بعرض معتمد.'
+  offline_note:        'ℹ️ سجّلنا الطلب عندنا وأبلغنا المبيعات. تحديث نظام المبيعات ممكن يتأخر شوي.'
+  btn_my_quotes:       '📄 طلباتي'
+  btn_more:            '🧱 أصناف ثانية'
+  aborted:             'تمام، ألغينا الطلب. تحت أمرك في أي وقت.'

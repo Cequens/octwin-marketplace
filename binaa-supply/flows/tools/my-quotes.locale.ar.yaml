@@ -1,0 +1,13 @@
+flow_id: my-quotes
+
+strings:
+  header:        '📄 طلباتي'
+  intro:         'عندك {count} طلب. اضغط أي طلب لتصفح أسعار جديدة.'
+  cta:           'اختر طلب'
+  row_title:     '{ref} · {material}'
+  row_qty:       '{qty} {unit}'
+
+  none_header:   '📄 ما عندك طلبات بعد'
+  none_body:     'تقدر تتصفح الأسعار أو تسجّل طلب عرض سعر وبنرجع لك بعرض معتمد.'
+  btn_prices:    '🧱 قائمة الأسعار'
+  btn_rfq:       '📝 اطلب عرض سعر'

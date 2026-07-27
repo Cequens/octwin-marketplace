@@ -1,0 +1,274 @@
+# The two systems the yard already runs on.
+#
+#  • sheet — the price list AND the RFQ log. Deliberately NOT mirrored into XRM:
+#            finance edits that workbook every day, and a mirror is a second
+#            source of truth that is always one sweep out of date. We read it live.
+#
+#            Reached through a Google Apps Script Web App rather than the Sheets
+#            REST API, because that API has no token-only write path (an API key is
+#            read-only and public-sheets-only; writing needs OAuth2). A Web App is
+#            a first-party Google endpoint the sheet's owner deploys, so there is no
+#            OAuth dance and no refresh tokens to rotate. See README.md.
+#
+#  • slack — where the sales desk actually lives.
+#
+# NOTHING here is a secret. The endpoint and the credential are operator data,
+# entered once in the console under Outbound → Integrations.
+
+version: 1
+
+connections:
+
+  sheet:
+    label:    { en: 'Price-list workbook', ar: 'شيت قائمة الأسعار' }
+    describe: >-
+      The Apps Script Web App bound to the Binaa workbook. The endpoint is the
+      /exec deployment URL; the credential is the same string you paste into
+      SHARED_SECRET at the top of the script.
+    base_url:
+      required: true
+      example:  'https://script.google.com/macros/s/AKfycbxxxxxxxxxxxxxxxxxxxx/exec'
+      # `/dev` is an editor-only URL that requires a signed-in Google session, so a
+      # server-to-server call against it always fails. Reject it before it is saved
+      # rather than after an operator spends an afternoon on it.
+      must_match: '^https://script\.google\.com/(a/macros/[^/]+|macros)/s/[A-Za-z0-9_-]+/exec$'
+    auth:
+      kind: api_key
+      # The Web App answers with a cross-host redirect, and any correct HTTP client
+      # strips an Authorization header on that hop — so the secret CANNOT ride a
+      # header here. The GET carries it in the query string; the POST overrides to
+      # the body (see `auth_in` on sheet_append_quote), because a query string is
+      # logged by intermediaries and an RFQ carries a customer's phone number.
+      in:   query
+      name: secret
+    request:
+      # Content Service always redirects to a one-time googleusercontent.com URL
+      # that is GET-only — following it with POST returns 405. All three of these
+      # are required for such an endpoint to work at all.
+      follow_redirects:       true
+      redirect_method:        get
+      strip_auth_on_redirect: true
+      max_redirects:          3
+      timeout_ms:             8000
+      max_response_bytes:     262144
+    # Apps Script cannot set a status code. A thrown script AND a wrong sharing
+    # setting both answer HTTP 200 — the latter with a human sign-in page. Every
+    # operation below therefore relies on the platform's default `expect: json`,
+    # which turns an HTML body into a named `non_json_response` failure instead of
+    # a silent success. Do not weaken it to `text` on this connection.
+    health: { operation: sheet_ping }
+    setup_hint: >-
+      Extensions → Apps Script, paste apps-script/binaa-sheet.gs.md, then
+      Deploy → New deployment → Web app with "Execute as: Me" and
+      "Who has access: Anyone".
+
+  slack:
+    label:    { en: 'Slack workspace', ar: 'سلاك' }
+    describe: 'Where the sales desk sees new RFQs and won deals.'
+    base_url: { fixed: 'https://slack.com/api' }
+    auth:     { kind: bearer }
+    settings:
+      rfq_channel:
+        label:    { en: 'RFQ channel ID', ar: 'قناة الطلبات' }
+        describe: 'Channel → About → the C… id at the bottom. Not the #name.'
+        required: true
+        example:  'C0123ABCD'
+      sales_channel:
+        label:    { en: 'Sales channel ID', ar: 'قناة المبيعات' }
+        required: true
+        example:  'C0456EFGH'
+    request:
+      timeout_ms:         8000
+      max_response_bytes: 65536
+    health: { operation: slack_auth_test }
+    setup_hint: >-
+      api.slack.com/apps → create an app → OAuth & Permissions → Bot Token Scopes
+      chat:write (add chat:write.public if you would rather not invite the bot) →
+      Install to Workspace → copy the xoxb- token.
+
+operations:
+
+  # ── the workbook ───────────────────────────────────────────────────────────
+
+  sheet_ping:
+    connection: sheet
+    describe:   'Cheap authenticated read for the console Test button. Also reports the pasted script version.'
+    method:     GET
+    query:      { action: ping }
+    response:
+      ok_path:    ok
+      error_path: error
+      error_map:
+        denied: [bad_secret]
+      data_path:  sheet
+
+  sheet_prices:
+    connection: sheet
+    describe:   'Live rows from the Prices tab, filtered by the script so we never download the whole list.'
+    method:     GET
+    query:
+      action:   prices
+      q:        '{{ input.q }}'
+      category: '{{ input.category }}'
+      sku:      '{{ input.sku }}'
+      limit:    '{{ input.limit }}'
+    response:
+      ok_path:    ok
+      error_path: error
+      items_path: rows
+      data_path:  rows
+      error_map:
+        denied:  [bad_secret]
+        invalid: [unknown_action, missing_sheet]
+
+  sheet_append_quote:
+    connection: sheet
+    describe:   'Append one RFQ row to the Quotes tab. The script dedupes on `ref`, so a retry cannot double-file.'
+    method:     POST
+    # The secret moves to the BODY for this one: a query string is logged by
+    # intermediaries, and this request carries the customer's phone number.
+    auth_in:    body
+    headers:
+      # Server-to-server, so there is no CORS preflight and no need for the
+      # text/plain workaround the browser-side advice recommends.
+      Content-Type: 'application/json'
+    body:
+      action:     append_quote
+      ref:        '{{ input.ref }}'
+      customer:   '{{ input.customer }}'
+      phone:      '{{ input.phone }}'
+      sku:        '{{ input.sku }}'
+      material:   '{{ input.material }}'
+      qty:        '{{ input.qty }}'
+      unit:       '{{ input.unit }}'
+      unit_price: '{{ input.unit_price }}'
+      total:      '{{ input.total }}'
+      currency:   '{{ input.currency || "SAR" }}'
+      site:       '{{ input.site }}'
+      address:    '{{ input.address }}'
+    # Never store a customer's phone number in the delivery log.
+    redact: [phone]
+    idempotency_header: 'X-Idempotency-Key'
+    response:
+      ok_path:    ok
+      error_path: error
+      data_path:  row
+      error_map:
+        denied:  [bad_secret]
+        invalid: [missing_ref, unknown_action, missing_sheet]
+        # The script holds a lock while appending; `busy` means try again shortly.
+        retry:   [busy]
+
+  # ── Slack ──────────────────────────────────────────────────────────────────
+
+  slack_auth_test:
+    connection: slack
+    describe:   'Confirms the bot token for the console Test button.'
+    method:     POST
+    path:       'auth.test'
+    response:
+      ok_path:    ok
+      error_path: error
+      data_path:  team
+      error_map:
+        denied: [invalid_auth, not_authed, token_revoked, account_inactive]
+
+  # TWO operations rather than one taking `channel` as an argument, because the
+  # channel is CONNECTION CONFIG, not per-call data. An operation body can read
+  # `{{ conn.* }}`; a `push:` hook's `input:` is rendered at enqueue time from the
+  # record alone and cannot. Putting the channel here also means a `push:` hook
+  # names WHICH DESK it is telling, which reads better in xrm.yaml.
+  slack_post_rfq:
+    connection: slack
+    describe:   'Tell the RFQ desk. Queued only.'
+    method:     POST
+    path:       'chat.postMessage'
+    # A customer must never wait on Slack's uptime for their reply, and the platform
+    # refuses a synchronous call to an operation declared this way.
+    allow_sync: false
+    headers:
+      # With a JSON body the token MUST be the header — Slack ignores a body field.
+      Content-Type: 'application/json; charset=utf-8'
+    body:
+      channel: '{{ conn.rfq_channel }}'
+      text:    '{{ input.text }}'
+    response:
+      ok_path:    ok
+      error_path: error
+      error_map:
+        # Slack answers HTTP 200 for EVERY failure, so status-code mapping would
+        # report each of these as a success. Splitting them matters because the
+        # response differs: `denied` is the operator's to fix and is never retried,
+        # `invalid` is ours, and `retry` is nobody's fault.
+        denied:  [not_in_channel, channel_not_found, missing_scope, invalid_auth,
+                  not_authed, token_revoked, token_expired, account_inactive,
+                  is_archived, restricted_action_read_only_channel]
+        invalid: [no_text, invalid_blocks, msg_blocks_too_long, invalid_arguments]
+        retry:   [rate_limited, ratelimited, internal_error, fatal_error,
+                  service_unavailable, request_timeout]
+    # chat.postMessage is rate-limited at roughly one message per second per
+    # channel and answers 429 with Retry-After. Honour theirs over our curve.
+    honor_retry_after: true
+
+  slack_post_sales:
+    connection: slack
+    describe:   'Tell the sales desk. Queued only.'
+    method:     POST
+    path:       'chat.postMessage'
+    # A customer must never wait on Slack's uptime for their reply, and the platform
+    # refuses a synchronous call to an operation declared this way.
+    allow_sync: false
+    headers:
+      # With a JSON body the token MUST be the header — Slack ignores a body field.
+      Content-Type: 'application/json; charset=utf-8'
+    body:
+      channel: '{{ conn.sales_channel }}'
+      text:    '{{ input.text }}'
+    response:
+      ok_path:    ok
+      error_path: error
+      error_map:
+        # Slack answers HTTP 200 for EVERY failure, so status-code mapping would
+        # report each of these as a success. Splitting them matters because the
+        # response differs: `denied` is the operator's to fix and is never retried,
+        # `invalid` is ours, and `retry` is nobody's fault.
+        denied:  [not_in_channel, channel_not_found, missing_scope, invalid_auth,
+                  not_authed, token_revoked, token_expired, account_inactive,
+                  is_archived, restricted_action_read_only_channel]
+        invalid: [no_text, invalid_blocks, msg_blocks_too_long, invalid_arguments]
+        retry:   [rate_limited, ratelimited, internal_error, fatal_error,
+                  service_unavailable, request_timeout]
+    # chat.postMessage is rate-limited at roughly one message per second per
+    # channel and answers 429 with Retry-After. Honour theirs over our curve.
+    honor_retry_after: true
+
+inbound:
+
+  quote_status:
+    label:    { en: 'Quote status edited in the sheet', ar: 'تغيّر حالة العرض في الشيت' }
+    describe: 'The ops team sets a Status cell in the Quotes tab; the script posts it here.'
+    connection: sheet
+    verify:
+      scheme:     octwin_v1
+      max_skew_s: 300
+    # onEdit can fire twice for one edit, and the script retries on a 5xx. This is
+    # the durable guard — it survives a restart, which a per-process one would not.
+    idempotency: '{{ payload.ref }}:{{ payload.status }}:{{ payload.edited_at }}'
+    when: { path: event, equals: [quote_status] }
+    upsert:
+      entity: quote
+      # The sheet has NO stable row identity — sorting it renumbers every row — so
+      # the join key is minted on OUR side (`record_number`), written into the
+      # sheet's Ref column when the RFQ is filed, and matched on the way back.
+      match:  { record_number: '{{ payload.ref }}' }
+      fields:
+        sheet_row:      '{{ payload.row }}'
+        sheet_row_url:  '{{ payload.row_url }}'
+        last_synced_at: '{{ payload.edited_at }}'
+        last_synced_by: '{{ payload.edited_by }}'
+      stage: '{{ payload.status }}'
+      # A stray edit on an unrelated row must never conjure a record here.
+      on_no_match: ignore
+      # The Status column is a data-validation dropdown, so this should never fire
+      # — and if it does, that is a mapping bug worth seeing rather than coercing.
+      on_unmapped_stage: reject

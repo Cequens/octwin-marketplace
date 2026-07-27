@@ -1,0 +1,15 @@
+# Pack-level slash commands. A top-level LIST, one literal `match` per entry.
+#
+# Without this file `/clear` silently reaches the agent as ordinary text. A
+# contractor who has wandered mid-RFQ needs a way out that does not involve
+# explaining themselves.
+
+- match:  '/clear'
+  action: close_conversation
+  reply:  'تمام، بدينا من جديد. كيف نخدمك؟'
+  source: '/clear'
+
+- match:  '/جديد'
+  action: close_conversation
+  reply:  'تمام، بدينا من جديد. كيف نخدمك؟'
+  source: '/clear'

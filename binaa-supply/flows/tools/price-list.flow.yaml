@@ -1,0 +1,159 @@
+# price-list — SEAM 1: read the live sheet on the turn.
+#
+# There is no local copy of the price list on purpose. Finance edits the workbook
+# daily, and a mirror would always be one sweep stale — so the bot reads it live and
+# the yard never has to remember to sync anything.
+#
+# `integration_call` is SYNCHRONOUS here because the customer is waiting on the
+# answer. Contrast the Slack alert in xrm.yaml, which is queued because nobody is.
+
+flow_id:     price-list
+version:     1
+description: |-
+  Live prices from the Binaa workbook. Call when the customer asks the price of a
+  material, names a section (أسمنت / حديد / بلوك / رمل / سيراميك / سباكة), or asks
+  what is available. Pass `sku` ONLY when it came off a card — never text they typed.
+
+config:
+  lookup: { page_size: 20 }
+
+input:
+  material:
+    type:     string
+    optional: true
+    describe: 'Whatever the customer typed — an Arabic or English material name, e.g. "أسمنت مقاوم" or "rebar 16mm".'
+  category:
+    type:     enum
+    enum:     [cement, steel, blocks, sand, tiles, plumbing]
+    optional: true
+    describe: 'Only when the customer named a section.'
+  sku:
+    type:     string
+    optional: true
+    describe: 'A catalogue code — ONLY from a previous card or picker, never text the customer typed.'
+
+entry:
+  - if: '$input.sku != null'
+    goto: fetch_one
+  - else: true
+    goto: fetch_many
+
+steps:
+
+  fetch_many:
+    - do: integration_call
+      args:
+        operation: sheet_prices
+        input:
+          q:        '$input.material'
+          category: '$input.category'
+          limit:    '$config.lookup.page_size'
+      bind: prices
+      outputs:
+        ok:      [{ goto: show_many }]
+        empty:   [{ goto: no_match }]
+        # Canonical handler: the reason goes to the model as `instructions` with no
+        # card, so it can rephrase and retry rather than showing a YAML error.
+        invalid: []
+        denied:  [{ goto: not_configured }]
+        failed:  [{ goto: sheet_down }]
+
+  fetch_one:
+    - do: integration_call
+      args:
+        operation: sheet_prices
+        input: { sku: '$input.sku', limit: 1 }
+      bind: prices          # same bind, so the shared outcome steps read one var
+      outputs:
+        ok:      [{ goto: show_one }]
+        empty:   [{ goto: no_match }]
+        invalid: []
+        denied:  [{ goto: not_configured }]
+        failed:  [{ goto: sheet_down }]
+
+  show_many:
+    # A mapper step rather than an inline item_template: `group_by:` reads a FIELD,
+    # not an expression, so the localized section title has to exist on the row.
+    - assign:
+        rows: '$map($prices, {
+                 sku:       $item.sku,
+                 name:      $coalesce($item.name_ar, $item.name_en),
+                 unit:      $item.unit,
+                 price:     $item.price,
+                 currency:  $coalesce($item.currency, "SAR"),
+                 stock:     $item.stock,
+                 lead_days: $item.lead_days,
+                 group:     $enum_label($item.category, "category")
+               })'
+    - render:
+        render_intent: list_picker
+        header:   '{$t("price-list.header")}'
+        body:     '$t("price-list.intro", { total: $length($rows) })'
+        footer:   '{$t("price-list.footer")}'
+        cta:      '{$t("price-list.cta")}'
+        items:    '$rows'
+        group_by: group
+        item_template:
+          title:       '$item.name'
+          description: '$lines($compact([
+                          $format_money($item.price, $item.currency) + " / " + $item.unit,
+                          $item.stock == "out" ? $t("price-list.out") : null,
+                          $item.lead_days > 0 ? $t("price-list.lead", { days: $item.lead_days }) : null
+                        ]), " · ")'
+          on_select:   { invoke: '$self', with: { sku: '$item.sku' } }
+      memory_note: 'Showed {$length($rows)} live price(s) from the Binaa workbook.'
+      data: { total: '$length($rows)' }
+    - end: applied
+
+  show_one:
+    # `$prices` is the operation's `data_path` payload — the rows array — so a
+    # single-sku lookup is its first element.
+    - assign: { m: '$prices[0]' }
+    - render:
+        render_intent: detail_card
+        header: '$coalesce($m.name_ar, $m.name_en)'
+        body: '$lines($compact([
+                 $t("price-list.card.sku",   { sku: $m.sku }),
+                 $t("price-list.card.price", { price: $format_money($m.price, $coalesce($m.currency, "SAR")), unit: $m.unit }),
+                 $m.stock == "out" ? $t("price-list.card.out") : $t("price-list.card.in"),
+                 $m.lead_days > 0 ? $t("price-list.lead", { days: $m.lead_days }) : null,
+                 $t("price-list.card.source")
+               ]), "\n")'
+        buttons:
+          - { title: '{$t("price-list.btn_rfq")}',  on_select: { invoke: request-quote, with: { sku: '$m.sku' } } }
+          - { title: '{$t("price-list.btn_back")}', on_select: { invoke: '$self', with: { category: '$m.category' } } }
+      memory_note: 'Priced {$m.sku} at {$m.price}/{$m.unit} (live sheet).'
+      data: { sku: '$m.sku', price: '$m.price', unit: '$m.unit' }
+    - end: applied
+
+  # A miss is a normal domain outcome, not an error — agent-voiced, no card.
+  no_match:
+    - answer:
+        data: { asked_for: '$coalesce($input.material, $input.sku, $input.category)' }
+        instructions: >-
+          Nothing in the live price sheet matched. Say so in ONE short line of Saudi
+          Arabic, name what they asked for, and offer the nearest section (أسمنت /
+          حديد / بلوك / رمل / سيراميك / سباكة). Never invent or estimate a price.
+
+  # `denied` means the OPERATOR has not finished setup — a wrong shared secret, or a
+  # sharing setting that still demands a Google sign-in. Nothing the customer can do,
+  # so the card is an apology plus a human route, not a diagnostic.
+  not_configured:
+    - render:
+        render_intent: text_card
+        body: '{$t("price-list.not_configured")}'
+      memory_note: 'Price-sheet connection rejected our secret — the workspace owner must finish setup on the console Integrations page.'
+    - end: failed
+
+  # A `failed:` port that only printed an error would be redundant — the platform's
+  # own error net does that better. This one RECOVERS: the RFQ is still worth taking
+  # without a live price, and that is the difference between a lost lead and a sale.
+  sheet_down:
+    - render:
+        render_intent: detail_card
+        header: '{$t("price-list.down_header")}'
+        body:   '{$t("price-list.down_body")}'
+        buttons:
+          - { title: '{$t("price-list.btn_rfq_anyway")}', on_select: { invoke: request-quote } }
+      memory_note: 'Price sheet unreachable — offered to take the RFQ without a live price.'
+    - end: failed

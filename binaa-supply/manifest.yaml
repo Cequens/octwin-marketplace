@@ -1,0 +1,72 @@
+# binaa-supply — a Riyadh building-materials wholesaler taking RFQs on WhatsApp.
+#
+# Demonstrates the INTEGRATIONS module: the bot works with the systems the yard
+# already runs, in all four directions.
+#
+#   1. FETCH   price-list     → integration_call GET  → the live price sheet
+#   2. PUSH    request-quote  → integration_call POST → a row in the Quotes tab
+#   3. OBSERVE xrm.yaml `on:`  → push: → Slack (a durable delivery, not a turn)
+#   4. INBOUND the sheet's onEdit trigger → signed webhook → the quote record
+#              updates → which re-fires `on: enter.shipped` → the EXISTING notify
+#              verb messages the customer. No new machinery for that last step.
+#
+# The pedagogical spine: SYNCHRONOUS when the customer is waiting for the answer
+# (a price), QUEUED when nobody is (a Slack alert). Read README.md before
+# installing — this pack needs a spreadsheet and a Slack app on the operator side.
+#
+# No pack DB, no code — pure YAML.
+
+id:          binaa-supply
+version:     1.0.0
+description: 'Building-materials wholesaler — live prices from the company spreadsheet, RFQs written back into it, Slack alerts to the sales desk, and shipment updates pushed to the customer on WhatsApp.'
+
+listing:
+  title:    'Binaa Building Supplies'
+  tagline:  'Live prices from your own spreadsheet, quotes filed back into it, Slack in the loop'
+  category: retail
+  author:   { name: 'Octwin', url: 'https://octwin.ai' }
+  public:   true
+
+supported_channels: [whatsapp, web]
+required_adapters:  [messaging]
+
+default_settings:
+  locale: ar
+
+default_conversation_context:
+  lang: { type: enum, enum: [ar, en, bilingual], default: ar, describe: 'Reply language.' }
+
+# The currency and the list page size live here so the yard manager can change
+# them without touching flow logic.
+config:
+  quote:
+    currency:  SAR
+    page_size: 20
+
+flows:
+  - home
+  - price-list
+  - request-quote
+  - my-quotes
+
+# A contractor on a noisy site dictates rather than types.
+inbound_preprocessing:
+  voicenote:
+    mode: transcribe
+    ack: '🎤 وصلتنا الرسالة الصوتية، نفرّغها لك الحين...'
+    prompt: 'Saudi Arabic building-materials order voice note — material names, quantities, delivery site.'
+    note_template: |-
+      $transcript != null ? "🎤 رسالة صوتية ({$media_ref}): {$transcript}" : "🎤 رسالة صوتية ({$media_ref}) — تعذّر التفريغ"
+
+agents:
+  - id:                desk
+    display_name:      'بناء لمواد البناء'
+    default_model:     'openrouter/google/gemini-3.1-flash-lite-preview'
+    include_platform_protocol: true
+    tools:
+      - home
+      - price-list
+      - request-quote
+      - my-quotes
+    instructions:
+      - file: prompts/identity.md

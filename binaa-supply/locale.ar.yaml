@@ -1,0 +1,29 @@
+# binaa-supply — pack-wide Arabic strings.
+#
+# `stage.*` is the `quote` pipeline and `category.*` / `city.*` are select options,
+# all resolved through `$enum_label` so no flow hardcodes a stage or section word.
+# The `shipped` label is the one a customer sees after someone edits a cell in the
+# workbook — the visible end of the inbound seam.
+pack_id: binaa-supply
+strings:
+  field_picker_footer: 'اختر من القائمة 👆'
+
+  stage.new:       'جديد'
+  stage.quoted:    'تم التسعير'
+  stage.won:       'معتمد ✅'
+  stage.shipped:   'تم الشحن 🚚'
+  stage.delivered: 'تم التسليم ✅'
+  stage.lost:      'ملغي'
+
+  category.cement:   'أسمنت'
+  category.steel:    'حديد'
+  category.blocks:   'بلوك'
+  category.sand:     'رمل وبحص'
+  category.tiles:    'سيراميك وبلاط'
+  category.plumbing: 'سباكة'
+
+  city.riyadh:  'الرياض'
+  city.kharj:   'الخرج'
+  city.diriyah: 'الدرعية'
+  city.qassim:  'القصيم'
+  city.dammam:  'الدمام'

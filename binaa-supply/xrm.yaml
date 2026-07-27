@@ -1,0 +1,127 @@
+# XRM declaration for binaa-supply.
+#
+# Two entities. The PRICE LIST is deliberately not one of them: it lives in the
+# operator's workbook and is read live (see integrations.yaml). Finance edits that
+# sheet daily, so a mirror here would always be one sweep out of date — and the
+# whole point of the pack is that it works with the system they already use.
+#
+#  • site  — where a contractor wants materials delivered.
+#  • quote — the RFQ pipeline. Its `on:` hooks are seams 3 and 4 of the demo.
+
+entities:
+
+  site:
+    label: { en: 'Delivery site', ar: 'موقع التسليم' }
+    fields:
+      name:          { type: text, required: true, label: { en: 'Site', ar: 'الموقع' } }
+      city:          { type: select, options: [riyadh, kharj, diriyah, qassim, dammam], label: { en: 'City', ar: 'المدينة' } }
+      address:       { type: textarea, label: { en: 'Address', ar: 'العنوان' } }
+      contact_phone: { type: text, label: { en: 'Site phone', ar: 'جوال الموقع' } }
+    list: [city, contact_phone]
+    search: { text: [name, address] }
+    dedupe_by: name
+
+  quote:
+    label: { en: 'Quote / RFQ', ar: 'طلب عرض سعر' }
+    fields:
+      material_name: { type: text, required: true, label: { en: 'Material', ar: 'الصنف' } }
+      sku:           { type: text, label: { en: 'SKU', ar: 'الكود' } }
+      qty:           { type: number, required: true, label: { en: 'Qty', ar: 'الكمية' } }
+      unit:          { type: text, label: { en: 'Unit', ar: 'الوحدة' } }
+      unit_price:    { type: money, label: { en: 'Unit price', ar: 'سعر الوحدة' } }
+      total:         { type: money, label: { en: 'Total', ar: 'الإجمالي' } }
+      currency:      { type: text, default: 'SAR', label: { en: 'Currency', ar: 'العملة' } }
+      customer_name: { type: text, label: { en: 'Customer', ar: 'العميل' } }
+      site:          { type: record, entity: site, label: { en: 'Site', ar: 'الموقع' } }
+      site_name:     { type: text, label: { en: 'Site name', ar: 'اسم الموقع' } }
+      site_address:  { type: textarea, label: { en: 'Address', ar: 'العنوان' } }
+      notes:         { type: textarea, label: { en: 'Notes', ar: 'ملاحظات' } }
+      # Written back FROM the workbook — the append response fills the first two,
+      # the inbound webhook refreshes them plus the sync stamps. So the console row
+      # deep-links straight to the sheet row the desk has to act on.
+      sheet_row:      { type: number, label: { en: 'Sheet row', ar: 'صف الشيت' } }
+      sheet_row_url:  { type: text,   label: { en: 'Open in Sheets', ar: 'افتح في الشيت' } }
+      last_synced_at: { type: text,   label: { en: 'Synced', ar: 'آخر مزامنة' } }
+      last_synced_by: { type: text,   label: { en: 'Edited by', ar: 'عدّلها' } }
+    list: [material_name, qty, total]
+    search: { text: [material_name, sku, customer_name] }
+    pipeline:
+      stages:      [new, quoted, won, shipped, delivered, lost]
+      initial:     new
+      progression: free
+      terminal:    [delivered, lost]
+    milestones:
+      rfq_filed: { label: { en: 'RFQ filed', ar: 'تم استلام الطلب' } }
+      order_won: { label: { en: 'Won', ar: 'تم الاعتماد' } }
+
+    on:
+      # ── seam 3 · the observer push ──────────────────────────────────────────
+      # Both hook SHAPES are exercised: `create:` is a bare directive list,
+      # `enter:` is a stage-keyed map.
+      #
+      # These are QUEUED, not called on the turn. A customer filing an RFQ must not
+      # wait on Slack, and the alert must survive a 503 — which the reactions seam,
+      # being fire-and-forget, could not guarantee on its own.
+      create:
+        - push:
+            operation: slack_post_rfq
+            input:
+              text: '🧱 New RFQ {{ record.record_number }} — {{ record.fields.material_name }} ×{{ record.fields.qty }} {{ record.fields.unit }} for {{ record.fields.customer_name }}. Sheet: {{ record.fields.sheet_row_url }}'
+      enter:
+        won:
+          - push:
+              operation: slack_post_sales
+              input:
+                text: '🏆 Won {{ record.record_number }} — {{ record.fields.material_name }} ×{{ record.fields.qty }} · {{ record.fields.total }} {{ record.fields.currency }} · {{ record.fields.customer_name }}'
+
+        # ── seam 4b · why the inbound leg needed no new machinery ─────────────
+        # The webhook upserts this record to `shipped`. That write re-enters the
+        # reactions reactor, so THIS hook fires — and it is the ordinary notify
+        # verb. One declared line is the whole customer notification.
+        shipped:
+          - notify:
+              message: '🚚 طلبك {{ record.record_number }} ({{ record.fields.material_name }}) خرج للشحن. نتواصل معك عند وصول الشحنة للموقع.'
+              cooldown_hours: 12
+
+        delivered:
+          - notify:
+              message: '✅ تم تسليم طلبك {{ record.record_number }}. شكراً لتعاملك مع بناء لمواد البناء.'
+              cooldown_hours: 24
+
+segments:
+  open_rfqs:
+    entity: quote
+    label:  { en: 'Open RFQs', ar: 'طلبات مفتوحة' }
+    where:  { stage_in: [new, quoted] }
+  in_transit:
+    entity: quote
+    label:  { en: 'In transit', ar: 'في الطريق' }
+    where:  { stage: shipped }
+
+demo:
+  - entity: site
+    as: site_narjis
+    fields:
+      name: 'مشروع النرجس - برج A'
+      city: riyadh
+      address: 'حي النرجس، طريق أنس بن مالك، الرياض'
+      contact_phone: '0551234567'
+  - entity: site
+    fields:
+      name: 'مستودع الخرج'
+      city: kharj
+      address: 'المنطقة الصناعية، الخرج'
+      contact_phone: '0559876543'
+  - entity: quote
+    stage: quoted
+    fields:
+      material_name: 'أسمنت مقاوم 50 كجم'
+      sku: 'CEM-SR-50'
+      qty: 400
+      unit: 'كيس'
+      unit_price: 14
+      total: 5600
+      currency: SAR
+      customer_name: 'مؤسسة الراجحي للمقاولات'
+      site: '@site_narjis'
+      site_name: 'مشروع النرجس - برج A'

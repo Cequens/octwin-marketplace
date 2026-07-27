@@ -1,0 +1,242 @@
+# request-quote — SEAM 2: file an RFQ into the workbook.
+#
+# TWO writes, in this order and for this reason:
+#
+#   1. record_save mints the quote — and with it `record_number`, the join key.
+#   2. integration_call writes that key into the sheet's Ref column.
+#
+# The sheet has NO stable row identity (sorting it renumbers every row), so the key
+# has to be minted on our side and carried outward. The inbound webhook then matches
+# on it when the ops team edits that row's Status.
+#
+# This call is SYNCHRONOUS because the customer is waiting on their reference. The
+# Slack alert for the same event is QUEUED (xrm.yaml `on: create`) because nobody is.
+
+flow_id:     request-quote
+version:     1
+description: |-
+  [interactive Tool] Take a request-for-quote and file it. This tool owns its own
+  collection — call it as soon as the customer asks for a quote, passing only what
+  they already said. `sku` ONLY from a price card, never text they typed.
+
+input:
+  sku:
+    type:     string
+    optional: true
+    describe: 'Catalogue code from a price card — never text the customer typed.'
+  material:
+    type:     string
+    optional: true
+    describe: 'What the customer typed, when there is no sku.'
+  qty:
+    type:     number
+    optional: true
+    positive: true
+
+entry:
+  - else: true
+    goto: price_lookup
+
+steps:
+
+  # Best-effort: carry the LIVE unit price onto the quote. Every failure path falls
+  # through to `gather` — a price-sheet outage must never lose an RFQ.
+  price_lookup:
+    - if: '$input.sku == null'
+      goto: gather
+    - do: integration_call
+      args:
+        operation: sheet_prices
+        input: { sku: '$input.sku', limit: 1 }
+      bind: prices
+      outputs:
+        ok:      [{ goto: seed_from_price }]
+        empty:   [{ goto: gather }]
+        invalid: [{ goto: gather }]
+        denied:  [{ goto: gather }]
+        failed:  [{ goto: gather }]
+
+  seed_from_price:
+    - assign: { m: '$prices[0]' }
+    # Fold into $state, not flow vars — these must survive the collect suspends.
+    - assign:
+        state: '$merge($state, {
+                  material:   $coalesce($m.name_ar, $m.name_en),
+                  sku:        $m.sku,
+                  unit:       $m.unit,
+                  unit_price: $m.price,
+                  currency:   $coalesce($m.currency, "SAR")
+                })'
+    - goto: gather
+
+  gather:
+    - collect:
+        derive:
+          line_total: '$coalesce($state.unit_price, 0) * $coalesce($state.qty, 0)'
+        gap_instructions: >-
+          Ask for the next RFQ detail ({$collect_field}) in ONE short line of Saudi
+          Arabic. Re-call request-quote with the answer.
+        fields:
+          # Already satisfied when seed_from_price ran, so silently skipped.
+          - field: material
+            label:    '$t("request-quote.label.material")'
+            describe: 'The material to be quoted.'
+          - field: qty
+            label:    '$t("request-quote.label.qty")'
+            describe: 'How many units — bags, tonnes, m² or pieces.'
+          - field: site
+            label: '$t("request-quote.label.site")'
+            options:
+              header: request-quote.field_header.site
+              body:   request-quote.field_body.site
+              cta:    request-quote.field_cta.site
+              fetch:  { do: record_list, args: { entity: site, limit: 10 }, bind: sites }
+              rows:   '$sites.rows'
+              map:
+                value:       '$item.id'
+                label:       '$item.fields.name'
+                description: '$enum_label($item.fields.city, "city")'
+                selection:
+                  site:         '$item.id'
+                  site_name:    '$item.fields.name'
+                  site_address: '$item.fields.address'
+              # A contractor with one site never has to tap.
+              auto_resolve: true
+          - field: customer_name
+            label:    '$t("request-quote.label.name")'
+            describe: 'Who the quote should be addressed to.'
+        complete: [{ goto: confirm }]
+
+  confirm:
+    - assign:
+        currency:   '$coalesce($state.currency, "SAR")'
+        line_total: '$coalesce($state.unit_price, 0) * $coalesce($state.qty, 0)'
+    - use: approve_apply
+      with:
+        header: '{$t("request-quote.confirm_header")}'
+        preview: '$lines($compact([
+                    $t("request-quote.preview.material", { material: $state.material }),
+                    $state.sku != null ? $t("request-quote.preview.sku", { sku: $state.sku }) : null,
+                    $t("request-quote.preview.qty", { qty: $state.qty, unit: $coalesce($state.unit, $t("request-quote.unit_generic")) }),
+                    $state.unit_price != null
+                      ? $t("request-quote.preview.total", { total: $format_money($line_total, $currency) })
+                      : $t("request-quote.preview.no_price"),
+                    $t("request-quote.preview.site", { site: $coalesce($state.site_name, "—") }),
+                    $t("request-quote.preview.name", { name: $state.customer_name })
+                  ]), "\n")'
+        footer:        '{$t("request-quote.confirm_footer")}'
+        confirm_title: '{$t("request-quote.btn_confirm")}'
+        cancel_title:  '{$t("request-quote.btn_cancel")}'
+        apply:         save_quote
+        abort:         aborted
+        on_other:      gather
+        memory_note:   'RFQ not filed yet — waiting on the contractor''s ✅.'
+
+  # Write 1: LOCAL. This is the record of truth, and it fires `on: create` → the
+  # queued Slack alert, whether or not the sheet is reachable.
+  save_quote:
+    - do: record_save
+      args:
+        entity: quote
+        stage:  new
+        fields:
+          material_name: '$state.material'
+          sku:           '$state.sku'
+          qty:           '$state.qty'
+          unit:          '$state.unit'
+          unit_price:    '$state.unit_price'
+          total:         '$line_total'
+          currency:      '$currency'
+          customer_name: '$state.customer_name'
+          site:          '$state.site'
+          site_name:     '$state.site_name'
+          site_address:  '$state.site_address'
+      bind: quote
+      outputs:
+        ok:      [{ goto: append_row }]
+        invalid: []
+        failed:  [{ goto: save_failed }]
+
+  # Write 2: THE SHEET, carrying the record_number as the join key.
+  append_row:
+    - do: record_milestone
+      args: { record_id: '$quote.record_id', milestone: rfq_filed }
+      detach: true
+    - do: integration_call
+      args:
+        operation: sheet_append_quote
+        input:
+          ref:        '$quote.record_number'
+          customer:   '$state.customer_name'
+          phone:      '$contact.channel_contact_handle'
+          sku:        '$state.sku'
+          material:   '$state.material'
+          qty:        '$state.qty'
+          unit:       '$state.unit'
+          unit_price: '$state.unit_price'
+          total:      '$line_total'
+          currency:   '$currency'
+          site:       '$state.site_name'
+          address:    '$state.site_address'
+      bind: appended
+      outputs:
+        ok:      [{ goto: stamp_row }]
+        invalid: [{ goto: filed_offline }]
+        denied:  [{ goto: filed_offline }]
+        failed:  [{ goto: filed_offline }]
+
+  # The outbound RESPONSE enriches the record, so the console row deep-links
+  # straight into the workbook row the sales desk has to act on.
+  stamp_row:
+    - do: record_save
+      args:
+        entity:    quote
+        record_id: '$quote.record_id'
+        fields:    { sheet_row: '$appended' }
+      outputs:
+        ok:      [{ goto: filed }]
+        invalid: [{ goto: filed }]
+        failed:  [{ goto: filed }]
+
+  filed:
+    - render:
+        render_intent: detail_card
+        header: '{$t("request-quote.filed_header")}'
+        body: '$lines($compact([
+                 $t("request-quote.filed_ref", { ref: $quote.record_number }),
+                 $t("request-quote.filed_line", { material: $state.material, qty: $state.qty, unit: $coalesce($state.unit, $t("request-quote.unit_generic")) }),
+                 $state.unit_price != null ? $t("request-quote.filed_total", { total: $format_money($line_total, $currency) }) : null,
+                 $t("request-quote.filed_next")
+               ]), "\n")'
+        buttons:
+          - { title: '{$t("request-quote.btn_my_quotes")}', on_select: { invoke: my-quotes } }
+          - { title: '{$t("request-quote.btn_more")}',      on_select: { invoke: price-list } }
+      memory_note: 'Filed RFQ {$quote.record_number} — {$state.material} ×{$state.qty}.'
+      data: { reference: '$quote.record_number' }
+    - end: applied
+
+  # Degrade HONESTLY: the RFQ is saved, the sheet lagged. Never claim the desk has
+  # it in front of them when it does not.
+  filed_offline:
+    - render:
+        render_intent: detail_card
+        header: '{$t("request-quote.filed_header")}'
+        body: '$lines($compact([
+                 $t("request-quote.filed_ref", { ref: $quote.record_number }),
+                 $t("request-quote.offline_note")
+               ]), "\n")'
+        buttons:
+          - { title: '{$t("request-quote.btn_my_quotes")}', on_select: { invoke: my-quotes } }
+      memory_note: 'RFQ {$quote.record_number} saved locally; the sheet append failed — sales was alerted on Slack regardless.'
+    # Legal: the flow outcome genuinely APPLIED. The render is not a failure card.
+    - end: applied
+
+  aborted:
+    - end: { status: aborted, body: '{$t("request-quote.aborted")}' }
+
+  save_failed:
+    - answer:
+        instructions: >-
+          The RFQ could not be saved. Say so plainly in one line of Saudi Arabic and
+          offer to try again. Do NOT claim a quote was filed and do NOT invent a
+          reference number.
