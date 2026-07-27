@@ -15,6 +15,7 @@ listing:
   title:    'Shield Motor'
   tagline:  'Indicative quotes, and claims a human assessor actually decides'
   category: finance
+  icon:     listing/icon.png
   author:   { name: 'Octwin', url: 'https://octwin.ai' }
   public:   true
 

@@ -22,6 +22,7 @@ listing:
   title:    'Storefront'
   tagline:  'Catalogue, cart and checkout on WhatsApp, with Meta commerce sync'
   category: retail
+  icon:     listing/icon.png
   author:   { name: 'Octwin', url: 'https://octwin.ai' }
 
 supported_channels: [whatsapp, web]

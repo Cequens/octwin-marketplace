@@ -13,6 +13,7 @@ listing:
   title:    'XPeng Egypt'
   tagline:  'Browse models, book a test drive, and open after-sales tickets'
   category: automotive
+  icon:     listing/icon.png
   author:   { name: 'Octwin', url: 'https://octwin.ai' }
   public:   true
 

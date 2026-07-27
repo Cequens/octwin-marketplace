@@ -14,6 +14,7 @@ listing:
   title:    'Glamour Salon'
   tagline:  'Stylist booking that respects how long a treatment really takes'
   category: services
+  icon:     listing/icon.png
   author:   { name: 'Octwin', url: 'https://octwin.ai' }
   public:   true
 

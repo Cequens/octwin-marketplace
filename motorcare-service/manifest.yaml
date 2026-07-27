@@ -16,6 +16,7 @@ listing:
   title:    'MotorCare Service'
   tagline:  'Photo-to-triage, bay booking, and a workshop queue with an SLA'
   category: automotive
+  icon:     listing/icon.png
   author:   { name: 'Octwin', url: 'https://octwin.ai' }
   public:   true
 

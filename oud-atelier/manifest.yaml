@@ -17,6 +17,7 @@ listing:
   title:    'Oud Atelier'
   tagline:  'A perfume boutique in chat — quiz, carousel, cart and checkout'
   category: retail
+  icon:     listing/icon.png
   author:   { name: 'Octwin', url: 'https://octwin.ai' }
   public:   true
 

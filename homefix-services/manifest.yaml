@@ -14,6 +14,7 @@ listing:
   title:    'HomeFix Services'
   tagline:  'Fault to dispatched technician, routed by emirate with an SLA'
   category: services
+  icon:     listing/icon.png
   author:   { name: 'Octwin', url: 'https://octwin.ai' }
   public:   true
 
