@@ -24,6 +24,7 @@ listing:
   title:    'Binaa Building Supplies'
   tagline:  'Live prices from your own spreadsheet, quotes filed back into it, Slack in the loop'
   category: retail
+  icon:     listing/icon.png
   author:   { name: 'Octwin', url: 'https://octwin.ai' }
   public:   true
 

@@ -59,6 +59,12 @@ const PACKS = {
     `<path ${S} d="M29 40h42l-4 32H33z"/><path ${S} d="M40 40v-6a10 10 0 0 1 20 0v6"/>` },
   'oud-atelier':       { category: 'retail', glyph:
     `<path ${S} d="M43 27h14v10H43z"/><path ${S} d="M38 47a10 10 0 0 1 7-10h10a10 10 0 0 1 7 10v18a8 8 0 0 1-8 8H46a8 8 0 0 1-8-8z"/><path ${S} d="M46 55h8"/>` },
+  // Masonry in RUNNING BOND — the offset vertical joints are what make it read as
+  // brickwork rather than a grid. Deliberately not a tool (homefix owns the hammer,
+  // motorcare the wrench) and not a building (gulf-realty's tower has punched
+  // windows): this pack SELLS the material, it does not build with it.
+  'binaa-supply':      { category: 'retail', glyph:
+    `<rect x="26" y="32" width="48" height="42" rx="3" ${S}/><path ${S} d="M26 46h48M26 60h48"/><path ${S} d="M50 32v14M38 46v14M62 46v14M50 60v14"/>` },
 
   // ── services ─────────────────────────────────────────────────────────────
   'glamour-salon':     { category: 'services', glyph:
