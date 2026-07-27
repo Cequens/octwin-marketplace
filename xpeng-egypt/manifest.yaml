@@ -5,6 +5,17 @@ id:          xpeng-egypt
 version:     '1.4.0'
 description: 'XPeng Egypt assistant — browse models, capture leads, book test drives, activate the XPeng App, and open after-sales support tickets on WhatsApp & web (AR/EN).'
 
+# Storefront face. Without this block the pack still publishes and installs, but
+# lands in the catalog with no title, no tagline and NO CATEGORY — every
+# category-grouped marketplace view then files it under an unnamed bucket.
+# `automotive` is the existing category (see motorcare-service), not a new one.
+listing:
+  title:    'XPeng Egypt'
+  tagline:  'Browse models, book a test drive, and open after-sales tickets'
+  category: automotive
+  author:   { name: 'Octwin', url: 'https://octwin.ai' }
+  public:   true
+
 # Channels + platform capabilities. `messaging` is the conversational adapter;
 # records / scheduling / casework are unlocked by the sibling declaration files
 # (xrm.yaml / scheduling.yaml / worklist.yaml), not by an adapter.
