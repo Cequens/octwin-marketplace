@@ -86,7 +86,9 @@ steps:
                           {"name_ar": "<full name in Arabic>", "name_en": "<full name in Latin letters>", "id_number": "<ID Number / رقم الهوية, digits only>", "license_type": "<License Type / نوع الرخصة, e.g. Private>", "issue_date": "<Issue Date>", "date_of_birth": "<Date of Birth>", "nationality": "<Nationality, in English>", "expiry_date": "<Expiry Date>", "blood_type": "<Blood Type, e.g. A+>"}
                       bind: ocr
                       outputs:
-                        # Guard the field access — a non-JSON model reply binds $ocr.json = null.
+                        # Guard the field access — a model reply the prompt could not fill returns
+                        # nulls inside the JSON. (A reply that is not JSON at all does NOT land
+                        # here: JSON.parse throws in the adapter and routes to `failed`.)
                         ok:
                           - if: '$ocr.json != null'
                             then:

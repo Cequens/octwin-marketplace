@@ -23,7 +23,7 @@ timezone: Asia/Riyadh
 
 resources:
   stylist:
-    slot: { default_minutes: 90, default_capacity: 1, window_days: 21 }
+    slot: { default_minutes: 90, window_days: 21 }
     reminders:
       - { key: t24, seconds: 86400 }
       - { key: t2,  seconds: 7200 }

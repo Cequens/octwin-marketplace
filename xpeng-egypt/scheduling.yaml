@@ -10,8 +10,7 @@ timezone: Africa/Cairo
 resources:
   branch:
     slot:
-      default_minutes:  45      # one test-drive slot = 45 min
-      default_capacity: 2       # 2 concurrent test drives per slot (cars available)
+      default_minutes:  45      # fallback for booking_reserve's slot_minutes ARG
       window_days:      14      # offer slots up to 2 weeks out
     reminders:
       - { key: t24h, seconds: 86400 }   # 24h before
@@ -21,33 +20,37 @@ booking:
   entity: booking
 
 # demo availability — seeded on `octwin deploy --seed`. dow: 0=Sun … 6=Sat.
+# Each rule carries its OWN slot_minutes + capacity: the grid and the seat count
+# come from the rule row, never from `resources.branch.slot` above (that block's
+# default_minutes is only the fallback for the booking_reserve argument). Without
+# them these rules took the engine defaults — a 20-minute grid at capacity 1.
 # Zayed & Mivida open Sat–Thu 11:00–20:00 (closed Fri=5); DUNE Mall daily 12:00–22:00.
 demo:
   availability:
     - resource_match: { entity: branch, field: code, value: zayed }
       rules:
-        - { dow: 6, start: '11:00', end: '20:00' }
-        - { dow: 0, start: '11:00', end: '20:00' }
-        - { dow: 1, start: '11:00', end: '20:00' }
-        - { dow: 2, start: '11:00', end: '20:00' }
-        - { dow: 3, start: '11:00', end: '20:00' }
-        - { dow: 4, start: '11:00', end: '20:00' }
+        - { dow: 6, start: '11:00', end: '20:00', slot_minutes: 45, capacity: 2 }
+        - { dow: 0, start: '11:00', end: '20:00', slot_minutes: 45, capacity: 2 }
+        - { dow: 1, start: '11:00', end: '20:00', slot_minutes: 45, capacity: 2 }
+        - { dow: 2, start: '11:00', end: '20:00', slot_minutes: 45, capacity: 2 }
+        - { dow: 3, start: '11:00', end: '20:00', slot_minutes: 45, capacity: 2 }
+        - { dow: 4, start: '11:00', end: '20:00', slot_minutes: 45, capacity: 2 }
 
     - resource_match: { entity: branch, field: code, value: dune }
       rules:
-        - { dow: 6, start: '12:00', end: '22:00' }
-        - { dow: 0, start: '12:00', end: '22:00' }
-        - { dow: 1, start: '12:00', end: '22:00' }
-        - { dow: 2, start: '12:00', end: '22:00' }
-        - { dow: 3, start: '12:00', end: '22:00' }
-        - { dow: 4, start: '12:00', end: '22:00' }
-        - { dow: 5, start: '12:00', end: '22:00' }
+        - { dow: 6, start: '12:00', end: '22:00', slot_minutes: 45, capacity: 2 }
+        - { dow: 0, start: '12:00', end: '22:00', slot_minutes: 45, capacity: 2 }
+        - { dow: 1, start: '12:00', end: '22:00', slot_minutes: 45, capacity: 2 }
+        - { dow: 2, start: '12:00', end: '22:00', slot_minutes: 45, capacity: 2 }
+        - { dow: 3, start: '12:00', end: '22:00', slot_minutes: 45, capacity: 2 }
+        - { dow: 4, start: '12:00', end: '22:00', slot_minutes: 45, capacity: 2 }
+        - { dow: 5, start: '12:00', end: '22:00', slot_minutes: 45, capacity: 2 }
 
     - resource_match: { entity: branch, field: code, value: mivida }
       rules:
-        - { dow: 6, start: '11:00', end: '20:00' }
-        - { dow: 0, start: '11:00', end: '20:00' }
-        - { dow: 1, start: '11:00', end: '20:00' }
-        - { dow: 2, start: '11:00', end: '20:00' }
-        - { dow: 3, start: '11:00', end: '20:00' }
-        - { dow: 4, start: '11:00', end: '20:00' }
+        - { dow: 6, start: '11:00', end: '20:00', slot_minutes: 45, capacity: 2 }
+        - { dow: 0, start: '11:00', end: '20:00', slot_minutes: 45, capacity: 2 }
+        - { dow: 1, start: '11:00', end: '20:00', slot_minutes: 45, capacity: 2 }
+        - { dow: 2, start: '11:00', end: '20:00', slot_minutes: 45, capacity: 2 }
+        - { dow: 3, start: '11:00', end: '20:00', slot_minutes: 45, capacity: 2 }
+        - { dow: 4, start: '11:00', end: '20:00', slot_minutes: 45, capacity: 2 }

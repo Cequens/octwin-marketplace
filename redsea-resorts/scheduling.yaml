@@ -16,7 +16,7 @@ timezone: Africa/Cairo
 
 resources:
   room_type:
-    slot: { default_minutes: 1440, default_capacity: 4, window_days: 60 }
+    slot: { default_minutes: 1440, window_days: 60 }
     reminders:
       - { key: t48, seconds: 172800 }
 

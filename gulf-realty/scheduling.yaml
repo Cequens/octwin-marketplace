@@ -6,7 +6,7 @@ timezone: Asia/Dubai
 
 resources:
   advisor:
-    slot: { default_minutes: 60, default_capacity: 2, window_days: 10 }
+    slot: { default_minutes: 60, window_days: 10 }
     # book-viewing turns each offset into an absolute send_at and hands it to
     # schedule_notify, so a buyer gets a day-before and a 2-hour reminder.
     reminders:

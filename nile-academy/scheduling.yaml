@@ -6,7 +6,7 @@ timezone: Africa/Cairo
 
 resources:
   campus:
-    slot: { default_minutes: 60, default_capacity: 6, window_days: 21 }
+    slot: { default_minutes: 60, window_days: 21 }
     reminders:
       - { key: t24, seconds: 86400 }
       - { key: t2,  seconds: 7200 }

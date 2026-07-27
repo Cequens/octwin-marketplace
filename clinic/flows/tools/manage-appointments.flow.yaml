@@ -135,6 +135,9 @@ steps:
         cancel_title:  '{$t("manage-appointments.cancel_confirm.keep")}'
         apply: apply_cancel
         abort_render: { render_intent: text_card, body: '{$t("manage-appointments.cancel_kept")}' }
+        # Neither approve nor decline (a typed reply, an agent resume, a stale tap)
+        # → re-enter THIS step: re-render the confirm card and pause again.
+        on_other: confirm_cancel
         memory_note: 'Confirm-cancel for {$state.appointment_id}'
 
   apply_cancel:

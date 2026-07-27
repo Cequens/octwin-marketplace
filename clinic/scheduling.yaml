@@ -9,7 +9,7 @@ timezone: Africa/Cairo
 
 resources:
   doctor:
-    slot:      { default_minutes: 20, default_capacity: 1, window_days: 7 }
+    slot:      { default_minutes: 20, window_days: 7 }
     # Reminder offsets before slot_start (seconds). book-appointment computes the
     # absolute send_at from these and hands each to schedule_notify.
     reminders:

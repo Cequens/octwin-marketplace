@@ -1,7 +1,7 @@
 # Scheduling declaration — the interesting part of this pack.
 #
 # A class is NOT a one-to-one appointment: it is many seats in one slot. So the
-# trainer resource carries `default_capacity: 12`, and each availability rule sets the
+# each availability rule sets the class's
 # real room capacity. The platform's slot ledger then does the thing a spreadsheet
 # cannot: twenty people can hold the same 07:00 spin slot, the twenty-first gets the
 # `full` port, and two simultaneous taps for the last mat cannot both win.
@@ -10,7 +10,7 @@ timezone: Asia/Dubai
 
 resources:
   trainer:
-    slot: { default_minutes: 45, default_capacity: 12, window_days: 14 }
+    slot: { default_minutes: 45, window_days: 14 }
     reminders:
       - { key: t24, seconds: 86400 }
       - { key: t2,  seconds: 7200 }

@@ -2,14 +2,14 @@
 # the race-free capacity ledger and slot expansion are the platform's; a visit is
 # the `booking` XRM system entity. No pack DB.
 #
-# Chairs are single-capacity, so `default_capacity: 1` — two patients can never be
+# Chairs are single-capacity, so every rule sets `capacity: 1` — two patients can never be
 # handed the same slot even if they tap at the same instant.
 
 timezone: Asia/Dubai
 
 resources:
   dentist:
-    slot: { default_minutes: 30, default_capacity: 1, window_days: 14 }
+    slot: { default_minutes: 30, window_days: 14 }
     reminders:
       - { key: t24, seconds: 86400 }
       - { key: t2,  seconds: 7200 }
