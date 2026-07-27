@@ -14,6 +14,7 @@ listing:
   title:    'Red Sea Resorts'
   tagline:  'Room inventory that cannot be oversold, priced by board and party'
   category: hospitality
+  icon:     listing/icon.png
   author:   { name: 'Octwin', url: 'https://octwin.ai' }
   public:   true
 

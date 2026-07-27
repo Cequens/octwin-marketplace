@@ -14,6 +14,7 @@ listing:
   title:    'PharmaPlus Rx'
   tagline:  'Prescription intake and refills — every clinical call left to a pharmacist'
   category: healthcare
+  icon:     listing/icon.png
   author:   { name: 'Octwin', url: 'https://octwin.ai' }
   public:   true
 

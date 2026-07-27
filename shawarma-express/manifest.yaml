@@ -14,6 +14,7 @@ listing:
   title:    'Shawarma Express'
   tagline:  'Menu, basket, checkout and live tracking — with an automatic nudge'
   category: hospitality
+  icon:     listing/icon.png
   author:   { name: 'Octwin', url: 'https://octwin.ai' }
   public:   true
 

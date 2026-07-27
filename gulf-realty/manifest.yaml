@@ -14,6 +14,7 @@ listing:
   title:    'Gulf Realty'
   tagline:  'Off-plan tours, payment plans and site viewings — booked in chat'
   category: real-estate
+  icon:     listing/icon.png
   author:   { name: 'Octwin', url: 'https://octwin.ai' }
   public:   true
 

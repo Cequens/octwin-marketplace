@@ -14,6 +14,7 @@ listing:
   title:    'SwiftShip Courier'
   tagline:  'Tracking that never guesses, and claims a human actually decides'
   category: logistics
+  icon:     listing/icon.png
   author:   { name: 'Octwin', url: 'https://octwin.ai' }
   public:   true
 

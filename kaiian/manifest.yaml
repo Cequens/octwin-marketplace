@@ -20,6 +20,7 @@ listing:
   title:    'Ride-hailing Support'
   tagline:  'Role-aware intake for passengers and captains, with human casework'
   category: logistics
+  icon:     listing/icon.png
   author:   { name: 'Octwin', url: 'https://octwin.ai' }
 
 supported_channels: [whatsapp, web]

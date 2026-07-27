@@ -14,6 +14,7 @@ listing:
   title:    'Smile Dental'
   tagline:  'Treatments, real availability, reminders and a rating that counts'
   category: healthcare
+  icon:     listing/icon.png
   author:   { name: 'Octwin', url: 'https://octwin.ai' }
   public:   true
 

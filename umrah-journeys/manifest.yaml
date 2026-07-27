@@ -15,6 +15,7 @@ listing:
   title:    'Umrah Journeys'
   tagline:  'Packages, group booking and a visa file that a human really works'
   category: hospitality
+  icon:     listing/icon.png
   author:   { name: 'Octwin', url: 'https://octwin.ai' }
   public:   true
 

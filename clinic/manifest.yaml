@@ -20,6 +20,7 @@ listing:
   title:    'Clinic Appointments'
   tagline:  'Arabic-first outpatient booking — doctors, slots and reminders'
   category: healthcare
+  icon:     listing/icon.png
   author:   { name: 'Octwin', url: 'https://octwin.ai' }
   # Pack-root-relative markdown, rendered on the marketplace detail pages. NOT the folder's
   # own README.md — that one is authoring notes for whoever edits this pack; this is the

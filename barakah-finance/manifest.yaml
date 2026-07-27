@@ -15,6 +15,7 @@ listing:
   title:    'Barakah Finance'
   tagline:  'Indicative instalments and a credit review a human actually makes'
   category: finance
+  icon:     listing/icon.png
   author:   { name: 'Octwin', url: 'https://octwin.ai' }
   public:   true
 
