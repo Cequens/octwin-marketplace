@@ -43,10 +43,12 @@ entities:
       # Google accepts it in a deep link, so the console can jump straight to the
       # row with no row number to parse and nothing a later sort invalidates.
       sheet_range:    { type: text,   label: { en: 'Sheet row', ar: 'صف الشيت' } }
-      # The row NUMBER, derived from `sheet_range` at append time — what the
-      # status write-back addresses. See `sheets_update_status` for why this is
-      # the fragile half and the append log is the durable one.
-      sheet_row:      { type: number, label: { en: 'Row', ar: 'رقم الصف' } }
+      # The row, derived from `sheet_range` at append time — what the status
+      # write-back addresses. TEXT, not number: the flow expression that extracts
+      # it has to start with `$` to be evaluated at all, so it cannot carry a `+`
+      # coercion, and a URL path needs a string anyway. See `sheets_update_status`
+      # for why this is the fragile half and the append log is the durable one.
+      sheet_row:      { type: text,   label: { en: 'Row', ar: 'رقم الصف' } }
     list: [material_name, qty, total]
     search: { text: [material_name, sku, customer_name] }
     pipeline:
