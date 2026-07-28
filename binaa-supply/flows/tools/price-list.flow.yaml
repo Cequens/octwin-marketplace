@@ -71,9 +71,13 @@ steps:
     # `$filter`'s predicate does NOT bind `$item` — it takes a field name or an
     # equality object — so the match is computed as a field in `$map` (which does)
     # and filtered on that. Substring and "not equal" are only expressible this way.
+    #
+    # `$lower` on `available` is not defensive tidying: Google normalises a boolean
+    # cell to TRUE/FALSE in caps, so a case-sensitive `!= "false"` silently fails to
+    # hide a row someone marked FALSE — it would keep selling a retired product.
     - assign:
         matched: '$map($rows_to_objects($sheet_values), $merge($item, { _hit:
-                    ($item.available != "false")
+                    ($lower($item.available) != "false")
                     && ($input.sku == null || $item.sku == $input.sku)
                     && ($input.category == null || $item.category == $input.category)
                     && ($input.material == null
