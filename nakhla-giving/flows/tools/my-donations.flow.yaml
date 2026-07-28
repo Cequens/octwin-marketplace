@@ -1,5 +1,13 @@
 # my-donations — the donor's own history, and the one thing they actually come
 # back for: the link to a donation they started and did not finish.
+#
+# TWO MODES, decided by whether `donation_id` arrived:
+#   absent  → the list
+#   present → that one donation, with the right action attached to its stage
+#
+# Without the input DECLARED, a tap on a row was a no-op: the binding was dropped,
+# the flow re-entered at `entry`, and the donor got the same list again. A picker
+# whose rows lead back to the picker is a loop with a tap in it.
 
 flow_id:     my-donations
 version:     1
@@ -10,11 +18,33 @@ description: |-
 config:
   lookup: { page_size: 10 }
 
+input:
+  # The record ID, not the record_number — `record_get` resolves `record_id:` and
+  # CANNOT match on `record_number` (that is a column; `match:` reaches declared
+  # fields only), so a number here silently finds nothing.
+  donation_id:
+    type:     string
+    optional: true
+    describe: 'A donation reference — ONLY from a row the donor tapped, never anything they typed.'
+
 entry:
   - else: true
-    goto: fetch
+    goto: route
 
 steps:
+
+  route:
+    - if: '$input.donation_id == null'
+      goto: fetch
+    - do: record_get
+      args: { entity: donation, record_id: '$input.donation_id' }
+      bind: gift
+      outputs:
+        ok:        [{ goto: detail }]
+        # A reference that no longer resolves falls back to the list rather than
+        # erroring — the donor asked to see their donations either way.
+        not_found: [{ goto: fetch }]
+        failed:    [{ goto: fetch }]
 
   fetch:
     # No `all:` and no `contact_id:` — an `entity` list is ALREADY scoped to the
@@ -41,11 +71,11 @@ steps:
   show:
     - assign:
         rows: '$map($found.rows, {
+                 id:       $item.id,
                  ref:      $item.record_number,
                  appeal:   $item.fields.appeal_title,
                  amount:   $item.fields.amount,
                  currency: $item.fields.currency,
-                 url:      $item.fields.checkout_url,
                  stage:    $item.stage
                })'
     - render:
@@ -62,9 +92,64 @@ steps:
                           $enum_label($item.stage, "stage"),
                           $format_money($item.amount, $coalesce($item.currency, "SAR"))
                         ]), " · ")'
-          on_select: { invoke: "$self", with: { ref: '$item.ref' } }
+          on_select: { invoke: "$self", with: { donation_id: '$item.id' } }
       memory_note: 'Showed {$length($rows)} donation(s).'
       data: { total: '$length($rows)' }
+    - end: applied
+
+  # ── one donation ──────────────────────────────────────────────────────────
+  detail:
+    - assign:
+        card: '$lines($compact([
+                 $t("my-donations.d_appeal", { appeal: $gift.fields.appeal_title }),
+                 $t("my-donations.d_amount", { amount: $format_money($gift.fields.amount, $coalesce($gift.fields.currency, "SAR")) }),
+                 $t("my-donations.d_stage",  { stage: $enum_label($gift.stage, "stage") }),
+                 $t("my-donations.d_ref",    { ref: $gift.record_number })
+               ]), "\n")'
+    # An unfinished donation is the reason this screen exists — hand the link
+    # back rather than describing the problem.
+    - if: '$gift.stage == "pending" && $gift.fields.checkout_url != null'
+      then: [{ goto: offer_pay }]
+      else: [{ goto: route_done }]
+
+  offer_pay:
+    - render:
+        render_intent: cta_url
+        header: '{$t("my-donations.d_header")}'
+        body:   '$card'
+        footer: '{$t("my-donations.d_pending_note")}'
+        label:  '{$t("my-donations.btn_pay")}'
+        url:    '$gift.fields.checkout_url'
+      memory_note: 'Donation {$gift.record_number} is still pending — re-offered its payment link.'
+      data: { ref: '$gift.record_number', stage: '$gift.stage' }
+    - end: applied
+
+  route_done:
+    # A paid gift gets its receipt; anything else (failed, refunded, or a pending
+    # one whose link never minted) gets the plain card — no button to nowhere.
+    - if: '$gift.stage == "paid" && $gift.fields.checkout_url != null'
+      then: [{ goto: offer_receipt }]
+      else: [{ goto: plain_detail }]
+
+  offer_receipt:
+    - render:
+        render_intent: cta_url
+        header: '{$t("my-donations.d_header")}'
+        body:   '$card'
+        footer: '{$t("my-donations.d_paid_note")}'
+        label:  '{$t("my-donations.btn_receipt")}'
+        url:    '$gift.fields.checkout_url'
+      memory_note: 'Showed the receipt for donation {$gift.record_number}.'
+      data: { ref: '$gift.record_number', stage: '$gift.stage' }
+    - end: applied
+
+  plain_detail:
+    - render:
+        render_intent: detail_card
+        header: '{$t("my-donations.d_header")}'
+        body:   '$card'
+      memory_note: 'Showed donation {$gift.record_number} ({$gift.stage}); no link to offer.'
+      data: { ref: '$gift.record_number', stage: '$gift.stage' }
     - end: applied
 
   none:

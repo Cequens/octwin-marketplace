@@ -5,6 +5,17 @@ strings:
   intro:  'عندك {count} تبرّع مسجّل.'
   cta:    'اختر تبرّع'
 
+  # Single-donation card
+  d_header:       '🧾 تفاصيل التبرّع'
+  d_appeal:       '🌱 الحملة: {appeal}'
+  d_amount:       '💰 المبلغ: {amount}'
+  d_stage:        '📌 الحالة: {stage}'
+  d_ref:          '🔖 رقم العملية: {ref}'
+  d_pending_note: 'الرابط من بوابة الدفع مباشرة'
+  d_paid_note:    'جزاك الله خيراً 🌿'
+  btn_pay:        '🔒 أكمل الدفع'
+  btn_receipt:    '🧾 الإيصال'
+
   stage_pending:  '⏳ بانتظار الدفع'
   stage_paid:     '✅ مستلم'
   stage_failed:   '❌ ما تمّت العملية'

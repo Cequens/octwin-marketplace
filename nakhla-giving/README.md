@@ -76,12 +76,16 @@ been observed is those two halves meeting: a `payment_paid` webhook landing on a
 donation record, so the receipt copy and the `first_gift` milestone are still unseen.
 Duplicate suppression (a replayed body) also remains only as good as its unit test.
 
-### One known gap
+### `my-donations` is two modes in one flow
 
-Tapping a row in `my-donations` re-renders the list instead of re-offering that
-donation's `checkout_url`, which is the single most common reason a donor comes back.
-The row's `on_select` passes a `ref` the flow does not declare as an input, so the tap
-is a no-op.
+Absent `donation_id` it lists; present, it shows that one donation with the action its
+stage deserves — **pending → the payment link again** (the single most common reason a
+donor comes back), **paid → the receipt**, anything else → a plain card with no button
+to nowhere.
+
+That input has to be DECLARED to exist. It was not, so the binding was dropped, the
+flow re-entered at `entry`, and a tap on a row produced the same list — a picker whose
+rows lead back to the picker, which reads as a loop.
 
 ---
 
