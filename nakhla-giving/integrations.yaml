@@ -11,24 +11,26 @@ connections:
 
   moyasar:
     label:    { en: 'Moyasar', ar: 'ميسر' }
-    describe: >-
-      The charity's Moyasar account. Paste ONE key — the SECRET key with a trailing
-      colon: `sk_test_xxxxx:` (or `sk_live_xxxxx:`). Moyasar authenticates with HTTP
-      Basic using the secret key as the USERNAME and an EMPTY password, so the colon
-      is the empty password. Do NOT put the publishable `pk_…` key in front of it:
-      the field is labelled user:password and a `pk_…:sk_…` pair looks right, but
-      Moyasar reads `pk_…` as the username and answers 403 "User not authorized".
-      (Verified against the live test API, 2026-07-28 — it was the first thing that
-      went wrong in a real setup.)
+    describe: 'The charity''s Moyasar account.'
     # Moyasar serves one API host, so the pack owns the endpoint and the operator
     # supplies only the key.
     base_url: { fixed: 'https://api.moyasar.com' }
     auth:
       # HTTP Basic with the secret key as the USERNAME and an EMPTY password —
-      # Moyasar's documented scheme. The stored credential is therefore
-      # `sk_test_xxxxx:` including the trailing colon; the platform base64-encodes
-      # the pair as-is.
-      kind: basic
+      # Moyasar's documented scheme. `password: empty` says exactly that, so the
+      # platform supplies the colon and the operator pastes only the key.
+      kind:     basic
+      password: empty
+      # Named the way MOYASAR names it. Without this the console falls back to
+      # the auth kind — "Credentials (user:password)" — which reads as an
+      # invitation to paste both keys as `pk_…:sk_…`. That is a real 403 this
+      # pack hit, not a hypothetical: Moyasar takes `pk_…` as the username and
+      # answers "User not authorized", blaming the operator for a bad label.
+      credential_label:    { en: 'Secret key', ar: 'المفتاح السري' }
+      credential_describe: >-
+        Your Moyasar SECRET key — NOT the publishable `pk_…` one, which belongs in
+        a web page and cannot read payments back. Dashboard → Settings → API keys.
+      credential_example:  'sk_test_xxxxxxxxxxxxxxxxxxxx'
     settings:
       callback_url:
         label:    { en: 'Webhook URL', ar: 'رابط الإشعار' }
