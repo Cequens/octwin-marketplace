@@ -65,6 +65,41 @@ connections:
       different domain from script.google.com rather than a subdomain, so it is
       not covered automatically.
 
+  # The SAME workbook as `sheet` above, reached through Google's own API instead of
+  # a script we deploy. Both exist on purpose: `sheet` needs no Google Cloud project
+  # and no OAuth consent (paste a URL and a secret, done), which keeps the pack
+  # installable in five minutes; `sheets` is the production shape, where the
+  # operator grants access once and the platform renews it forever.
+  #
+  # Nothing here is a secret and there is no credential field — pressing Connect in
+  # the console sends the operator to Google, and the grant comes back to us.
+  sheets:
+    label:    { en: 'Google Sheets (direct)', ar: 'جداول جوجل (مباشر)' }
+    describe: >-
+      The same price workbook, read through the Google Sheets API with an account
+      the operator authorizes once. No Apps Script deployment and no shared secret.
+    # Google serves every spreadsheet from one host, so the pack owns the endpoint
+    # and the operator supplies only WHICH workbook.
+    base_url: { fixed: 'https://sheets.googleapis.com' }
+    auth:
+      kind:     oauth2
+      provider: google
+      scopes:
+        # Read AND write: the RFQ append moves here next. Asking for it now means
+        # one consent rather than two, and the scope list is shown to whoever
+        # presses Connect.
+        - https://www.googleapis.com/auth/spreadsheets
+    settings:
+      spreadsheet_id:
+        label:    { en: 'Spreadsheet ID', ar: 'معرّف الجدول' }
+        describe: 'The part of the sheet URL between /d/ and /edit.'
+        required: true
+        example:  '1BxiMVs0XRA5nFMdKvBdBZjgmUUqptlbs74OgvE2upms'
+    health: { operation: sheets_ping }
+    setup_hint: >-
+      Press Connect and approve access at Google. An administrator must first
+      register the platform's OAuth client under Platform → Integrations.
+
   slack:
     label:    { en: 'Slack workspace', ar: 'سلاك' }
     describe: 'Where the sales desk sees new RFQs and won deals.'
@@ -168,6 +203,26 @@ operations:
         invalid: [missing_ref, unknown_action, missing_sheet]
         # The script holds a lock while appending; `busy` means try again shortly.
         retry:   [busy]
+
+  # ── the workbook, through Google's own API ─────────────────────────────────
+
+  sheets_ping:
+    connection: sheets
+    describe:   'Read the workbook title. Proves the grant, the scope and the spreadsheet id in one call.'
+    method:     GET
+    path:       'v4/spreadsheets/{{ conn.spreadsheet_id }}'
+    query:
+      # Ask for one field rather than the whole workbook — a large sheet would
+      # otherwise return megabytes to answer "are you connected?".
+      fields: 'properties.title'
+    response:
+      data_path: properties
+    status_map:
+      # Google DOES use real status codes, unlike the two endpoints above, so the
+      # platform's defaults are already right: 401/403 → denied, 5xx → retry. The
+      # one override: a 404 here means the operator typed the wrong spreadsheet id,
+      # which is a setup mistake to fix — not an empty result to render.
+      404: invalid
 
   # ── Slack ──────────────────────────────────────────────────────────────────
 
