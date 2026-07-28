@@ -259,17 +259,18 @@ steps:
         invalid: [{ goto: send_link }]
         failed:  [{ goto: send_link }]
 
+  # THE LINK GOES OUT FIRST. That ordering is not cosmetic.
+  #
+  # An empty port body (`outputs: { ok: [] }`) selects the CANONICAL handler,
+  # which is `[{ end: applied }]` — it terminates the FLOW, not just the step. A
+  # `track_event` written above the render with empty ports therefore ended the
+  # run right there, and the payment link below it was unreachable: the donation
+  # was saved, the invoice was created, `checkout_url` was stored, and the donor
+  # was shown nothing. Analytics silently outranked the one message the whole
+  # flow exists to send.
+  #
+  # So: render, THEN track, with every port ending explicitly.
   send_link:
-    # The funnel's `intending` stage. Emitted here rather than at `save_donation`
-    # because a record with no link is not an abandoned checkout — it is our
-    # failure, and counting it as donor hesitation would flatter us.
-    - do: track_event
-      args:
-        event: donation_link_issued
-        value: '$state.amount'
-      outputs:
-        ok:     []
-        failed: []
     - render:
         render_intent: detail_card
         header: '{$t("donate.ready_header")}'
@@ -282,7 +283,18 @@ steps:
           - { title: '{$t("donate.btn_mine")}', on_select: { invoke: my-donations } }
       memory_note: 'Donation {$gift.record_number} created, checkout link sent. Awaiting the gateway.'
       data: { ref: '$gift.record_number', amount: '$state.amount' }
-    - end: applied
+    # The funnel's `intending` stage. Emitted AFTER the link (see above) and at
+    # `send_link` rather than `save_donation`, because a record with no link is
+    # not an abandoned checkout — it is our failure, and counting it as donor
+    # hesitation would flatter us. Both ports end explicitly: a missing analytics
+    # write must never decide whether the flow completed.
+    - do: track_event
+      args:
+        event: donation_link_issued
+        value: '$state.amount'
+      outputs:
+        ok:     [{ end: applied }]
+        failed: [{ end: applied }]
 
   # The record exists and is `pending`; only the link is missing. Say so honestly
   # rather than implying the donation failed — the charity can re-issue it.
