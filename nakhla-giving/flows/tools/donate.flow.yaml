@@ -191,6 +191,15 @@ steps:
         denied:  [{ goto: not_configured }]
         failed:  [{ goto: no_link }]
 
+  # `invoice_id` is the WEBHOOK'S JOIN KEY, not a nice-to-have — the receipt for
+  # this donation can only be delivered if this write lands (see the inbound
+  # declaration in integrations.yaml for why the join is not invoice metadata).
+  #
+  # The failure ports still continue to `send_link` anyway, deliberately: the donor
+  # already has a working payment link, and refusing to hand it over because OUR
+  # bookkeeping write failed punishes them for our problem. The cost is that such a
+  # payment lands with nothing to match it and has to be reconciled by hand from
+  # the Moyasar dashboard — which is what the invoice `metadata.ref` above is for.
   stamp_link:
     - do: record_save
       args:

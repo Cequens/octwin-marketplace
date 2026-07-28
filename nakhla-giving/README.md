@@ -30,19 +30,32 @@ an auth kind that sent no credential at all, and a probe that silently found
 nothing were each invisible to a green suite and only surfaced when a real vendor
 pushed back. Assume the same of the payment path below.
 
-Two specific things to check first with a `sk_test_` key:
+### What HAS been verified against the live test API (2026-07-28)
 
-1. **Does the invoice's `metadata` reach the payment webhook?** The inbound
-   declaration joins on `payload.data.metadata.ref`. Moyasar documents metadata as
-   echoed in webhook messages, but this pack creates an **invoice** and the webhook
-   carries a **payment**. If the payment does not inherit the invoice's metadata,
-   switch the join to `payload.data.invoice_id` and store `invoice_id` as the match
-   field — the record already keeps it.
-2. **Does `moyasar_find_invoice` actually list recent invoices** in a way the retry
-   probe can search? If the list is paginated smaller than expected, widen `limit`
-   or key the probe on something narrower.
+Both of this section's original open questions were settled by driving real
+`sk_test_` endpoints, and **the first one was answered the wrong way** — the
+original design was broken:
 
-Until both are confirmed, treat a `paid` record as unproven.
+1. **Invoice `metadata` does NOT reach the payment webhook.** Moyasar accepts
+   metadata on `POST /v1/invoices`, stores it, and returns it on invoice reads — and
+   does not copy it onto the payment. A payment created against an invoice comes
+   back `metadata: null` with a populated `invoice_id`. The original join on
+   `payload.data.metadata.ref` would have matched **nothing, for every donation, for
+   ever**, and because `on_no_match: ignore` is the safe setting it would have failed
+   by doing nothing at all: no error, no receipt, every gift stuck at `pending`. The
+   join is now `payload.data.invoice_id` against the stored `invoice_id`.
+2. **`moyasar_find_invoice` works for the probe.** The list envelope is
+   `{ invoices: [...], meta }`, and each row DOES carry `metadata` — so the probe's
+   `matches:` on our ref finds a landed invoice. Confirmed with a real ref.
+3. **Arabic survives.** `description` and `metadata` round-trip UTF-8 intact, so an
+   Arabic appeal title reaches the donor's checkout page unmangled.
+4. **The credential is one key, not two.** See the connection's `describe:` — a
+   `pk_…:sk_…` pair in the user:password field gets a 403 "User not authorized".
+
+**Still unproven:** the webhook itself. Nothing here has received a real POST from
+Moyasar, so `verify.scheme: shared_secret_body`, the `stage_map`, the receipt and
+the duplicate-suppression are all still only as good as their unit tests. A `paid`
+record remains unproven until a test card has driven one end to end.
 
 ---
 

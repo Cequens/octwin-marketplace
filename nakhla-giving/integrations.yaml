@@ -12,9 +12,14 @@ connections:
   moyasar:
     label:    { en: 'Moyasar', ar: 'ميسر' }
     describe: >-
-      The charity's Moyasar account. The credential is the SECRET key (sk_live_… or
-      sk_test_…), never the publishable one — a publishable key can only create
-      payments and cannot read them back.
+      The charity's Moyasar account. Paste ONE key — the SECRET key with a trailing
+      colon: `sk_test_xxxxx:` (or `sk_live_xxxxx:`). Moyasar authenticates with HTTP
+      Basic using the secret key as the USERNAME and an EMPTY password, so the colon
+      is the empty password. Do NOT put the publishable `pk_…` key in front of it:
+      the field is labelled user:password and a `pk_…:sk_…` pair looks right, but
+      Moyasar reads `pk_…` as the username and answers 403 "User not authorized".
+      (Verified against the live test API, 2026-07-28 — it was the first thing that
+      went wrong in a real setup.)
     # Moyasar serves one API host, so the pack owns the endpoint and the operator
     # supplies only the key.
     base_url: { fixed: 'https://api.moyasar.com' }
@@ -80,10 +85,14 @@ operations:
       description:  '{{ input.description }}'
       callback_url: '{{ conn.callback_url }}'
       success_url:  '{{ conn.success_url }}'
+      # NOT the join key — see the `payment_status` inbound below. Moyasar keeps
+      # this on the invoice and returns it on invoice reads, but does NOT copy it
+      # onto the payment, so the webhook cannot see it. It stays because it is what
+      # makes an invoice legible to a human reconciling the Moyasar dashboard
+      # against the charity's own records, and because the retry probe below reads
+      # the invoice list, where it IS present.
       metadata:
-        # The join key. Moyasar echoes metadata back on the webhook, which is how
-        # a payment we never see created finds its way to the right record.
-        ref:      '{{ input.ref }}'
+        ref:    '{{ input.ref }}'
         appeal: '{{ input.appeal }}'
     # A donor is holding their phone waiting for this link, so it MUST be allowed
     # synchronously — the opposite of the receipt below.
@@ -141,11 +150,21 @@ inbound:
     when: { path: type, equals: [payment_paid, payment_failed, payment_refunded] }
     upsert:
       entity: donation
-      # The ref we put in the invoice metadata comes back on the payment. If a
-      # future Moyasar change stops propagating invoice metadata onto the payment,
-      # the alternative join is `payload.data.invoice_id` against a stored field —
-      # see README § Status.
-      match:  { record_number: '{{ payload.data.metadata.ref }}' }
+      # JOINED ON `invoice_id`, NOT ON INVOICE METADATA — verified against the live
+      # test API on 2026-07-28, which is the only reason this is right.
+      #
+      # The obvious design is to put our `record_number` in the invoice's
+      # `metadata` and read it back off the webhook. Moyasar accepts the metadata,
+      # stores it, and returns it on the INVOICE — and then does not propagate it
+      # to the payment. A payment created against an invoice comes back with
+      # `metadata: null` and a populated `invoice_id`. A join on
+      # `payload.data.metadata.ref` therefore matches nothing, for every donation,
+      # for ever — and because `on_no_match: ignore` is the safe setting, it fails
+      # by doing NOTHING: no error, no receipt, every gift stuck at `pending`.
+      #
+      # So the join is the gateway's own invoice id, which `stamp_link` stores on
+      # the record the moment the invoice is created.
+      match:  { invoice_id: '{{ payload.data.invoice_id }}' }
       fields:
         gateway_payment_id: '{{ payload.data.id }}'
         paid_at:            '{{ payload.data.created_at }}'
