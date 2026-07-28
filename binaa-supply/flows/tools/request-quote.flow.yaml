@@ -167,7 +167,7 @@ steps:
       detach: true
     - do: integration_call
       args:
-        operation: sheet_append_quote
+        operation: sheets_append_quote
         input:
           ref:        '$quote.record_number'
           customer:   '$state.customer_name'
@@ -189,12 +189,16 @@ steps:
 
   # The outbound RESPONSE enriches the record, so the console row deep-links
   # straight into the workbook row the sales desk has to act on.
+  #
+  # `updatedRange` is a STRING like `Quotes!A5:O5`, stored verbatim — Google
+  # accepts it in a deep link, so there is no row number to parse and nothing
+  # cached that a later sort of the tab could invalidate.
   stamp_row:
     - do: record_save
       args:
         entity:    quote
         record_id: '$quote.record_id'
-        fields:    { sheet_row: '$appended' }
+        fields:    { sheet_range: '$appended.updatedRange' }
       outputs:
         ok:      [{ goto: filed }]
         invalid: [{ goto: filed }]

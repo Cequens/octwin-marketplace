@@ -1,16 +1,20 @@
 # The two systems the yard already runs on.
 #
-#  • sheet — the price list AND the RFQ log. Deliberately NOT mirrored into XRM:
-#            finance edits that workbook every day, and a mirror is a second
-#            source of truth that is always one sweep out of date. We read it live.
+#  • sheets — the price list AND the RFQ log, through Google's own API with an
+#             account the operator authorizes once. Deliberately NOT mirrored into
+#             XRM: finance edits that workbook every day, and a mirror is a second
+#             source of truth that is always one sweep out of date.
 #
-#            Reached through a Google Apps Script Web App rather than the Sheets
-#            REST API, because that API has no token-only write path (an API key is
-#            read-only and public-sheets-only; writing needs OAuth2). A Web App is
-#            a first-party Google endpoint the sheet's owner deploys, so there is no
-#            OAuth dance and no refresh tokens to rotate. See README.md.
+#  • slack  — where the sales desk actually lives.
 #
-#  • slack — where the sales desk actually lives.
+# THERE IS NO APPS SCRIPT. An earlier version of this pack deployed one, because
+# the Sheets REST API had no token-only write path and no way to address columns
+# by name from a flow. Both are gone: the platform speaks OAuth2, and
+# `$rows_to_objects` restores name addressing. What the script bought was one
+# thing the API genuinely cannot do — tell us when a human edits a cell — and the
+# answer to that is not to rebuild the notification, but to stop needing it:
+# quote status is changed in the console, and the platform writes the change back
+# to the sheet. See README.md → "Where status lives".
 #
 # NOTHING here is a secret. The endpoint and the credential are operator data,
 # entered once in the console under Outbound → Integrations.
@@ -19,75 +23,10 @@ version: 1
 
 connections:
 
-  sheet:
-    label:    { en: 'Price-list workbook', ar: 'شيت قائمة الأسعار' }
-    describe: >-
-      The Apps Script Web App bound to the Binaa workbook. The endpoint is the
-      /exec deployment URL; the credential is the same string you paste into
-      SHARED_SECRET at the top of the script.
-    base_url:
-      required: true
-      example:  'https://script.google.com/macros/s/AKfycbxxxxxxxxxxxxxxxxxxxx/exec'
-      # `/dev` is an editor-only URL that requires a signed-in Google session, so a
-      # server-to-server call against it always fails. Reject it before it is saved
-      # rather than after an operator spends an afternoon on it.
-      must_match: '^https://script\.google\.com/(a/macros/[^/]+|macros)/s/[A-Za-z0-9_-]+/exec$'
-    auth:
-      kind: api_key
-      # The Web App answers with a cross-host redirect, and any correct HTTP client
-      # strips an Authorization header on that hop — so the secret CANNOT ride a
-      # header here. The GET carries it in the query string; the POST overrides to
-      # the body (see `auth_in` on sheet_append_quote), because a query string is
-      # logged by intermediaries and an RFQ carries a customer's phone number.
-      in:   query
-      name: secret
-    request:
-      # Content Service always redirects to a one-time googleusercontent.com URL
-      # that is GET-only — following it with POST returns 405. All three of these
-      # are required for such an endpoint to work at all.
-      follow_redirects:       true
-      redirect_method:        get
-      strip_auth_on_redirect: true
-      max_redirects:          3
-      timeout_ms:             8000
-      max_response_bytes:     262144
-    # Apps Script cannot set a status code. A thrown script AND a wrong sharing
-    # setting both answer HTTP 200 — the latter with a human sign-in page. Every
-    # operation below therefore relies on the platform's default `expect: json`,
-    # which turns an HTML body into a named `non_json_response` failure instead of
-    # a silent success. Do not weaken it to `text` on this connection.
-    health: { operation: sheet_ping }
-    setup_hint: >-
-      Extensions → Apps Script, paste apps-script/binaa-sheet.gs.md, then
-      Deploy → New deployment → Web app with "Execute as: Me" and
-      "Who has access: Anyone". Add script.googleusercontent.com under Allowed
-      redirect hosts — the Web App redirects there to serve its body, and it is a
-      different domain from script.google.com rather than a subdomain, so it is
-      not covered automatically.
-
-  # The SAME workbook as `sheet` above, reached through Google's own API instead of
-  # a script we deploy. Both exist on purpose: `sheet` needs no Google Cloud project
-  # and no OAuth consent (paste a URL and a secret, done), which keeps the pack
-  # installable in five minutes; `sheets` is the production shape, where the
-  # operator grants access once and the platform renews it forever.
-  #
-  # WHY THE PRICE READ STAYS ON THE APPS SCRIPT. It is tempting to retire `sheet`
-  # now that OAuth2 works, and it would be a downgrade for two reasons:
-  #
-  #   • values.get returns POSITIONAL arrays, so a flow can only address columns by
-  #     index — hard-coding column order. The script resolves them by NAME, and this
-  #     pack's README promises exactly that ("column order may change but the names
-  #     may not"). Reordering two columns would then yield wrong prices rather than
-  #     an error. Closing this needs an `index_of` expr builtin — logged in the
-  #     platform's docs/BACKLOG.md.
-  #   • the script filters server-side (q / category / sku / limit); values.get
-  #     cannot, so the whole sheet would cross the wire on every turn.
-  #
-  # A WRITE needs neither property, which is why the RFQ append is what moves here
-  # next.
-  #
-  # Nothing here is a secret and there is no credential field — pressing Connect in
-  # the console sends the operator to Google, and the grant comes back to us.
+  # One connection, one workbook, three jobs: read the Prices tab, append an RFQ to
+  # Quotes, and append every status move to `Status log`. The operator authorizes
+  # once and the platform renews access forever — no deployment to keep current and
+  # no shared secret to rotate.
   sheets:
     label:    { en: 'Google Sheets (direct)', ar: 'جداول جوجل (مباشر)' }
     describe: >-
@@ -148,58 +87,6 @@ connections:
 
 operations:
 
-  # ── the workbook ───────────────────────────────────────────────────────────
-
-  sheet_ping:
-    connection: sheet
-    describe:   'Cheap authenticated read for the console Test button. Also reports the pasted script version.'
-    method:     GET
-    query:      { action: ping }
-    response:
-      ok_path:    ok
-      error_path: error
-      error_map:
-        denied: [bad_secret]
-      data_path:  sheet
-
-  sheet_append_quote:
-    connection: sheet
-    describe:   'Append one RFQ row to the Quotes tab. The script dedupes on `ref`, so a retry cannot double-file.'
-    method:     POST
-    # The secret moves to the BODY for this one: a query string is logged by
-    # intermediaries, and this request carries the customer's phone number.
-    auth_in:    body
-    headers:
-      # Server-to-server, so there is no CORS preflight and no need for the
-      # text/plain workaround the browser-side advice recommends.
-      Content-Type: 'application/json'
-    body:
-      action:     append_quote
-      ref:        '{{ input.ref }}'
-      customer:   '{{ input.customer }}'
-      phone:      '{{ input.phone }}'
-      sku:        '{{ input.sku }}'
-      material:   '{{ input.material }}'
-      qty:        '{{ input.qty }}'
-      unit:       '{{ input.unit }}'
-      unit_price: '{{ input.unit_price }}'
-      total:      '{{ input.total }}'
-      currency:   '{{ input.currency || "SAR" }}'
-      site:       '{{ input.site }}'
-      address:    '{{ input.address }}'
-    # Never store a customer's phone number in the delivery log.
-    redact: [phone]
-    idempotency_header: 'X-Idempotency-Key'
-    response:
-      ok_path:    ok
-      error_path: error
-      data_path:  row
-      error_map:
-        denied:  [bad_secret]
-        invalid: [missing_ref, unknown_action, missing_sheet]
-        # The script holds a lock while appending; `busy` means try again shortly.
-        retry:   [busy]
-
   # ── the workbook, through Google's own API ─────────────────────────────────
 
   sheets_ping:
@@ -237,6 +124,88 @@ operations:
     response:
       items_path: values
       data_path:  values
+    # Sheets allows 300 reads/minute for the whole Cloud project — shared across
+    # EVERY workspace on the platform, not per tenant. Uncached, the number of
+    # price questions is the ceiling for everyone. A minute of staleness on a list
+    # finance edits a few times a day is invisible, and it makes cost scale with
+    # tenants instead of questions.
+    cache_ttl_s: 60
+    status_map:
+      404: invalid
+
+  sheets_append_quote:
+    connection: sheets
+    describe:   'Append one RFQ row to the Quotes tab.'
+    method:     POST
+    path:       'v4/spreadsheets/{{ conn.spreadsheet_id }}/values/Quotes!A:O:append'
+    query:
+      valueInputOption:  RAW
+      insertDataOption:  INSERT_ROWS
+    headers:
+      Content-Type: 'application/json; charset=utf-8'
+    # POSITIONAL — this hard-codes the Quotes column order, the very hazard
+    # `$rows_to_objects` removes from the READ. It is acceptable here and ONLY
+    # here, because the platform is now the sole writer of this tab; the Prices
+    # tab stays name-addressed precisely because humans edit it. If you ever let
+    # someone hand-edit Quotes, this is the line that breaks.
+    body:
+      values:
+        - - '{{ input.ref }}'
+          # Filled by the operation, not the flow: `now` is an operation scope
+          # root, and flows have no `$now`.
+          - '{{ now.iso }}'
+          - '{{ input.customer }}'
+          - '{{ input.phone }}'
+          - '{{ input.sku }}'
+          - '{{ input.material }}'
+          - '{{ input.qty }}'
+          - '{{ input.unit }}'
+          - '{{ input.unit_price }}'
+          - '{{ input.total }}'
+          - '{{ input.currency || "SAR" }}'
+          - '{{ input.site }}'
+          - '{{ input.address }}'
+          - ''
+          - ''
+    # Never store a customer's phone number in the delivery log.
+    redact: [phone]
+    response:
+      # `updates.updatedRange` comes back as e.g. `Quotes!A5:O5`. Google accepts
+      # that string verbatim in a deep link (…/edit?range=Quotes!A5:O5), so the
+      # record can point at its own row with NO row-number parsing and nothing
+      # cached that a later sort could invalidate.
+      data_path: updates
+    status_map:
+      404: invalid
+
+  sheets_append_status:
+    connection: sheets
+    describe:   'Append one row to `Status log` — the sheet-side mirror of a stage move.'
+    method:     POST
+    path: "v4/spreadsheets/{{ conn.spreadsheet_id }}/values/'Status log'!A:E:append"
+    query:
+      valueInputOption:  RAW
+      insertDataOption:  INSERT_ROWS
+    headers:
+      Content-Type: 'application/json; charset=utf-8'
+    # APPEND, not update. `values:update` addresses a ROW INDEX, and any sort of
+    # the Quotes tab would then write one quote's status onto another's row —
+    # worse than showing nothing. An appended event has no index to invalidate,
+    # needs only `ref` (which always exists), and gives the yard an audit trail
+    # instead of a single overwritten cell. The Quotes `status` column is a
+    # lookup formula over this tab; see README.md.
+    body:
+      values:
+        - - '{{ input.ref }}'
+          - '{{ input.from }}'
+          - '{{ input.to }}'
+          - '{{ now.iso }}'
+          - '{{ input.by }}'
+    # Queued only: a record can change with nobody on a turn, and no customer
+    # should ever wait on a spreadsheet write.
+    allow_sync: false
+    response:
+      data_path: updates
     status_map:
       404: invalid
 
@@ -322,34 +291,3 @@ operations:
     # chat.postMessage is rate-limited at roughly one message per second per
     # channel and answers 429 with Retry-After. Honour theirs over our curve.
     honor_retry_after: true
-
-inbound:
-
-  quote_status:
-    label:    { en: 'Quote status edited in the sheet', ar: 'تغيّر حالة العرض في الشيت' }
-    describe: 'The ops team sets a Status cell in the Quotes tab; the script posts it here.'
-    connection: sheet
-    verify:
-      scheme:     octwin_v1
-      max_skew_s: 300
-    # onEdit can fire twice for one edit, and the script retries on a 5xx. This is
-    # the durable guard — it survives a restart, which a per-process one would not.
-    idempotency: '{{ payload.ref }}:{{ payload.status }}:{{ payload.edited_at }}'
-    when: { path: event, equals: [quote_status] }
-    upsert:
-      entity: quote
-      # The sheet has NO stable row identity — sorting it renumbers every row — so
-      # the join key is minted on OUR side (`record_number`), written into the
-      # sheet's Ref column when the RFQ is filed, and matched on the way back.
-      match:  { record_number: '{{ payload.ref }}' }
-      fields:
-        sheet_row:      '{{ payload.row }}'
-        sheet_row_url:  '{{ payload.row_url }}'
-        last_synced_at: '{{ payload.edited_at }}'
-        last_synced_by: '{{ payload.edited_by }}'
-      stage: '{{ payload.status }}'
-      # A stray edit on an unrelated row must never conjure a record here.
-      on_no_match: ignore
-      # The Status column is a data-validation dropdown, so this should never fire
-      # — and if it does, that is a mapping bug worth seeing rather than coercing.
-      on_unmapped_stage: reject

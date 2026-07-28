@@ -39,10 +39,10 @@ entities:
       # Written back FROM the workbook — the append response fills the first two,
       # the inbound webhook refreshes them plus the sync stamps. So the console row
       # deep-links straight to the sheet row the desk has to act on.
-      sheet_row:      { type: number, label: { en: 'Sheet row', ar: 'صف الشيت' } }
-      sheet_row_url:  { type: text,   label: { en: 'Open in Sheets', ar: 'افتح في الشيت' } }
-      last_synced_at: { type: text,   label: { en: 'Synced', ar: 'آخر مزامنة' } }
-      last_synced_by: { type: text,   label: { en: 'Edited by', ar: 'عدّلها' } }
+      # The append's own `updatedRange`, e.g. `Quotes!A5:O5`, stored verbatim —
+      # Google accepts it in a deep link, so the console can jump straight to the
+      # row with no row number to parse and nothing a later sort invalidates.
+      sheet_range:    { type: text,   label: { en: 'Sheet row', ar: 'صف الشيت' } }
     list: [material_name, qty, total]
     search: { text: [material_name, sku, customer_name] }
     pipeline:
@@ -66,7 +66,7 @@ entities:
         - push:
             operation: slack_post_rfq
             input:
-              text: '🧱 New RFQ {{ record.record_number }} — {{ record.fields.material_name }} ×{{ record.fields.qty }} {{ record.fields.unit }} for {{ record.fields.customer_name }}. Sheet: {{ record.fields.sheet_row_url }}'
+              text: '🧱 New RFQ {{ record.record_number }} — {{ record.fields.material_name }} ×{{ record.fields.qty }} {{ record.fields.unit }} for {{ record.fields.customer_name }}. Sheet: {{ record.fields.sheet_range }}'
       enter:
         won:
           - push:
@@ -74,10 +74,11 @@ entities:
               input:
                 text: '🏆 Won {{ record.record_number }} — {{ record.fields.material_name }} ×{{ record.fields.qty }} · {{ record.fields.total }} {{ record.fields.currency }} · {{ record.fields.customer_name }}'
 
-        # ── seam 4b · why the inbound leg needed no new machinery ─────────────
-        # The webhook upserts this record to `shipped`. That write re-enters the
-        # reactions reactor, so THIS hook fires — and it is the ordinary notify
-        # verb. One declared line is the whole customer notification.
+        # ── the customer notification ─────────────────────────────────────────
+        # Ops moves the quote to `shipped` in the console, and THIS fires — the
+        # ordinary notify verb, one declared line. It does not care what caused
+        # the move, which is exactly why deleting the sheet-side webhook cost
+        # nothing: a console click and an inbound upsert produce the same event.
         shipped:
           - notify:
               message: '🚚 طلبك {{ record.record_number }} ({{ record.fields.material_name }}) خرج للشحن. نتواصل معك عند وصول الشحنة للموقع.'
@@ -87,6 +88,24 @@ entities:
           - notify:
               message: '✅ تم تسليم طلبك {{ record.record_number }}. شكراً لتعاملك مع بناء لمواد البناء.'
               cooldown_hours: 24
+
+      # ── the sheet-side mirror ───────────────────────────────────────────────
+      # ANY move, appended to `Status log` — so the workbook still shows status
+      # even though nobody types it there any more. `stage_change` rather than six
+      # `enter:` entries: a stage added later would silently miss the mirror.
+      #
+      # It fires ALONGSIDE the `enter:` hooks above, not instead of them, and for
+      # EVERY source — a console click, a flow's record_save, an automation sweep.
+      # Queued, so a spreadsheet write can never delay the customer's message; if
+      # it fails it dead-letters visibly and the stage move still stands.
+      stage_change:
+        - push:
+            operation: sheets_append_status
+            input:
+              ref:  '{{ record.record_number }}'
+              from: '{{ event.from }}'
+              to:   '{{ event.to }}'
+              by:   '{{ event.actor }}'
 
 segments:
   open_rfqs:
