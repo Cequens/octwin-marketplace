@@ -171,6 +171,20 @@ operations:
           # hardcoded 'new', so it cannot drift from the pipeline's `initial:`.
           - '{{ input.status }}'
           - ''
+    # NOT IDEMPOTENT, and now declared so rather than described in a comment.
+    # A `values:append` with no key files a second row if a request times out
+    # after the write landed. Today this operation is only called synchronously
+    # from a flow (which never auto-retries), but the platform refuses to let a
+    # `push:` reach it without this probe — so the safety is enforced rather than
+    # remembered.
+    idempotent: false
+    probe:
+      operation: sheets_find_ref
+      # The Sheets values API cannot be asked a filtered question, so the probe
+      # reads the WHOLE ref column and we look for ours in it. Without `matches`
+      # a non-empty column would mean "some other quote exists" and every retry
+      # would be dropped as already-done.
+      matches: '{{ input.ref }}'
     # Never store a customer's phone number in the delivery log.
     redact: [phone]
     response:
@@ -179,6 +193,19 @@ operations:
       # record can point at its own row with NO row-number parsing and nothing
       # cached that a later sort could invalidate.
       data_path: updates
+    status_map:
+      404: invalid
+
+  sheets_find_ref:
+    connection: sheets
+    describe:   'Every ref in the Quotes tab — the retry probe for sheets_append_quote.'
+    method:     GET
+    # Column A only: the probe answers one question and should not pull the whole
+    # sheet to do it.
+    path:       'v4/spreadsheets/{{ conn.spreadsheet_id }}/values/Quotes!A1:A1000'
+    response:
+      data_path: values
+    cache_ttl_s: 0        # a probe must never read a cached answer
     status_map:
       404: invalid
 
