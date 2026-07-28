@@ -27,11 +27,19 @@ entry:
 steps:
 
   fetch:
+    # `stage` is a first-class argument, NOT a `where:` key — `where:` is an AST
+    # over the entity's own FIELDS, and `where: { stage: active }` matches a field
+    # named "stage" that this entity does not have.
+    #
+    # `all: true` because appeals belong to the CHARITY. Without it `record_list`
+    # scopes to the calling contact and every donor sees an empty list — with no
+    # error, because zero rows is a legitimate answer.
     - do: record_list
       args:
-        entity: appeal
-        where:  { stage: active }
-        limit:  '$config.lookup.page_size'
+        entity:  appeal
+        stage:   active
+        all:     true
+        limit:   '$config.lookup.page_size'
       bind: found
       outputs:
         ok:     [{ goto: narrow }]
@@ -42,7 +50,7 @@ steps:
     # `$filter`'s predicate takes a field name or an equality object and never
     # binds `$item`, so the category match is computed in `$map` and filtered on.
     - assign:
-        rows: '$map($found.records, $merge($item, { _hit:
+        rows: '$map($found.rows, $merge($item, { _hit:
                  $input.category == null || $item.fields.category == $input.category
                }))'
     - assign: { hits: '$filter($rows, "_hit")' }

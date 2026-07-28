@@ -27,17 +27,28 @@ config:
   giving:
     currency:    SAR
     minor_units: 100
-    presets:     [50, 100, 250, 500]
 
+# `amount` is declared here even though the collect below also gathers it, because
+# an explicit `input:` spec WINS over the field the collect engine would otherwise
+# auto-expose as a bare string. That is the difference between the agent handing us
+# the number 300 and handing us "٣٠٠" — and `$state.amount * minor_units` on a
+# string is how a donation gets charged wrong.
 input:
   appeal_number:
     type:     number
+    integer:  true
+    positive: true
     optional: true
-    describe: 'A campaign reference — ONLY from a previous card or picker.'
+    describe: 'A campaign reference — ONLY from a card or picker the donor tapped, never a number they typed.'
   amount:
     type:     number
+    positive: true
     optional: true
-    describe: 'Whatever the donor named, in whole riyals.'
+    describe: 'The donation amount in whole riyals, as the donor named it.'
+  donor_name:
+    type:     string
+    optional: true
+    describe: 'The name to record the gift under, if the donor gave one.'
 
 entry:
   - else: true
@@ -45,70 +56,100 @@ entry:
 
 steps:
 
+  # A tapped campaign card arrives carrying a record_number. Resolving it here
+  # seeds `$state` so the collect below finds the field already filled and never
+  # shows the picker — the tap IS the answer.
   resolve_appeal:
     - if: '$input.appeal_number == null'
-      goto: pick_appeal
+      goto: gather
     - do: record_get
-      args: { entity: appeal, record_number: '$input.appeal_number' }
+      args:
+        entity: appeal
+        match:  { field: record_number, value: '$input.appeal_number' }
       bind: ap
       outputs:
-        ok:      [{ goto: seed }]
-        empty:   [{ goto: pick_appeal }]
-        invalid: [{ goto: pick_appeal }]
-        failed:  [{ goto: pick_appeal }]
-
-  # No campaign chosen: hand off rather than guess. `campaigns` renders the
-  # picker whose taps come back here with a number.
-  pick_appeal:
-    - do: invoke_flow
-      args: { flow: campaigns }
-      outputs:
-        ok:     []
-        failed: []
+        ok:        [{ goto: seed }]
+        not_found: [{ goto: gather }]
+        failed:    [{ goto: gather }]
 
   seed:
     - assign:
         state: '$merge($state, {
-                  appeal_title: $ap.record.fields.title_ar,
-                  appeal_id:    $ap.record.id,
-                  currency:     $config.giving.currency
+                  appeal_number: $ap.record_number,
+                  appeal_title:  $ap.fields.title_ar,
+                  appeal_id:     $ap.id
                 })'
     - goto: gather
 
   gather:
-    - do: collect
-      args:
+    - collect:
+        # Fold any invoke-time args into the bag on every pass. `$coalesce` keeps
+        # whatever the donor has already answered, so this is safe to re-run.
+        derive:
+          amount:     '$coalesce($state.amount, $input.amount)'
+          donor_name: '$coalesce($state.donor_name, $input.donor_name)'
         fields:
-          - field:  amount
-            prompt: '{$t("donate.ask_amount")}'
-            options: '$map($config.giving.presets, { title: $item, value: $item })'
-          - field:  donor_name
-            prompt: '{$t("donate.ask_name")}'
-      outputs:
-        ok:      [{ goto: confirm }]
-        invalid: []
-        failed:  []
+          # `all: true` because appeals belong to the CHARITY, not to the donor.
+          # Without it `record_list` scopes to the current contact and the picker
+          # renders an empty list for every donor — silently, since zero rows is a
+          # legitimate result. `auto_resolve` skips the tap when only one appeal is
+          # live, and `fallback: text` keeps the ask answerable if none are.
+          - field: appeal_number
+            label: '$t("donate.f_appeal")'
+            options:
+              header: donate.pick_header
+              body:   donate.pick_body
+              cta:    donate.pick_cta
+              fetch:
+                do:   record_list
+                args: { entity: appeal, stage: active, all: true, limit: 10 }
+                bind: live
+              rows: '$live.rows'
+              map:
+                value:       '$item.record_number'
+                label:       '$item.fields.title_ar'
+                description: '$coalesce($item.fields.summary, "")'
+                selection:
+                  appeal_title: '$item.fields.title_ar'
+                  appeal_id:    '$item.id'
+              auto_resolve: true
+              fallback:     text
+
+          # Free text, not a preset picker. A static option list cannot carry
+          # `fallback: text` and forces every label through `$t()` with STRING
+          # values — and an amount must stay a number. Presets are offered as taps
+          # on the home card instead, which bind `amount` directly.
+          - field: amount
+            label: '$t("donate.f_amount")'
+            validate:
+              when:  '$state.amount != null && $state.amount <= 0'
+              error: '$t("donate.err_amount")'
+
+          - field: donor_name
+            label: '$t("donate.f_donor")'
+
+        gap_instructions: >-
+          Ask for the one missing detail in a single short, warm line of Saudi
+          Arabic. Never re-ask for something already answered, never pressure, and
+          never guess an amount — if the donor is vague, ask.
+        complete: [{ goto: confirm }]
 
   confirm:
-    - assign:
-        amount_riyals: '$coalesce($state.amount, $input.amount)'
     - use: approve_apply
       with:
         header:  '{$t("donate.confirm_header")}'
         preview: '$lines($compact([
                     $t("donate.preview_appeal", { appeal: $state.appeal_title }),
-                    $t("donate.preview_amount", { amount: $format_money($amount_riyals, $state.currency) }),
+                    $t("donate.preview_amount", { amount: $format_money($state.amount, $config.giving.currency) }),
                     $t("donate.preview_donor",  { donor: $state.donor_name })
                   ]), "\n")'
         confirm_title: '{$t("donate.btn_confirm")}'
         cancel_title:  '{$t("donate.btn_cancel")}'
         apply:         save_donation
         abort:         cancelled
-        # REQUIRED, and it must not point at `abort`: a donor who TYPES instead
-        # of tapping (changing the amount, correcting the name) is not
-        # cancelling. Routing back to `gather` re-merges what they typed and
-        # re-asks, which is the whole reason the template forces this branch to
-        # be named rather than defaulting it to a silent abort.
+        # REQUIRED, and deliberately NOT `abort`: a donor who types instead of
+        # tapping — correcting the amount, fixing a name — has not cancelled.
+        # Routing back to the collect re-merges what they typed and re-asks.
         on_other:      gather
 
   # WRITE 1 — ours. Mints record_number, the join key the gateway echoes back.
@@ -119,20 +160,20 @@ steps:
         fields:
           appeal_title: '$state.appeal_title'
           appeal_id:    '$state.appeal_id'
-          amount:       '$amount_riyals'
-          currency:     '$state.currency'
+          amount:       '$state.amount'
+          currency:     '$config.giving.currency'
           donor_name:   '$state.donor_name'
       bind: gift
       outputs:
         ok:      [{ goto: make_invoice }]
-        invalid: []
+        invalid: [{ goto: save_failed }]
         failed:  [{ goto: save_failed }]
 
   # WRITE 2 — the gateway. The amount is converted to the SMALLEST unit here,
   # once, so no other step has to remember that SAR is quoted in halalas.
   make_invoice:
     - assign:
-        amount_minor: '$amount_riyals * $config.giving.minor_units'
+        amount_minor: '$state.amount * $config.giving.minor_units'
     - do: integration_call
       args:
         operation: moyasar_create_invoice
@@ -140,7 +181,7 @@ steps:
           ref:          '$gift.record_number'
           appeal:       '$state.appeal_title'
           amount_minor: '$amount_minor'
-          currency:     '$state.currency'
+          currency:     '$config.giving.currency'
           description:  '$state.appeal_title'
       bind: inv
       outputs:
@@ -168,14 +209,14 @@ steps:
         render_intent: detail_card
         header: '{$t("donate.ready_header")}'
         body: '$lines($compact([
-                 $t("donate.ready_amount", { amount: $format_money($amount_riyals, $state.currency), appeal: $state.appeal_title }),
+                 $t("donate.ready_amount", { amount: $format_money($state.amount, $config.giving.currency), appeal: $state.appeal_title }),
                  $t("donate.ready_link",   { url: $inv.url }),
                  $t("donate.ready_note")
                ]), "\n")'
         buttons:
           - { title: '{$t("donate.btn_mine")}', on_select: { invoke: my-donations } }
       memory_note: 'Donation {$gift.record_number} created, checkout link sent. Awaiting the gateway.'
-      data: { ref: '$gift.record_number', amount: '$amount_riyals' }
+      data: { ref: '$gift.record_number', amount: '$state.amount' }
     - end: applied
 
   # The record exists and is `pending`; only the link is missing. Say so honestly

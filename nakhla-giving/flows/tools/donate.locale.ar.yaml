@@ -1,8 +1,16 @@
 flow_id: donate
 
 strings:
-  ask_amount:      '💚 كم تحب يكون مبلغ تبرّعك؟'
-  ask_name:        '✍️ الاسم اللي نسجّل فيه التبرّع؟'
+  # Gap-card labels — one per collect field, read by `$collect_missing_labels`.
+  f_appeal:        'الحملة'
+  f_amount:        'المبلغ'
+  f_donor:         'الاسم'
+  err_amount:      'المبلغ لازم يكون أكبر من صفر 🙏'
+
+  # The appeal picker (a dynamic `options:` block, so these are bare keys).
+  pick_header:     '🌱 وين تحب يوصل تبرّعك؟'
+  pick_body:       'هذي الحملات المفتوحة حالياً.'
+  pick_cta:        'اختر حملة'
 
   confirm_header:  '📝 مراجعة التبرّع'
   preview_appeal:  '🌱 الحملة: {appeal}'

@@ -17,10 +17,14 @@ entry:
 steps:
 
   fetch:
+    # No `all:` and no `contact_id:` — an `entity` list is ALREADY scoped to the
+    # calling contact, which is exactly right here: a donor sees their own gifts
+    # and nobody else's. (`all: true` is what the appeal lists need, and would be
+    # a disclosure bug here.)
     - do: record_list
       args:
         entity: donation
-        mine:   true
+        sort:   created_at
         limit:  '$config.lookup.page_size'
       bind: found
       outputs:
@@ -30,7 +34,7 @@ steps:
 
   show:
     - assign:
-        rows: '$map($found.records, {
+        rows: '$map($found.rows, {
                  ref:      $item.record_number,
                  appeal:   $item.fields.appeal_title,
                  amount:   $item.fields.amount,

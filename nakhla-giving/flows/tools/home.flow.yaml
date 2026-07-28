@@ -19,8 +19,17 @@ steps:
   count_unpaid:
     # Lead with what is actually outstanding. A donor who tapped away from a
     # checkout page and came back has exactly one question.
+    #
+    # `contact_id` is NOT optional here. `record_aggregate` is project-wide by
+    # default (the opposite of `record_list`, which scopes to the contact unless
+    # told otherwise), so without it the card tells every donor that THEY have
+    # however many unpaid donations the whole charity is carrying.
     - do: record_aggregate
-      args: { entity: donation, op: count, active_only: true }
+      args:
+        entity:      donation
+        op:          count
+        active_only: true
+        contact_id:  '$contact.id'
       bind: oc
       outputs:
         ok:     [{ goto: show }]
@@ -38,9 +47,17 @@ steps:
                ]), "\n")'
         footer: '{$t("home.footer")}'
         cta:    '{$t("home.cta")}'
+        # The three preset rows are where the quick amounts live. `donate` collects
+        # `amount` as FREE TEXT (a static option list cannot carry `fallback: text`
+        # and would force the amount to a string), so the presets are offered here
+        # as taps that bind the number directly — one tap from the front door to a
+        # payment link, and any other figure is just typed.
         items:
           - { title: '{$t("home.row_appeals")}',  description: '{$t("home.row_appeals_d")}',  on_select: { invoke: campaigns } }
           - { title: '{$t("home.row_donate")}',   description: '{$t("home.row_donate_d")}',   on_select: { invoke: donate } }
+          - { title: '{$t("home.row_p100")}',     description: '{$t("home.row_preset_d")}',   on_select: { invoke: donate, with: { amount: 100 } } }
+          - { title: '{$t("home.row_p250")}',     description: '{$t("home.row_preset_d")}',   on_select: { invoke: donate, with: { amount: 250 } } }
+          - { title: '{$t("home.row_p500")}',     description: '{$t("home.row_preset_d")}',   on_select: { invoke: donate, with: { amount: 500 } } }
           - { title: '{$t("home.row_mine")}',     description: '{$t("home.row_mine_d")}',     on_select: { invoke: my-donations } }
       memory_note: 'Showed the giving menu.'
     - end: applied
