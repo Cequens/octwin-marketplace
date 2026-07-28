@@ -180,6 +180,7 @@ steps:
           total:      '$line_total'
           currency:   '$currency'
           site:       '$state.site_name'
+          status:     '$quote.stage'
       bind: appended
       outputs:
         ok:      [{ goto: stamp_row }]

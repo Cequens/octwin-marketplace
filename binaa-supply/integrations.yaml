@@ -165,7 +165,11 @@ operations:
           - '{{ input.currency || "SAR" }}'
           - '{{ input.site }}'
           - '{{ input.address }}'
-          - ''
+          # The record's CURRENT stage, so a new row shows its status immediately
+          # rather than sitting blank until the first move — `stage_change` fires
+          # on a MOVE, and creation is not one. Passed from the flow rather than
+          # hardcoded 'new', so it cannot drift from the pipeline's `initial:`.
+          - '{{ input.status }}'
           - ''
     # Never store a customer's phone number in the delivery log.
     redact: [phone]
