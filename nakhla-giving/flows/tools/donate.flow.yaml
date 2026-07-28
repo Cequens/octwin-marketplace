@@ -100,10 +100,16 @@ steps:
                     $t("donate.preview_amount", { amount: $format_money($amount_riyals, $state.currency) }),
                     $t("donate.preview_donor",  { donor: $state.donor_name })
                   ]), "\n")'
-        approve_label: '{$t("donate.btn_confirm")}'
-        cancel_label:  '{$t("donate.btn_cancel")}'
-        on_approve:    save_donation
-        on_cancel:     cancelled
+        confirm_title: '{$t("donate.btn_confirm")}'
+        cancel_title:  '{$t("donate.btn_cancel")}'
+        apply:         save_donation
+        abort:         cancelled
+        # REQUIRED, and it must not point at `abort`: a donor who TYPES instead
+        # of tapping (changing the amount, correcting the name) is not
+        # cancelling. Routing back to `gather` re-merges what they typed and
+        # re-asks, which is the whole reason the template forces this branch to
+        # be named rather than defaulting it to a silent abort.
+        on_other:      gather
 
   # WRITE 1 — ours. Mints record_number, the join key the gateway echoes back.
   save_donation:

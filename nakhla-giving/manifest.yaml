@@ -32,6 +32,7 @@ listing:
   title:    'Nakhla Giving'
   tagline:  'Donations on WhatsApp, with a real payment gateway and a real receipt'
   category: nonprofit
+  icon:     listing/icon.png
   author:   { name: 'Octwin', url: 'https://octwin.ai' }
   public:   false
 
