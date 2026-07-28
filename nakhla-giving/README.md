@@ -8,11 +8,14 @@ Arabic-first, pure YAML, no pack database.
 
 ---
 
-## ⚠️ Status: passes the platform's full validation, NOT yet run against a live gateway
+## Status: validated, and driven against a real Moyasar test account
 
 `octwin validate --remote` is green — the same check `deploy` runs, so the
 manifest, `xrm.yaml`, `integrations.yaml` and every flow are accepted by the
-platform itself. **Nothing here has touched a real Moyasar account.**
+platform itself. Beyond that, the outbound calls, the webhook round trip and a
+successful `paid` payment have all been exercised against live `sk_test_`
+endpoints (see below). What has NOT run is the pack's own `paid` branch end to
+end — see *Still unproven*.
 
 Green validation is worth less than it looks, and this pack is the evidence. The
 first version validated clean while carrying five bugs the validator cannot see,
@@ -59,11 +62,17 @@ original design was broken:
    on the donation's timeline. The payment failed only because the card was declined
    (`DECLINED: INVALID CARD OR NOT FOUND`), which is the gateway working.
 
-**Still unproven:** the `paid` branch specifically. Every mechanism it uses has now
-run for real on the `failed` branch — same verification, same join, same `stage_map`,
-same reaction seam — but no test card has yet produced a successful payment, so the
-receipt copy and the `first_gift` milestone have not been seen. Duplicate suppression
-(a replayed body) is also still only as good as its unit test.
+6. **A test card really does reach `paid`.** `4111111111111111` with the 3DS ACS
+   emulator set to `AUTHENTICATED` returns `status: paid`, `APPROVED` — see *Paying a
+   test invoice* below for why every other candidate card fails misleadingly.
+
+**Still unproven:** the pack's own `paid` branch, end to end. Every mechanism it
+depends on has now run for real — the same signature verification, the same
+`invoice_id` join, the same `stage_map`, the same reaction seam, all exercised on the
+`failed` branch — and a `paid` payment has been produced at the gateway. What has not
+been observed is those two halves meeting: a `payment_paid` webhook landing on a
+donation record, so the receipt copy and the `first_gift` milestone are still unseen.
+Duplicate suppression (a replayed body) also remains only as good as its unit test.
 
 ### One known gap
 
@@ -156,13 +165,40 @@ with the shared secret from step 2.
 
 ---
 
+## Paying a test invoice (the part the docs do not spell out)
+
+Verified empirically against the live sandbox on 2026-07-29, because the obvious
+attempts all fail with a message that blames the wrong thing.
+
+**1 — Use a card the sandbox recognises; `4111111111111111` always works.** Pushed
+through the API, `4111111111111111` authorises and the other common test numbers
+(`5555555555554444`, `4464040000000007`, `5297412542005689`, `4000000000000002`) all
+return `DECLINED: INVALID CARD OR NOT FOUND` — a message that reads like a bug in your
+integration and is not one. A real mada test card issued to the account also works via
+the hosted checkout page, so this is a list of what was *verified*, not an exhaustive
+claim about what the gateway accepts. Expiry: any future date. CVC: any 3 digits.
+
+**2 — On the 3-D Secure page, pick `AUTHENTICATED`.** The sandbox does not send an
+OTP. It shows an *ACS Emulator* screen with a dropdown where you choose the outcome,
+and the choice maps straight through:
+
+| ACS dropdown | payment status | gateway message |
+|---|---|---|
+| `AUTHENTICATED` | **`paid`** | `APPROVED` |
+| `UNAUTHENTICATED` | `failed` | `3DS: Card authentication declined.` |
+| `AUTHENTICATION_REJECTED` | `failed` | `3DS: The authentication attempt was rejected by the issuer bank.` |
+
+Abandoning that page leaves the payment at `initiated` for ever — which is exactly
+what an unfinished checkout looks like in production, and why `pending` is a normal
+resting state for a donation rather than an error.
+
 ## Verifying it end to end
 
 | Step | What proves it worked |
 |---|---|
 | `octwin chat "أبي أتبرع"` | the campaign picker, from your own records |
 | tap a campaign, choose an amount, confirm | a checkout link arrives **on the turn**, and a `donation` record exists at `pending` |
-| pay with a Moyasar **test card** | the record moves to `paid` and the donor receives a receipt on WhatsApp |
+| pay with `4111111111111111`, choosing `AUTHENTICATED` on the 3DS page | the record moves to `paid` and the donor receives a receipt on WhatsApp |
 | `octwin records donation` | `gateway_payment_id` and `paid_at` were written by the webhook, not by a flow |
 
 Then the negatives, which are what the design is for:
