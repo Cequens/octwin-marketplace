@@ -162,25 +162,6 @@ operations:
         denied: [bad_secret]
       data_path:  sheet
 
-  sheet_prices:
-    connection: sheet
-    describe:   'Live rows from the Prices tab, filtered by the script so we never download the whole list.'
-    method:     GET
-    query:
-      action:   prices
-      q:        '{{ input.q }}'
-      category: '{{ input.category }}'
-      sku:      '{{ input.sku }}'
-      limit:    '{{ input.limit }}'
-    response:
-      ok_path:    ok
-      error_path: error
-      items_path: rows
-      data_path:  rows
-      error_map:
-        denied:  [bad_secret]
-        invalid: [unknown_action, missing_sheet]
-
   sheet_append_quote:
     connection: sheet
     describe:   'Append one RFQ row to the Quotes tab. The script dedupes on `ref`, so a retry cannot double-file.'

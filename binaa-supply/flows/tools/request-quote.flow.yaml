@@ -44,11 +44,11 @@ steps:
   price_lookup:
     - if: '$input.sku == null'
       goto: gather
+    # Same source as price-list: Google's own API, so both flows read the sheet ONE
+    # way. The API cannot filter, so the row is picked out here.
     - do: integration_call
-      args:
-        operation: sheet_prices
-        input: { sku: '$input.sku', limit: 1 }
-      bind: prices
+      args: { operation: sheets_prices }
+      bind: sheet_values
       outputs:
         ok:      [{ goto: seed_from_price }]
         empty:   [{ goto: gather }]
@@ -57,14 +57,22 @@ steps:
         failed:  [{ goto: gather }]
 
   seed_from_price:
-    - assign: { m: '$prices[0]' }
+    - assign: { m: '$filter($rows_to_objects($sheet_values), { sku: $input.sku })[0]' }
+    # A sku that is no longer in the sheet is a normal outcome, not a failure: the
+    # customer taps a card, finance deletes the row, and the RFQ must still be
+    # takeable. Without this guard `$merge` would fold undefined fields into $state.
+    - if: '$m == null'
+      goto: gather
     # Fold into $state, not flow vars — these must survive the collect suspends.
+    # `+` on the price because every cell from values.get is a STRING, and an
+    # unconverted one reaches the total and the money formatter (which renders an
+    # empty string rather than failing).
     - assign:
         state: '$merge($state, {
                   material:   $coalesce($m.name_ar, $m.name_en),
                   sku:        $m.sku,
                   unit:       $m.unit,
-                  unit_price: $m.price,
+                  unit_price: +$m.price,
                   currency:   $coalesce($m.currency, "SAR")
                 })'
     - goto: gather
