@@ -63,23 +63,39 @@ steps:
         items: '$map($hits, {
                   id:      $item.id,
                   title:   $item.fields.title_ar,
-                  summary: $item.fields.summary
+                  summary: $item.fields.summary,
+                  image:   $item.fields.image,
+                  goal:    $item.fields.goal,
+                  raised:  $item.fields.raised
                 })'
+    # A CAROUSEL, not a list_picker: appeals carry a photo, and someone decides
+    # what to give to by looking. A carousel card has NO `title` / `description`
+    # — the name goes in `body:` as markdown (a `title:` written here renders
+    # nothing at all) — and `image_url` takes the raw `MEDIA-…` ref, which the
+    # channel bridge rewrites to a storage URL.
+    #
+    # Meta rejects a ONE-card carousel (#131009); the provider degrades that to an
+    # image-header message rather than failing, so a charity down to its last live
+    # appeal still renders.
     - render:
-        render_intent: list_picker
-        header: '{$t("campaigns.header")}'
-        body:   '$t("campaigns.intro", { count: $length($items) })'
-        footer: '{$t("campaigns.footer")}'
-        cta:    '{$t("campaigns.cta")}'
-        items:  '$items'
+        render_intent: carousel
+        body:  '$t("campaigns.intro", { count: $length($items) })'
+        items: '$items'
         item_template:
-          title:       '$item.title'
-          description: '$coalesce($item.summary, "")'
-          # The ID, not the record_number: `record_get` cannot look a record up by
-          # record_number (that is a column, and `match:` reaches declared FIELDS
-          # only), so a number here resolves to nothing and the donation fails a
-          # required-field check further downstream.
-          on_select:   { invoke: donate, with: { appeal_id: '$item.id' } }
+          image_url: '$item.image'
+          body: '$lines($compact([
+                   $t("campaigns.card_title", { title: $item.title }),
+                   $t("campaigns.card_progress", {
+                     raised: $format_money($item.raised, "SAR"),
+                     goal:   $format_money($item.goal, "SAR") }),
+                   $item.summary
+                 ]), "\n")'
+          buttons:
+            # The ID, not the record_number: `record_get` cannot look a record up
+            # by record_number (that is a column, and `match:` reaches declared
+            # FIELDS only), so a number here resolves to nothing and the donation
+            # fails a required-field check further downstream.
+            - { title: '{$t("campaigns.btn_give")}', on_select: { invoke: donate, with: { appeal_id: '$item.id' } } }
       memory_note: 'Listed {$length($items)} live appeal(s).'
       data: { total: '$length($items)' }
     - end: applied

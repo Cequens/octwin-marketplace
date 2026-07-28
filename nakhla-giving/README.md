@@ -146,8 +146,27 @@ You need a Moyasar account and the ability to register a webhook.
 
 ### 1 — Records
 
-In the console, create a few `appeal` records and move them to **active**. The bot
-only reads these; the charity's team owns them.
+```bash
+octwin deploy --seed
+```
+
+Seeds **five active appeals**, one per declared category (food · health · education ·
+shelter · water), each with a goal, a running total and a generated photo. Re-seeding is
+idempotent — `title_field: title_ar` is what makes the seeder find and update the
+existing row instead of inserting a sixth campaign every deploy — and it REUSES any
+image it already generated, so repeating `--seed` is cheap.
+
+**Images need `media:generate` on the deploy token** (a *special* scope, separate from
+`pack:deploy`, because it spends model credits). Without it the `generate:` markers are
+skipped and the field is simply omitted — the carousel still renders, just without
+photos. Nothing breaks, and there is no broken image ref.
+
+**Donations are deliberately NOT seeded** — see the `demo:` comment in `xrm.yaml`. Short
+version: a seeded gift has no linked contact so no donor could ever see it, fabricated
+`paid` rows put money that never moved into the funnel, and inventing receipts is the one
+thing this bot's own instructions forbid. Earn them by talking to it.
+
+The charity's team owns these records afterwards; the bot only reads them.
 
 ### 2 — Console → Outbound → Integrations → `moyasar`
 

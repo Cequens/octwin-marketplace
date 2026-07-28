@@ -9,6 +9,11 @@ entities:
 
   appeal:
     label:   { en: 'Appeal', ar: 'حملة' }
+    # `title_field` is what makes `--seed` IDEMPOTENT. The seeder looks for an
+    # existing row by `dedupe_by`, else by the title field's value; declaring
+    # NEITHER means it never finds one and inserts a fresh set on every seed —
+    # deploy twice and the charity has ten campaigns instead of five.
+    title_field: title_ar
     fields:
       title_ar:    { type: text,   required: true, label: { en: 'Title (AR)', ar: 'العنوان' } }
       title_en:    { type: text,   label: { en: 'Title (EN)', ar: 'العنوان بالإنجليزي' } }
@@ -16,6 +21,10 @@ entities:
       goal:        { type: number, label: { en: 'Goal', ar: 'الهدف' } }
       raised:      { type: number, label: { en: 'Raised', ar: 'المُحصّل' } }
       category:    { type: select, options: [food, health, education, shelter, water], label: { en: 'Category', ar: 'التصنيف' } }
+      # A donor gives to what they can see. Seeded via `generate:` so a pure-YAML
+      # pack (which ships no binaries) still arrives with real imagery; an
+      # unresolved marker OMITS the field rather than writing a broken ref.
+      image:       { type: image,  label: { en: 'Photo', ar: 'صورة' } }
     list:   [title_ar, goal, raised]
     search: { text: [title_ar, title_en, summary] }
     pipeline:
@@ -113,3 +122,81 @@ segments:
     entity: appeal
     label:  { en: 'Live appeals', ar: 'حملات نشطة' }
     where:  { stage: active }
+
+# ── demo data ───────────────────────────────────────────────────────────────
+#
+# APPEALS ONLY, deliberately. Donations are NOT seeded:
+#
+#   • `my-donations` is contact-scoped, so a seeded gift (which has no linked
+#     contact) is invisible to every donor — present in the console, absent
+#     exactly where a demo needs it;
+#   • inventing `paid` rows with fabricated `gateway_payment_id` / `paid_at`
+#     puts money that never moved into the funnel and the journey's conversion
+#     numbers, in the one pack whose whole subject is money;
+#   • the agent's own instructions forbid inventing an amount, a campaign or a
+#     receipt. Shipping fake gifts would contradict the product being demoed.
+#
+# Donations are earned by talking to the bot.
+#
+# Re-seeding is idempotent via `title_field: title_ar` (above) and REUSES any
+# image already generated, so `deploy --seed` is cheap to repeat.
+#
+# The image prompts describe PLACES AND OBJECTS, never identifiable people in
+# hardship. A charity that raises money on images of the people it serves trades
+# their dignity for donations; the platform will generate whatever it is asked
+# for, so the restraint has to live here.
+demo:
+  - entity: appeal
+    stage:  active
+    fields:
+      title_ar: 'سلة الخير الغذائية'
+      title_en: 'Food basket'
+      summary:  'سلة غذائية شهرية لأسرة متعففة — مواد أساسية تكفي شهراً كاملاً.'
+      category: food
+      goal:     150000
+      raised:   92400
+      image:    'generate:A neatly packed cardboard box of staple pantry goods — rice, lentils, dates, cooking oil — on a plain wooden table in warm daylight. Documentary product photography, no people, no faces, no logos, no text.'
+
+  - entity: appeal
+    stage:  active
+    fields:
+      title_ar: 'علاج مرضى السرطان'
+      title_en: 'Cancer treatment fund'
+      summary:  'تغطية تكاليف العلاج والأدوية للمرضى غير القادرين.'
+      category: health
+      goal:     500000
+      raised:   312750
+      image:    'generate:A calm, clean hospital corridor with soft natural light through a window and an empty waiting bench. Architectural interior photography, no people, no faces, no signage, no text.'
+
+  - entity: appeal
+    stage:  active
+    fields:
+      title_ar: 'كفالة طالب علم'
+      title_en: 'Sponsor a student'
+      summary:  'رسوم دراسية وحقيبة مدرسية لطالب لعام كامل.'
+      category: education
+      goal:     200000
+      raised:   74300
+      image:    'generate:A tidy wooden school desk with stacked notebooks, a satchel and sharpened pencils beside a sunlit classroom window. Still-life photography, no people, no faces, no text.'
+
+  - entity: appeal
+    stage:  active
+    fields:
+      title_ar: 'ترميم بيوت الأسر المتعففة'
+      title_en: 'Home repairs'
+      summary:  'ترميم وصيانة مساكن الأسر المحتاجة لتأمين سكن آمن وكريم.'
+      category: shelter
+      goal:     300000
+      raised:   118900
+      image:    'generate:A simple modest house exterior mid-renovation under a clear sky, fresh plaster and a newly fitted window frame, ladder leaning against the wall. Architectural documentary photography, no people, no faces, no text.'
+
+  - entity: appeal
+    stage:  active
+    fields:
+      title_ar: 'حفر بئر ماء'
+      title_en: 'Water well'
+      summary:  'حفر بئر يخدم قرية كاملة بمياه شرب نظيفة على مدار العام.'
+      category: water
+      goal:     120000
+      raised:   65200
+      image:    'generate:Clear water pouring from a simple metal hand pump into a container, dry earth ground, bright daylight. Documentary photography, close on the pump and water, no people, no faces, no text.'
