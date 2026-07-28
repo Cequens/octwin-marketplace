@@ -60,7 +60,10 @@ connections:
     setup_hint: >-
       Extensions → Apps Script, paste apps-script/binaa-sheet.gs.md, then
       Deploy → New deployment → Web app with "Execute as: Me" and
-      "Who has access: Anyone".
+      "Who has access: Anyone". Add script.googleusercontent.com under Allowed
+      redirect hosts — the Web App redirects there to serve its body, and it is a
+      different domain from script.google.com rather than a subdomain, so it is
+      not covered automatically.
 
   slack:
     label:    { en: 'Slack workspace', ar: 'سلاك' }

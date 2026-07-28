@@ -100,7 +100,15 @@ Anyone**. Copy the `/exec` URL; never use `/dev`.
 
 ### 4 — Console → Outbound → Integrations → `sheet`
 
-Paste the `/exec` URL and the sheet credential, save, then press **Test connection**.
+Paste the `/exec` URL and the sheet credential, and add **`script.googleusercontent.com`**
+under **Allowed redirect hosts**. That one is not optional and it is not guessable: a
+Web App answers every call with a 302 to a one-time URL on that host, which is a
+*different* domain from `script.google.com` rather than a subdomain of it — so the
+egress guard refuses the hop until you name it. Without it every call fails with
+*host '…googleusercontent.com' is not allowed*, which reads like a broken feature
+and is really a missing line in this box.
+
+Save, then press **Test connection**.
 A green result means the URL, the credential, the sharing setting, the redirect
 follow *and* the script version are all correct — in one click. It returns your
 workbook's name, so you can see you reached the right file.
