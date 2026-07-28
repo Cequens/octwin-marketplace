@@ -34,12 +34,16 @@ config:
 # the number 300 and handing us "٣٠٠" — and `$state.amount * minor_units` on a
 # string is how a donation gets charged wrong.
 input:
-  appeal_number:
-    type:     number
-    integer:  true
-    positive: true
+  # The record ID, NOT the record_number, and that is not a style preference.
+  # `record_get` resolves `match: { field, value }` through xrm's `findRecords`,
+  # which matches DECLARED FIELDS via `fields->>` — and `record_number` is a
+  # COLUMN, so it can never be reached that way. The lookup returns `not_found`
+  # for a campaign that plainly exists, silently, and the donation then fails a
+  # required-field check three steps later. Ids go through `record_id:`.
+  appeal_id:
+    type:     string
     optional: true
-    describe: 'A campaign reference — ONLY from a card or picker the donor tapped, never a number they typed.'
+    describe: 'A campaign reference — ONLY from a card or picker the donor tapped, never anything they typed.'
   amount:
     type:     number
     positive: true
@@ -56,28 +60,37 @@ entry:
 
 steps:
 
-  # A tapped campaign card arrives carrying a record_number. Resolving it here
+  # A tapped campaign card arrives carrying the appeal's id. Resolving it here
   # seeds `$state` so the collect below finds the field already filled and never
   # shows the picker — the tap IS the answer.
   resolve_appeal:
-    - if: '$input.appeal_number == null'
-      goto: gather
+    - if: '$input.appeal_id == null'
+      goto: check_live
     - do: record_get
-      args:
-        entity: appeal
-        match:  { field: record_number, value: '$input.appeal_number' }
+      args: { entity: appeal, record_id: '$input.appeal_id' }
       bind: ap
       outputs:
         ok:        [{ goto: seed }]
-        not_found: [{ goto: gather }]
-        failed:    [{ goto: gather }]
+        not_found: [{ goto: check_live }]
+        failed:    [{ goto: check_live }]
+
+  # A charity between campaigns has nothing to give to, which is a legitimate
+  # state — and one the picker cannot express: a REQUIRED picker whose source
+  # returns zero rows is a dead end the collect engine refuses LOUDLY rather than
+  # re-asking for ever. Asking here means the picker below can never be empty.
+  check_live:
+    - do: record_list
+      args: { entity: appeal, stage: active, all: true, limit: 1 }
+      outputs:
+        ok:     [{ goto: gather }]
+        empty:  [{ goto: none_live }]
+        failed: [{ goto: none_live }]
 
   seed:
     - assign:
         state: '$merge($state, {
-                  appeal_number: $ap.record_number,
-                  appeal_title:  $ap.fields.title_ar,
-                  appeal_id:     $ap.id
+                  appeal_id:    $ap.id,
+                  appeal_title: $ap.fields.title_ar
                 })'
     - goto: gather
 
@@ -94,7 +107,7 @@ steps:
           # renders an empty list for every donor — silently, since zero rows is a
           # legitimate result. `auto_resolve` skips the tap when only one appeal is
           # live, and `fallback: text` keeps the ask answerable if none are.
-          - field: appeal_number
+          - field: appeal_id
             label: '$t("donate.f_appeal")'
             options:
               header: donate.pick_header
@@ -106,14 +119,15 @@ steps:
                 bind: live
               rows: '$live.rows'
               map:
-                value:       '$item.record_number'
+                # The id, so both entry paths agree on what identifies an appeal.
+                value:       '$item.id'
                 label:       '$item.fields.title_ar'
                 description: '$coalesce($item.fields.summary, "")'
+                # `appeal_id` is auto-echoed from `value`; the TITLE is the part
+                # only the picker can supply, and `save_donation` requires it.
                 selection:
                   appeal_title: '$item.fields.title_ar'
-                  appeal_id:    '$item.id'
               auto_resolve: true
-              fallback:     text
 
           # Free text, not a preset picker. A static option list cannot carry
           # `fallback: text` and forces every label through `$t()` with STRING
@@ -132,7 +146,39 @@ steps:
           Ask for the one missing detail in a single short, warm line of Saudi
           Arabic. Never re-ask for something already answered, never pressure, and
           never guess an amount — if the donor is vague, ask.
-        complete: [{ goto: confirm }]
+        complete: [{ goto: check_resolved }]
+
+  # THE GUARD THIS FLOW EARNED THE HARD WAY.
+  #
+  # `appeal_title` is a required field on the donation entity, and only two things
+  # set it: `seed` (the tap path) and the picker's `selection:` (the typed path).
+  # An `appeal_id` arriving on `$input` counts as ANSWERED by the collect engine,
+  # so a bad id skips the picker — and then the title is empty and `record_save`
+  # rejects the record, which the donor reads as "something broke on our side"
+  # three steps after the thing that actually broke.
+  #
+  # A stale card is a real event (a withdrawn appeal, an old chat scrolled back to),
+  # so recover instead of failing: say the campaign is gone and offer the live list.
+  check_resolved:
+    - if: '$state.appeal_title == null'
+      then: [{ goto: stale_appeal }]
+      else: [{ goto: confirm }]
+
+  stale_appeal:
+    - render:
+        render_intent: text_card
+        body: '{$t("donate.stale_appeal")}'
+        buttons:
+          - { title: '{$t("donate.btn_appeals")}', on_select: { invoke: campaigns } }
+      memory_note: 'The campaign reference did not resolve — offered the live list instead.'
+    - end: applied
+
+  none_live:
+    - answer:
+        instructions: >-
+          There are no campaigns open for donations right now. Say so in ONE short,
+          warm line of Saudi Arabic and offer to let them know when the next one
+          opens. Do NOT invent a campaign and do NOT take an amount.
 
   confirm:
     - use: approve_apply

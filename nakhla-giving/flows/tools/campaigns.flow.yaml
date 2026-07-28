@@ -63,8 +63,7 @@ steps:
         items: '$map($hits, {
                   id:      $item.id,
                   title:   $item.fields.title_ar,
-                  summary: $item.fields.summary,
-                  number:  $item.record_number
+                  summary: $item.fields.summary
                 })'
     - render:
         render_intent: list_picker
@@ -76,7 +75,11 @@ steps:
         item_template:
           title:       '$item.title'
           description: '$coalesce($item.summary, "")'
-          on_select:   { invoke: donate, with: { appeal_number: '$item.number' } }
+          # The ID, not the record_number: `record_get` cannot look a record up by
+          # record_number (that is a column, and `match:` reaches declared FIELDS
+          # only), so a number here resolves to nothing and the donation fails a
+          # required-field check further downstream.
+          on_select:   { invoke: donate, with: { appeal_id: '$item.id' } }
       memory_note: 'Listed {$length($items)} live appeal(s).'
       data: { total: '$length($items)' }
     - end: applied

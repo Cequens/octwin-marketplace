@@ -52,10 +52,25 @@ original design was broken:
 4. **The credential is one key, not two.** See the connection's `describe:` — a
    `pk_…:sk_…` pair in the user:password field gets a 403 "User not authorized".
 
-**Still unproven:** the webhook itself. Nothing here has received a real POST from
-Moyasar, so `verify.scheme: shared_secret_body`, the `stage_map`, the receipt and
-the duplicate-suppression are all still only as good as their unit tests. A `paid`
-record remains unproven until a test card has driven one end to end.
+5. **The webhook round trip works.** A real Moyasar POST arrived, passed
+   `shared_secret_body` verification, joined on `invoice_id`, had `payment_failed`
+   translated to `failed` by `stage_map`, and fired the `enter: failed` reaction —
+   `{"hook":"enter.failed","verbs":[{"ok":true,"verb":"notify"}],"triggered_by":"integration:moyasar"}`
+   on the donation's timeline. The payment failed only because the card was declined
+   (`DECLINED: INVALID CARD OR NOT FOUND`), which is the gateway working.
+
+**Still unproven:** the `paid` branch specifically. Every mechanism it uses has now
+run for real on the `failed` branch — same verification, same join, same `stage_map`,
+same reaction seam — but no test card has yet produced a successful payment, so the
+receipt copy and the `first_gift` milestone have not been seen. Duplicate suppression
+(a replayed body) is also still only as good as its unit test.
+
+### One known gap
+
+Tapping a row in `my-donations` re-renders the list instead of re-offering that
+donation's `checkout_url`, which is the single most common reason a donor comes back.
+The row's `on_select` passes a `ref` the flow does not declare as an input, so the tap
+is a no-op.
 
 ---
 

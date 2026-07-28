@@ -12,6 +12,9 @@ strings:
   pick_body:       'هذي الحملات المفتوحة حالياً.'
   pick_cta:        'اختر حملة'
 
+  stale_appeal:    'يبدو أن هذي الحملة انتهت أو ما هي متاحة حالياً 🌿 تحب تشوف الحملات المفتوحة؟'
+  btn_appeals:     '📋 الحملات المتاحة'
+
   confirm_header:  '📝 مراجعة التبرّع'
   preview_appeal:  '🌱 الحملة: {appeal}'
   preview_amount:  '💰 المبلغ: {amount}'
