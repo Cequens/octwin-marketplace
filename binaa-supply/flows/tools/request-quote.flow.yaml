@@ -84,24 +84,21 @@ steps:
           - field: qty
             label:    '$t("request-quote.label.qty")'
             describe: 'How many units — bags, tonnes, m² or pieces.'
-          - field: site
-            label: '$t("request-quote.label.site")'
-            options:
-              header: request-quote.field_header.site
-              body:   request-quote.field_body.site
-              cta:    request-quote.field_cta.site
-              fetch:  { do: record_list, args: { entity: site, limit: 10 }, bind: sites }
-              rows:   '$sites.rows'
-              map:
-                value:       '$item.id'
-                label:       '$item.fields.name'
-                description: '$enum_label($item.fields.city, "city")'
-                selection:
-                  site:         '$item.id'
-                  site_name:    '$item.fields.name'
-                  site_address: '$item.fields.address'
-              # A contractor with one site never has to tap.
-              auto_resolve: true
+          # FREE TEXT, deliberately not a picker over the `site` entity.
+          #
+          # A picker whose option source is EMPTY renders nothing and falls back to
+          # the engine's gap prompt — but a picker field is not exposed in the
+          # tool's input schema (only free-text fields are), so the agent has no way
+          # to hand the typed answer back and the field re-prompts for ever. That is
+          # exactly what a fresh install hits: `octwin deploy` without `--seed`
+          # leaves no sites, and the very first RFQ dead-ends.
+          #
+          # A wholesaler's customers name sites the yard has never heard of anyway,
+          # so free text is also the more honest model. The `site` entity and its
+          # `demo:` rows stay for the Records surface.
+          - field: site_name
+            label:    '$t("request-quote.label.site")'
+            describe: 'Where to deliver — a project name, a district, or an address.'
           - field: customer_name
             label:    '$t("request-quote.label.name")'
             describe: 'Who the quote should be addressed to.'
@@ -148,9 +145,7 @@ steps:
           total:         '$line_total'
           currency:      '$currency'
           customer_name: '$state.customer_name'
-          site:          '$state.site'
           site_name:     '$state.site_name'
-          site_address:  '$state.site_address'
       bind: quote
       outputs:
         ok:      [{ goto: append_row }]
@@ -177,7 +172,6 @@ steps:
           total:      '$line_total'
           currency:   '$currency'
           site:       '$state.site_name'
-          address:    '$state.site_address'
       bind: appended
       outputs:
         ok:      [{ goto: stamp_row }]
