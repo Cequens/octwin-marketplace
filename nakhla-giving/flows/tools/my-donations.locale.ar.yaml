@@ -1,0 +1,11 @@
+flow_id: my-donations
+
+strings:
+  header: '🧾 تبرّعاتي'
+  intro:  'عندك {count} تبرّع مسجّل.'
+  cta:    'اختر تبرّع'
+
+  stage_pending:  '⏳ بانتظار الدفع'
+  stage_paid:     '✅ مستلم'
+  stage_failed:   '❌ ما تمّت العملية'
+  stage_refunded: '↩️ مسترجع'

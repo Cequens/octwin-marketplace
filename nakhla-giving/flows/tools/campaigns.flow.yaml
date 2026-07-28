@@ -1,0 +1,82 @@
+# campaigns — the live appeals, read from the charity's own records.
+#
+# No integration here on purpose: this is the charity's OWN data, so it belongs
+# in xrm rather than behind an API call. The pack's integration is the payment,
+# not the catalogue.
+
+flow_id:     campaigns
+version:     1
+description: |-
+  The charity's active appeals. Call when the donor asks what they can give to,
+  names a cause (طعام / صحة / تعليم / مأوى / ماء), or asks where the money goes.
+
+config:
+  lookup: { page_size: 10 }
+
+input:
+  category:
+    type:     enum
+    enum:     [food, health, education, shelter, water]
+    optional: true
+    describe: 'Only when the donor named a cause.'
+
+entry:
+  - else: true
+    goto: fetch
+
+steps:
+
+  fetch:
+    - do: record_list
+      args:
+        entity: appeal
+        where:  { stage: active }
+        limit:  '$config.lookup.page_size'
+      bind: found
+      outputs:
+        ok:     [{ goto: narrow }]
+        empty:  [{ goto: none_live }]
+        failed: [{ goto: none_live }]
+
+  narrow:
+    # `$filter`'s predicate takes a field name or an equality object and never
+    # binds `$item`, so the category match is computed in `$map` and filtered on.
+    - assign:
+        rows: '$map($found.records, $merge($item, { _hit:
+                 $input.category == null || $item.fields.category == $input.category
+               }))'
+    - assign: { hits: '$filter($rows, "_hit")' }
+    - if: '$length($hits) == 0'
+      then: [{ goto: none_live }]
+      else: [{ goto: show }]
+
+  show:
+    - assign:
+        items: '$map($hits, {
+                  id:      $item.id,
+                  title:   $item.fields.title_ar,
+                  summary: $item.fields.summary,
+                  number:  $item.record_number
+                })'
+    - render:
+        render_intent: list_picker
+        header: '{$t("campaigns.header")}'
+        body:   '$t("campaigns.intro", { count: $length($items) })'
+        footer: '{$t("campaigns.footer")}'
+        cta:    '{$t("campaigns.cta")}'
+        items:  '$items'
+        item_template:
+          title:       '$item.title'
+          description: '$coalesce($item.summary, "")'
+          on_select:   { invoke: donate, with: { appeal_number: '$item.number' } }
+      memory_note: 'Listed {$length($items)} live appeal(s).'
+      data: { total: '$length($items)' }
+    - end: applied
+
+  none_live:
+    - answer:
+        data: { asked_for: '$input.category' }
+        instructions: >-
+          There are no live appeals matching that right now. Say so in ONE short
+          line of Saudi Arabic, warmly, and offer to take a general donation
+          instead. Never invent a campaign.

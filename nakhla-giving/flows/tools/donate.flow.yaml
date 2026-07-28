@@ -1,0 +1,205 @@
+# donate — collect an amount, mint the donation, create a checkout link.
+#
+# THE ORDER OF THE TWO WRITES IS THE WHOLE DESIGN.
+#
+# The xrm record is saved FIRST, and only then is the invoice created. That is
+# deliberate and it is the opposite of what feels natural ("get the link, then
+# record it"):
+#
+#   • `record_save` mints `record_number`, which is the join key we hand the
+#     gateway as invoice metadata and which comes back on the webhook. Without a
+#     record first, a payment could clear for a donation we have no row for.
+#   • If the invoice call fails we are left with a `pending` donation and no
+#     link — recoverable, visible in the console, re-offerable from
+#     `my-donations`. The reverse failure (a live invoice with no record) is a
+#     donor charged for something the charity cannot see.
+#
+# The invoice call is SYNCHRONOUS because the donor is holding their phone
+# waiting for the link. The receipt is queued, because nobody is.
+
+flow_id:     donate
+version:     1
+description: |-
+  Take a donation. Call when the donor wants to give, names an amount, or taps a
+  campaign. Pass `appeal_number` ONLY when it came off a card, never text they typed.
+
+config:
+  giving:
+    currency:    SAR
+    minor_units: 100
+    presets:     [50, 100, 250, 500]
+
+input:
+  appeal_number:
+    type:     number
+    optional: true
+    describe: 'A campaign reference — ONLY from a previous card or picker.'
+  amount:
+    type:     number
+    optional: true
+    describe: 'Whatever the donor named, in whole riyals.'
+
+entry:
+  - else: true
+    goto: resolve_appeal
+
+steps:
+
+  resolve_appeal:
+    - if: '$input.appeal_number == null'
+      goto: pick_appeal
+    - do: record_get
+      args: { entity: appeal, record_number: '$input.appeal_number' }
+      bind: ap
+      outputs:
+        ok:      [{ goto: seed }]
+        empty:   [{ goto: pick_appeal }]
+        invalid: [{ goto: pick_appeal }]
+        failed:  [{ goto: pick_appeal }]
+
+  # No campaign chosen: hand off rather than guess. `campaigns` renders the
+  # picker whose taps come back here with a number.
+  pick_appeal:
+    - do: invoke_flow
+      args: { flow: campaigns }
+      outputs:
+        ok:     []
+        failed: []
+
+  seed:
+    - assign:
+        state: '$merge($state, {
+                  appeal_title: $ap.record.fields.title_ar,
+                  appeal_id:    $ap.record.id,
+                  currency:     $config.giving.currency
+                })'
+    - goto: gather
+
+  gather:
+    - do: collect
+      args:
+        fields:
+          - field:  amount
+            prompt: '{$t("donate.ask_amount")}'
+            options: '$map($config.giving.presets, { title: $item, value: $item })'
+          - field:  donor_name
+            prompt: '{$t("donate.ask_name")}'
+      outputs:
+        ok:      [{ goto: confirm }]
+        invalid: []
+        failed:  []
+
+  confirm:
+    - assign:
+        amount_riyals: '$coalesce($state.amount, $input.amount)'
+    - use: approve_apply
+      with:
+        header:  '{$t("donate.confirm_header")}'
+        preview: '$lines($compact([
+                    $t("donate.preview_appeal", { appeal: $state.appeal_title }),
+                    $t("donate.preview_amount", { amount: $format_money($amount_riyals, $state.currency) }),
+                    $t("donate.preview_donor",  { donor: $state.donor_name })
+                  ]), "\n")'
+        approve_label: '{$t("donate.btn_confirm")}'
+        cancel_label:  '{$t("donate.btn_cancel")}'
+        on_approve:    save_donation
+        on_cancel:     cancelled
+
+  # WRITE 1 — ours. Mints record_number, the join key the gateway echoes back.
+  save_donation:
+    - do: record_save
+      args:
+        entity: donation
+        fields:
+          appeal_title: '$state.appeal_title'
+          appeal_id:    '$state.appeal_id'
+          amount:       '$amount_riyals'
+          currency:     '$state.currency'
+          donor_name:   '$state.donor_name'
+      bind: gift
+      outputs:
+        ok:      [{ goto: make_invoice }]
+        invalid: []
+        failed:  [{ goto: save_failed }]
+
+  # WRITE 2 — the gateway. The amount is converted to the SMALLEST unit here,
+  # once, so no other step has to remember that SAR is quoted in halalas.
+  make_invoice:
+    - assign:
+        amount_minor: '$amount_riyals * $config.giving.minor_units'
+    - do: integration_call
+      args:
+        operation: moyasar_create_invoice
+        input:
+          ref:          '$gift.record_number'
+          appeal:       '$state.appeal_title'
+          amount_minor: '$amount_minor'
+          currency:     '$state.currency'
+          description:  '$state.appeal_title'
+      bind: inv
+      outputs:
+        ok:      [{ goto: stamp_link }]
+        empty:   [{ goto: no_link }]
+        invalid: [{ goto: no_link }]
+        denied:  [{ goto: not_configured }]
+        failed:  [{ goto: no_link }]
+
+  stamp_link:
+    - do: record_save
+      args:
+        entity:    donation
+        record_id: '$gift.record_id'
+        fields:
+          checkout_url: '$inv.url'
+          invoice_id:   '$inv.id'
+      outputs:
+        ok:      [{ goto: send_link }]
+        invalid: [{ goto: send_link }]
+        failed:  [{ goto: send_link }]
+
+  send_link:
+    - render:
+        render_intent: detail_card
+        header: '{$t("donate.ready_header")}'
+        body: '$lines($compact([
+                 $t("donate.ready_amount", { amount: $format_money($amount_riyals, $state.currency), appeal: $state.appeal_title }),
+                 $t("donate.ready_link",   { url: $inv.url }),
+                 $t("donate.ready_note")
+               ]), "\n")'
+        buttons:
+          - { title: '{$t("donate.btn_mine")}', on_select: { invoke: my-donations } }
+      memory_note: 'Donation {$gift.record_number} created, checkout link sent. Awaiting the gateway.'
+      data: { ref: '$gift.record_number', amount: '$amount_riyals' }
+    - end: applied
+
+  # The record exists and is `pending`; only the link is missing. Say so honestly
+  # rather than implying the donation failed — the charity can re-issue it.
+  no_link:
+    - render:
+        render_intent: detail_card
+        header: '{$t("donate.no_link_header")}'
+        body:   '{$t("donate.no_link_body")}'
+      memory_note: 'Donation {$gift.record_number} saved but the gateway returned no link; the team can re-issue it.'
+    - end: applied
+
+  # `denied` means the OPERATOR has not finished setup — a wrong key, or a
+  # publishable one where a secret is required. Nothing the donor can do, so the
+  # card is an apology plus a human route, not a diagnostic.
+  not_configured:
+    - render:
+        render_intent: text_card
+        body: '{$t("donate.not_configured")}'
+      memory_note: 'Payment gateway rejected our key — the charity must finish setup on the console Integrations page.'
+    - end: failed
+
+  save_failed:
+    - render:
+        render_intent: text_card
+        body: '{$t("donate.save_failed")}'
+    - end: failed
+
+  cancelled:
+    - answer:
+        instructions: >-
+          The donor cancelled before paying. Acknowledge warmly in ONE short line
+          of Saudi Arabic, with no pressure and no follow-up question.

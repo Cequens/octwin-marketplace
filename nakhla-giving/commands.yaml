@@ -1,0 +1,14 @@
+# Pack-level slash commands. A top-level LIST, one literal `match` per entry.
+#
+# A donor who has changed their mind mid-flow needs a way out that does not
+# involve explaining themselves to a bot about money.
+
+- match:  '/clear'
+  action: close_conversation
+  reply:  'تمام، بدينا من جديد. كيف نقدر نساعدك؟'
+  source: '/clear'
+
+- match:  '/جديد'
+  action: close_conversation
+  reply:  'تمام، بدينا من جديد. كيف نقدر نساعدك؟'
+  source: '/clear'

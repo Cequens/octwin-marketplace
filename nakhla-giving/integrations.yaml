@@ -1,0 +1,167 @@
+# Moyasar — the Saudi payment gateway.
+#
+# ONE connection, and every rule this platform has about money shows up in it.
+#
+# NOTHING here is a secret. The API key and the webhook secret are operator data,
+# entered once in the console under Outbound → Integrations.
+
+version: 1
+
+connections:
+
+  moyasar:
+    label:    { en: 'Moyasar', ar: 'ميسر' }
+    describe: >-
+      The charity's Moyasar account. The credential is the SECRET key (sk_live_… or
+      sk_test_…), never the publishable one — a publishable key can only create
+      payments and cannot read them back.
+    # Moyasar serves one API host, so the pack owns the endpoint and the operator
+    # supplies only the key.
+    base_url: { fixed: 'https://api.moyasar.com' }
+    auth:
+      # HTTP Basic with the secret key as the USERNAME and an EMPTY password —
+      # Moyasar's documented scheme. The stored credential is therefore
+      # `sk_test_xxxxx:` including the trailing colon; the platform base64-encodes
+      # the pair as-is.
+      kind: basic
+    settings:
+      callback_url:
+        label:    { en: 'Webhook URL', ar: 'رابط الإشعار' }
+        describe: 'The inbound endpoint for payment_status, from the Inbound tab. Moyasar posts here when a payment clears.'
+        required: true
+        example:  'https://your-octwin/api/integrations/tenant/project/payment_status'
+      success_url:
+        label:    { en: 'Thank-you page', ar: 'صفحة الشكر' }
+        describe: 'Where the donor lands after paying. Any public page will do.'
+        required: false
+        example:  'https://nakhla.example.org/thanks'
+    request:
+      timeout_ms:         10000
+      max_response_bytes: 65536
+    health: { operation: moyasar_ping }
+    setup_hint: >-
+      Dashboard → Settings → API keys for the secret key, and Settings → Webhooks
+      to register the endpoint with the same secret you set here as the inbound
+      secret.
+
+operations:
+
+  moyasar_ping:
+    connection: moyasar
+    describe:   'Cheapest authenticated read there is — proves the key without creating anything.'
+    method:     GET
+    path:       'v1/payments'
+    query:
+      # One row, because the console's Test button should not pull a page of a
+      # charity's payment history to answer "is this key valid".
+      limit: 1
+    response:
+      data_path: meta
+    status_map:
+      # Moyasar answers 401 for a bad key, which the platform already maps to
+      # `denied`. 403 means the key is real but not permitted — usually a
+      # publishable key where a secret one is required.
+      403: denied
+
+  moyasar_create_invoice:
+    connection: moyasar
+    describe:   'Create a hosted checkout invoice and return its payment link.'
+    method:     POST
+    path:       'v1/invoices'
+    headers:
+      Content-Type: 'application/json; charset=utf-8'
+    body:
+      # SMALLEST CURRENCY UNIT. SAR is quoted in halalas, so the flow multiplies
+      # by config.giving.minor_units before it gets here. Sending 100 when you
+      # meant 100 SAR charges one riyal, and nothing about the response would
+      # look wrong.
+      amount:       '{{ input.amount_minor }}'
+      currency:     '{{ input.currency || "SAR" }}'
+      description:  '{{ input.description }}'
+      callback_url: '{{ conn.callback_url }}'
+      success_url:  '{{ conn.success_url }}'
+      metadata:
+        # The join key. Moyasar echoes metadata back on the webhook, which is how
+        # a payment we never see created finds its way to the right record.
+        ref:      '{{ input.ref }}'
+        appeal: '{{ input.appeal }}'
+    # A donor is holding their phone waiting for this link, so it MUST be allowed
+    # synchronously — the opposite of the receipt below.
+    #
+    # NOT IDEMPOTENT: `POST /v1/invoices` mints a new invoice every time it is
+    # called. From the outbox a retry after a timeout would create a SECOND
+    # invoice for the same donation — two links, and potentially two charges. The
+    # platform refuses to let a `push:` reach this without the probe below.
+    idempotent: false
+    probe:
+      operation: moyasar_find_invoice
+      # Moyasar's list endpoint cannot be filtered by metadata in a way we can
+      # rely on here, so the probe reads the recent page and looks for OUR ref in
+      # it. Without `matches` a non-empty page would mean "some invoice exists"
+      # and every retry would be dropped as already-done.
+      matches: '{{ input.ref }}'
+    response:
+      # The whole invoice: `id`, `status`, and `url` — the link the donor taps.
+      data_path: ''
+    status_map:
+      400: invalid
+
+  moyasar_find_invoice:
+    connection: moyasar
+    describe:   'Recent invoices — the retry probe for moyasar_create_invoice.'
+    method:     GET
+    path:       'v1/invoices'
+    query:
+      limit: 50
+    response:
+      data_path: invoices
+    # A probe must never read a cached answer: the question is "what is true right
+    # now", and a stale yes drops a real donation.
+    cache_ttl_s: 0
+
+inbound:
+
+  payment_status:
+    label:    { en: 'Payment status changed', ar: 'تغيّرت حالة الدفع' }
+    describe: 'Moyasar posts here when a payment clears, fails or is refunded.'
+    connection: moyasar
+    verify:
+      # Moyasar does NOT sign its webhooks. It echoes a shared secret inside the
+      # JSON body, which is weaker than an HMAC — nothing binds the secret to the
+      # body, so an intercepted request can be replayed with a modified one. The
+      # platform accepts the scheme because the vendor gives no alternative, and
+      # requires the idempotency key below precisely because of it.
+      scheme:      shared_secret_body
+      secret_path: secret_token
+    # Moyasar's own event id. This is the ONLY replay protection this scheme has,
+    # which is why the platform refuses the declaration without it.
+    idempotency: '{{ payload.id }}'
+    # One endpoint, several event types. Anything else is recorded and ignored
+    # rather than mapped onto a stage that would be wrong.
+    when: { path: type, equals: [payment_paid, payment_failed, payment_refunded] }
+    upsert:
+      entity: donation
+      # The ref we put in the invoice metadata comes back on the payment. If a
+      # future Moyasar change stops propagating invoice metadata onto the payment,
+      # the alternative join is `payload.data.invoice_id` against a stored field —
+      # see README § Status.
+      match:  { record_number: '{{ payload.data.metadata.ref }}' }
+      fields:
+        gateway_payment_id: '{{ payload.data.id }}'
+        paid_at:            '{{ payload.data.created_at }}'
+        source:             '{{ payload.data.source.type }}'
+      # `payment_paid` → paid, and the two failure types map to their own stages
+      # rather than being flattened into one — a refund is not a failure, and a
+      # charity's finance desk needs to tell them apart.
+      # The gateway's vocabulary, translated into ours — see `stage_map` in the
+      # platform spec for why naming a pipeline stage `payment_paid` would be
+      # letting someone else's contract into our domain model.
+      stage: '{{ payload.type }}'
+      stage_map:
+        payment_paid:     paid
+        payment_failed:   failed
+        payment_refunded: refunded
+      # A payment for a donation this instance never created must not conjure a
+      # record — that is either another environment's traffic or a forged body.
+      on_no_match: ignore
+      on_unmapped_stage: reject

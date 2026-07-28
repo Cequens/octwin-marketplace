@@ -1,0 +1,64 @@
+# my-donations — the donor's own history, and the one thing they actually come
+# back for: the link to a donation they started and did not finish.
+
+flow_id:     my-donations
+version:     1
+description: |-
+  The donor's own donations and receipts. Call when they ask about a previous
+  gift, a receipt, or "did my payment go through?".
+
+config:
+  lookup: { page_size: 10 }
+
+entry:
+  - else: true
+    goto: fetch
+
+steps:
+
+  fetch:
+    - do: record_list
+      args:
+        entity: donation
+        mine:   true
+        limit:  '$config.lookup.page_size'
+      bind: found
+      outputs:
+        ok:     [{ goto: show }]
+        empty:  [{ goto: none }]
+        failed: [{ goto: none }]
+
+  show:
+    - assign:
+        rows: '$map($found.records, {
+                 ref:      $item.record_number,
+                 appeal:   $item.fields.appeal_title,
+                 amount:   $item.fields.amount,
+                 currency: $item.fields.currency,
+                 url:      $item.fields.checkout_url,
+                 stage:    $item.stage
+               })'
+    - render:
+        render_intent: list_picker
+        header: '{$t("my-donations.header")}'
+        body:   '$t("my-donations.intro", { count: $length($rows) })'
+        cta:    '{$t("my-donations.cta")}'
+        items:  '$rows'
+        item_template:
+          title: '$item.appeal'
+          # The stage is what the donor is actually asking about, so it leads the
+          # line rather than sitting in a badge they have to interpret.
+          description: '$lines($compact([
+                          $enum_label($item.stage, "stage"),
+                          $format_money($item.amount, $coalesce($item.currency, "SAR"))
+                        ]), " · ")'
+          on_select: { invoke: "$self", with: { ref: '$item.ref' } }
+      memory_note: 'Showed {$length($rows)} donation(s).'
+      data: { total: '$length($rows)' }
+    - end: applied
+
+  none:
+    - answer:
+        instructions: >-
+          The donor has no donations yet. Say so in ONE short warm line of Saudi
+          Arabic and offer to show the live campaigns. No pressure.

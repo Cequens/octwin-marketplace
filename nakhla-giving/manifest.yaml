@@ -1,0 +1,74 @@
+# nakhla-giving — a Saudi charity taking donations on WhatsApp.
+#
+# Demonstrates TAKING MONEY, which is the one thing none of the other packs do
+# and the one where getting it wrong is expensive rather than embarrassing.
+#
+#   1. FETCH   campaigns  → live campaigns from the charity's own records
+#   2. PAY     donate     → integration_call POST → a Moyasar invoice, and the
+#                           donor gets a checkout link on the turn
+#   3. INBOUND payment_status → Moyasar's webhook → the donation record moves to
+#              `paid` → which fires the EXISTING notify verb → the donor gets a
+#              receipt. No new machinery for that last step.
+#
+# WHY THIS PACK EXISTS ALONGSIDE binaa-supply: that one shows a spreadsheet being
+# made to look like it emits events. This one shows a system that GENUINELY
+# pushes — a payment gateway — which is where the inbound seam belongs.
+#
+# THE PEDAGOGICAL POINT: a payment is the clearest case of the platform's
+# money-shaped rules. The invoice call is SYNCHRONOUS (the donor is holding their
+# phone waiting for a link). The receipt is QUEUED (nobody is waiting). And the
+# invoice create is declared `idempotent: false` with a probe, because a retry
+# that creates a second invoice is a second charge.
+#
+# ⚠️ NOT YET VERIFIED AGAINST A LIVE MOYASAR ACCOUNT — see README.md § Status.
+#
+# No pack DB, no code — pure YAML.
+
+id:          nakhla-giving
+version:     0.1.0
+description: 'Charity donations over WhatsApp — browse campaigns, get a Moyasar checkout link on the turn, and receive a receipt the moment the payment clears.'
+
+listing:
+  title:    'Nakhla Giving'
+  tagline:  'Donations on WhatsApp, with a real payment gateway and a real receipt'
+  category: nonprofit
+  author:   { name: 'Octwin', url: 'https://octwin.ai' }
+  public:   false
+
+supported_channels: [whatsapp, web]
+required_adapters:  [messaging]
+
+default_settings:
+  locale: ar
+
+default_conversation_context:
+  lang: { type: enum, enum: [ar, en, bilingual], default: ar, describe: 'Reply language.' }
+
+# Currency and the preset amounts live here so the charity can change them
+# without touching flow logic. `minor_units` is the multiplier Moyasar wants:
+# SAR is quoted in halalas, so 100 SAR is 10000.
+config:
+  giving:
+    currency:    SAR
+    minor_units: 100
+    presets:     [50, 100, 250, 500]
+    page_size:   10
+
+flows:
+  - home
+  - campaigns
+  - donate
+  - my-donations
+
+agents:
+  - id:                desk
+    display_name:      'نخلة للعطاء'
+    default_model:     'openrouter/google/gemini-3.1-flash-lite-preview'
+    include_platform_protocol: true
+    tools:
+      - home
+      - campaigns
+      - donate
+      - my-donations
+    instructions:
+      - file: prompts/identity.md

@@ -1,0 +1,100 @@
+# Two entities: what the charity is raising for, and what a donor actually gave.
+#
+#  • campaign — operator data. The charity's team maintains these in the console;
+#               the bot only reads them.
+#  • donation — one per attempt, minted BEFORE the invoice exists so its
+#               `record_number` can be the join key the gateway echoes back.
+
+entities:
+
+  appeal:
+    label:   { en: 'Appeal', ar: 'حملة' }
+    fields:
+      title_ar:    { type: text,   required: true, label: { en: 'Title (AR)', ar: 'العنوان' } }
+      title_en:    { type: text,   label: { en: 'Title (EN)', ar: 'العنوان بالإنجليزي' } }
+      summary:     { type: text,   label: { en: 'Summary', ar: 'نبذة' } }
+      goal:        { type: number, label: { en: 'Goal', ar: 'الهدف' } }
+      raised:      { type: number, label: { en: 'Raised', ar: 'المُحصّل' } }
+      category:    { type: select, options: [food, health, education, shelter, water], label: { en: 'Category', ar: 'التصنيف' } }
+    list:   [title_ar, goal, raised]
+    search: { text: [title_ar, title_en, summary] }
+    pipeline:
+      stages:      [draft, active, closed]
+      initial:     draft
+      progression: free
+      terminal:    [closed]
+
+  donation:
+    label:   { en: 'Donation', ar: 'تبرّع' }
+    fields:
+      appeal_title: { type: text,   required: true, label: { en: 'Appeal', ar: 'الحملة' } }
+      appeal_id:    { type: text,   label: { en: 'Appeal ref', ar: 'رقم الحملة' } }
+      amount:         { type: number, required: true, label: { en: 'Amount', ar: 'المبلغ' } }
+      currency:       { type: text,   label: { en: 'Currency', ar: 'العملة' } }
+      donor_name:     { type: text,   label: { en: 'Donor', ar: 'المتبرّع' } }
+      # Returned by the invoice create — the link the donor taps. Stored so
+      # `my-donations` can offer it again for something still unpaid, which is
+      # the single most common follow-up question.
+      checkout_url:   { type: text,   label: { en: 'Checkout link', ar: 'رابط الدفع' } }
+      invoice_id:     { type: text,   label: { en: 'Invoice', ar: 'رقم الفاتورة' } }
+      # Written by the webhook, never by a flow.
+      gateway_payment_id: { type: text, label: { en: 'Payment id', ar: 'رقم العملية' } }
+      paid_at:            { type: text, label: { en: 'Paid at', ar: 'وقت الدفع' } }
+      source:             { type: text, label: { en: 'Method', ar: 'الوسيلة' } }
+    list:   [appeal_title, amount, donor_name]
+    search: { text: [appeal_title, donor_name] }
+    pipeline:
+      # `pending` is where a donation sits between "we made an invoice" and "the
+      # gateway told us what happened" — which may be never, if the donor closes
+      # the page. That is a normal outcome, not an error.
+      stages:      [pending, paid, failed, refunded]
+      initial:     pending
+      progression: free
+      terminal:    [paid, refunded]
+    milestones:
+      first_gift: { label: { en: 'First gift', ar: 'أول تبرّع' } }
+
+    on:
+      # ── the receipt ─────────────────────────────────────────────────────────
+      # The webhook moves the record to `paid`, and THIS fires. It is the ordinary
+      # notify verb — the entire customer-facing half of a payment integration is
+      # one declared line, and it does not care that a gateway caused the move.
+      enter:
+        paid:
+          - notify:
+              message: >-
+                🌱 وصلنا تبرّعك — جزاك الله خيراً.
+                المبلغ {{ record.fields.amount }} {{ record.fields.currency }} لصالح {{ record.fields.appeal_title }}.
+                رقم العملية {{ record.record_number }}.
+              cooldown_hours: 24
+          - track: { event: donation_paid }
+
+        # A failed card is not silence. A donor who thinks they gave and did not
+        # is the worst outcome a charity can have.
+        failed:
+          - notify:
+              message: >-
+                ما تمّت عملية الدفع لتبرّعك رقم {{ record.record_number }}.
+                ما انخصم أي مبلغ. تقدر تحاول مرة ثانية وقت ما يناسبك 🌿
+              cooldown_hours: 6
+
+        refunded:
+          - notify:
+              message: >-
+                تم استرجاع مبلغ تبرّعك رقم {{ record.record_number }} بالكامل.
+                إذا عندك أي استفسار تواصل معنا.
+              cooldown_hours: 24
+
+segments:
+  unpaid:
+    entity: donation
+    label:  { en: 'Awaiting payment', ar: 'بانتظار الدفع' }
+    where:  { stage: pending }
+  received:
+    entity: donation
+    label:  { en: 'Received', ar: 'تبرّعات مستلمة' }
+    where:  { stage: paid }
+  live_appeals:
+    entity: appeal
+    label:  { en: 'Live appeals', ar: 'حملات نشطة' }
+    where:  { stage: active }
