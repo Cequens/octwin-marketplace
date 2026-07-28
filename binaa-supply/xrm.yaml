@@ -43,6 +43,10 @@ entities:
       # Google accepts it in a deep link, so the console can jump straight to the
       # row with no row number to parse and nothing a later sort invalidates.
       sheet_range:    { type: text,   label: { en: 'Sheet row', ar: 'صف الشيت' } }
+      # The row NUMBER, derived from `sheet_range` at append time — what the
+      # status write-back addresses. See `sheets_update_status` for why this is
+      # the fragile half and the append log is the durable one.
+      sheet_row:      { type: number, label: { en: 'Row', ar: 'رقم الصف' } }
     list: [material_name, qty, total]
     search: { text: [material_name, sku, customer_name] }
     pipeline:
@@ -99,6 +103,9 @@ entities:
       # Queued, so a spreadsheet write can never delay the customer's message; if
       # it fails it dead-letters visibly and the stage move still stands.
       stage_change:
+        # TWO writes on purpose. The log is the durable record — append-only, no
+        # row index, survives a sort. The cell is the one the sales desk reads
+        # without being taught a formula. If they ever disagree, the log is right.
         - push:
             operation: sheets_append_status
             input:
@@ -106,6 +113,11 @@ entities:
               from: '{{ event.from }}'
               to:   '{{ event.to }}'
               by:   '{{ event.actor }}'
+        - push:
+            operation: sheets_update_status
+            input:
+              row:    '{{ record.fields.sheet_row }}'
+              status: '{{ event.to }}'
 
 segments:
   open_rfqs:

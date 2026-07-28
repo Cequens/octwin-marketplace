@@ -67,18 +67,19 @@ and the platform appends the change to a **`Status log`** tab. One writer per fa
 | RFQs | platform → sheet | `sheets_append_quote` |
 | status | platform → sheet | `sheets_append_status`, via `on: stage_change` |
 
-It is an **append**, never a cell update, and that is deliberate:
-`values:update` addresses a row *index*, so any sort of the Quotes tab would write
-one quote's status onto another's row. An appended event has no index to invalidate
-and gives the yard an audit trail instead of a single overwritten cell.
+Every move is written back **twice**, on purpose:
 
-The Quotes tab's `status` column is then a lookup formula over that log — owned by
-the sheet, not by us. Put this in `N2` and fill down:
+- **`Status log`** — appended, one row per change. No row index to invalidate, so
+  it survives anything anyone does to the workbook, and it gives the yard an audit
+  trail rather than a single overwritten cell.
+- **`Quotes!N`** — the quote's own Status cell, overwritten, so the sales desk sees
+  the current state where they already look, without being taught a formula.
 
-```
-=IFNA(INDEX(SORT(FILTER('Status log'!C:C,'Status log'!A:A=$A2),
-                 SEQUENCE(ROWS(FILTER('Status log'!D:D,'Status log'!A:A=$A2))),1,FALSE),1),"new")
-```
+The cell write is the fragile half: it addresses a **row number**, taken from the
+append's own `updatedRange` when the row was created. **Sort the Quotes tab with a
+Filter View, never by sorting the data** — a real sort renumbers every row, and the
+write would then land on a different quote. If the two ever disagree, the log is the
+one that is right.
 
 ### Why the reads are cached
 
@@ -118,8 +119,7 @@ columns, and sort with a *Filter View* rather than sorting the data.
 ref · created_at · customer · phone · sku · material · qty · unit · unit_price · total · currency · site · address · status · notes
 ```
 
-`status` holds the lookup formula from *[Where status lives](#where-status-lives)*;
-`ref` is the join key.
+`status` is written by the platform; `ref` is the join key.
 
 **`Status log`** — written by the bot, append-only.
 

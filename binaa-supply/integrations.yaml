@@ -209,6 +209,33 @@ operations:
     status_map:
       404: invalid
 
+  sheets_update_status:
+    connection: sheets
+    describe:   "Overwrite one quote's Status cell in the Quotes tab."
+    method:     PUT
+    path:       'v4/spreadsheets/{{ conn.spreadsheet_id }}/values/Quotes!N{{ input.row }}'
+    query:
+      valueInputOption: RAW
+    headers:
+      Content-Type: 'application/json; charset=utf-8'
+    body:
+      values:
+        - - '{{ input.status }}'
+    # ROW-ADDRESSED, and that is the one fragile thing in this pack. The row comes
+    # from the append's own `updatedRange`, so it is correct when written — but a
+    # SORT of the Quotes tab renumbers every row and this would then overwrite a
+    # different quote's status. Sort with a Filter View (which reorders your view,
+    # not the data) and never the sheet itself.
+    #
+    # `sheets_append_status` exists precisely because this cannot be made safe: the
+    # log is append-only, has no index to invalidate, and is the recoverable record
+    # if this cell is ever wrong. Both fire on every move.
+    allow_sync: false
+    response:
+      data_path: updatedRange
+    status_map:
+      404: invalid
+
   # ── Slack ──────────────────────────────────────────────────────────────────
 
   slack_auth_test:

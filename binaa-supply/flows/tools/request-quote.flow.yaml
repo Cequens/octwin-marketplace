@@ -198,7 +198,15 @@ steps:
       args:
         entity:    quote
         record_id: '$quote.record_id'
-        fields:    { sheet_range: '$appended.updatedRange' }
+        fields:
+          sheet_range: '$appended.updatedRange'
+          # The row NUMBER, for the status write-back. `updatedRange` is
+          # `Quotes!A6:O6`; the digits sit between the '!' (plus the always-'A'
+          # column) and the ':'. `$index_of` is what makes this one line rather
+          # than string surgery.
+          sheet_row:   '+$slice($appended.updatedRange,
+                          $index_of($appended.updatedRange, "!") + 2,
+                          $index_of($appended.updatedRange, ":"))'
       outputs:
         ok:      [{ goto: filed }]
         invalid: [{ goto: filed }]
