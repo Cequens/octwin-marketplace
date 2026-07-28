@@ -71,6 +71,21 @@ connections:
   # installable in five minutes; `sheets` is the production shape, where the
   # operator grants access once and the platform renews it forever.
   #
+  # WHY THE PRICE READ STAYS ON THE APPS SCRIPT. It is tempting to retire `sheet`
+  # now that OAuth2 works, and it would be a downgrade for two reasons:
+  #
+  #   • values.get returns POSITIONAL arrays, so a flow can only address columns by
+  #     index — hard-coding column order. The script resolves them by NAME, and this
+  #     pack's README promises exactly that ("column order may change but the names
+  #     may not"). Reordering two columns would then yield wrong prices rather than
+  #     an error. Closing this needs an `index_of` expr builtin — logged in the
+  #     platform's docs/BACKLOG.md.
+  #   • the script filters server-side (q / category / sku / limit); values.get
+  #     cannot, so the whole sheet would cross the wire on every turn.
+  #
+  # A WRITE needs neither property, which is why the RFQ append is what moves here
+  # next.
+  #
   # Nothing here is a secret and there is no credential field — pressing Connect in
   # the console sends the operator to Google, and the grant comes back to us.
   sheets:
