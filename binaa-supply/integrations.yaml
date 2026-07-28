@@ -65,7 +65,14 @@ connections:
   slack:
     label:    { en: 'Slack workspace', ar: 'سلاك' }
     describe: 'Where the sales desk sees new RFQs and won deals.'
-    base_url: { fixed: 'https://slack.com/api' }
+    # Operator-supplied even though Slack's API base never varies, because a DEMO
+    # has to be runnable. `fixed:` would be the better production pattern for a
+    # known SaaS (and docs/38 shows it), but it also makes this half of the demo
+    # impossible to exercise without a real Slack workspace — and the README
+    # promises the whole loop runs against the local stub. Runnable beats tidy.
+    base_url:
+      required: true
+      example:  'https://slack.com/api'
     auth:     { kind: bearer }
     settings:
       rfq_channel:
