@@ -27,9 +27,9 @@ entry:
 steps:
 
   fetch:
-    # `stage` is a first-class argument, NOT a `where:` key — `where:` is an AST
-    # over the entity's own FIELDS, and `where: { stage: active }` matches a field
-    # named "stage" that this entity does not have.
+    # `stage:` here is the first-class argument. (`where: { stage: active }` would
+    # ALSO work — the filter AST has a `stage` node kind alongside `field` — but
+    # the dedicated argument is the plainer way to say it.)
     #
     # `all: true` because appeals belong to the CHARITY. Without it `record_list`
     # scopes to the calling contact and every donor sees an empty list — with no

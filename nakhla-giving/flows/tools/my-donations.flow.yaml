@@ -21,11 +21,17 @@ steps:
     # calling contact, which is exactly right here: a donor sees their own gifts
     # and nobody else's. (`all: true` is what the appeal lists need, and would be
     # a disclosure bug here.)
+    # `active_only: false` is LOAD-BEARING, not a tweak. It defaults to TRUE, and
+    # that drops every record sitting in a `terminal` pipeline stage — which for
+    # `donation` is `[paid, refunded]`. A receipt list left on the default shows
+    # the donor only their PENDING and FAILED gifts and silently hides every one
+    # that succeeded: the donation disappears at the exact moment it works.
     - do: record_list
       args:
-        entity: donation
-        sort:   created_at
-        limit:  '$config.lookup.page_size'
+        entity:      donation
+        active_only: false
+        sort:        created_at
+        limit:       '$config.lookup.page_size'
       bind: found
       outputs:
         ok:     [{ goto: show }]

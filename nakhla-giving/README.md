@@ -18,14 +18,16 @@ endpoints (see below). What has NOT run is the pack's own `paid` branch end to
 end — see *Still unproven*.
 
 Green validation is worth less than it looks, and this pack is the evidence. The
-first version validated clean while carrying five bugs the validator cannot see,
-because a primitive's `args:` are open (`additionalProperties: {}`) and a `bind:`
-path is never compared to the port schema — so `record_list args: { mine: true }`,
-`record_get args: { record_number: … }`, `where: { stage: active }` and
-`$found.records` (the envelope is `rows`) were all accepted and all silently did
-nothing. Worst of the five: `record_aggregate` is project-wide **by default**,
-the opposite of `record_list`, so the home card told every donor they had the
-entire charity's unpaid donation count. All five are fixed; the gap is logged in
+first version validated clean while carrying several bugs the validator cannot
+see, because a primitive's `args:` are open (`additionalProperties: {}`) and a
+`bind:` path is never compared to the port schema — so `record_list args: { mine:
+true }`, `record_get args: { record_number: … }` and `$found.records` (the
+envelope is `rows`) were all accepted and all silently did nothing. Two defaults
+did more damage than any typo: `record_aggregate` is project-wide **by default**
+(the opposite of `record_list`), so the home card told every donor they had the
+entire charity's unpaid count; and `record_list`'s `active_only` defaults to
+**true**, which drops every record in a `terminal` stage — so the donor's receipt
+list hid each donation at the moment it was PAID. All are fixed; the gap is logged in
 the platform's [`docs/BACKLOG.md`](https://github.com/Cequens/octwin/blob/master/docs/BACKLOG.md).
 
 The same lesson has landed repeatedly here: a duplicated `Content-Type` header,

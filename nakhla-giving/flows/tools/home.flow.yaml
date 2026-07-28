@@ -24,12 +24,17 @@ steps:
     # default (the opposite of `record_list`, which scopes to the contact unless
     # told otherwise), so without it the card tells every donor that THEY have
     # however many unpaid donations the whole charity is carrying.
+    # `where: { stage: pending }`, NOT `active_only: true`. `active_only` excludes
+    # the pipeline's TERMINAL stages — `[paid, refunded]` — which leaves `failed`
+    # in, so the card would tell a donor that a gift whose card was declined is
+    # "awaiting payment". Name the stage you actually mean; the filter AST has a
+    # first-class `stage` node for exactly this.
     - do: record_aggregate
       args:
-        entity:      donation
-        op:          count
-        active_only: true
-        contact_id:  '$contact.id'
+        entity:     donation
+        op:         count
+        where:      { stage: pending }
+        contact_id: '$contact.id'
       bind: oc
       outputs:
         ok:     [{ goto: show }]
