@@ -6,6 +6,18 @@
 #
 # `integration_call` is SYNCHRONOUS here because the customer is waiting on the
 # answer. Contrast the Slack alert in xrm.yaml, which is queued because nobody is.
+#
+# READS GOOGLE'S OWN API, not a deployed Apps Script. That swap removed the entire
+# setup path the script demanded — a deployment URL, a shared secret, a "who has
+# access" setting, an extra redirect host — and got real status codes in place of
+# HTTP 200 for every outcome. It costs two things, both handled here:
+#
+#   • the API cannot filter, so the flow filters in memory (`_hit` below);
+#   • values.get returns POSITIONAL arrays and every cell as a STRING.
+#     `$rows_to_objects` restores column-name addressing (so reordering a column in
+#     the sheet cannot silently shift prices), and `+` coerces the numerics —
+#     `$format_money("14", …)` returns an EMPTY STRING, so a missing `+` shows a
+#     product with no price rather than an error.
 
 flow_id:     price-list
 version:     1
@@ -33,24 +45,21 @@ input:
     describe: 'A catalogue code — ONLY from a previous card or picker, never text the customer typed.'
 
 entry:
-  - if: '$input.sku != null'
-    goto: fetch_one
+  # One call serves both shapes now: the sheet arrives whole and the flow narrows
+  # it, so there is no longer a reason to branch before fetching.
   - else: true
-    goto: fetch_many
+    goto: fetch
 
 steps:
 
-  fetch_many:
+  fetch:
     - do: integration_call
-      args:
-        operation: sheet_prices
-        input:
-          q:        '$input.material'
-          category: '$input.category'
-          limit:    '$config.lookup.page_size'
-      bind: prices
+      args: { operation: sheets_prices }
+      bind: sheet_values
       outputs:
-        ok:      [{ goto: show_many }]
+        ok:      [{ goto: select }]
+        # `empty` is the SHEET being empty — not "nothing matched", which is decided
+        # below once the rows are in hand.
         empty:   [{ goto: no_match }]
         # Canonical handler: the reason goes to the model as `instructions` with no
         # card, so it can rephrase and retry rather than showing a YAML error.
@@ -58,31 +67,40 @@ steps:
         denied:  [{ goto: not_configured }]
         failed:  [{ goto: sheet_down }]
 
-  fetch_one:
-    - do: integration_call
-      args:
-        operation: sheet_prices
-        input: { sku: '$input.sku', limit: 1 }
-      bind: prices          # same bind, so the shared outcome steps read one var
-      outputs:
-        ok:      [{ goto: show_one }]
-        empty:   [{ goto: no_match }]
-        invalid: []
-        denied:  [{ goto: not_configured }]
-        failed:  [{ goto: sheet_down }]
+  select:
+    # `$filter`'s predicate does NOT bind `$item` — it takes a field name or an
+    # equality object — so the match is computed as a field in `$map` (which does)
+    # and filtered on that. Substring and "not equal" are only expressible this way.
+    - assign:
+        matched: '$map($rows_to_objects($sheet_values), $merge($item, { _hit:
+                    ($item.available != "false")
+                    && ($input.sku == null || $item.sku == $input.sku)
+                    && ($input.category == null || $item.category == $input.category)
+                    && ($input.material == null
+                        || $includes($lower($item.name_ar), $lower($input.material))
+                        || $includes($lower($item.name_en), $lower($input.material))
+                        || $includes($lower($item.sku), $lower($input.material)))
+                  }))'
+    - assign:
+        hits: '$take($filter($matched, "_hit"), $config.lookup.page_size)'
+    - if: '$length($hits) == 0'
+      goto: no_match
+    - if: '$input.sku != null'
+      then: [{ goto: show_one }]
+      else: [{ goto: show_many }]
 
   show_many:
     # A mapper step rather than an inline item_template: `group_by:` reads a FIELD,
     # not an expression, so the localized section title has to exist on the row.
     - assign:
-        rows: '$map($prices, {
+        rows: '$map($hits, {
                  sku:       $item.sku,
                  name:      $coalesce($item.name_ar, $item.name_en),
                  unit:      $item.unit,
-                 price:     $item.price,
+                 price:     +$item.price,
                  currency:  $coalesce($item.currency, "SAR"),
                  stock:     $item.stock,
-                 lead_days: $item.lead_days,
+                 lead_days: +$item.lead_days,
                  group:     $enum_label($item.category, "category")
                })'
     - render:
@@ -106,17 +124,16 @@ steps:
     - end: applied
 
   show_one:
-    # `$prices` is the operation's `data_path` payload — the rows array — so a
-    # single-sku lookup is its first element.
-    - assign: { m: '$prices[0]' }
+    # One row survived the `sku` narrowing above.
+    - assign: { m: '$hits[0]' }
     - render:
         render_intent: detail_card
         header: '$coalesce($m.name_ar, $m.name_en)'
         body: '$lines($compact([
                  $t("price-list.card.sku",   { sku: $m.sku }),
-                 $t("price-list.card.price", { price: $format_money($m.price, $coalesce($m.currency, "SAR")), unit: $m.unit }),
+                 $t("price-list.card.price", { price: $format_money(+$m.price, $coalesce($m.currency, "SAR")), unit: $m.unit }),
                  $m.stock == "out" ? $t("price-list.card.out") : $t("price-list.card.in"),
-                 $m.lead_days > 0 ? $t("price-list.lead", { days: $m.lead_days }) : null,
+                 +$m.lead_days > 0 ? $t("price-list.lead", { days: +$m.lead_days }) : null,
                  $t("price-list.card.source")
                ]), "\n")'
         buttons:
@@ -135,9 +152,9 @@ steps:
           Arabic, name what they asked for, and offer the nearest section (أسمنت /
           حديد / بلوك / رمل / سيراميك / سباكة). Never invent or estimate a price.
 
-  # `denied` means the OPERATOR has not finished setup — a wrong shared secret, or a
-  # sharing setting that still demands a Google sign-in. Nothing the customer can do,
-  # so the card is an apology plus a human route, not a diagnostic.
+  # `denied` means the OPERATOR has not finished setup — the Google authorization
+  # was never granted, or it was revoked. Nothing the customer can do, so the card is
+  # an apology plus a human route, not a diagnostic.
   not_configured:
     - render:
         render_intent: text_card
