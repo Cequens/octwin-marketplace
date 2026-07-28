@@ -271,16 +271,29 @@ steps:
   #
   # So: render, THEN track, with every port ending explicitly.
   send_link:
+    # `cta_url`, NOT a detail_card with the URL in the body. A raw checkout link
+    # printed inside Arabic body text is the worst possible presentation of the
+    # one thing this flow exists to deliver: bidi reordering strands the trailing
+    # colon at the wrong end of the line and the URL itself wraps mid-token, so it
+    # reads as broken and is hard to tap accurately. `cta_url` renders as a native
+    # WhatsApp URL button (`interactive.type: cta_url`) — one clean tap, and the
+    # link never has to survive RTL text layout.
+    #
+    # The cost, accepted: this intent carries exactly ONE button, so the
+    # "🧾 تبرّعاتي" shortcut is gone from this message. Paying is the only action
+    # that matters here, and `my-donations` stays reachable from the home hub and
+    # by simply asking.
     - render:
-        render_intent: detail_card
+        render_intent: cta_url
         header: '{$t("donate.ready_header")}'
         body: '$lines($compact([
                  $t("donate.ready_amount", { amount: $format_money($state.amount, $config.giving.currency), appeal: $state.appeal_title }),
-                 $t("donate.ready_link",   { url: $inv.url }),
                  $t("donate.ready_note")
                ]), "\n")'
-        buttons:
-          - { title: '{$t("donate.btn_mine")}', on_select: { invoke: my-donations } }
+        footer: '{$t("donate.ready_footer")}'
+        # Clamped to 20 chars by WhatsApp (`display_text`) — keep it short.
+        label:  '{$t("donate.btn_pay")}'
+        url:    '$inv.url'
       memory_note: 'Donation {$gift.record_number} created, checkout link sent. Awaiting the gateway.'
       data: { ref: '$gift.record_number', amount: '$state.amount' }
     # The funnel's `intending` stage. Emitted AFTER the link (see above) and at

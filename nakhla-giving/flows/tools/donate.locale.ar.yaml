@@ -22,11 +22,15 @@ strings:
   btn_confirm:     '✅ أكّد وأصدر رابط الدفع'
   btn_cancel:      '❌ إلغاء'
 
+  # `ready_link` (a raw {url} line) and `btn_mine` were REMOVED with the switch to
+  # a `cta_url` render: the link now rides a native URL button, and that intent
+  # carries only one button. Never print a checkout URL into Arabic body text —
+  # bidi reordering breaks it across lines and strands the punctuation.
   ready_header:    '🔒 رابط الدفع جاهز'
   ready_amount:    '💰 {amount} لصالح {appeal}'
-  ready_link:      '👈 ادفع من هنا: {url}'
-  ready_note:      'ℹ️ الرابط من بوابة الدفع مباشرة. يوصلك إيصال هنا أول ما تتم العملية.'
-  btn_mine:        '🧾 تبرّعاتي'
+  ready_note:      'ℹ️ الدفع يتم على صفحة بوابة الدفع مباشرة — ما نطلب منك أي بيانات بطاقة هنا.'
+  ready_footer:    'يوصلك إيصال هنا أول ما تتم العملية'
+  btn_pay:         '🔒 ادفع الآن'
 
   no_link_header:  '⏳ سجّلنا تبرّعك'
   no_link_body:    'سجّلنا تبرّعك بس ما قدرنا نصدر رابط الدفع الحين. فريقنا يرسل لك الرابط قريب، وما انخصم أي مبلغ.'
