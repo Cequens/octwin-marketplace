@@ -8,16 +8,27 @@ Arabic-first, pure YAML, no pack database.
 
 ---
 
-## ⚠️ Status: authored, validated, NOT yet run against a live gateway
+## ⚠️ Status: passes the platform's full validation, NOT yet run against a live gateway
 
-Everything here parses through the platform's own loaders — `integrations.yaml`
-through the resolver, `xrm.yaml` through `validateXrmFile`, every flow through
-the flow schema. **None of it has touched a real Moyasar account.**
+`octwin validate --remote` is green — the same check `deploy` runs, so the
+manifest, `xrm.yaml`, `integrations.yaml` and every flow are accepted by the
+platform itself. **Nothing here has touched a real Moyasar account.**
 
-That distinction has mattered repeatedly on this platform: a duplicated
-`Content-Type` header, an auth kind that sent no credential at all, and a probe
-that silently found nothing were each invisible to a green test suite and only
-surfaced when a real vendor pushed back. Assume the same is true here.
+Green validation is worth less than it looks, and this pack is the evidence. The
+first version validated clean while carrying five bugs the validator cannot see,
+because a primitive's `args:` are open (`additionalProperties: {}`) and a `bind:`
+path is never compared to the port schema — so `record_list args: { mine: true }`,
+`record_get args: { record_number: … }`, `where: { stage: active }` and
+`$found.records` (the envelope is `rows`) were all accepted and all silently did
+nothing. Worst of the five: `record_aggregate` is project-wide **by default**,
+the opposite of `record_list`, so the home card told every donor they had the
+entire charity's unpaid donation count. All five are fixed; the gap is logged in
+the platform's [`docs/BACKLOG.md`](https://github.com/Cequens/octwin/blob/master/docs/BACKLOG.md).
+
+The same lesson has landed repeatedly here: a duplicated `Content-Type` header,
+an auth kind that sent no credential at all, and a probe that silently found
+nothing were each invisible to a green suite and only surfaced when a real vendor
+pushed back. Assume the same of the payment path below.
 
 Two specific things to check first with a `sk_test_` key:
 

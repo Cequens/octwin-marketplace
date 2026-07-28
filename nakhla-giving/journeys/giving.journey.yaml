@@ -1,0 +1,44 @@
+# The giving funnel — three stages, and the gap between the last two is the only
+# number a charity actually needs from a WhatsApp desk.
+#
+# `intending` is entered when a checkout link is ISSUED; `donor` when the gateway
+# says the money arrived. The difference between them is checkout abandonment,
+# which no other surface here can tell you: the donation record sits at `pending`
+# for both "closed the page" and "paying right now", and a stage count cannot
+# separate a donor who never came back from one who is mid-payment.
+#
+# Every stage below is reachable by a declared event. `intending` comes from the
+# `track_event` in `donate`'s `send_link`, `donor` from the `track:` on the
+# donation entity's `enter: paid` hook — i.e. from the WEBHOOK, not from a flow,
+# which is the whole point: the funnel advances when the money moves, not when
+# the bot says something.
+
+id:    giving
+label: { en: 'Giving', ar: 'مسار العطاء' }
+
+lifecycle:
+  progression: monotonic
+  # A donor gives more than once, and the second gift must be able to re-run the
+  # funnel — `none` would freeze them at `donor` for ever and the abandonment
+  # number would only ever describe first-time givers.
+  reentry:     anytime
+
+stages:
+  - { id: visitor,   order: 0, label: { en: 'Visitor',        ar: 'زائر' } }
+  - { id: intending, order: 1, label: { en: 'Link issued',    ar: 'صدر له رابط دفع' } }
+  - { id: donor,     order: 2, label: { en: 'Donor',          ar: 'متبرّع' } }
+
+goals:
+  - id:    first_donation
+    label: { en: 'Donation received', ar: 'تبرّع مستلم' }
+    stage: donor
+
+events:
+  - name:        donation_link_issued
+    label:       { en: 'Checkout link issued', ar: 'صدر رابط الدفع' }
+    advances_to: intending
+
+  - name:        donation_paid
+    label:       { en: 'Donation paid', ar: 'تم الدفع' }
+    advances_to: donor
+    completes:   first_donation

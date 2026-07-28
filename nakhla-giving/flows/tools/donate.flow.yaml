@@ -205,6 +205,16 @@ steps:
         failed:  [{ goto: send_link }]
 
   send_link:
+    # The funnel's `intending` stage. Emitted here rather than at `save_donation`
+    # because a record with no link is not an abandoned checkout — it is our
+    # failure, and counting it as donor hesitation would flatter us.
+    - do: track_event
+      args:
+        event: donation_link_issued
+        value: '$state.amount'
+      outputs:
+        ok:     []
+        failed: []
     - render:
         render_intent: detail_card
         header: '{$t("donate.ready_header")}'
