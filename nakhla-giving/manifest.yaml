@@ -25,7 +25,7 @@
 # No pack DB, no code — pure YAML.
 
 id:          nakhla-giving
-version:     0.1.0
+version:     0.2.0
 description: 'Charity donations over WhatsApp — browse campaigns, get a Moyasar checkout link on the turn, and receive a receipt the moment the payment clears.'
 
 listing:
