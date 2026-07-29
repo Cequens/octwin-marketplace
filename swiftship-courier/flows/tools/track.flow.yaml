@@ -2,8 +2,10 @@
 # record: the stage, its plain-language explainer, the last scan, the COD amount. There
 # is no path through this flow that lets the agent narrate a status it did not read.
 #
-# `all: true` is deliberate — a waybill is looked up by NUMBER, not by who is asking, so
-# a recipient can track a parcel a shop sent them.
+# A waybill is looked up by NUMBER, not by who is asking, so a recipient can track a
+# parcel a shop sent them. That needs no argument: unlike `record_list`, `record_get` is
+# NOT scoped to the calling contact — an `entity` + `match:` lookup already reaches any
+# record. (This used to carry `all: true`, which `record_get` does not take and dropped.)
 
 flow_id:     track
 version:     1
@@ -33,7 +35,6 @@ steps:
     - do: record_get
       args:
         entity: shipment
-        all:    true
         match:  { field: tracking_number, value: '$tn' }
       bind: shp
       outputs:

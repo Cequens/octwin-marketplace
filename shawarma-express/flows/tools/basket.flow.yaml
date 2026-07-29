@@ -56,7 +56,7 @@ steps:
         match:  { field: line_key, value: '$contact.id + ":" + $input.dish_code' }
         fields:
           line_key:   '$contact.id + ":" + $input.dish_code'
-          dish:       '$dish.record_id'
+          dish:       '$dish.id'
           code:       '$input.dish_code'
           title:      '$dish.fields.name'
           qty:        '$n'
@@ -80,7 +80,7 @@ steps:
   # every read below (`$filter_gte` on the quantity).
   zero_line:
     - do: record_save
-      args: { entity: basket_line, record_id: '$gone.record_id', fields: { qty: 0, line_total: 0 } }
+      args: { entity: basket_line, record_id: '$gone.id', fields: { qty: 0, line_total: 0 } }
       outputs:
         ok:      [{ goto: load_lines }]
         invalid: [{ goto: load_lines }]

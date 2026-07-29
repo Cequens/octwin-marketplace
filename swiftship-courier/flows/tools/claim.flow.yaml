@@ -78,7 +78,7 @@ steps:
           - if: '$state.tracking_number != null'
             then:
               - do: record_get
-                args: { entity: shipment, all: true, match: { field: tracking_number, value: '$upper($trim($normalize_digits($state.tracking_number)))' } }
+                args: { entity: shipment, match: { field: tracking_number, value: '$upper($trim($normalize_digits($state.tracking_number)))' } }
                 bind: shp
                 outputs:
                   ok:        []

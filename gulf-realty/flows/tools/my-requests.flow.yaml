@@ -20,7 +20,10 @@ entry:
 steps:
   load:
     - do: record_list
-      args: { entity: booking, limit: 10, sort_by: { field: slot_label, dir: asc } }
+      # `active_only` defaults to TRUE, which drops every record in a terminal stage —
+      # for `booking` that is completed/cancelled/no_show. This flow is the buyer's
+      # history, so a viewing they already attended has to keep showing.
+      args: { entity: booking, limit: 10, active_only: false, sort_by: { field: slot_label, dir: asc } }
       bind: viewings
       outputs:
         ok:     [{ goto: load_leads }]
@@ -29,7 +32,9 @@ steps:
 
   load_leads:
     - do: record_list
-      args: { entity: buyer_lead, limit: 10 }
+      # Same reason: `buyer_lead` is terminal at reserved/lost, and `reserved` is the
+      # SUCCESS case — without this the buyer's own reservation vanishes from the list.
+      args: { entity: buyer_lead, limit: 10, active_only: false }
       bind: leads
       outputs:
         ok:     [{ goto: show }]

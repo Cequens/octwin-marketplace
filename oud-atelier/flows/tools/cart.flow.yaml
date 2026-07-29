@@ -64,7 +64,7 @@ steps:
         match:  { field: line_key, value: '$contact.id + ":" + $input.product_id' }
         fields:
           line_key:   '$contact.id + ":" + $input.product_id'
-          fragrance:  '$prod.record_id'
+          fragrance:  '$prod.id'
           sku:        '$input.product_id'
           title:      '$prod.fields.name'
           qty:        '$n'
@@ -92,7 +92,7 @@ steps:
     - do: record_save
       args:
         entity:    cart_line
-        record_id: '$gone.record_id'
+        record_id: '$gone.id'
         fields:    { qty: 0, line_total: 0 }
       outputs:
         ok:      [{ goto: load_lines }]

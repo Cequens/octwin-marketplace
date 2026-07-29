@@ -69,7 +69,7 @@ steps:
 
   do_cancel:
     - do: booking_cancel
-      args: { booking_record_id: '$input.visit_id' }
+      args: { record_id: '$input.visit_id' }
       outputs:
         ok:              [{ goto: cancelled }]
         not_cancellable: [{ goto: too_late }]

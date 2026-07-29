@@ -108,7 +108,7 @@ steps:
 
   load_item:
     - do: record_get
-      args: { entity: otc_item, all: true, match: { field: code, value: '$input.item_code' } }
+      args: { entity: otc_item, match: { field: code, value: '$input.item_code' } }
       bind: item
       outputs:
         ok:        [{ goto: rx_gate }]
@@ -138,7 +138,7 @@ steps:
         match:  { field: line_key, value: '$contact.id + ":" + $input.item_code' }
         fields:
           line_key:   '$contact.id + ":" + $input.item_code'
-          item:       '$item.record_id'
+          item:       '$item.id'
           code:       '$input.item_code'
           title:      '$item.fields.name'
           qty:        '$n'

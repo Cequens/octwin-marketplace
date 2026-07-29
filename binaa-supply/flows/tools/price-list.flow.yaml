@@ -94,8 +94,9 @@ steps:
       else: [{ goto: show_many }]
 
   show_many:
-    # A mapper step rather than an inline item_template: `group_by:` reads a FIELD,
-    # not an expression, so the localized section title has to exist on the row.
+    # A mapper step rather than an inline item_template: the rows are grouped into
+    # `sections:` below, and a section title has to be a plain value on the row —
+    # so the localized category label is resolved here, once per row.
     - assign:
         rows: '$map($hits, {
                  sku:       $item.sku,
@@ -113,16 +114,26 @@ steps:
         body:     '$t("price-list.intro", { total: $length($rows) })'
         footer:   '{$t("price-list.footer")}'
         cta:      '{$t("price-list.cta")}'
-        items:    '$rows'
-        group_by: group
-        item_template:
-          title:       '$item.name'
-          description: '$lines($compact([
-                          $format_money($item.price, $item.currency) + " / " + $item.unit,
-                          $item.stock == "out" ? $t("price-list.out") : null,
-                          $item.lead_days > 0 ? $t("price-list.lead", { days: $item.lead_days }) : null
-                        ]), " · ")'
-          on_select:   { invoke: '$self', with: { sku: '$item.sku' } }
+        # `items:` is required by the intent but the rows live in `sections:` —
+        # one labeled section per category, built by grouping the mapped rows on
+        # the `group` field resolved above.
+        items:    []
+        sections:
+          for_each: '$entries($group_by($rows, "group"))'
+          as: g
+          template:
+            title: '{$g.key}'
+            items:
+              for_each: '$g.value'
+              as: p
+              template:
+                title:       '{$p.name}'
+                description: '$lines($compact([
+                                $format_money($p.price, $p.currency) + " / " + $p.unit,
+                                $p.stock == "out" ? $t("price-list.out") : null,
+                                $p.lead_days > 0 ? $t("price-list.lead", { days: $p.lead_days }) : null
+                              ]), " · ")'
+                on_select:   { invoke: '$self', with: { sku: '$p.sku' } }
       memory_note: 'Showed {$length($rows)} live price(s) from the Binaa workbook.'
       data: { total: '$length($rows)' }
     - end: applied

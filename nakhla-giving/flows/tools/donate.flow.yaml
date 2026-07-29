@@ -166,7 +166,7 @@ steps:
 
   stale_appeal:
     - render:
-        render_intent: text_card
+        render_intent: detail_card
         body: '{$t("donate.stale_appeal")}'
         buttons:
           - { title: '{$t("donate.btn_appeals")}', on_select: { invoke: campaigns } }

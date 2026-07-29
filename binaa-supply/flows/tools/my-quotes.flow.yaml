@@ -18,7 +18,9 @@ steps:
 
   load:
     - do: record_list
-      args: { entity: quote, limit: 10, sort: record_number, order: desc }
+      # `active_only` defaults to TRUE and `quote` is terminal at delivered/lost, so
+      # without this a buyer's delivered orders disappear from their own quote history.
+      args: { entity: quote, limit: 10, active_only: false, sort_by: { field: record_number, dir: desc } }
       bind: quotes
       outputs:
         ok:     [{ goto: show }]

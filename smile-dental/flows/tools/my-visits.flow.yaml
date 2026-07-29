@@ -87,7 +87,7 @@ steps:
   # ── cancel ───────────────────────────────────────────────────────────────
   do_cancel:
     - do: booking_cancel
-      args: { booking_record_id: '$input.visit_id' }
+      args: { record_id: '$input.visit_id' }
       bind: cancelled
       outputs:
         ok:              [{ goto: cancelled_ok }]
