@@ -15,7 +15,7 @@ entities:
       name:        { type: text, required: true, label: { en: 'Name', ar: 'الاسم' } }
       category:    { type: select, options: [pain_relief, cold_flu, vitamins, baby, skincare, first_aid, devices], label: { en: 'Category', ar: 'القسم' } }
       description: { type: textarea, label: { en: 'Description', ar: 'الوصف' } }
-      price:       { type: money, label: { en: 'Price', ar: 'السعر' } }
+      price:       { type: money, label: { en: 'Price', ar: 'السعر' }, sortable: true }
       currency:    { type: text, label: { en: 'Currency', ar: 'العملة' }, default: 'EGP' }
       # TRUE means: never sellable without a pharmacist. The OTC flow filters on it.
       rx_required: { type: boolean, label: { en: 'Prescription required', ar: 'يتطلب روشتة' }, default: false }
@@ -44,6 +44,18 @@ entities:
       stages:   [received, pharmacist_review, approved, dispensed, delivered, rejected]
       initial:  received
       terminal: [delivered, rejected]
+    # Display names for the stages above — entity level, NOT inside `pipeline:`,
+    # so an `extends: system` entity can label stages it never declared. The console
+    # badge/filter/pipeline/funnel read these; an unlabelled stage falls back to Title
+    # Case of its key. Kept in step with the `stage.*` locale keys the flows resolve
+    # through `$enum_label(stage, "stage")`.
+    stage_labels:
+      received:          { en: 'Received', ar: 'وصل الطلب' }
+      pharmacist_review: { en: 'Pharmacist review', ar: 'الصيدلي يراجع الروشتة' }
+      approved:          { en: 'Approved to dispense', ar: 'تمت الموافقة على الصرف' }
+      dispensed:         { en: 'Dispensed', ar: 'تم التحضير' }
+      delivered:         { en: 'Delivered', ar: 'تم التسليم ✅' }
+      rejected:          { en: 'Could not dispense', ar: 'تعذّر الصرف' }
     milestones:
       submitted_for_review: { label: { en: 'Sent for review', ar: 'أُرسلت للمراجعة' }, stage: pharmacist_review }
       delivered:            { label: { en: 'Delivered', ar: 'تم التسليم' },            stage: delivered, terminal: true }
@@ -56,10 +68,10 @@ entities:
     label: { en: 'Shelf order', ar: 'طلب من الرف' }
     fields:
       items_summary:  { type: textarea, label: { en: 'Items', ar: 'المنتجات' } }
-      item_count:     { type: number, label: { en: 'Items', ar: 'عدد المنتجات' } }
+      item_count:     { type: number, label: { en: 'Items', ar: 'عدد المنتجات' }, sortable: true }
       subtotal:       { type: money, label: { en: 'Subtotal', ar: 'إجمالي المنتجات' } }
       delivery_fee:   { type: money, label: { en: 'Delivery', ar: 'التوصيل' } }
-      total:          { type: money, label: { en: 'Total', ar: 'الإجمالي' } }
+      total:          { type: money, label: { en: 'Total', ar: 'الإجمالي' }, sortable: true }
       currency:       { type: text, label: { en: 'Currency', ar: 'العملة' }, default: 'EGP' }
       patient_name:   { type: text, label: { en: 'Customer', ar: 'العميل' } }
       delivery_area:  { type: select, options: [nasr_city, maadi, heliopolis, zamalek, october, giza], label: { en: 'Area', ar: 'المنطقة' } }
@@ -71,6 +83,17 @@ entities:
       stages:   [placed, packed, out_for_delivery, delivered, cancelled]
       initial:  placed
       terminal: [delivered, cancelled]
+    # Display names for the stages above — entity level, NOT inside `pipeline:`,
+    # so an `extends: system` entity can label stages it never declared. The console
+    # badge/filter/pipeline/funnel read these; an unlabelled stage falls back to Title
+    # Case of its key. Kept in step with the `stage.*` locale keys the flows resolve
+    # through `$enum_label(stage, "stage")`.
+    stage_labels:
+      placed:           { en: 'Placed', ar: 'اتسجّل' }
+      packed:           { en: 'Packed', ar: 'تم التجهيز' }
+      out_for_delivery: { en: 'Out for delivery', ar: 'مع المندوب 🛵' }
+      delivered:        { en: 'Delivered', ar: 'تم التسليم ✅' }
+      cancelled:        { en: 'Cancelled', ar: 'ملغي' }
     milestones:
       order_placed:    { label: { en: 'Placed', ar: 'تم الطلب' },      stage: placed }
       order_delivered: { label: { en: 'Delivered', ar: 'تم التسليم' }, stage: delivered, terminal: true }
@@ -88,9 +111,9 @@ entities:
       item:       { type: record, entity: otc_item, label: { en: 'Item', ar: 'المنتج' } }
       code:       { type: text, label: { en: 'Code', ar: 'الرمز' } }
       title:      { type: text, label: { en: 'Item', ar: 'المنتج' } }
-      qty:        { type: number, label: { en: 'Qty', ar: 'الكمية' }, default: 1 }
+      qty:        { type: number, label: { en: 'Qty', ar: 'الكمية' }, default: 1, sortable: true }
       unit_price: { type: money, label: { en: 'Unit price', ar: 'سعر الوحدة' } }
-      line_total: { type: money, label: { en: 'Line total', ar: 'إجمالي السطر' } }
+      line_total: { type: money, label: { en: 'Line total', ar: 'إجمالي السطر' }, sortable: true }
     list: [title, qty, line_total]
     dedupe_by: line_key
 

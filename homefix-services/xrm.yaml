@@ -17,7 +17,7 @@ entities:
       name:        { type: text, required: true, label: { en: 'Name', ar: 'الاسم' } }
       trade:       { type: select, options: [plumbing, electrical, ac, carpentry, painting, appliance, other], label: { en: 'Trade', ar: 'التخصص' } }
       description: { type: textarea, label: { en: 'Description', ar: 'الوصف' } }
-      price_from:  { type: money, label: { en: 'From', ar: 'يبدأ من' } }
+      price_from:  { type: money, label: { en: 'From', ar: 'يبدأ من' }, sortable: true }
       currency:    { type: text, label: { en: 'Currency', ar: 'العملة' }, default: 'AED' }
       photo:       { type: image, label: { en: 'Photo', ar: 'الصورة' } }
       popularity:  { type: number, label: { en: 'Popularity', ar: 'الأكثر طلباً' }, default: 0 }
@@ -61,6 +61,18 @@ entities:
       stages:   [received, dispatched, on_site, awaiting_parts, completed, cancelled]
       initial:  received
       terminal: [completed, cancelled]
+    # Display names for the stages above — entity level, NOT inside `pipeline:`,
+    # so an `extends: system` entity can label stages it never declared. The console
+    # badge/filter/pipeline/funnel read these; an unlabelled stage falls back to Title
+    # Case of its key. Kept in step with the `stage.*` locale keys the flows resolve
+    # through `$enum_label(stage, "stage")`.
+    stage_labels:
+      received:       { en: 'Received', ar: 'وصل الطلب' }
+      dispatched:     { en: 'Technician dispatched', ar: 'تم إرسال فني 👷' }
+      on_site:        { en: 'Technician on site', ar: 'الفني في الموقع' }
+      awaiting_parts: { en: 'Awaiting parts', ar: 'بانتظار قطع غيار' }
+      completed:      { en: 'Completed', ar: 'تم الإنجاز ✅' }
+      cancelled:      { en: 'Cancelled', ar: 'ملغى' }
     milestones:
       dispatched: { label: { en: 'Dispatched', ar: 'تم الإرسال' }, stage: dispatched }
       completed:  { label: { en: 'Completed', ar: 'تم الإنجاز' },   stage: completed, terminal: true }
@@ -70,7 +82,7 @@ entities:
     fields:
       plan:       { type: select, options: [ac_annual, full_home_annual, pool_monthly], label: { en: 'Plan', ar: 'الباقة' } }
       property:   { type: record, entity: property, label: { en: 'Property', ar: 'العقار' } }
-      price:      { type: money, label: { en: 'Price', ar: 'السعر' } }
+      price:      { type: money, label: { en: 'Price', ar: 'السعر' }, sortable: true }
       currency:   { type: text, label: { en: 'Currency', ar: 'العملة' }, default: 'AED' }
       visits_per_year: { type: number, label: { en: 'Visits / year', ar: 'عدد الزيارات سنوياً' } }
     list: [plan, price]
@@ -79,6 +91,16 @@ entities:
       initial:  proposed
       terminal: [expired, cancelled]
 
+    # Display names for the stages above — entity level, NOT inside `pipeline:`,
+    # so an `extends: system` entity can label stages it never declared. The console
+    # badge/filter/pipeline/funnel read these; an unlabelled stage falls back to Title
+    # Case of its key. Kept in step with the `stage.*` locale keys the flows resolve
+    # through `$enum_label(stage, "stage")`.
+    stage_labels:
+      proposed:  { en: 'Proposed', ar: 'مقترح' }
+      active:    { en: 'Active', ar: 'ساري' }
+      expired:   { en: 'Expired', ar: 'منتهي' }
+      cancelled: { en: 'Cancelled', ar: 'ملغى' }
 segments:
   open_orders:
     entity: work_order

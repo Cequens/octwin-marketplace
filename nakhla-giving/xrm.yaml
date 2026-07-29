@@ -18,8 +18,8 @@ entities:
       title_ar:    { type: text,   required: true, label: { en: 'Title (AR)', ar: 'العنوان' } }
       title_en:    { type: text,   label: { en: 'Title (EN)', ar: 'العنوان بالإنجليزي' } }
       summary:     { type: text,   label: { en: 'Summary', ar: 'نبذة' } }
-      goal:        { type: number, label: { en: 'Goal', ar: 'الهدف' } }
-      raised:      { type: number, label: { en: 'Raised', ar: 'المُحصّل' } }
+      goal:        { type: number, label: { en: 'Goal', ar: 'الهدف' }, sortable: true }
+      raised:      { type: number, label: { en: 'Raised', ar: 'المُحصّل' }, sortable: true }
       category:    { type: select, options: [food, health, education, shelter, water], label: { en: 'Category', ar: 'التصنيف' } }
       # A donor gives to what they can see. Seeded via `generate:` so a pure-YAML
       # pack (which ships no binaries) still arrives with real imagery; an
@@ -33,12 +33,21 @@ entities:
       progression: free
       terminal:    [closed]
 
+    # Display names for the stages above — entity level, NOT inside `pipeline:`,
+    # so an `extends: system` entity can label stages it never declared. The console
+    # badge/filter/pipeline/funnel read these; an unlabelled stage falls back to Title
+    # Case of its key. Kept in step with the `stage.*` locale keys the flows resolve
+    # through `$enum_label(stage, "stage")`.
+    stage_labels:
+      draft:  { en: 'Draft', ar: 'مسودة' }
+      active: { en: 'Live', ar: 'حملة نشطة' }
+      closed: { en: 'Closed', ar: 'مغلقة' }
   donation:
     label:   { en: 'Donation', ar: 'تبرّع' }
     fields:
       appeal_title: { type: text,   required: true, label: { en: 'Appeal', ar: 'الحملة' } }
       appeal_id:    { type: text,   label: { en: 'Appeal ref', ar: 'رقم الحملة' } }
-      amount:         { type: number, required: true, label: { en: 'Amount', ar: 'المبلغ' } }
+      amount:         { type: number, required: true, label: { en: 'Amount', ar: 'المبلغ' }, sortable: true }
       currency:       { type: text,   label: { en: 'Currency', ar: 'العملة' } }
       donor_name:     { type: text,   label: { en: 'Donor', ar: 'المتبرّع' } }
       # Returned by the invoice create — the link the donor taps. Stored so
@@ -60,6 +69,16 @@ entities:
       initial:     pending
       progression: free
       terminal:    [paid, refunded]
+    # Display names for the stages above — entity level, NOT inside `pipeline:`,
+    # so an `extends: system` entity can label stages it never declared. The console
+    # badge/filter/pipeline/funnel read these; an unlabelled stage falls back to Title
+    # Case of its key. Kept in step with the `stage.*` locale keys the flows resolve
+    # through `$enum_label(stage, "stage")`.
+    stage_labels:
+      pending:  { en: 'Pending', ar: 'بانتظار السداد' }
+      paid:     { en: 'Paid', ar: 'تم السداد' }
+      failed:   { en: 'Failed', ar: 'فشل السداد' }
+      refunded: { en: 'Refunded', ar: 'تم الاسترجاع' }
     milestones:
       first_gift: { label: { en: 'First gift', ar: 'أول تبرّع' } }
 

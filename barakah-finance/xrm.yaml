@@ -16,9 +16,9 @@ entities:
       structure:       { type: select, options: [murabaha, ijara, musharaka], label: { en: 'Structure', ar: 'الصيغة' } }
       description:     { type: textarea, label: { en: 'Description', ar: 'الوصف' } }
       # Published, not computed — the estimate multiplies by this and says it is indicative.
-      profit_rate_pct: { type: number, label: { en: 'Profit rate %', ar: 'نسبة الربح %' } }
+      profit_rate_pct: { type: number, label: { en: 'Profit rate %', ar: 'نسبة الربح %' }, sortable: true }
       min_down_pct:    { type: number, label: { en: 'Min down payment %', ar: 'أقل دفعة مقدمة %' } }
-      max_years:       { type: number, label: { en: 'Max term (years)', ar: 'أقصى مدة (سنة)' } }
+      max_years:       { type: number, label: { en: 'Max term (years)', ar: 'أقصى مدة (سنة)' }, sortable: true }
       max_amount:      { type: money, label: { en: 'Max amount', ar: 'أقصى مبلغ' } }
       currency:        { type: text, label: { en: 'Currency', ar: 'العملة' }, default: 'SAR' }
       supports_rege:   { type: boolean, label: { en: 'REDF supported', ar: 'مدعوم من صندوق التنمية العقارية' } }
@@ -35,7 +35,7 @@ entities:
       employment:      { type: select, options: [government, private, self_employed, retired], label: { en: 'Employment', ar: 'جهة العمل' } }
       monthly_income:  { type: number, label: { en: 'Monthly income', ar: 'الدخل الشهري' } }
       existing_obligations: { type: number, label: { en: 'Existing obligations', ar: 'الالتزامات الحالية' } }
-      property_price:  { type: money, label: { en: 'Property price', ar: 'سعر العقار' } }
+      property_price:  { type: money, label: { en: 'Property price', ar: 'سعر العقار' }, sortable: true }
       down_payment:    { type: money, label: { en: 'Down payment', ar: 'الدفعة المقدمة' } }
       term_years:      { type: number, label: { en: 'Term (years)', ar: 'المدة (سنة)' } }
       city:            { type: select, options: [riyadh, jeddah, dammam, makkah, madinah, khobar], label: { en: 'City', ar: 'المدينة' } }
@@ -49,6 +49,17 @@ entities:
       stages:   [enquiry, estimated, documents_pending, submitted, withdrawn]
       initial:  enquiry
       terminal: [submitted, withdrawn]
+    # Display names for the stages above — entity level, NOT inside `pipeline:`,
+    # so an `extends: system` entity can label stages it never declared. The console
+    # badge/filter/pipeline/funnel read these; an unlabelled stage falls back to Title
+    # Case of its key. Kept in step with the `stage.*` locale keys the flows resolve
+    # through `$enum_label(stage, "stage")`.
+    stage_labels:
+      enquiry:           { en: 'Enquiry', ar: 'استفسار' }
+      estimated:         { en: 'Estimate given', ar: 'تم التقدير' }
+      documents_pending: { en: 'Documents pending', ar: 'بانتظار المستندات' }
+      submitted:         { en: 'Submitted to bank', ar: 'تم التقديم' }
+      withdrawn:         { en: 'Withdrawn', ar: 'مسحوب' }
     milestones:
       estimated: { label: { en: 'Estimate given', ar: 'تم التقدير' },   stage: estimated }
       submitted: { label: { en: 'Submitted', ar: 'تم التقديم' },        stage: submitted, terminal: true }

@@ -17,9 +17,9 @@ entities:
       stage_level:  { type: select, options: [kg, primary, preparatory, secondary], label: { en: 'Stage', ar: 'المرحلة' } }
       curriculum:   { type: select, options: [national, british, american, ib], label: { en: 'Curriculum', ar: 'المنهج' } }
       description:  { type: textarea, label: { en: 'Description', ar: 'الوصف' } }
-      annual_fee:   { type: money, label: { en: 'Annual fee', ar: 'المصروفات السنوية' } }
+      annual_fee:   { type: money, label: { en: 'Annual fee', ar: 'المصروفات السنوية' }, sortable: true }
       currency:     { type: text, label: { en: 'Currency', ar: 'العملة' }, default: 'EGP' }
-      seats_left:   { type: number, label: { en: 'Seats left', ar: 'المقاعد المتاحة' }, default: 0 }
+      seats_left:   { type: number, label: { en: 'Seats left', ar: 'المقاعد المتاحة' }, default: 0, sortable: true }
       photo:        { type: image, label: { en: 'Photo', ar: 'الصورة' } }
     list: [stage_level, curriculum, annual_fee, seats_left]
     search: { text: [name, description], semantic: [name, description] }
@@ -54,6 +54,20 @@ entities:
       stages:   [enquiry, tour_booked, application_started, documents_complete, assessment_scheduled, offer_made, enrolled, declined]
       initial:  enquiry
       terminal: [enrolled, declined]
+    # Display names for the stages above — entity level, NOT inside `pipeline:`,
+    # so an `extends: system` entity can label stages it never declared. The console
+    # badge/filter/pipeline/funnel read these; an unlabelled stage falls back to Title
+    # Case of its key. Kept in step with the `stage.*` locale keys the flows resolve
+    # through `$enum_label(stage, "stage")`.
+    stage_labels:
+      enquiry:              { en: 'Enquiry', ar: 'استفسار' }
+      tour_booked:          { en: 'Tour booked', ar: 'حجز زيارة' }
+      application_started:  { en: 'Application started', ar: 'الطلب قيد الاستكمال' }
+      documents_complete:   { en: 'Documents complete', ar: 'المستندات مكتملة' }
+      assessment_scheduled: { en: 'Assessment scheduled', ar: 'تحديد موعد التقييم' }
+      offer_made:           { en: 'Offer made', ar: 'صدر القبول 🎉' }
+      enrolled:             { en: 'Enrolled', ar: 'تم التسجيل' }
+      declined:             { en: 'Declined', ar: 'لم يتم القبول' }
     # The five moments a registrar reports on. `record_milestone` fires each one from the
     # flow that causes it, so completion rates are real rather than inferred from stages.
     milestones:

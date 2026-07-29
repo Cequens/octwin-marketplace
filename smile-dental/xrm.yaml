@@ -16,8 +16,8 @@ entities:
       name:        { type: text, required: true, label: { en: 'Name', ar: 'الاسم' } }
       category:    { type: select, options: [preventive, restorative, cosmetic, orthodontic, surgical], label: { en: 'Category', ar: 'التصنيف' } }
       description: { type: textarea, label: { en: 'Description', ar: 'الوصف' } }
-      duration_min: { type: number, label: { en: 'Duration (min)', ar: 'المدة (دقيقة)' } }
-      price_from:  { type: money, label: { en: 'From', ar: 'يبدأ من' } }
+      duration_min: { type: number, label: { en: 'Duration (min)', ar: 'المدة (دقيقة)' }, sortable: true }
+      price_from:  { type: money, label: { en: 'From', ar: 'يبدأ من' }, sortable: true }
       currency:    { type: text, label: { en: 'Currency', ar: 'العملة' }, default: 'AED' }
       insured:     { type: boolean, label: { en: 'Usually covered', ar: 'يغطيه التأمين عادةً' } }
     list: [category, duration_min, price_from]
@@ -35,7 +35,7 @@ entities:
       photo:        { type: image, label: { en: 'Photo', ar: 'الصورة' } }
       timezone:     { type: text, label: { en: 'Timezone', ar: 'المنطقة الزمنية' }, default: 'Asia/Dubai' }
       # Written back by the survey rollup — never typed by hand.
-      rating:       { type: number, label: { en: 'Rating', ar: 'التقييم' }, default: 0 }
+      rating:       { type: number, label: { en: 'Rating', ar: 'التقييم' }, default: 0, sortable: true }
       rating_count: { type: number, label: { en: 'Ratings', ar: 'عدد التقييمات' }, default: 0 }
     list: [title, specialty, rating]
     search: { text: [name, languages], rank_by: rating }

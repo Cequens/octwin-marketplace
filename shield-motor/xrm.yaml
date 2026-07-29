@@ -15,7 +15,7 @@ entities:
       cover:             { type: select, options: [third_party, comprehensive, comprehensive_plus], label: { en: 'Cover', ar: 'نوع التغطية' } }
       description:       { type: textarea, label: { en: 'Description', ar: 'الوصف' } }
       # The published rating factors — the quote's only inputs.
-      base_rate_pct:     { type: number, label: { en: 'Base rate % of value', ar: 'النسبة الأساسية من قيمة المركبة %' } }
+      base_rate_pct:     { type: number, label: { en: 'Base rate % of value', ar: 'النسبة الأساسية من قيمة المركبة %' }, sortable: true }
       min_premium:       { type: money, label: { en: 'Minimum premium', ar: 'أدنى قسط' } }
       young_driver_load_pct: { type: number, label: { en: 'Young-driver loading %', ar: 'تحميل السن الصغير %' } }
       agency_repair:     { type: boolean, label: { en: 'Agency repair', ar: 'إصلاح بالوكالة' } }
@@ -31,16 +31,27 @@ entities:
     fields:
       plan:          { type: record, entity: plan, label: { en: 'Plan', ar: 'الباقة' } }
       plan_label:    { type: text, label: { en: 'Plan', ar: 'الباقة' } }
-      vehicle_value: { type: money, label: { en: 'Vehicle value', ar: 'قيمة المركبة' } }
+      vehicle_value: { type: money, label: { en: 'Vehicle value', ar: 'قيمة المركبة' }, sortable: true }
       driver_band:   { type: select, options: [under_25, from_25_to_40, over_40], label: { en: 'Driver age band', ar: 'فئة عمر السائق' } }
       no_claim_years: { type: number, label: { en: 'No-claim years', ar: 'سنوات بدون مطالبات' } }
-      indicative_premium: { type: money, label: { en: 'Indicative premium', ar: 'القسط التقديري' } }
+      indicative_premium: { type: money, label: { en: 'Indicative premium', ar: 'القسط التقديري' }, sortable: true }
       currency:      { type: text, label: { en: 'Currency', ar: 'العملة' }, default: 'AED' }
     list: [plan_label, vehicle_value, indicative_premium]
     pipeline:
       stages:   [enquiry, quoted, submitted, issued, lapsed]
       initial:  enquiry
       terminal: [issued, lapsed]
+    # Display names for the stages above — entity level, NOT inside `pipeline:`,
+    # so an `extends: system` entity can label stages it never declared. The console
+    # badge/filter/pipeline/funnel read these; an unlabelled stage falls back to Title
+    # Case of its key. Kept in step with the `stage.*` locale keys the flows resolve
+    # through `$enum_label(stage, "stage")`.
+    stage_labels:
+      enquiry:   { en: 'Enquiry', ar: 'استفسار' }
+      quoted:    { en: 'Quoted', ar: 'تم التسعير' }
+      submitted: { en: 'Submitted to insurer', ar: 'تم التقديم لشركة التأمين' }
+      issued:    { en: 'Policy issued', ar: 'صدرت الوثيقة' }
+      lapsed:    { en: 'Lapsed', ar: 'منتهي' }
     milestones:
       quoted: { label: { en: 'Quoted', ar: 'تم التسعير' }, stage: quoted }
       issued: { label: { en: 'Policy issued', ar: 'صدرت الوثيقة' }, stage: issued, terminal: true }
@@ -66,6 +77,16 @@ entities:
       stages:   [notified, documents_pending, assessor_review, closed]
       initial:  notified
       terminal: [closed]
+    # Display names for the stages above — entity level, NOT inside `pipeline:`,
+    # so an `extends: system` entity can label stages it never declared. The console
+    # badge/filter/pipeline/funnel read these; an unlabelled stage falls back to Title
+    # Case of its key. Kept in step with the `stage.*` locale keys the flows resolve
+    # through `$enum_label(stage, "stage")`.
+    stage_labels:
+      notified:          { en: 'Notified', ar: 'تم الإبلاغ' }
+      documents_pending: { en: 'Documents pending', ar: 'بانتظار المستندات' }
+      assessor_review:   { en: 'Assessor review', ar: 'قيد تقييم المُقيِّم' }
+      closed:            { en: 'Closed', ar: 'مغلقة' }
     milestones:
       notified:        { label: { en: 'Notified', ar: 'تم الإبلاغ' },          stage: notified }
       under_assessment: { label: { en: 'Under assessment', ar: 'قيد التقييم' }, stage: assessor_review }

@@ -15,7 +15,7 @@ entities:
       name:        { type: text, required: true, label: { en: 'Name', ar: 'الاسم' } }
       category:    { type: select, options: [shawarma, grills, sandwiches, sides, drinks, desserts], label: { en: 'Category', ar: 'القسم' } }
       description: { type: textarea, label: { en: 'Description', ar: 'الوصف' } }
-      price:       { type: money, label: { en: 'Price', ar: 'السعر' } }
+      price:       { type: money, label: { en: 'Price', ar: 'السعر' }, sortable: true }
       currency:    { type: text, label: { en: 'Currency', ar: 'العملة' }, default: 'EGP' }
       spicy:       { type: boolean, label: { en: 'Spicy', ar: 'حار' } }
       available:   { type: boolean, label: { en: 'Available', ar: 'متاح' }, default: true }
@@ -50,9 +50,9 @@ entities:
       dish:       { type: record, entity: dish, label: { en: 'Dish', ar: 'الطبق' } }
       code:       { type: text, label: { en: 'Code', ar: 'الرمز' } }
       title:      { type: text, label: { en: 'Dish', ar: 'الطبق' } }
-      qty:        { type: number, label: { en: 'Qty', ar: 'الكمية' }, default: 1 }
+      qty:        { type: number, label: { en: 'Qty', ar: 'الكمية' }, default: 1, sortable: true }
       unit_price: { type: money, label: { en: 'Unit price', ar: 'سعر الوحدة' } }
-      line_total: { type: money, label: { en: 'Line total', ar: 'إجمالي السطر' } }
+      line_total: { type: money, label: { en: 'Line total', ar: 'إجمالي السطر' }, sortable: true }
       note:       { type: text, label: { en: 'Note', ar: 'ملاحظة' } }
     list: [title, qty, line_total]
     dedupe_by: line_key
@@ -61,10 +61,10 @@ entities:
     label: { en: 'Order', ar: 'أوردر' }
     fields:
       items_summary:  { type: textarea, label: { en: 'Items', ar: 'الأصناف' } }
-      item_count:     { type: number, label: { en: 'Items', ar: 'عدد الأصناف' } }
+      item_count:     { type: number, label: { en: 'Items', ar: 'عدد الأصناف' }, sortable: true }
       subtotal:       { type: money, label: { en: 'Subtotal', ar: 'إجمالي الأصناف' } }
       delivery_fee:   { type: money, label: { en: 'Delivery', ar: 'التوصيل' } }
-      total:          { type: money, label: { en: 'Total', ar: 'الإجمالي' } }
+      total:          { type: money, label: { en: 'Total', ar: 'الإجمالي' }, sortable: true }
       currency:       { type: text, label: { en: 'Currency', ar: 'العملة' }, default: 'EGP' }
       customer_name:  { type: text, label: { en: 'Customer', ar: 'العميل' } }
       area:           { type: select, options: [nasr_city, maadi, zamalek, heliopolis, october, giza], label: { en: 'Area', ar: 'المنطقة' } }
@@ -81,6 +81,17 @@ entities:
       # The automation `stale_records` job reads THIS, so the rule lives with the
       # data: an order nobody moved out of `placed` within a day is not live.
       auto_transition: { from: placed, to: cancelled, after_idle_hours: 24 }
+    # Display names for the stages above — entity level, NOT inside `pipeline:`,
+    # so an `extends: system` entity can label stages it never declared. The console
+    # badge/filter/pipeline/funnel read these; an unlabelled stage falls back to Title
+    # Case of its key. Kept in step with the `stage.*` locale keys the flows resolve
+    # through `$enum_label(stage, "stage")`.
+    stage_labels:
+      placed:           { en: 'Placed', ar: 'اتسجّل' }
+      preparing:        { en: 'Preparing', ar: 'بيتجهّز في المطبخ 👨‍🍳' }
+      out_for_delivery: { en: 'Out for delivery', ar: 'مع الدليفري 🛵' }
+      delivered:        { en: 'Delivered', ar: 'اتسلّم ✅' }
+      cancelled:        { en: 'Cancelled', ar: 'ملغي' }
     milestones:
       order_placed:    { label: { en: 'Placed', ar: 'تم الطلب' },      stage: placed }
       order_delivered: { label: { en: 'Delivered', ar: 'تم التسليم' }, stage: delivered, terminal: true }

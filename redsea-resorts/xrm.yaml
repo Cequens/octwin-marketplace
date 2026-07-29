@@ -11,7 +11,7 @@ entities:
     fields:
       name:        { type: text, required: true, label: { en: 'Name', ar: 'الاسم' } }
       destination: { type: select, options: [hurghada, el_gouna, marsa_alam, sharm, dahab], label: { en: 'Destination', ar: 'الوجهة' } }
-      stars:       { type: number, label: { en: 'Stars', ar: 'التصنيف' } }
+      stars:       { type: number, label: { en: 'Stars', ar: 'التصنيف' }, sortable: true }
       description: { type: textarea, label: { en: 'Description', ar: 'الوصف' } }
       facilities:  { type: text, label: { en: 'Facilities', ar: 'المرافق' } }
       photo:       { type: image, label: { en: 'Photo', ar: 'الصورة' } }
@@ -29,8 +29,8 @@ entities:
       view:          { type: select, options: [sea, pool, garden, lagoon], label: { en: 'View', ar: 'الإطلالة' } }
       max_adults:    { type: number, label: { en: 'Max adults', ar: 'أقصى عدد بالغين' } }
       # The inventory count — mirrored into scheduling.yaml as slot capacity.
-      room_count:    { type: number, label: { en: 'Rooms of this type', ar: 'عدد الغرف' } }
-      nightly_bb:    { type: money, label: { en: 'Per night (B&B)', ar: 'الليلة (إفطار)' } }
+      room_count:    { type: number, label: { en: 'Rooms of this type', ar: 'عدد الغرف' }, sortable: true }
+      nightly_bb:    { type: money, label: { en: 'Per night (B&B)', ar: 'الليلة (إفطار)' }, sortable: true }
       nightly_hb:    { type: money, label: { en: 'Per night (half board)', ar: 'الليلة (نصف إقامة)' } }
       nightly_ai:    { type: money, label: { en: 'Per night (all inclusive)', ar: 'الليلة (شامل)' } }
       currency:      { type: text, label: { en: 'Currency', ar: 'العملة' }, default: 'EGP' }
@@ -47,11 +47,11 @@ entities:
       resort_label:   { type: text, label: { en: 'Resort', ar: 'المنتجع' } }
       room_label:     { type: text, label: { en: 'Room', ar: 'الغرفة' } }
       check_in_label: { type: text, label: { en: 'Check-in', ar: 'تاريخ الوصول' } }
-      nights:         { type: number, label: { en: 'Nights', ar: 'عدد الليالي' } }
+      nights:         { type: number, label: { en: 'Nights', ar: 'عدد الليالي' }, sortable: true }
       adults:         { type: number, label: { en: 'Adults', ar: 'بالغون' } }
       children:       { type: number, label: { en: 'Children', ar: 'أطفال' } }
       board:          { type: select, options: [bb, hb, ai], label: { en: 'Board', ar: 'نظام الإقامة' } }
-      total:          { type: money, label: { en: 'Total', ar: 'الإجمالي' } }
+      total:          { type: money, label: { en: 'Total', ar: 'الإجمالي' }, sortable: true }
       deposit:        { type: money, label: { en: 'Deposit', ar: 'العربون' } }
       currency:       { type: text, label: { en: 'Currency', ar: 'العملة' }, default: 'EGP' }
       notes:          { type: textarea, label: { en: 'Notes', ar: 'ملاحظات' } }
@@ -60,6 +60,18 @@ entities:
       stages:   [held, confirmed, checked_in, completed, cancelled, no_show]
       initial:  held
       terminal: [completed, cancelled, no_show]
+    # Display names for the stages above — entity level, NOT inside `pipeline:`,
+    # so an `extends: system` entity can label stages it never declared. The console
+    # badge/filter/pipeline/funnel read these; an unlabelled stage falls back to Title
+    # Case of its key. Kept in step with the `stage.*` locale keys the flows resolve
+    # through `$enum_label(stage, "stage")`.
+    stage_labels:
+      held:       { en: 'Held (awaiting deposit)', ar: 'حجز مبدئي (بانتظار العربون)' }
+      confirmed:  { en: 'Confirmed', ar: 'مؤكَّد ✅' }
+      checked_in: { en: 'Checked in', ar: 'تم تسجيل الوصول' }
+      completed:  { en: 'Completed', ar: 'انتهت الإقامة' }
+      cancelled:  { en: 'Cancelled', ar: 'ملغى' }
+      no_show:    { en: 'No show', ar: 'لم يتم الحضور' }
     milestones:
       stay_held:      { label: { en: 'Held', ar: 'حجز مبدئي' },   stage: held }
       stay_confirmed: { label: { en: 'Confirmed', ar: 'مؤكَّد' },   stage: confirmed }

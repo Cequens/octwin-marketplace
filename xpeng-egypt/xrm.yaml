@@ -24,7 +24,7 @@ entities:
           - { value: suv,   label: { en: 'SUV',              ar: 'دفع رباعي (SUV)' } }
           - { value: mpv,   label: { en: 'MPV (7-seater)',   ar: 'عائلية 7 مقاعد (MPV)' } }
       tagline:     { type: text, localized: true }
-      range_km:    { type: number }
+      range_km:    { type: number, sortable: true }
       battery_kwh: { type: number }
       power_hp:    { type: number }
       accel_0_100: { type: number }
@@ -92,6 +92,17 @@ entities:
       stages:   [new, contacted, qualified, won, lost]
       initial:  new
       terminal: [won, lost]
+    # Display names for the stages above — entity level, NOT inside `pipeline:`,
+    # so an `extends: system` entity can label stages it never declared. The console
+    # badge/filter/pipeline/funnel read these; an unlabelled stage falls back to Title
+    # Case of its key. Kept in step with the `stage.*` locale keys the flows resolve
+    # through `$enum_label(stage, "stage")`.
+    stage_labels:
+      new:       { en: 'New', ar: 'جديد' }
+      contacted: { en: 'Contacted', ar: 'تم التواصل' }
+      qualified: { en: 'Qualified', ar: 'مؤهل' }
+      won:       { en: 'Won', ar: 'تم البيع' }
+      lost:      { en: 'Lost', ar: 'مغلق' }
     # Reaction hooks (reactions-guide `on:` grammar). Off-channel funnel bridge:
     # when a rep marks the lead `won` (however it happens — console, a flow's
     # record_stage, or an automation transition), complete the purchase journey's

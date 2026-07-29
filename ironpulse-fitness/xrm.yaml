@@ -18,7 +18,7 @@ entities:
       description: { type: textarea, label: { en: 'Description', ar: 'الوصف' } }
       intensity:   { type: select, options: [beginner, intermediate, advanced], label: { en: 'Intensity', ar: 'المستوى' } }
       duration_min: { type: number, label: { en: 'Duration (min)', ar: 'المدة (دقيقة)' } }
-      seats:       { type: number, label: { en: 'Seats', ar: 'عدد المقاعد' }, default: 12 }
+      seats:       { type: number, label: { en: 'Seats', ar: 'عدد المقاعد' }, default: 12, sortable: true }
       photo:       { type: image, label: { en: 'Photo', ar: 'الصورة' } }
       popularity:  { type: number, label: { en: 'Popularity', ar: 'الأكثر حضوراً' }, default: 0 }
     list: [discipline, intensity, seats]
@@ -34,7 +34,7 @@ entities:
       languages:  { type: text, label: { en: 'Languages', ar: 'اللغات' } }
       photo:      { type: image, label: { en: 'Photo', ar: 'الصورة' } }
       timezone:   { type: text, label: { en: 'Timezone', ar: 'المنطقة الزمنية' }, default: 'Asia/Dubai' }
-      rating:     { type: number, label: { en: 'Rating', ar: 'التقييم' }, default: 0 }
+      rating:     { type: number, label: { en: 'Rating', ar: 'التقييم' }, default: 0, sortable: true }
     list: [specialty, languages, rating]
     search: { text: [name, languages], rank_by: rating }
     dedupe_by: name
@@ -44,8 +44,8 @@ entities:
     fields:
       code:      { type: text, required: true, label: { en: 'Code', ar: 'الرمز' } }
       name:      { type: text, required: true, label: { en: 'Name', ar: 'الاسم' } }
-      months:    { type: number, label: { en: 'Months', ar: 'عدد الأشهر' } }
-      price:     { type: money, label: { en: 'Price', ar: 'السعر' } }
+      months:    { type: number, label: { en: 'Months', ar: 'عدد الأشهر' }, sortable: true }
+      price:     { type: money, label: { en: 'Price', ar: 'السعر' }, sortable: true }
       currency:  { type: text, label: { en: 'Currency', ar: 'العملة' }, default: 'AED' }
       includes:  { type: textarea, label: { en: 'Includes', ar: 'يشمل' } }
       classes_included: { type: boolean, label: { en: 'Classes included', ar: 'يشمل الحصص' } }
@@ -66,6 +66,17 @@ entities:
       stages:   [enquiry, trial_booked, trial_attended, member, lapsed]
       initial:  enquiry
       terminal: [member, lapsed]
+    # Display names for the stages above — entity level, NOT inside `pipeline:`,
+    # so an `extends: system` entity can label stages it never declared. The console
+    # badge/filter/pipeline/funnel read these; an unlabelled stage falls back to Title
+    # Case of its key. Kept in step with the `stage.*` locale keys the flows resolve
+    # through `$enum_label(stage, "stage")`.
+    stage_labels:
+      enquiry:        { en: 'Enquiry', ar: 'استفسار' }
+      trial_booked:   { en: 'Trial booked', ar: 'حجز حصة تجريبية' }
+      trial_attended: { en: 'Trial attended', ar: 'حضر التجريبية' }
+      member:         { en: 'Member', ar: 'عضو 💪' }
+      lapsed:         { en: 'Lapsed', ar: 'عضوية منتهية' }
     milestones:
       trial_booked: { label: { en: 'Trial booked', ar: 'حجز حصة تجريبية' }, stage: trial_booked }
       joined:       { label: { en: 'Joined', ar: 'انضم' },                   stage: member, terminal: true }

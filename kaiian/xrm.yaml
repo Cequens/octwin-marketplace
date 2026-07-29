@@ -73,6 +73,18 @@ entities:
         docs_check:    [vehicle_check, rejected]
         vehicle_check: [training, rejected]
         training:      [active, rejected]
+    # Display names for the stages above — entity level, NOT inside `pipeline:`,
+    # so an `extends: system` entity can label stages it never declared. The console
+    # badge/filter/pipeline/funnel read these; an unlabelled stage falls back to Title
+    # Case of its key. Kept in step with the `stage.*` locale keys the flows resolve
+    # through `$enum_label(stage, "stage")`.
+    stage_labels:
+      applied:       { en: 'Application received', ar: 'تم استلام الطلب' }
+      docs_check:    { en: 'Documents under review', ar: 'مراجعة المستندات' }
+      vehicle_check: { en: 'Vehicle inspection', ar: 'فحص المركبة' }
+      training:      { en: 'Training', ar: 'التدريب' }
+      active:        { en: 'Active captain', ar: 'كابتن نشط' }
+      rejected:      { en: 'Not approved', ar: 'لم تتم الموافقة' }
     list: [region, vehicle_type]
     # A returning applicant UPDATES their application (record_save `match:`),
     # never duplicates it.

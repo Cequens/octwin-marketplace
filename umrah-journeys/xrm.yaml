@@ -16,13 +16,13 @@ entities:
       code:          { type: text, required: true, label: { en: 'Code', ar: 'الرمز' } }
       name:          { type: text, required: true, label: { en: 'Name', ar: 'الاسم' } }
       kind:          { type: select, options: [umrah, hajj, ramadan_umrah, ziyarah], label: { en: 'Kind', ar: 'النوع' } }
-      nights:        { type: number, label: { en: 'Nights', ar: 'عدد الليالي' } }
+      nights:        { type: number, label: { en: 'Nights', ar: 'عدد الليالي' }, sortable: true }
       makkah_hotel:  { type: text, label: { en: 'Makkah hotel', ar: 'فندق مكة' } }
       madinah_hotel: { type: text, label: { en: 'Madinah hotel', ar: 'فندق المدينة' } }
       distance_haram: { type: text, label: { en: 'Distance to Haram', ar: 'المسافة من الحرم' } }
       transport:     { type: text, label: { en: 'Transport', ar: 'المواصلات' } }
       includes:      { type: textarea, label: { en: 'Includes', ar: 'يشمل' } }
-      price_pp:      { type: money, label: { en: 'Price per person', ar: 'السعر للفرد' } }
+      price_pp:      { type: money, label: { en: 'Price per person', ar: 'السعر للفرد' }, sortable: true }
       currency:      { type: text, label: { en: 'Currency', ar: 'العملة' }, default: 'SAR' }
       hero:          { type: image, label: { en: 'Photo', ar: 'الصورة' } }
       rating:        { type: number, label: { en: 'Popularity', ar: 'الأكثر طلباً' }, default: 0 }
@@ -48,11 +48,11 @@ entities:
       package_label:  { type: text, label: { en: 'Package', ar: 'الباقة' } }
       package_code:   { type: text, label: { en: 'Package code', ar: 'رمز الباقة' } }
       lead_name:      { type: text, label: { en: 'Lead traveller', ar: 'المسؤول عن الحجز' } }
-      travellers:     { type: number, label: { en: 'Travellers', ar: 'عدد المسافرين' } }
+      travellers:     { type: number, label: { en: 'Travellers', ar: 'عدد المسافرين' }, sortable: true }
       departure_city: { type: select, options: [riyadh, jeddah, cairo, dubai, casablanca, jakarta], label: { en: 'Departure city', ar: 'مدينة المغادرة' } }
       travel_month:   { type: select, options: [rajab, shaaban, ramadan, shawwal, dhul_qadah, dhul_hijjah], label: { en: 'Month', ar: 'الشهر' } }
       room_type:      { type: select, options: [double, triple, quad], label: { en: 'Room', ar: 'نوع الغرفة' } }
-      total_price:    { type: money, label: { en: 'Total', ar: 'الإجمالي' } }
+      total_price:    { type: money, label: { en: 'Total', ar: 'الإجمالي' }, sortable: true }
       currency:       { type: text, label: { en: 'Currency', ar: 'العملة' }, default: 'SAR' }
       notes:          { type: textarea, label: { en: 'Notes', ar: 'ملاحظات' } }
     list: [package_label, travellers, travel_month, total_price]
@@ -60,6 +60,19 @@ entities:
       stages:   [enquiry, reserved, docs_pending, visa_issued, ticketed, travelled, cancelled]
       initial:  enquiry
       terminal: [travelled, cancelled]
+    # Display names for the stages above — entity level, NOT inside `pipeline:`,
+    # so an `extends: system` entity can label stages it never declared. The console
+    # badge/filter/pipeline/funnel read these; an unlabelled stage falls back to Title
+    # Case of its key. Kept in step with the `stage.*` locale keys the flows resolve
+    # through `$enum_label(stage, "stage")`.
+    stage_labels:
+      enquiry:      { en: 'Enquiry', ar: 'استفسار' }
+      reserved:     { en: 'Reserved', ar: 'حجز مثبّت' }
+      docs_pending: { en: 'Documents pending', ar: 'بانتظار المستندات' }
+      visa_issued:  { en: 'Visa issued', ar: 'صدرت التأشيرة' }
+      ticketed:     { en: 'Ticketed', ar: 'تم إصدار التذاكر' }
+      travelled:    { en: 'Travelled', ar: 'تمت الرحلة' }
+      cancelled:    { en: 'Cancelled', ar: 'ملغى' }
     milestones:
       trip_reserved: { label: { en: 'Reserved', ar: 'تم الحجز' },       stage: reserved }
       visa_issued:   { label: { en: 'Visa issued', ar: 'صدرت التأشيرة' }, stage: visa_issued }

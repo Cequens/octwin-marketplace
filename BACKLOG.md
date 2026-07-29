@@ -15,6 +15,123 @@ KB) and the primitive input schemas (`platform-primitives.json`). Nothing here i
 
 ---
 
+## 2026-07-29c — declaration gaps the new console surfaces make visible — ✅ CLOSED
+
+> **Closed 2026-07-29.** `sortable: true` added to **61 fields across 18 packs**; `stage_labels:`
+> declared on **all 22 pipelined entities across 17 packs**. Verified with octwin-cli 0.1.20 against
+> KB `5bd9d41b9cae`: 21/21 packs clean offline, 21/21 pass `octwin validate --remote` — which is the
+> check that matters here, since a `stage_labels` key that is not a declared stage is a boot error.
+>
+> **Method.** `ar` was read programmatically from each pack's own `locale.ar.yaml` `stage.*` keys
+> rather than retyped, so the declaration and the flow-side `$enum_label(stage, "stage")` are
+> byte-identical (including emoji and the ZWJ in `shawarma-express`'s `👨‍🍳`) — the "keep them
+> saying the same thing" rule in the xrm guide. English was authored for all 22; Arabic was authored
+> only for the 8 entities whose packs had no `stage.*` coverage. `stage_labels:` sits at entity
+> level immediately after `pipeline:`, never inside it.
+>
+> **Three corrections to this batch's examples.** All three named in the `sortable:` fix are wrong,
+> though the audit behind them is right:
+> - `swiftship-courier` `shipment.created_at` — `created_at` is a **built-in column, not a declared
+>   field**, so it cannot carry `sortable:`, and it is not in `shipment`'s `list:` either. Skipped.
+> - `oud-atelier` `product.price` — there is no `product` entity; it is **`fragrance`**.
+> - `shawarma-express` `order.total` — there is no `order` entity; it is **`food_order`**.
+>
+> Scope taken: the `number`/`money`/`date` columns each entity already names in `list:`, per the
+> fix's own wording. `text`/`select` columns were left alone — indexing every one of them buys
+> little and costs writes.
+
+The operator console now renders each entity's declared `list:` fields as the records table's
+columns, sorts on a column server-side, and names pipeline stages from a new `stage_labels:` key.
+Two declarations that were previously inert are now load-bearing for what an operator sees.
+
+**How these were found.** A `js-yaml` parse of all 20 `xrm.yaml` files (73 declared entities, 22 of
+them pipelined). Counts below are exact, not sampled.
+
+### [audit] No pack declares `sortable:` on any field — 0 of 73 entities
+
+Operators can now sort the records table by a declared `number`/`money`/`date`/`text`/`select`
+column. Sorting works without `sortable: true` — it simply **scans** the `(project, entity)` subset
+instead of hitting an index, because `sortable:` is what emits the functional btree.
+
+**What the customer experiences:** nothing today, and a slow Records page on the entities that grow.
+The cost is invisible until a table has tens of thousands of rows, which is exactly when it is
+hardest to diagnose.
+
+**Fix:** add `sortable: true` to the fields operators actually sort by — the money/number/date
+columns already named in each entity's `list:`. Examples: `oud-atelier` `product.price`,
+`swiftship-courier` `shipment.created_at`, `shawarma-express` `order.total`.
+
+### [audit] No pack declares `stage_labels:` — 0 of 22 pipelined entities
+
+Stages had no `label` slot in the grammar until 2026-07-29, so every stage rendered as Title Case of
+its key everywhere: the console badge, the stage filter, the pipeline control, the timeline and the
+funnel.
+
+**What the customer experiences:** an operator reading `Docs Check` and `No Show` instead of the
+words the business uses — and, in Arabic-first packs, English chrome over Arabic data.
+
+**Fix** — entity level, beside `field_groups` (NOT inside `pipeline:`, which an `extends: system`
+pack may not declare):
+
+```yaml
+entities:
+  captain_application:
+    pipeline:
+      stages: [submitted, docs_check, active, rejected]
+    stage_labels:
+      submitted:  { en: Submitted,    ar: "تم التقديم" }
+      docs_check: { en: "Docs review", ar: "مراجعة المستندات" }
+      active:     { en: Active,       ar: "نشط" }
+      rejected:   { en: Rejected,     ar: "مرفوض" }
+```
+
+Keys must be declared stages and an entity with no pipeline may not declare them — both are boot
+errors, so a typo fails the deploy rather than silently doing nothing. The seven platform system
+entities (`order`, `booking`, `case`, `cart`, `campaign`, …) already ship en/ar labels, so an
+`extends: system` pack inherits them and only needs `stage_labels:` for stages it renamed or added.
+
+### Not a pack defect — noted for context
+
+Nine packs extend the system `booking` without declaring `list:`, and so inherit the platform
+template's `list: [slot_start]`: one column, no customer or resource. That thinness is the
+**platform template's** to fix, not the packs'. Logged in the platform repo's `docs/BACKLOG.md`.
+
+**Correcting an earlier estimate:** a draft of this batch claimed most entities declare no `list:`.
+The parse says the opposite — **64 of 73 do**, and all 9 that don't are the `booking` case above.
+There is no widespread `list:` gap in the marketplace.
+
+---
+
+## 2026-07-29d — OPEN — found while closing 2026-07-29c
+
+### P1 — `nakhla-giving` renders an unresolvable stage label to donors
+
+[`flows/tools/my-donations.flow.yaml:92`](nakhla-giving/flows/tools/my-donations.flow.yaml) and
+`:106` call:
+
+```yaml
+$enum_label($item.stage, "stage")     # ✗ no fallback argument, and no "stage" strings exist
+```
+
+**The pack has no `locale.ar.yaml` / `locale.en.yaml` at all** — it is the only pack in the
+marketplace without one — and `grep` finds no `stage.*` key anywhere in it. Every other pack either
+defines `stage.*` at pack level (`swiftship-courier`, `kaiian`, …) or resolves stages through a
+flow-local `$enum_lookup(… , $item.stage)` **with the raw stage as the fallback**
+(`oud-atelier`, `gulf-realty`). This one does neither, and unlike its siblings it passes **no third
+argument**, so there is not even a raw-key fallback.
+
+A donor opening "my donations" sees the status line resolve to nothing (or to the bare key
+`paid` / `refunded`) on every gift.
+
+**Not fixed here** — the fix is new customer-facing Arabic copy, which is the pack owner's call, not
+a mechanical correction. The Arabic now sitting in `nakhla-giving/xrm.yaml` `stage_labels:` (authored
+in 2026-07-29c: `بانتظار السداد` / `تم السداد` / `فشل السداد` / `تم الاسترجاع`) is the obvious source
+to copy into a new `locale.ar.yaml`, which would also satisfy the "keep them saying the same thing"
+rule. Note the declaration and the locale are still **two separate stores** — the console reads
+`stage_labels:`, the flow reads the locale — so declaring one does not populate the other.
+
+---
+
 ## ✅ Status — all batches CLOSED (2026-07-29)
 
 Every finding below is fixed. Verified with octwin-cli **0.1.20** against a freshly pulled KB

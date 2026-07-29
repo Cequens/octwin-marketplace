@@ -21,12 +21,12 @@ entities:
       sku:         { type: text, required: true, label: { en: 'SKU', ar: 'الرمز' } }
       name:        { type: text, required: true, label: { en: 'Name', ar: 'الاسم' } }
       description: { type: textarea, label: { en: 'Description', ar: 'الوصف' } }
-      price:       { type: money, label: { en: 'Price', ar: 'السعر' } }
+      price:       { type: money, label: { en: 'Price', ar: 'السعر' }, sortable: true }
       currency:    { type: text, label: { en: 'Currency', ar: 'العملة' }, default: 'SAR' }
       category:    { type: select, options: [oud_oil, bakhoor, eau_de_parfum, gift_set, oud_chips], label: { en: 'Category', ar: 'الفئة' } }
       scent_notes: { type: text, label: { en: 'Notes', ar: 'المكوّنات العطرية' } }
       longevity:   { type: select, options: [light, moderate, long, very_long], label: { en: 'Longevity', ar: 'الثبات' } }
-      stock:       { type: number, label: { en: 'Stock', ar: 'المخزون' }, default: 0 }
+      stock:       { type: number, label: { en: 'Stock', ar: 'المخزون' }, default: 0, sortable: true }
       photo:       { type: image, label: { en: 'Photo', ar: 'الصورة' } }
       rating:      { type: number, label: { en: 'Popularity', ar: 'الأكثر طلباً' }, default: 0 }
     list: [category, price, stock]
@@ -49,9 +49,9 @@ entities:
       fragrance:  { type: record, entity: fragrance, label: { en: 'Item', ar: 'المنتج' } }
       sku:        { type: text, label: { en: 'SKU', ar: 'الرمز' } }
       title:      { type: text, label: { en: 'Item', ar: 'المنتج' } }
-      qty:        { type: number, label: { en: 'Qty', ar: 'الكمية' }, default: 1 }
+      qty:        { type: number, label: { en: 'Qty', ar: 'الكمية' }, default: 1, sortable: true }
       unit_price: { type: money, label: { en: 'Unit price', ar: 'سعر الوحدة' } }
-      line_total: { type: money, label: { en: 'Line total', ar: 'إجمالي السطر' } }
+      line_total: { type: money, label: { en: 'Line total', ar: 'إجمالي السطر' }, sortable: true }
     list: [title, qty, line_total]
     # One line per SKU per SHOPPER — see the `line_key` note above.
     dedupe_by: line_key
@@ -61,8 +61,8 @@ entities:
     label: { en: 'Order', ar: 'طلب' }
     fields:
       items_summary:  { type: textarea, label: { en: 'Items', ar: 'المنتجات' } }
-      item_count:     { type: number, label: { en: 'Items', ar: 'عدد المنتجات' } }
-      total:          { type: money, label: { en: 'Total', ar: 'الإجمالي' } }
+      item_count:     { type: number, label: { en: 'Items', ar: 'عدد المنتجات' }, sortable: true }
+      total:          { type: money, label: { en: 'Total', ar: 'الإجمالي' }, sortable: true }
       currency:       { type: text, label: { en: 'Currency', ar: 'العملة' }, default: 'SAR' }
       recipient:      { type: text, label: { en: 'Recipient', ar: 'المستلم' } }
       city:           { type: select, options: [riyadh, jeddah, dammam, makkah, madinah, abha], label: { en: 'City', ar: 'المدينة' } }
@@ -74,6 +74,17 @@ entities:
       stages:   [placed, packed, shipped, delivered, cancelled]
       initial:  placed
       terminal: [delivered, cancelled]
+    # Display names for the stages above — entity level, NOT inside `pipeline:`,
+    # so an `extends: system` entity can label stages it never declared. The console
+    # badge/filter/pipeline/funnel read these; an unlabelled stage falls back to Title
+    # Case of its key. Kept in step with the `stage.*` locale keys the flows resolve
+    # through `$enum_label(stage, "stage")`.
+    stage_labels:
+      placed:    { en: 'Placed', ar: 'تم الطلب' }
+      packed:    { en: 'Packed', ar: 'تم التغليف' }
+      shipped:   { en: 'Shipped', ar: 'تم الشحن' }
+      delivered: { en: 'Delivered', ar: 'تم التسليم' }
+      cancelled: { en: 'Cancelled', ar: 'ملغي' }
     milestones:
       order_placed:    { label: { en: 'Order placed', ar: 'تم الطلب' },   stage: placed }
       order_delivered: { label: { en: 'Delivered', ar: 'تم التسليم' },     stage: delivered, terminal: true }
