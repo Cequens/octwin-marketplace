@@ -76,7 +76,7 @@ steps:
           image_url: '$coalesce($item.fields.photo, "")'
           body: '$lines($compact([
                    ($item.fields.spicy == true ? "🌶️ " : "") + $item.fields.name,
-                   $format_money_field($item.fields.price, $coalesce($item.fields.currency, "EGP"))
+                   $format_money_field($item.fields.price, "EGP")
                  ]), "\n")'
           buttons:
             - { title: '{$t("menu.btn_add")}',     on_select: { invoke: basket, with: { action: add, dish_code: '$item.fields.code' } } }

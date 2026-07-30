@@ -56,7 +56,7 @@ steps:
           body: '$lines($compact([
                    $item.fields.name,
                    $item.fields.distance_haram,
-                   $t("packages.from", { price: $format_money_field($item.fields.price_pp, $coalesce($item.fields.currency, "SAR")) })
+                   $t("packages.from", { price: $format_money_field($item.fields.price_pp, "SAR") })
                  ]), "\n")'
           buttons:
             - { title: '{$t("packages.btn_detail")}', on_select: { invoke: package-detail, with: { package_id: '$item.id' } } }

@@ -10,6 +10,8 @@
 entities:
   treatment:
     label: { en: 'Treatment', ar: 'خدمة' }
+    icon:        '💅'
+    description: { en: 'A service on the price list, with its duration', ar: 'خدمة ضمن قائمة الأسعار ومدتها' }
     fields:
       code:         { type: text, required: true, label: { en: 'Code', ar: 'الرمز' } }
       name:         { type: text, required: true, label: { en: 'Name', ar: 'الاسم' } }
@@ -17,16 +19,17 @@ entities:
       description:  { type: textarea, label: { en: 'Description', ar: 'الوصف' } }
       # The real chair time — this is what the booking passes as `slot_minutes`.
       duration_min: { type: number, label: { en: 'Duration (min)', ar: 'المدة (دقيقة)' }, sortable: true }
-      price:        { type: money, label: { en: 'Price', ar: 'السعر' }, sortable: true }
-      currency:     { type: text, label: { en: 'Currency', ar: 'العملة' }, default: 'SAR' }
+      price:        { type: money, label: { en: 'Price', ar: 'السعر' }, sortable: true, currency: SAR }
       photo:        { type: image, label: { en: 'Photo', ar: 'الصورة' } }
-      popularity:   { type: number, label: { en: 'Popularity', ar: 'الأكثر طلباً' }, default: 0 }
+      popularity:   { type: number, label: { en: 'Popularity', ar: 'الأكثر طلباً' }, default: 0, description: { en: 'Manual ordering weight for the services carousel — higher shows earlier. Not a sales figure.', ar: 'وزن ترتيب يدوي لعرض الخدمات — الأعلى يظهر أولاً. ليس رقم مبيعات.' } }
     list: [category, duration_min, price]
     search: { text: [name, description], semantic: [name, description], rank_by: popularity }
     dedupe_by: code
 
   stylist:
     label: { en: 'Stylist', ar: 'أخصائية' }
+    icon:        '👩‍🎨'
+    description: { en: 'A specialist clients book with, ranked by their ratings', ar: 'أخصائية تحجز معها العميلات ومرتبة بتقييماتهن' }
     fields:
       name:         { type: text, required: true, label: { en: 'Name', ar: 'الاسم' } }
       title:        { type: text, label: { en: 'Title', ar: 'المسمى' } }
@@ -36,8 +39,8 @@ entities:
       photo:        { type: image, label: { en: 'Photo', ar: 'الصورة' } }
       timezone:     { type: text, label: { en: 'Timezone', ar: 'المنطقة الزمنية' }, default: 'Asia/Riyadh' }
       # Rolled up from the post-visit survey — never typed by hand.
-      rating:       { type: number, label: { en: 'Rating', ar: 'التقييم' }, default: 0, sortable: true }
-      rating_count: { type: number, label: { en: 'Ratings', ar: 'عدد التقييمات' }, default: 0 }
+      rating:       { type: number, label: { en: 'Rating', ar: 'التقييم' }, default: 0, sortable: true, description: { en: 'Computed from client survey responses — it orders the stylist picker, so editing it changes who is offered first.', ar: 'محسوب من تقييمات العميلات — وهو ما يرتب قائمة الأخصائيات، فتعديله يغيّر من تُعرض أولاً.' } }
+      rating_count: { type: number, label: { en: 'Ratings', ar: 'عدد التقييمات' }, default: 0, description: { en: 'How many responses the rating averages.', ar: 'عدد التقييمات التي بُني عليها المتوسط.' } }
     list: [title, languages, rating]
     search: { text: [name, languages], rank_by: rating }
     dedupe_by: name
@@ -67,19 +70,19 @@ segments:
 
 demo:
   - entity: treatment
-    fields: { code: 'CUT-BLOW', name: 'قص وتصفيف', category: hair, description: 'قص وغسيل وتصفيف بالسيشوار. Cut, wash and blow-dry.', duration_min: 60, price: 180, currency: SAR, popularity: 5, photo: 'generate:Photograph of a modern upscale hair salon interior with a stylist blow-drying a client hair at a mirrored station, warm lighting, elegant decor, photorealistic.' }
+    fields: { code: 'CUT-BLOW', name: 'قص وتصفيف', category: hair, description: 'قص وغسيل وتصفيف بالسيشوار. Cut, wash and blow-dry.', duration_min: 60, price: 180, popularity: 5, photo: 'generate:Photograph of a modern upscale hair salon interior with a stylist blow-drying a client hair at a mirrored station, warm lighting, elegant decor, photorealistic.' }
   - entity: treatment
-    fields: { code: 'COLOUR-FULL', name: 'صبغة كاملة مع علاج', category: colour, description: 'صبغة كاملة مع علاج مرمم وتصفيف — تستغرق ثلاث ساعات. Full colour with a repair treatment and styling; takes three hours.', duration_min: 180, price: 650, currency: SAR, popularity: 5, photo: 'generate:Photograph of a hair colourist applying colour to a client long hair with a brush and foils in an elegant salon, soft lighting, photorealistic.' }
+    fields: { code: 'COLOUR-FULL', name: 'صبغة كاملة مع علاج', category: colour, description: 'صبغة كاملة مع علاج مرمم وتصفيف — تستغرق ثلاث ساعات. Full colour with a repair treatment and styling; takes three hours.', duration_min: 180, price: 650, popularity: 5, photo: 'generate:Photograph of a hair colourist applying colour to a client long hair with a brush and foils in an elegant salon, soft lighting, photorealistic.' }
   - entity: treatment
-    fields: { code: 'KERATIN', name: 'بروتين وكيراتين', category: colour, description: 'علاج كيراتين لفرد وتنعيم الشعر — أربع ساعات. Keratin smoothing treatment; four hours.', duration_min: 240, price: 900, currency: SAR, popularity: 4, photo: 'generate:Photograph of a keratin hair treatment being flat-ironed section by section in a bright modern salon, photorealistic.' }
+    fields: { code: 'KERATIN', name: 'بروتين وكيراتين', category: colour, description: 'علاج كيراتين لفرد وتنعيم الشعر — أربع ساعات. Keratin smoothing treatment; four hours.', duration_min: 240, price: 900, popularity: 4, photo: 'generate:Photograph of a keratin hair treatment being flat-ironed section by section in a bright modern salon, photorealistic.' }
   - entity: treatment
-    fields: { code: 'MANI-PEDI', name: 'مناكير وباديكير', category: nails, description: 'مناكير وباديكير مع تدليك وطلاء. Manicure and pedicure with massage and polish.', duration_min: 90, price: 220, currency: SAR, popularity: 5, photo: 'generate:Photograph of a nail technician giving a manicure at a clean modern nail station, pastel polish bottles arranged, soft daylight, photorealistic.' }
+    fields: { code: 'MANI-PEDI', name: 'مناكير وباديكير', category: nails, description: 'مناكير وباديكير مع تدليك وطلاء. Manicure and pedicure with massage and polish.', duration_min: 90, price: 220, popularity: 5, photo: 'generate:Photograph of a nail technician giving a manicure at a clean modern nail station, pastel polish bottles arranged, soft daylight, photorealistic.' }
   - entity: treatment
-    fields: { code: 'FACIAL-HYD', name: 'تنظيف بشرة مرطّب', category: skincare, description: 'تنظيف عميق وترطيب مع ماسك مناسب لنوع البشرة. Deep cleanse and hydrating mask suited to the skin type.', duration_min: 75, price: 380, currency: SAR, popularity: 4, photo: 'generate:Photograph of a facial treatment room with a therapist applying a hydrating mask to a relaxed client, calm spa lighting, photorealistic.' }
+    fields: { code: 'FACIAL-HYD', name: 'تنظيف بشرة مرطّب', category: skincare, description: 'تنظيف عميق وترطيب مع ماسك مناسب لنوع البشرة. Deep cleanse and hydrating mask suited to the skin type.', duration_min: 75, price: 380, popularity: 4, photo: 'generate:Photograph of a facial treatment room with a therapist applying a hydrating mask to a relaxed client, calm spa lighting, photorealistic.' }
   - entity: treatment
-    fields: { code: 'SPA-MASSAGE', name: 'مساج استرخاء ٦٠ دقيقة', category: spa, description: 'مساج سويدي للاسترخاء بزيوت عطرية. Swedish relaxation massage with aromatic oils.', duration_min: 60, price: 300, currency: SAR, popularity: 4, photo: 'generate:Photograph of a serene spa massage room with soft towels, candles and orchids, warm dim lighting, photorealistic.' }
+    fields: { code: 'SPA-MASSAGE', name: 'مساج استرخاء ٦٠ دقيقة', category: spa, description: 'مساج سويدي للاسترخاء بزيوت عطرية. Swedish relaxation massage with aromatic oils.', duration_min: 60, price: 300, popularity: 4, photo: 'generate:Photograph of a serene spa massage room with soft towels, candles and orchids, warm dim lighting, photorealistic.' }
   - entity: treatment
-    fields: { code: 'BRIDAL', name: 'باكج العروس', category: bridal, description: 'مكياج وتصفيف وعناية بالبشرة والأظافر لليوم الكبير — تُحجز مبكراً. Bridal makeup, hair, skin and nails; book early.', duration_min: 300, price: 3500, currency: SAR, popularity: 3, photo: 'generate:Photograph of a bridal makeup session in an elegant salon suite, makeup artist working with brushes, soft glamorous lighting, white flowers, photorealistic.' }
+    fields: { code: 'BRIDAL', name: 'باكج العروس', category: bridal, description: 'مكياج وتصفيف وعناية بالبشرة والأظافر لليوم الكبير — تُحجز مبكراً. Bridal makeup, hair, skin and nails; book early.', duration_min: 300, price: 3500, popularity: 3, photo: 'generate:Photograph of a bridal makeup session in an elegant salon suite, makeup artist working with brushes, soft glamorous lighting, white flowers, photorealistic.' }
 
   - entity: stylist
     fields: { name: 'ريهام', title: 'أخصائية شعر أولى', specialties: [hair, colour], languages: 'العربية، الإنجليزية', bio: 'خبرة ١٢ سنة في الصبغات والعلاجات.', timezone: 'Asia/Riyadh', rating: 4.9, rating_count: 74, photo: 'generate:Professional portrait of a female hair stylist in a black salon apron holding styling scissors, elegant salon blurred behind, warm lighting.' }

@@ -48,7 +48,7 @@ steps:
                 then:
                   - assign:
                       dev_name:     '$dev.fields.name'
-                      dev_currency: '$coalesce($dev.fields.currency, "AED")'
+                      dev_currency: '"AED"'
                       dev_price:    '$dev.fields.from_price.value / $dev.fields.from_price.offset'
         before_prompt:
           - assign:
@@ -73,7 +73,7 @@ steps:
               map:
                 value:       '$item.id'
                 label:       '$item.fields.name'
-                description: '$format_money_field($item.fields.from_price, $coalesce($item.fields.currency, "AED"))'
+                description: '$format_money_field($item.fields.from_price, "AED")'
               auto_resolve: true
           - field: down_payment
             label: '$t("mortgage-estimate.label.down")'

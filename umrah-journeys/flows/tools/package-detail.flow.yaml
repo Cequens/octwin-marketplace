@@ -38,7 +38,7 @@ steps:
                  $pkg.fields.distance_haram != null ? $t("package-detail.distance", { distance: $pkg.fields.distance_haram }) : null,
                  $pkg.fields.transport != null ? $t("package-detail.transport", { transport: $pkg.fields.transport }) : null,
                  $pkg.fields.includes != null ? $t("package-detail.includes", { includes: $pkg.fields.includes }) : null,
-                 $t("package-detail.price", { price: $format_money_field($pkg.fields.price_pp, $coalesce($pkg.fields.currency, "SAR")) })
+                 $t("package-detail.price", { price: $format_money_field($pkg.fields.price_pp, "SAR") })
                ]), "\n")'
         footer: '{$t("package-detail.footer")}'
         buttons:

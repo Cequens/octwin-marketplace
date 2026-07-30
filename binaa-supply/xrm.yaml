@@ -12,6 +12,8 @@ entities:
 
   site:
     label: { en: 'Delivery site', ar: 'موقع التسليم' }
+    icon:        '🏗️'
+    description: { en: 'A customer construction site materials are quoted and delivered to', ar: 'موقع إنشائي للعميل تُسعّر وتُسلَّم إليه المواد' }
     fields:
       name:          { type: text, required: true, label: { en: 'Site', ar: 'الموقع' } }
       city:          { type: select, options: [riyadh, kharj, diriyah, qassim, dammam], label: { en: 'City', ar: 'المدينة' } }
@@ -23,14 +25,15 @@ entities:
 
   quote:
     label: { en: 'Quote / RFQ', ar: 'طلب عرض سعر' }
+    icon:        '🧾'
+    description: { en: 'A material request-for-quote, priced and tracked to delivery', ar: 'طلب تسعير مواد يُسعّر ويُتابع حتى التسليم' }
     fields:
       material_name: { type: text, required: true, label: { en: 'Material', ar: 'الصنف' } }
       sku:           { type: text, label: { en: 'SKU', ar: 'الكود' } }
       qty:           { type: number, required: true, label: { en: 'Qty', ar: 'الكمية' }, sortable: true }
       unit:          { type: text, label: { en: 'Unit', ar: 'الوحدة' } }
-      unit_price:    { type: money, label: { en: 'Unit price', ar: 'سعر الوحدة' } }
-      total:         { type: money, label: { en: 'Total', ar: 'الإجمالي' }, sortable: true }
-      currency:      { type: text, default: 'SAR', label: { en: 'Currency', ar: 'العملة' } }
+      unit_price:    { type: money, label: { en: 'Unit price', ar: 'سعر الوحدة' }, currency: SAR }
+      total:         { type: money, label: { en: 'Total', ar: 'الإجمالي' }, sortable: true, currency: SAR }
       customer_name: { type: text, label: { en: 'Customer', ar: 'العميل' } }
       site:          { type: record, entity: site, label: { en: 'Site', ar: 'الموقع' } }
       site_name:     { type: text, label: { en: 'Site name', ar: 'اسم الموقع' } }
@@ -56,6 +59,16 @@ entities:
       initial:     new
       progression: free
       terminal:    [delivered, lost]
+    # What each stage MEANS — rendered above the console pipeline control and on
+    # each move button. Kept in step with the `stage_hint.*` locale keys the flows
+    # resolve through `$enum_label(stage, "stage_hint")`.
+    stage_hints:
+      new:       { en: 'RFQ received, not yet priced', ar: 'وصل طلب التسعير ولم يُسعّر بعد' }
+      quoted:    { en: 'A price was sent; awaiting the customer', ar: 'أُرسل السعر وبانتظار رد العميل' }
+      won:       { en: 'The customer accepted; prepare the order', ar: 'وافق العميل — جهّز التوريد' }
+      shipped:   { en: 'Materials left the yard', ar: 'غادرت المواد المستودع' }
+      delivered: { en: 'Signed for on site', ar: 'تم الاستلام والتوقيع في الموقع' }
+      lost:      { en: 'Closed without an order', ar: 'أُغلق دون توريد' }
     # Display names for the stages above — entity level, NOT inside `pipeline:`,
     # so an `extends: system` entity can label stages it never declared. The console
     # badge/filter/pipeline/funnel read these; an unlabelled stage falls back to Title
@@ -90,7 +103,7 @@ entities:
           - push:
               operation: slack_post_sales
               input:
-                text: '🏆 Won {{ record.record_number }} — {{ record.fields.material_name }} ×{{ record.fields.qty }} · {{ record.fields.total }} {{ record.fields.currency }} · {{ record.fields.customer_name }}'
+                text: '🏆 Won {{ record.record_number }} — {{ record.fields.material_name }} ×{{ record.fields.qty }} · {{ record.fields.total }} SAR · {{ record.fields.customer_name }}'
 
         # ── the customer notification ─────────────────────────────────────────
         # Ops moves the quote to `shipped` in the console, and THIS fires — the
@@ -166,7 +179,6 @@ demo:
       unit: 'كيس'
       unit_price: 14
       total: 5600
-      currency: SAR
       customer_name: 'مؤسسة الراجحي للمقاولات'
       site: '@site_narjis'
       site_name: 'مشروع النرجس - برج A'

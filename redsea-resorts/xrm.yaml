@@ -8,6 +8,8 @@
 entities:
   resort:
     label: { en: 'Resort', ar: 'منتجع' }
+    icon:        '🏖️'
+    description: { en: 'A resort in the portfolio and its rating', ar: 'منتجع ضمن المجموعة وتصنيفه' }
     fields:
       name:        { type: text, required: true, label: { en: 'Name', ar: 'الاسم' } }
       destination: { type: select, options: [hurghada, el_gouna, marsa_alam, sharm, dahab], label: { en: 'Destination', ar: 'الوجهة' } }
@@ -22,6 +24,8 @@ entities:
 
   room_type:
     label: { en: 'Room type', ar: 'نوع الغرفة' }
+    icon:        '🛏️'
+    description: { en: 'A room category and its nightly boards', ar: 'فئة غرفة وأسعار الليلة حسب نظام الإقامة' }
     fields:
       name:          { type: text, required: true, label: { en: 'Name', ar: 'الاسم' } }
       resort:        { type: record, entity: resort, label: { en: 'Resort', ar: 'المنتجع' } }
@@ -30,10 +34,9 @@ entities:
       max_adults:    { type: number, label: { en: 'Max adults', ar: 'أقصى عدد بالغين' } }
       # The inventory count — mirrored into scheduling.yaml as slot capacity.
       room_count:    { type: number, label: { en: 'Rooms of this type', ar: 'عدد الغرف' }, sortable: true }
-      nightly_bb:    { type: money, label: { en: 'Per night (B&B)', ar: 'الليلة (إفطار)' }, sortable: true }
-      nightly_hb:    { type: money, label: { en: 'Per night (half board)', ar: 'الليلة (نصف إقامة)' } }
-      nightly_ai:    { type: money, label: { en: 'Per night (all inclusive)', ar: 'الليلة (شامل)' } }
-      currency:      { type: text, label: { en: 'Currency', ar: 'العملة' }, default: 'EGP' }
+      nightly_bb:    { type: money, label: { en: 'Per night (B&B)', ar: 'الليلة (إفطار)' }, sortable: true, currency: EGP }
+      nightly_hb:    { type: money, label: { en: 'Per night (half board)', ar: 'الليلة (نصف إقامة)' }, currency: EGP }
+      nightly_ai:    { type: money, label: { en: 'Per night (all inclusive)', ar: 'الليلة (شامل)' }, currency: EGP }
       photo:         { type: image, label: { en: 'Photo', ar: 'الصورة' } }
       popularity:    { type: number, label: { en: 'Popularity', ar: 'الأكثر طلباً' }, default: 0 }
     list: [resort_label, view, room_count, nightly_bb]
@@ -42,6 +45,8 @@ entities:
 
   stay:
     label: { en: 'Stay', ar: 'إقامة' }
+    icon:        '🧳'
+    description: { en: 'A guest stay, from deposit to check-out', ar: 'إقامة ضيف من العربون حتى المغادرة' }
     fields:
       guest_name:     { type: text, label: { en: 'Guest', ar: 'اسم الضيف' } }
       resort_label:   { type: text, label: { en: 'Resort', ar: 'المنتجع' } }
@@ -51,15 +56,24 @@ entities:
       adults:         { type: number, label: { en: 'Adults', ar: 'بالغون' } }
       children:       { type: number, label: { en: 'Children', ar: 'أطفال' } }
       board:          { type: select, options: [bb, hb, ai], label: { en: 'Board', ar: 'نظام الإقامة' } }
-      total:          { type: money, label: { en: 'Total', ar: 'الإجمالي' }, sortable: true }
-      deposit:        { type: money, label: { en: 'Deposit', ar: 'العربون' } }
-      currency:       { type: text, label: { en: 'Currency', ar: 'العملة' }, default: 'EGP' }
+      total:          { type: money, label: { en: 'Total', ar: 'الإجمالي' }, sortable: true, currency: EGP }
+      deposit:        { type: money, label: { en: 'Deposit', ar: 'العربون' }, currency: EGP }
       notes:          { type: textarea, label: { en: 'Notes', ar: 'ملاحظات' } }
     list: [resort_label, room_label, nights, total]
     pipeline:
       stages:   [held, confirmed, checked_in, completed, cancelled, no_show]
       initial:  held
       terminal: [completed, cancelled, no_show]
+    # What each stage MEANS — rendered above the console pipeline control and on
+    # each move button. Kept in step with the `stage_hint.*` locale keys the flows
+    # resolve through `$enum_label(stage, "stage_hint")`.
+    stage_hints:
+      held:       { en: 'Provisional — the deposit is not in yet', ar: 'ℹ️ الغرفة محجوزة مبدئياً باسمك — التأكيد النهائي بعد وصول العربون.' }
+      confirmed:  { en: 'Deposit received and the room is held', ar: 'ℹ️ حجزك مؤكَّد. في انتظارك 🌊' }
+      checked_in: { en: 'The guest has arrived', ar: 'ℹ️ إقامتك جارية — تحت أمرك لأي طلب.' }
+      completed:  { en: 'The stay finished', ar: 'ℹ️ شكراً لاختيارك منتجعاتنا 🌊' }
+      cancelled:  { en: 'Cancelled before arrival', ar: 'ℹ️ هذا الحجز ملغى.' }
+      no_show:    { en: 'The guest never arrived', ar: 'ℹ️ لم يتم الحضور في موعد الوصول.' }
     # Display names for the stages above — entity level, NOT inside `pipeline:`,
     # so an `extends: system` entity can label stages it never declared. The console
     # badge/filter/pipeline/funnel read these; an unlabelled stage falls back to Title
@@ -104,10 +118,10 @@ demo:
     fields: { name: 'مرسى علم إكو ريزورت', destination: marsa_alam, stars: 4, description: 'منتجع بيئي هادئ مناسب للغوص ومشاهدة السلاحف. A quiet eco-resort in Marsa Alam for diving and turtle spotting.', facilities: 'شاطئ شعاب · مركز غوص · مطعم بحري', timezone: 'Africa/Cairo', photo: 'generate:Photograph of a quiet eco resort on the Red Sea coast at Marsa Alam, timber walkways over coral shore, desert mountains behind, clear water, photorealistic.' }
 
   - entity: room_type
-    fields: { name: 'غرفة مزدوجة بإطلالة على البحر', resort: '@gouna', resort_label: 'منتجع الجونة لاجون', view: sea, max_adults: 2, room_count: 10, nightly_bb: 2400, nightly_hb: 2900, nightly_ai: 3600, currency: EGP, popularity: 5, photo: 'generate:Photograph of a bright hotel room with a king bed, white linen and an open balcony door showing turquoise sea, elegant minimal decor, photorealistic.' }
+    fields: { name: 'غرفة مزدوجة بإطلالة على البحر', resort: '@gouna', resort_label: 'منتجع الجونة لاجون', view: sea, max_adults: 2, room_count: 10, nightly_bb: 2400, nightly_hb: 2900, nightly_ai: 3600, popularity: 5, photo: 'generate:Photograph of a bright hotel room with a king bed, white linen and an open balcony door showing turquoise sea, elegant minimal decor, photorealistic.' }
   - entity: room_type
-    fields: { name: 'سويت عائلي بإطلالة على البحيرة', resort: '@gouna', resort_label: 'منتجع الجونة لاجون', view: lagoon, max_adults: 4, room_count: 4, nightly_bb: 4200, nightly_hb: 4900, nightly_ai: 5800, currency: EGP, popularity: 4, photo: 'generate:Photograph of a spacious family hotel suite with a separate living area and a balcony overlooking a calm lagoon, warm daylight, photorealistic.' }
+    fields: { name: 'سويت عائلي بإطلالة على البحيرة', resort: '@gouna', resort_label: 'منتجع الجونة لاجون', view: lagoon, max_adults: 4, room_count: 4, nightly_bb: 4200, nightly_hb: 4900, nightly_ai: 5800, popularity: 4, photo: 'generate:Photograph of a spacious family hotel suite with a separate living area and a balcony overlooking a calm lagoon, warm daylight, photorealistic.' }
   - entity: room_type
-    fields: { name: 'غرفة مزدوجة بإطلالة على المسبح', resort: '@hurghada', resort_label: 'منتجع الغردقة ريف', view: pool, max_adults: 2, room_count: 14, nightly_bb: 1600, nightly_hb: 2000, nightly_ai: 2600, currency: EGP, popularity: 5, photo: 'generate:Photograph of a comfortable double hotel room with a balcony overlooking a resort swimming pool, palm trees, bright daylight, photorealistic.' }
+    fields: { name: 'غرفة مزدوجة بإطلالة على المسبح', resort: '@hurghada', resort_label: 'منتجع الغردقة ريف', view: pool, max_adults: 2, room_count: 14, nightly_bb: 1600, nightly_hb: 2000, nightly_ai: 2600, popularity: 5, photo: 'generate:Photograph of a comfortable double hotel room with a balcony overlooking a resort swimming pool, palm trees, bright daylight, photorealistic.' }
   - entity: room_type
-    fields: { name: 'شاليه حديقة', resort: '@marsa', resort_label: 'مرسى علم إكو ريزورت', view: garden, max_adults: 3, room_count: 6, nightly_bb: 1800, nightly_hb: 2200, nightly_ai: 2900, currency: EGP, popularity: 3, photo: 'generate:Photograph of a low stone eco-chalet with a shaded terrace and desert garden planting, Red Sea coast light, photorealistic.' }
+    fields: { name: 'شاليه حديقة', resort: '@marsa', resort_label: 'مرسى علم إكو ريزورت', view: garden, max_adults: 3, room_count: 6, nightly_bb: 1800, nightly_hb: 2200, nightly_ai: 2900, popularity: 3, photo: 'generate:Photograph of a low stone eco-chalet with a shaded terrace and desert garden planting, Red Sea coast light, photorealistic.' }

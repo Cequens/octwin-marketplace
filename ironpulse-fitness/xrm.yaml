@@ -11,6 +11,8 @@
 entities:
   session_type:
     label: { en: 'Class', ar: 'حصة' }
+    icon:        '🏋️'
+    description: { en: 'A class on the timetable and its capacity', ar: 'حصة ضمن الجدول وسعتها' }
     fields:
       code:        { type: text, required: true, label: { en: 'Code', ar: 'الرمز' } }
       name:        { type: text, required: true, label: { en: 'Name', ar: 'الاسم' } }
@@ -18,15 +20,17 @@ entities:
       description: { type: textarea, label: { en: 'Description', ar: 'الوصف' } }
       intensity:   { type: select, options: [beginner, intermediate, advanced], label: { en: 'Intensity', ar: 'المستوى' } }
       duration_min: { type: number, label: { en: 'Duration (min)', ar: 'المدة (دقيقة)' } }
-      seats:       { type: number, label: { en: 'Seats', ar: 'عدد المقاعد' }, default: 12, sortable: true }
+      seats:       { type: number, label: { en: 'Seats', ar: 'عدد المقاعد' }, default: 12, sortable: true, description: { en: 'Capacity per session. The scheduling engine stops booking once this many seats are taken.', ar: 'سعة الحصة. يتوقف محرك الحجز عند اكتمال هذا العدد.' } }
       photo:       { type: image, label: { en: 'Photo', ar: 'الصورة' } }
-      popularity:  { type: number, label: { en: 'Popularity', ar: 'الأكثر حضوراً' }, default: 0 }
+      popularity:  { type: number, label: { en: 'Popularity', ar: 'الأكثر حضوراً' }, default: 0, description: { en: 'Manual ordering weight for the class list — higher shows earlier.', ar: 'وزن ترتيب يدوي لقائمة الحصص — الأعلى يظهر أولاً.' } }
     list: [discipline, intensity, seats]
     search: { text: [name, description], semantic: [name, description], rank_by: popularity }
     dedupe_by: code
 
   trainer:
     label: { en: 'Trainer', ar: 'مدرب' }
+    icon:        '💪'
+    description: { en: 'A coach members book sessions with', ar: 'مدرب يحجز معه الأعضاء حصصهم' }
     fields:
       name:       { type: text, required: true, label: { en: 'Name', ar: 'الاسم' } }
       specialty:  { type: select, options: [spin, hiit, yoga, boxing, strength, pilates], label: { en: 'Specialty', ar: 'التخصص' } }
@@ -41,31 +45,43 @@ entities:
 
   plan:
     label: { en: 'Membership plan', ar: 'باقة عضوية' }
+    icon:        '🎟️'
+    description: { en: 'A membership term and what it includes', ar: 'مدة العضوية وما تشمله' }
     fields:
       code:      { type: text, required: true, label: { en: 'Code', ar: 'الرمز' } }
       name:      { type: text, required: true, label: { en: 'Name', ar: 'الاسم' } }
       months:    { type: number, label: { en: 'Months', ar: 'عدد الأشهر' }, sortable: true }
-      price:     { type: money, label: { en: 'Price', ar: 'السعر' }, sortable: true }
-      currency:  { type: text, label: { en: 'Currency', ar: 'العملة' }, default: 'AED' }
+      price:     { type: money, label: { en: 'Price', ar: 'السعر' }, sortable: true, currency: AED }
       includes:  { type: textarea, label: { en: 'Includes', ar: 'يشمل' } }
-      classes_included: { type: boolean, label: { en: 'Classes included', ar: 'يشمل الحصص' } }
+      classes_included: { type: boolean, label: { en: 'Classes included', ar: 'يشمل الحصص' }, description: { en: 'Whether the membership price covers classes, or they are paid per session on top.', ar: 'هل يشمل سعر العضوية الحصص أم تُدفع لكل حصة على حدة.' } }
     list: [months, price, classes_included]
     dedupe_by: code
 
   member_lead:
     label: { en: 'Membership enquiry', ar: 'استفسار عضوية' }
+    icon:        '🌟'
+    description: { en: 'An enquiry, from first trial through to membership', ar: 'استفسار من الحصة التجريبية حتى العضوية' }
     fields:
       full_name:  { type: text, label: { en: 'Name', ar: 'الاسم' } }
       goal:       { type: select, options: [weight_loss, muscle_gain, endurance, general_fitness, rehab], label: { en: 'Goal', ar: 'الهدف' } }
       plan:       { type: record, entity: plan, label: { en: 'Plan', ar: 'الباقة' } }
       plan_label: { type: text, label: { en: 'Plan', ar: 'الباقة' } }
-      experience: { type: select, options: [none, some, regular], label: { en: 'Experience', ar: 'الخبرة' } }
+      experience: { type: select, options: [none, some, regular], label: { en: 'Experience', ar: 'الخبرة' }, description: { en: 'Training background — sets which sessions and intensities the member is offered.', ar: 'الخلفية التدريبية — وتحدد الحصص ومستويات الشدة التي تُعرض على العضو.' } }
       notes:      { type: textarea, label: { en: 'Notes', ar: 'ملاحظات' } }
     list: [full_name, goal, plan_label]
     pipeline:
       stages:   [enquiry, trial_booked, trial_attended, member, lapsed]
       initial:  enquiry
       terminal: [member, lapsed]
+    # What each stage MEANS — rendered above the console pipeline control and on
+    # each move button. Kept in step with the `stage_hint.*` locale keys the flows
+    # resolve through `$enum_label(stage, "stage_hint")`.
+    stage_hints:
+      enquiry:        { en: 'Interested, no trial booked yet', ar: 'مهتم دون حجز حصة تجريبية' }
+      trial_booked:   { en: 'A trial session is scheduled', ar: 'حُجزت حصة تجريبية' }
+      trial_attended: { en: 'They came in; follow up on joining', ar: 'حضر التجريبية — تابع الاشتراك' }
+      member:         { en: 'Joined on a paid plan', ar: 'اشترك في باقة مدفوعة' }
+      lapsed:         { en: 'Membership ended and was not renewed', ar: 'انتهت العضوية ولم تُجدَّد' }
     # Display names for the stages above — entity level, NOT inside `pipeline:`,
     # so an `extends: system` entity can label stages it never declared. The console
     # badge/filter/pipeline/funnel read these; an unlabelled stage falls back to Title
@@ -119,10 +135,10 @@ demo:
     fields: { name: 'كوتش دانا', specialty: strength, bio: 'مدربة قوة ورفع أثقال، تعمل على تصحيح الأداء.', languages: 'العربية، الإنجليزية', timezone: 'Asia/Dubai', rating: 4.6, photo: 'generate:Professional portrait of a strong female strength coach in gym wear beside a squat rack, modern gym blurred behind, determined expression.' }
 
   - entity: plan
-    fields: { code: 'M1', name: 'شهر واحد', months: 1, price: 450, currency: AED, includes: 'دخول غير محدود للنادي · حصتان جماعيتان أسبوعياً · تقييم لياقة مبدئي.', classes_included: true }
+    fields: { code: 'M1', name: 'شهر واحد', months: 1, price: 450, includes: 'دخول غير محدود للنادي · حصتان جماعيتان أسبوعياً · تقييم لياقة مبدئي.', classes_included: true }
   - entity: plan
-    fields: { code: 'M3', name: 'ثلاثة أشهر', months: 3, price: 1150, currency: AED, includes: 'دخول غير محدود · حصص جماعية غير محدودة · تقييم لياقة شهري.', classes_included: true }
+    fields: { code: 'M3', name: 'ثلاثة أشهر', months: 3, price: 1150, includes: 'دخول غير محدود · حصص جماعية غير محدودة · تقييم لياقة شهري.', classes_included: true }
   - entity: plan
-    fields: { code: 'M12', name: 'سنة كاملة', months: 12, price: 3600, currency: AED, includes: 'دخول غير محدود · حصص غير محدودة · أربع جلسات تدريب شخصي · تجميد شهر.', classes_included: true }
+    fields: { code: 'M12', name: 'سنة كاملة', months: 12, price: 3600, includes: 'دخول غير محدود · حصص غير محدودة · أربع جلسات تدريب شخصي · تجميد شهر.', classes_included: true }
   - entity: plan
-    fields: { code: 'CLS10', name: 'بطاقة ١٠ حصص', months: 3, price: 600, currency: AED, includes: 'عشر حصص جماعية تُستخدم خلال ثلاثة أشهر — بدون دخول للنادي.', classes_included: true }
+    fields: { code: 'CLS10', name: 'بطاقة ١٠ حصص', months: 3, price: 600, includes: 'عشر حصص جماعية تُستخدم خلال ثلاثة أشهر — بدون دخول للنادي.', classes_included: true }

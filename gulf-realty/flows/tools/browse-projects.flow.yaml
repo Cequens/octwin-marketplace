@@ -71,7 +71,7 @@ steps:
           body: '$lines($compact([
                    $item.fields.name,
                    $item.fields.area != null ? ("📍 " + $item.fields.area + ($item.fields.handover != null ? (" · 🔑 " + $item.fields.handover) : "")) : null,
-                   $item.fields.from_price != null ? $t("browse-projects.from", { price: $format_money_field($item.fields.from_price, $coalesce($item.fields.currency, "AED")) }) : null
+                   $item.fields.from_price != null ? $t("browse-projects.from", { price: $format_money_field($item.fields.from_price, "AED") }) : null
                  ]), "\n")'
           buttons:
             - { title: '{$t("browse-projects.btn_detail")}',  on_select: { invoke: project-detail, with: { development_id: '$item.id' } } }

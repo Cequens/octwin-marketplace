@@ -9,18 +9,19 @@
 entities:
   plan:
     label: { en: 'Plan', ar: 'باقة تأمين' }
+    icon:        '🛡️'
+    description: { en: 'A motor cover level and how its premium is rated', ar: 'مستوى تغطية تأمين المركبة وطريقة تسعير قسطه' }
     fields:
       code:              { type: text, required: true, label: { en: 'Code', ar: 'الرمز' } }
       name:              { type: text, required: true, label: { en: 'Name', ar: 'الاسم' } }
       cover:             { type: select, options: [third_party, comprehensive, comprehensive_plus], label: { en: 'Cover', ar: 'نوع التغطية' } }
       description:       { type: textarea, label: { en: 'Description', ar: 'الوصف' } }
       # The published rating factors — the quote's only inputs.
-      base_rate_pct:     { type: number, label: { en: 'Base rate % of value', ar: 'النسبة الأساسية من قيمة المركبة %' }, sortable: true }
-      min_premium:       { type: money, label: { en: 'Minimum premium', ar: 'أدنى قسط' } }
+      base_rate_pct:     { type: number, label: { en: 'Base rate % of value', ar: 'النسبة الأساسية من قيمة المركبة %' }, sortable: true, description: { en: 'Premium as a percentage of the insured vehicle value, e.g. 2.75 for 2.75%. The quote multiplies this by the vehicle value.', ar: 'القسط كنسبة من قيمة المركبة المؤمَّنة، مثال 2.75 تعني ٢٫٧٥٪. ويضربها التسعير في قيمة المركبة.' } }
+      min_premium:       { type: money, label: { en: 'Minimum premium', ar: 'أدنى قسط' }, currency: AED, description: { en: 'Floor on the premium — charged when the rated amount falls below it.', ar: 'الحد الأدنى للقسط — يُطبَّق عندما يقل المبلغ المحتسب عنه.' } }
       young_driver_load_pct: { type: number, label: { en: 'Young-driver loading %', ar: 'تحميل السن الصغير %' } }
       agency_repair:     { type: boolean, label: { en: 'Agency repair', ar: 'إصلاح بالوكالة' } }
-      excess:            { type: money, label: { en: 'Excess', ar: 'مبلغ التحمّل' } }
-      currency:          { type: text, label: { en: 'Currency', ar: 'العملة' }, default: 'AED' }
+      excess:            { type: money, label: { en: 'Excess', ar: 'مبلغ التحمّل' }, currency: AED, description: { en: 'Deductible the customer pays on each claim before cover applies.', ar: 'مبلغ التحمّل الذي يدفعه العميل عن كل مطالبة قبل أن تبدأ التغطية.' } }
       benefits:          { type: text, label: { en: 'Benefits', ar: 'المزايا' } }
     list: [cover, base_rate_pct, agency_repair]
     search: { text: [name, benefits], semantic: [name, description] }
@@ -28,19 +29,29 @@ entities:
 
   quote_req:
     label: { en: 'Quote enquiry', ar: 'طلب تسعير' }
+    icon:        '🧾'
+    description: { en: 'A quote request, from enquiry to policy issue', ar: 'طلب تسعير من الاستفسار حتى إصدار الوثيقة' }
     fields:
       plan:          { type: record, entity: plan, label: { en: 'Plan', ar: 'الباقة' } }
       plan_label:    { type: text, label: { en: 'Plan', ar: 'الباقة' } }
-      vehicle_value: { type: money, label: { en: 'Vehicle value', ar: 'قيمة المركبة' }, sortable: true }
+      vehicle_value: { type: money, label: { en: 'Vehicle value', ar: 'قيمة المركبة' }, sortable: true, currency: AED, description: { en: 'Declared market value of the vehicle. The premium is rated as a percentage of this, so it drives the price.', ar: 'القيمة السوقية المعلنة للمركبة. ويُحتسب القسط كنسبة منها، فهي التي تحدد السعر.' } }
       driver_band:   { type: select, options: [under_25, from_25_to_40, over_40], label: { en: 'Driver age band', ar: 'فئة عمر السائق' } }
       no_claim_years: { type: number, label: { en: 'No-claim years', ar: 'سنوات بدون مطالبات' } }
-      indicative_premium: { type: money, label: { en: 'Indicative premium', ar: 'القسط التقديري' }, sortable: true }
-      currency:      { type: text, label: { en: 'Currency', ar: 'العملة' }, default: 'AED' }
+      indicative_premium: { type: money, label: { en: 'Indicative premium', ar: 'القسط التقديري' }, sortable: true, currency: AED, description: { en: 'Computed from the plan''s base rate and the vehicle value. Indicative — the insurer underwrites the final premium.', ar: 'محسوب من النسبة الأساسية للباقة وقيمة المركبة. تقديري — وشركة التأمين تحدد القسط النهائي.' } }
     list: [plan_label, vehicle_value, indicative_premium]
     pipeline:
       stages:   [enquiry, quoted, submitted, issued, lapsed]
       initial:  enquiry
       terminal: [issued, lapsed]
+    # What each stage MEANS — rendered above the console pipeline control and on
+    # each move button. Kept in step with the `stage_hint.*` locale keys the flows
+    # resolve through `$enum_label(stage, "stage_hint")`.
+    stage_hints:
+      enquiry:   { en: 'Vehicle details taken, not yet rated', ar: 'أُخذت بيانات المركبة ولم تُسعّر بعد' }
+      quoted:    { en: 'An indicative premium was given', ar: 'أُعطي قسط تقديري' }
+      submitted: { en: 'With the insurer for underwriting', ar: 'لدى شركة التأمين للاكتتاب' }
+      issued:    { en: 'Policy issued and in force', ar: 'صدرت الوثيقة وأصبحت سارية' }
+      lapsed:    { en: 'The quote expired without a policy', ar: 'انتهت صلاحية العرض دون إصدار' }
     # Display names for the stages above — entity level, NOT inside `pipeline:`,
     # so an `extends: system` entity can label stages it never declared. The console
     # badge/filter/pipeline/funnel read these; an unlabelled stage falls back to Title
@@ -58,6 +69,8 @@ entities:
 
   fnol:
     label: { en: 'Claim notification', ar: 'إشعار مطالبة' }
+    icon:        '⚠️'
+    description: { en: 'A first notification of loss, through assessment to closure', ar: 'بلاغ حادث أول عبر التقييم حتى الإغلاق' }
     fields:
       policy_number:  { type: text, label: { en: 'Policy number', ar: 'رقم الوثيقة' } }
       plate:          { type: text, label: { en: 'Plate', ar: 'رقم اللوحة' } }
@@ -69,7 +82,7 @@ entities:
       description:    { type: textarea, label: { en: 'What happened (customer''s words)', ar: 'وصف الحادث بكلمات العميل' } }
       police_report:  { type: text, label: { en: 'Police report number', ar: 'رقم تقرير الشرطة' } }
       damage_photo:   { type: image, label: { en: 'Damage photo', ar: 'صورة الأضرار' } }
-      injuries:       { type: boolean, label: { en: 'Injuries reported', ar: 'يوجد مصابون' } }
+      injuries:       { type: boolean, label: { en: 'Injuries reported', ar: 'يوجد مصابون' }, description: { en: 'Whether anyone was hurt. True escalates the claim out of the standard assessor queue.', ar: 'هل وقعت إصابات. القيمة true تُصعّد المطالبة خارج مسار المُقيِّم المعتاد.' } }
     list: [policy_number, incident_type, emirate]
     pipeline:
       # Stops at `assessor_review` — settlement and decline are assessor decisions on the
@@ -77,6 +90,14 @@ entities:
       stages:   [notified, documents_pending, assessor_review, closed]
       initial:  notified
       terminal: [closed]
+    # What each stage MEANS — rendered above the console pipeline control and on
+    # each move button. Kept in step with the `stage_hint.*` locale keys the flows
+    # resolve through `$enum_label(stage, "stage_hint")`.
+    stage_hints:
+      notified:          { en: 'Loss reported; nothing collected yet', ar: 'أُبلغ عن الحادث ولم تُجمع المستندات' }
+      documents_pending: { en: 'Waiting on photos and paperwork', ar: 'بانتظار الصور والأوراق' }
+      assessor_review:   { en: 'With the assessor for evaluation', ar: 'لدى المُقيِّم للتقييم' }
+      closed:            { en: 'Settled or declined; file closed', ar: 'تمت التسوية أو الرفض وأُغلق الملف' }
     # Display names for the stages above — entity level, NOT inside `pipeline:`,
     # so an `extends: system` entity can label stages it never declared. The console
     # badge/filter/pipeline/funnel read these; an unlabelled stage falls back to Title
@@ -99,10 +120,10 @@ segments:
 
 demo:
   - entity: plan
-    fields: { code: 'TPL-BASIC', name: 'تأمين ضد الغير', cover: third_party, description: 'يغطي الأضرار التي تسببها لمركبات وممتلكات الغير — لا يغطي مركبتك. Covers damage you cause to third parties; your own vehicle is not covered.', base_rate_pct: 0, min_premium: 780, young_driver_load_pct: 15, agency_repair: false, excess: 0, currency: AED, benefits: 'تغطية الغير · مساعدة على الطريق' }
+    fields: { code: 'TPL-BASIC', name: 'تأمين ضد الغير', cover: third_party, description: 'يغطي الأضرار التي تسببها لمركبات وممتلكات الغير — لا يغطي مركبتك. Covers damage you cause to third parties; your own vehicle is not covered.', base_rate_pct: 0, min_premium: 780, young_driver_load_pct: 15, agency_repair: false, excess: 0, benefits: 'تغطية الغير · مساعدة على الطريق' }
   - entity: plan
-    fields: { code: 'COMP-STD', name: 'تأمين شامل', cover: comprehensive, description: 'يغطي مركبتك والغير، مع ورش معتمدة ومساعدة على الطريق. Covers your vehicle and third parties, with approved workshops and roadside assistance.', base_rate_pct: 2.4, min_premium: 1450, young_driver_load_pct: 20, agency_repair: false, excess: 1000, currency: AED, benefits: 'ورش معتمدة · مساعدة على الطريق · سيارة بديلة ٥ أيام' }
+    fields: { code: 'COMP-STD', name: 'تأمين شامل', cover: comprehensive, description: 'يغطي مركبتك والغير، مع ورش معتمدة ومساعدة على الطريق. Covers your vehicle and third parties, with approved workshops and roadside assistance.', base_rate_pct: 2.4, min_premium: 1450, young_driver_load_pct: 20, agency_repair: false, excess: 1000, benefits: 'ورش معتمدة · مساعدة على الطريق · سيارة بديلة ٥ أيام' }
   - entity: plan
-    fields: { code: 'COMP-AGY', name: 'شامل — إصلاح بالوكالة', cover: comprehensive_plus, description: 'شامل مع إصلاح في وكالة المركبة وسيارة بديلة أطول. Comprehensive with agency repair and a longer courtesy car.', base_rate_pct: 3.2, min_premium: 2100, young_driver_load_pct: 25, agency_repair: true, excess: 1500, currency: AED, benefits: 'إصلاح بالوكالة · سيارة بديلة ١٠ أيام · تغطية عُمان' }
+    fields: { code: 'COMP-AGY', name: 'شامل — إصلاح بالوكالة', cover: comprehensive_plus, description: 'شامل مع إصلاح في وكالة المركبة وسيارة بديلة أطول. Comprehensive with agency repair and a longer courtesy car.', base_rate_pct: 3.2, min_premium: 2100, young_driver_load_pct: 25, agency_repair: true, excess: 1500, benefits: 'إصلاح بالوكالة · سيارة بديلة ١٠ أيام · تغطية عُمان' }
   - entity: plan
-    fields: { code: 'COMP-EV', name: 'شامل للمركبات الكهربائية', cover: comprehensive_plus, description: 'شامل مخصص للمركبات الكهربائية مع تغطية البطارية والشاحن المنزلي. Comprehensive for EVs, including battery and home-charger cover.', base_rate_pct: 2.9, min_premium: 1900, young_driver_load_pct: 20, agency_repair: true, excess: 1200, currency: AED, benefits: 'تغطية البطارية · الشاحن المنزلي · سحب للشاحن الأقرب' }
+    fields: { code: 'COMP-EV', name: 'شامل للمركبات الكهربائية', cover: comprehensive_plus, description: 'شامل مخصص للمركبات الكهربائية مع تغطية البطارية والشاحن المنزلي. Comprehensive for EVs, including battery and home-charger cover.', base_rate_pct: 2.9, min_premium: 1900, young_driver_load_pct: 20, agency_repair: true, excess: 1200, benefits: 'تغطية البطارية · الشاحن المنزلي · سحب للشاحن الأقرب' }

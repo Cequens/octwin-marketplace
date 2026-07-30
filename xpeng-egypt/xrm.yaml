@@ -14,6 +14,8 @@ entities:
   # ─────────────────────────────────────────── the lineup ──
   model:
     label: { en: 'Model', ar: 'موديل' }
+    icon:        '🚘'
+    description: { en: 'A model in the line-up, its body type and range', ar: 'طراز ضمن التشكيلة ونوع هيكله ومداه' }
     fields:
       name:        { type: text, required: true, localized: true }
       code:        { type: text, required: true, unique: true }
@@ -40,6 +42,8 @@ entities:
   # ─────────────────────────────────────── the showrooms ──
   branch:
     label: { en: 'Showroom', ar: 'معرض' }
+    icon:        '📍'
+    description: { en: 'A showroom customers can test drive at', ar: 'معرض يمكن للعملاء تجربة القيادة فيه' }
     fields:
       name:    { type: text, required: true, localized: true }
       code:    { type: text, required: true, unique: true }
@@ -56,6 +60,8 @@ entities:
   # ─────────────────────────────────────────── sales leads ──
   lead:
     label: { en: 'Sales lead', ar: 'عميل محتمل' }
+    icon:        '🌟'
+    description: { en: 'A sales enquiry, from first contact to close', ar: 'استفسار مبيعات من أول تواصل حتى الإغلاق' }
     fields:
       name:  { type: text, required: true }
       phone: { type: text, required: true }
@@ -92,6 +98,15 @@ entities:
       stages:   [new, contacted, qualified, won, lost]
       initial:  new
       terminal: [won, lost]
+    # What each stage MEANS — rendered above the console pipeline control and on
+    # each move button. Kept in step with the `stage_hint.*` locale keys the flows
+    # resolve through `$enum_label(stage, "stage_hint")`.
+    stage_hints:
+      new:       { en: 'Enquiry received, no contact made yet', ar: 'وصل الاستفسار دون تواصل بعد' }
+      contacted: { en: 'Reached out; awaiting a reply', ar: 'تم التواصل وبانتظار الرد' }
+      qualified: { en: 'Genuine intent and budget confirmed', ar: 'تأكدت الجدية والميزانية' }
+      won:       { en: 'Sale closed', ar: 'تم إتمام البيع' }
+      lost:      { en: 'Closed without a sale', ar: 'أُغلق دون بيع' }
     # Display names for the stages above — entity level, NOT inside `pipeline:`,
     # so an `extends: system` entity can label stages it never declared. The console
     # badge/filter/pipeline/funnel read these; an unlabelled stage falls back to Title

@@ -10,6 +10,8 @@
 entities:
   development:
     label: { en: 'Development', ar: 'مشروع' }
+    icon:        '🏘️'
+    description: { en: 'A project being sold, its developer and starting price', ar: 'مشروع معروض للبيع ومطوّره وسعر البداية' }
     fields:
       name:          { type: text, required: true, label: { en: 'Name', ar: 'الاسم' } }
       developer:     { type: text, label: { en: 'Developer', ar: 'المطوّر' } }
@@ -17,24 +19,24 @@ entities:
       area:          { type: text, label: { en: 'Area', ar: 'المنطقة' } }
       handover:      { type: text, label: { en: 'Handover', ar: 'التسليم' } }
       payment_plan:  { type: text, label: { en: 'Payment plan', ar: 'خطة السداد' } }
-      from_price:    { type: money, label: { en: 'Starting price', ar: 'يبدأ من' }, sortable: true }
-      currency:      { type: text, label: { en: 'Currency', ar: 'العملة' }, default: 'AED' }
+      from_price:    { type: money, label: { en: 'Starting price', ar: 'يبدأ من' }, sortable: true, currency: AED }
       highlights:    { type: textarea, label: { en: 'Highlights', ar: 'أبرز الميزات' } }
       hero:          { type: image, label: { en: 'Hero image', ar: 'الصورة' } }
-      rating:        { type: number, label: { en: 'Demand score', ar: 'مؤشر الطلب' }, default: 0 }
+      rating:        { type: number, label: { en: 'Demand score', ar: 'مؤشر الطلب' }, default: 0, description: { en: 'Internal demand score used to order the project list. Not a customer-visible rating.', ar: 'مؤشر طلب داخلي يُرتَّب به عرض المشاريع. ليس تقييماً يراه العميل.' } }
     list: [developer, city, from_price]
     search: { text: [name, area, developer], rank_by: rating }
     dedupe_by: name
 
   unit_type:
     label: { en: 'Unit type', ar: 'نوع الوحدة' }
+    icon:        '🏠'
+    description: { en: 'A floor plan within a development, priced per unit', ar: 'نموذج وحدة داخل المشروع بسعره' }
     fields:
       name:        { type: text, required: true, label: { en: 'Name', ar: 'الاسم' } }
       development: { type: record, entity: development, label: { en: 'Development', ar: 'المشروع' } }
       bedrooms:    { type: number, label: { en: 'Bedrooms', ar: 'غرف النوم' }, sortable: true }
       area_sqft:   { type: number, label: { en: 'Area (sqft)', ar: 'المساحة (قدم²)' } }
-      price:       { type: money, label: { en: 'Price', ar: 'السعر' }, sortable: true }
-      currency:    { type: text, label: { en: 'Currency', ar: 'العملة' }, default: 'AED' }
+      price:       { type: money, label: { en: 'Price', ar: 'السعر' }, sortable: true, currency: AED }
       view:        { type: text, label: { en: 'View', ar: 'الإطلالة' } }
       photo:       { type: image, label: { en: 'Photo', ar: 'الصورة' } }
     list: [development, bedrooms, price]
@@ -43,6 +45,8 @@ entities:
 
   advisor:
     label: { en: 'Advisor', ar: 'مستشار عقاري' }
+    icon:        '🤝'
+    description: { en: 'A sales advisor assigned to buyers', ar: 'مستشار مبيعات مسند إلى المشترين' }
     fields:
       name:      { type: text, required: true, label: { en: 'Name', ar: 'الاسم' } }
       title:     { type: text, label: { en: 'Title', ar: 'المسمى' } }
@@ -59,21 +63,33 @@ entities:
   # console + `octwin analytics buyer_lead` chart conversion between stages.
   buyer_lead:
     label: { en: 'Buyer lead', ar: 'عميل محتمل' }
+    icon:        '📄'
+    description: { en: 'A buyer enquiry, from first contact to reservation', ar: 'استفسار مشترٍ من أول تواصل حتى الحجز' }
     fields:
       full_name:      { type: text, label: { en: 'Name', ar: 'الاسم' } }
-      budget:         { type: money, label: { en: 'Budget', ar: 'الميزانية' }, sortable: true }
+      budget:         { type: money, label: { en: 'Budget', ar: 'الميزانية' }, sortable: true, currency: AED }
       bedrooms:       { type: number, label: { en: 'Bedrooms', ar: 'غرف النوم' } }
       city:           { type: select, options: [dubai, abu_dhabi, riyadh, jeddah, sharjah, cairo], label: { en: 'City', ar: 'المدينة' } }
       purpose:        { type: select, options: [end_use, investment], label: { en: 'Purpose', ar: 'الغرض' } }
-      finance:        { type: select, options: [cash, mortgage], label: { en: 'Finance', ar: 'التمويل' } }
+      finance:        { type: select, options: [cash, mortgage], label: { en: 'Finance', ar: 'التمويل' }, description: { en: 'How the buyer intends to pay. Cash buyers are routed to a different advisor track than mortgage buyers.', ar: 'طريقة الشراء المزمعة. ويُوجَّه المشتري نقداً إلى مسار مستشار مختلف عن مشتري التمويل.' } }
       development:    { type: record, entity: development, label: { en: 'Interested in', ar: 'المشروع' } }
-      monthly_income: { type: number, label: { en: 'Monthly income', ar: 'الدخل الشهري' } }
+      monthly_income: { type: number, label: { en: 'Monthly income', ar: 'الدخل الشهري' }, description: { en: 'Used only for the indicative mortgage estimate — not an eligibility decision.', ar: 'يُستخدم فقط لتقدير التمويل الاسترشادي — وليس قراراً بالأهلية.' } }
       notes:          { type: textarea, label: { en: 'Notes', ar: 'ملاحظات' } }
     list: [full_name, city, budget, finance]
     pipeline:
       stages:   [new, qualified, viewing_booked, offer_made, reserved, lost]
       initial:  new
       terminal: [reserved, lost]
+    # What each stage MEANS — rendered above the console pipeline control and on
+    # each move button. Kept in step with the `stage_hint.*` locale keys the flows
+    # resolve through `$enum_label(stage, "stage_hint")`.
+    stage_hints:
+      new:            { en: 'Enquiry received, not yet qualified', ar: 'وصل الاستفسار ولم يؤهَّل بعد' }
+      qualified:      { en: 'Budget and requirement confirmed', ar: 'تم تأكيد الميزانية والمتطلبات' }
+      viewing_booked: { en: 'A viewing is scheduled with an advisor', ar: 'حُجزت معاينة مع مستشار' }
+      offer_made:     { en: 'An offer is with the buyer', ar: 'العرض لدى المشتري' }
+      reserved:       { en: 'Unit reserved — deposit taken', ar: 'حُجزت الوحدة وتم دفع العربون' }
+      lost:           { en: 'Closed without a reservation', ar: 'أُغلق دون حجز' }
     # Display names for the stages above — entity level, NOT inside `pipeline:`,
     # so an `extends: system` entity can label stages it never declared. The console
     # badge/filter/pipeline/funnel read these; an unlabelled stage falls back to Title
@@ -121,7 +137,6 @@ demo:
       handover: 'Q4 2027'
       payment_plan: '20% down · 50% during construction · 30% on handover'
       from_price: 1850000
-      currency: AED
       highlights: 'إطلالة كاملة على المارينا · مسبح لا نهائي · صالة رياضية · قريب من المترو'
       rating: 4.8
       hero: 'generate:Architectural render of a luxury waterfront residential tower in Dubai Marina at golden hour, yachts in the foreground, glass facade, photorealistic, wide angle.'
@@ -135,7 +150,6 @@ demo:
       handover: 'Q2 2026'
       payment_plan: '10% down · 60% during construction · 30% on handover'
       from_price: 4200000
-      currency: AED
       highlights: 'فلل على البحيرة · شاطئ خاص · حدائق واسعة · مدارس عالمية قريبة'
       rating: 4.6
       hero: 'generate:Architectural render of modern beachfront villas on Saadiyat Island Abu Dhabi, turquoise lagoon, palm trees, minimal white architecture, photorealistic, daylight.'
@@ -149,7 +163,6 @@ demo:
       handover: 'Q1 2027'
       payment_plan: '5% down · مدعوم بالتمويل العقاري السكني'
       from_price: 1450000
-      currency: SAR
       highlights: 'مجتمع متكامل · مساجد ومدارس · ممشى ٤ كم · تصميم نجدي معاصر'
       rating: 4.7
       hero: 'generate:Architectural render of a contemporary Najdi-style residential community in Riyadh, sandstone facades, landscaped walkway, families strolling, warm daylight, photorealistic.'
@@ -163,21 +176,20 @@ demo:
       handover: 'Q3 2026'
       payment_plan: '10% down · 40% during construction · 50% on handover'
       from_price: 1980000
-      currency: SAR
       highlights: 'واجهة بحرية · مرسى قوارب · أبراج سكنية بإطلالة على البحر الأحمر'
       rating: 4.4
       hero: 'generate:Architectural render of a Red Sea waterfront residential development in Jeddah, marina with small boats, low-rise apartments, sunset light, photorealistic.'
 
   - entity: unit_type
-    fields: { name: '1BR Marina View', development: '@marina', bedrooms: 1, area_sqft: 780, price: 1850000, currency: AED, view: 'إطلالة على المارينا' }
+    fields: { name: '1BR Marina View', development: '@marina', bedrooms: 1, area_sqft: 780, price: 1850000, view: 'إطلالة على المارينا' }
   - entity: unit_type
-    fields: { name: '2BR Marina Corner', development: '@marina', bedrooms: 2, area_sqft: 1240, price: 2790000, currency: AED, view: 'إطلالة زاوية على المارينا والبحر' }
+    fields: { name: '2BR Marina Corner', development: '@marina', bedrooms: 2, area_sqft: 1240, price: 2790000, view: 'إطلالة زاوية على المارينا والبحر' }
   - entity: unit_type
-    fields: { name: '4BR Lagoon Villa', development: '@saadiyat', bedrooms: 4, area_sqft: 4100, price: 4200000, currency: AED, view: 'إطلالة على البحيرة' }
+    fields: { name: '4BR Lagoon Villa', development: '@saadiyat', bedrooms: 4, area_sqft: 4100, price: 4200000, view: 'إطلالة على البحيرة' }
   - entity: unit_type
-    fields: { name: '3BR Townhouse', development: '@sedra', bedrooms: 3, area_sqft: 2150, price: 1450000, currency: SAR, view: 'حديقة خاصة' }
+    fields: { name: '3BR Townhouse', development: '@sedra', bedrooms: 3, area_sqft: 2150, price: 1450000, view: 'حديقة خاصة' }
   - entity: unit_type
-    fields: { name: '2BR Sea View', development: '@jeddah_bay', bedrooms: 2, area_sqft: 1320, price: 1980000, currency: SAR, view: 'إطلالة على البحر الأحمر' }
+    fields: { name: '2BR Sea View', development: '@jeddah_bay', bedrooms: 2, area_sqft: 1320, price: 1980000, view: 'إطلالة على البحر الأحمر' }
 
   - entity: advisor
     fields:

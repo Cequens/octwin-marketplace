@@ -72,7 +72,7 @@ steps:
               map:
                 value:       '$item.id'
                 label:       '$item.fields.name'
-                description: '$format_money_field($item.fields.annual_fee, $coalesce($item.fields.currency, "EGP"))'
+                description: '$format_money_field($item.fields.annual_fee, "EGP")'
                 selection:   { prog_label: '$item.fields.name' }
               auto_resolve: true
           - field: student_name

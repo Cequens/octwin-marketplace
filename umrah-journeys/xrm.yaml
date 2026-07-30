@@ -12,6 +12,8 @@
 entities:
   package:
     label: { en: 'Package', ar: 'باقة' }
+    icon:        '🕋'
+    description: { en: 'An Umrah package, its nights and price per person', ar: 'باقة عمرة وعدد لياليها وسعر الفرد' }
     fields:
       code:          { type: text, required: true, label: { en: 'Code', ar: 'الرمز' } }
       name:          { type: text, required: true, label: { en: 'Name', ar: 'الاسم' } }
@@ -22,16 +24,17 @@ entities:
       distance_haram: { type: text, label: { en: 'Distance to Haram', ar: 'المسافة من الحرم' } }
       transport:     { type: text, label: { en: 'Transport', ar: 'المواصلات' } }
       includes:      { type: textarea, label: { en: 'Includes', ar: 'يشمل' } }
-      price_pp:      { type: money, label: { en: 'Price per person', ar: 'السعر للفرد' }, sortable: true }
-      currency:      { type: text, label: { en: 'Currency', ar: 'العملة' }, default: 'SAR' }
+      price_pp:      { type: money, label: { en: 'Price per person', ar: 'السعر للفرد' }, sortable: true, currency: SAR }
       hero:          { type: image, label: { en: 'Photo', ar: 'الصورة' } }
-      rating:        { type: number, label: { en: 'Popularity', ar: 'الأكثر طلباً' }, default: 0 }
+      rating:        { type: number, label: { en: 'Popularity', ar: 'الأكثر طلباً' }, default: 0, description: { en: 'Manual ordering weight for the package list — higher shows earlier.', ar: 'وزن ترتيب يدوي لقائمة الباقات — الأعلى يظهر أولاً.' } }
     list: [kind, nights, price_pp]
     search: { text: [name, makkah_hotel, madinah_hotel], semantic: [name, includes], rank_by: rating }
     dedupe_by: code
 
   pilgrim:
     label: { en: 'Pilgrim', ar: 'معتمر' }
+    icon:        '🧕'
+    description: { en: 'A traveller passport and nationality held for visa filing', ar: 'بيانات جواز المعتمر وجنسيته لتقديم التأشيرة' }
     fields:
       full_name:       { type: text, required: true, label: { en: 'Name', ar: 'الاسم' } }
       passport_number: { type: text, label: { en: 'Passport', ar: 'رقم الجواز' } }
@@ -43,23 +46,35 @@ entities:
 
   trip:
     label: { en: 'Trip', ar: 'رحلة' }
+    icon:        '✈️'
+    description: { en: 'A booked journey, from reservation through visa to travel', ar: 'رحلة محجوزة من الحجز والتأشيرة حتى السفر' }
     fields:
       package:        { type: record, entity: package, label: { en: 'Package', ar: 'الباقة' } }
       package_label:  { type: text, label: { en: 'Package', ar: 'الباقة' } }
       package_code:   { type: text, label: { en: 'Package code', ar: 'رمز الباقة' } }
       lead_name:      { type: text, label: { en: 'Lead traveller', ar: 'المسؤول عن الحجز' } }
-      travellers:     { type: number, label: { en: 'Travellers', ar: 'عدد المسافرين' }, sortable: true }
+      travellers:     { type: number, label: { en: 'Travellers', ar: 'عدد المسافرين' }, sortable: true, description: { en: 'Number of people on the booking. Multiplies the per-person package price into the total.', ar: 'عدد المسافرين في الحجز. ويُضرب في سعر الفرد للوصول إلى الإجمالي.' } }
       departure_city: { type: select, options: [riyadh, jeddah, cairo, dubai, casablanca, jakarta], label: { en: 'Departure city', ar: 'مدينة المغادرة' } }
       travel_month:   { type: select, options: [rajab, shaaban, ramadan, shawwal, dhul_qadah, dhul_hijjah], label: { en: 'Month', ar: 'الشهر' } }
       room_type:      { type: select, options: [double, triple, quad], label: { en: 'Room', ar: 'نوع الغرفة' } }
-      total_price:    { type: money, label: { en: 'Total', ar: 'الإجمالي' }, sortable: true }
-      currency:       { type: text, label: { en: 'Currency', ar: 'العملة' }, default: 'SAR' }
+      total_price:    { type: money, label: { en: 'Total', ar: 'الإجمالي' }, sortable: true, currency: SAR }
       notes:          { type: textarea, label: { en: 'Notes', ar: 'ملاحظات' } }
     list: [package_label, travellers, travel_month, total_price]
     pipeline:
       stages:   [enquiry, reserved, docs_pending, visa_issued, ticketed, travelled, cancelled]
       initial:  enquiry
       terminal: [travelled, cancelled]
+    # What each stage MEANS — rendered above the console pipeline control and on
+    # each move button. Kept in step with the `stage_hint.*` locale keys the flows
+    # resolve through `$enum_label(stage, "stage_hint")`.
+    stage_hints:
+      enquiry:      { en: 'Interested; nothing reserved yet', ar: 'ℹ️ لسه ما ثبّتنا الحجز — قول لي الباقة وأكمل معك.' }
+      reserved:     { en: 'Seats held on the package', ar: 'ℹ️ الحجز مثبّت. الخطوة القادمة: رفع صور الجوازات.' }
+      docs_pending: { en: 'Waiting on passports and paperwork', ar: 'ℹ️ ناقص مستندات — ارفع الجوازات حتى نبدأ إجراءات التأشيرة.' }
+      visa_issued:  { en: 'The visa has come through', ar: 'ℹ️ التأشيرة صدرت 🎉 نجهّز التذاكر وبنرسل لك التفاصيل.' }
+      ticketed:     { en: 'Flights issued and confirmed', ar: 'ℹ️ التذاكر صدرت — بنرسل لك جدول الرحلة وتفاصيل التجمّع.' }
+      travelled:    { en: 'The journey is complete', ar: 'ℹ️ تقبّل الله طاعتكم 🌙' }
+      cancelled:    { en: 'Cancelled before travel', ar: 'ℹ️ هذا الحجز ملغى. تحت أمرك لو أردت حجزاً جديداً.' }
     # Display names for the stages above — entity level, NOT inside `pipeline:`,
     # so an `extends: system` entity can label stages it never declared. The console
     # badge/filter/pipeline/funnel read these; an unlabelled stage falls back to Title
@@ -97,7 +112,6 @@ demo:
       transport: 'باص مكيّف بين مكة والمدينة والمطار'
       includes: 'إقامة ٧ ليالٍ · إفطار يومي · تنقلات · مرشد ديني · تأشيرة عمرة. Seven nights, daily breakfast, all transfers, a religious guide and the Umrah visa.'
       price_pp: 2450
-      currency: SAR
       rating: 4.5
       hero: 'generate:Photograph of a modern hotel building in Makkah at dusk with the Abraj Al Bait clock tower visible in the background, warm evening light, pilgrims walking on a clean plaza, photorealistic.'
   - entity: package
@@ -112,7 +126,6 @@ demo:
       transport: 'سيارات خاصة (GMC) لكل التنقلات'
       includes: 'إقامة ١٠ ليالٍ بإطلالة على الحرم · إفطار وعشاء · تنقلات خاصة · مرشد · تأشيرة. Ten nights with a Haram view, half board, private transfers, a guide and the visa.'
       price_pp: 7900
-      currency: SAR
       rating: 4.9
       hero: 'generate:Photograph from a luxury hotel room balcony overlooking the Grand Mosque in Makkah at blue hour, marble interior in the foreground, warm lamps, photorealistic, serene.'
   - entity: package
@@ -127,7 +140,6 @@ demo:
       transport: 'باص فاخر + تنقلات ليلية للحرم'
       includes: 'إقامة ١٥ ليلة تشمل العشر الأواخر · سحور وإفطار · تنقلات ليلية · برنامج ديني. Fifteen nights covering the last ten days of Ramadan, suhoor and iftar, night transfers and a religious programme.'
       price_pp: 11500
-      currency: SAR
       rating: 4.8
       hero: 'generate:Photograph of the Grand Mosque courtyard in Makkah during Ramadan night, thousands of pilgrims praying under warm floodlights, long exposure, reverent atmosphere, photorealistic.'
   - entity: package
@@ -142,6 +154,5 @@ demo:
       transport: 'باصات المشاعر + نقل داخلي'
       includes: 'مخيم مكيّف بمنى وعرفات · إعاشة كاملة · مرشد لكل ٤٠ حاجاً · تصريح الحج. Air-conditioned camps at Mina and Arafat, full board, one guide per forty pilgrims and the Hajj permit.'
       price_pp: 24500
-      currency: SAR
       rating: 4.6
       hero: 'generate:Photograph of orderly white air-conditioned pilgrim tents in the valley of Mina during Hajj, bright daylight, mountains behind, documentary style, photorealistic.'

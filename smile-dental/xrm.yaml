@@ -11,14 +11,15 @@
 entities:
   treatment:
     label: { en: 'Treatment', ar: 'إجراء' }
+    icon:        '🦷'
+    description: { en: 'A dental treatment, its duration and starting price', ar: 'علاج أسنان ومدته وسعره المبدئي' }
     fields:
       code:        { type: text, required: true, label: { en: 'Code', ar: 'الرمز' } }
       name:        { type: text, required: true, label: { en: 'Name', ar: 'الاسم' } }
       category:    { type: select, options: [preventive, restorative, cosmetic, orthodontic, surgical], label: { en: 'Category', ar: 'التصنيف' } }
       description: { type: textarea, label: { en: 'Description', ar: 'الوصف' } }
       duration_min: { type: number, label: { en: 'Duration (min)', ar: 'المدة (دقيقة)' }, sortable: true }
-      price_from:  { type: money, label: { en: 'From', ar: 'يبدأ من' }, sortable: true }
-      currency:    { type: text, label: { en: 'Currency', ar: 'العملة' }, default: 'AED' }
+      price_from:  { type: money, label: { en: 'From', ar: 'يبدأ من' }, sortable: true, currency: AED }
       insured:     { type: boolean, label: { en: 'Usually covered', ar: 'يغطيه التأمين عادةً' } }
     list: [category, duration_min, price_from]
     search: { text: [name, description], semantic: [name, description] }
@@ -26,6 +27,8 @@ entities:
 
   dentist:
     label: { en: 'Dentist', ar: 'طبيب أسنان' }
+    icon:        '👨‍⚕️'
+    description: { en: 'A dentist patients book with, ranked by rating', ar: 'طبيب أسنان يحجز معه المرضى ومرتب بتقييمه' }
     fields:
       name:         { type: text, required: true, label: { en: 'Name', ar: 'الاسم' } }
       title:        { type: text, label: { en: 'Title', ar: 'اللقب' } }
@@ -35,8 +38,8 @@ entities:
       photo:        { type: image, label: { en: 'Photo', ar: 'الصورة' } }
       timezone:     { type: text, label: { en: 'Timezone', ar: 'المنطقة الزمنية' }, default: 'Asia/Dubai' }
       # Written back by the survey rollup — never typed by hand.
-      rating:       { type: number, label: { en: 'Rating', ar: 'التقييم' }, default: 0, sortable: true }
-      rating_count: { type: number, label: { en: 'Ratings', ar: 'عدد التقييمات' }, default: 0 }
+      rating:       { type: number, label: { en: 'Rating', ar: 'التقييم' }, default: 0, sortable: true, description: { en: 'Computed from patient survey responses — it ranks the dentist picker.', ar: 'محسوب من تقييمات المرضى — وهو ما يرتب قائمة الأطباء.' } }
+      rating_count: { type: number, label: { en: 'Ratings', ar: 'عدد التقييمات' }, default: 0, description: { en: 'How many responses the rating averages.', ar: 'عدد التقييمات التي بُني عليها المتوسط.' } }
     list: [title, specialty, rating]
     search: { text: [name, languages], rank_by: rating }
     dedupe_by: name
@@ -71,17 +74,17 @@ segments:
 
 demo:
   - entity: treatment
-    fields: { code: 'CLEAN', name: 'تنظيف وتلميع الأسنان', category: preventive, description: 'إزالة الجير والتصبغات مع تلميع — جلسة واحدة. Scale and polish in a single visit.', duration_min: 30, price_from: 350, currency: AED, insured: true }
+    fields: { code: 'CLEAN', name: 'تنظيف وتلميع الأسنان', category: preventive, description: 'إزالة الجير والتصبغات مع تلميع — جلسة واحدة. Scale and polish in a single visit.', duration_min: 30, price_from: 350, insured: true }
   - entity: treatment
-    fields: { code: 'FILL', name: 'حشو تجميلي (كومبوزيت)', category: restorative, description: 'حشو أبيض بلون السن لعلاج التسوس. Tooth-coloured composite filling.', duration_min: 45, price_from: 450, currency: AED, insured: true }
+    fields: { code: 'FILL', name: 'حشو تجميلي (كومبوزيت)', category: restorative, description: 'حشو أبيض بلون السن لعلاج التسوس. Tooth-coloured composite filling.', duration_min: 45, price_from: 450, insured: true }
   - entity: treatment
-    fields: { code: 'ROOT', name: 'علاج جذور (عصب)', category: restorative, description: 'علاج قناة الجذر على جلستين مع حشو نهائي. Root-canal treatment over two sessions.', duration_min: 60, price_from: 1600, currency: AED, insured: true }
+    fields: { code: 'ROOT', name: 'علاج جذور (عصب)', category: restorative, description: 'علاج قناة الجذر على جلستين مع حشو نهائي. Root-canal treatment over two sessions.', duration_min: 60, price_from: 1600, insured: true }
   - entity: treatment
-    fields: { code: 'WHITE', name: 'تبييض بالليزر', category: cosmetic, description: 'تبييض في العيادة بجلسة واحدة، نتيجة فورية. In-clinic laser whitening, one session.', duration_min: 60, price_from: 1800, currency: AED, insured: false }
+    fields: { code: 'WHITE', name: 'تبييض بالليزر', category: cosmetic, description: 'تبييض في العيادة بجلسة واحدة، نتيجة فورية. In-clinic laser whitening, one session.', duration_min: 60, price_from: 1800, insured: false }
   - entity: treatment
-    fields: { code: 'ALIGN', name: 'تقويم شفاف (Aligners)', category: orthodontic, description: 'خطة تقويم شفاف مع متابعة شهرية — تبدأ بجلسة تقييم وأشعة. Clear-aligner plan with monthly review; starts with an assessment.', duration_min: 45, price_from: 12000, currency: AED, insured: false }
+    fields: { code: 'ALIGN', name: 'تقويم شفاف (Aligners)', category: orthodontic, description: 'خطة تقويم شفاف مع متابعة شهرية — تبدأ بجلسة تقييم وأشعة. Clear-aligner plan with monthly review; starts with an assessment.', duration_min: 45, price_from: 12000, insured: false }
   - entity: treatment
-    fields: { code: 'IMPL', name: 'زراعة سن', category: surgical, description: 'زراعة بعنوان تيتانيوم مع تاج خلال ثلاثة أشهر. Titanium implant with a crown over three months.', duration_min: 90, price_from: 6500, currency: AED, insured: false }
+    fields: { code: 'IMPL', name: 'زراعة سن', category: surgical, description: 'زراعة بعنوان تيتانيوم مع تاج خلال ثلاثة أشهر. Titanium implant with a crown over three months.', duration_min: 90, price_from: 6500, insured: false }
 
   - entity: dentist
     fields:

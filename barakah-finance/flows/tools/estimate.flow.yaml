@@ -144,7 +144,6 @@ steps:
           down_payment:          '$down_amt'
           term_years:            '$state.years'
           indicative_instalment: '$monthly'
-          currency:              SAR
       bind: app
       outputs:
         ok:      [{ goto: show }]

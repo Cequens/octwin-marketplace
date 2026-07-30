@@ -28,7 +28,7 @@ steps:
         failed:    [{ goto: missing }]
 
   show:
-    - assign: { cur: '$coalesce($item.fields.currency, "SAR")' }
+    - assign: { cur: '"SAR"' }
     - render:
         render_intent: detail_card
         header: '{$item.fields.name}'

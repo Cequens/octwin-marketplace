@@ -12,21 +12,24 @@
 entities:
   trade_service:
     label: { en: 'Service', ar: 'خدمة' }
+    icon:        '🛠️'
+    description: { en: 'A trade the company sends technicians for', ar: 'تخصص فني ترسل له الشركة فنيين' }
     fields:
       code:        { type: text, required: true, label: { en: 'Code', ar: 'الرمز' } }
       name:        { type: text, required: true, label: { en: 'Name', ar: 'الاسم' } }
       trade:       { type: select, options: [plumbing, electrical, ac, carpentry, painting, appliance, other], label: { en: 'Trade', ar: 'التخصص' } }
       description: { type: textarea, label: { en: 'Description', ar: 'الوصف' } }
-      price_from:  { type: money, label: { en: 'From', ar: 'يبدأ من' }, sortable: true }
-      currency:    { type: text, label: { en: 'Currency', ar: 'العملة' }, default: 'AED' }
+      price_from:  { type: money, label: { en: 'From', ar: 'يبدأ من' }, sortable: true, currency: AED }
       photo:       { type: image, label: { en: 'Photo', ar: 'الصورة' } }
-      popularity:  { type: number, label: { en: 'Popularity', ar: 'الأكثر طلباً' }, default: 0 }
+      popularity:  { type: number, label: { en: 'Popularity', ar: 'الأكثر طلباً' }, default: 0, description: { en: 'Manual ordering weight for the services list — higher shows earlier.', ar: 'وزن ترتيب يدوي لقائمة الخدمات — الأعلى يظهر أولاً.' } }
     list: [trade, price_from]
     search: { text: [name, description], semantic: [name, description], rank_by: popularity }
     dedupe_by: code
 
   property:
     label: { en: 'Property', ar: 'العقار' }
+    icon:        '🏢'
+    description: { en: 'A customer address work is carried out at', ar: 'عنوان العميل الذي تُنفَّذ فيه الأعمال' }
     fields:
       label:        { type: text, required: true, label: { en: 'Label', ar: 'الاسم' } }
       emirate:      { type: select, options: [dubai, sharjah, abu_dhabi, ajman, rak], label: { en: 'Emirate', ar: 'الإمارة' } }
@@ -40,9 +43,11 @@ entities:
 
   work_order:
     label: { en: 'Work order', ar: 'أمر عمل' }
+    icon:        '🔧'
+    description: { en: 'A dispatched job, from request to completion', ar: 'أمر عمل من الطلب حتى الإنجاز' }
     fields:
       # The TYPE discriminator — it is what selects the SLA in worklist.yaml.
-      urgency:      { type: select, options: [routine, soon, emergency], label: { en: 'Urgency', ar: 'الاستعجال' } }
+      urgency:      { type: select, options: [routine, soon, emergency], label: { en: 'Urgency', ar: 'الاستعجال' }, description: { en: 'Drives dispatch order — an emergency is offered the earliest window, not the next free one.', ar: 'يحدد أولوية الإرسال — الحالة الطارئة تُمنح أقرب موعد وليس أول موعد متاح.' } }
       # The ROUTING key — worklist.yaml maps it to a regional crew.
       emirate:      { type: select, options: [dubai, sharjah, abu_dhabi, ajman, rak], label: { en: 'Emirate', ar: 'الإمارة' } }
       trade:        { type: select, options: [plumbing, electrical, ac, carpentry, painting, appliance, other], label: { en: 'Trade', ar: 'التخصص' } }
@@ -53,14 +58,24 @@ entities:
       pin:          { type: geo, label: { en: 'Location pin', ar: 'الموقع' } }
       fault:        { type: textarea, label: { en: 'Fault', ar: 'وصف المشكلة' } }
       fault_photo:  { type: image, label: { en: 'Photo', ar: 'صورة المشكلة' } }
-      preferred_window: { type: select, options: [morning, afternoon, evening], label: { en: 'Preferred window', ar: 'الوقت المفضل' } }
+      preferred_window: { type: select, options: [morning, afternoon, evening], label: { en: 'Preferred window', ar: 'الوقت المفضل' }, description: { en: 'The time band the customer asked for. A preference, not a guarantee — dispatch may not match it.', ar: 'الفترة التي طلبها العميل. تفضيل لا ضمان — وقد لا يطابقه جدول الإرسال.' } }
       contact_name: { type: text, label: { en: 'Contact', ar: 'اسم المتواصل' } }
-      quoted_amount: { type: money, label: { en: 'Quote', ar: 'عرض السعر' } }
+      quoted_amount: { type: money, label: { en: 'Quote', ar: 'عرض السعر' }, currency: AED }
     list: [urgency, trade, emirate]
     pipeline:
       stages:   [received, dispatched, on_site, awaiting_parts, completed, cancelled]
       initial:  received
       terminal: [completed, cancelled]
+    # What each stage MEANS — rendered above the console pipeline control and on
+    # each move button. Kept in step with the `stage_hint.*` locale keys the flows
+    # resolve through `$enum_label(stage, "stage_hint")`.
+    stage_hints:
+      received:       { en: 'Logged, no technician assigned yet', ar: 'ℹ️ الطلب عند فريق منطقتك ويتم تعيين فني له.' }
+      dispatched:     { en: 'A technician is on the way', ar: 'ℹ️ تم تعيين فني — بيتواصل معك قبل الوصول.' }
+      on_site:        { en: 'Work is underway at the property', ar: 'ℹ️ الفني في الموقع الآن.' }
+      awaiting_parts: { en: 'Paused until a part arrives', ar: 'ℹ️ مطلوب قطع غيار — بنبلّغك بموعد الوصول أول ما تتوفر.' }
+      completed:      { en: 'Job finished and signed off', ar: 'ℹ️ تم إنجاز العمل. لو ظهرت المشكلة تاني تواصل معنا فوراً.' }
+      cancelled:      { en: 'Called off before completion', ar: 'ℹ️ هذا الطلب ملغى.' }
     # Display names for the stages above — entity level, NOT inside `pipeline:`,
     # so an `extends: system` entity can label stages it never declared. The console
     # badge/filter/pipeline/funnel read these; an unlabelled stage falls back to Title
@@ -79,18 +94,27 @@ entities:
 
   contract:
     label: { en: 'Maintenance contract', ar: 'عقد صيانة' }
+    icon:        '📑'
+    description: { en: 'An annual maintenance plan and its cover', ar: 'عقد صيانة سنوي وتغطيته' }
     fields:
       plan:       { type: select, options: [ac_annual, full_home_annual, pool_monthly], label: { en: 'Plan', ar: 'الباقة' } }
       property:   { type: record, entity: property, label: { en: 'Property', ar: 'العقار' } }
-      price:      { type: money, label: { en: 'Price', ar: 'السعر' }, sortable: true }
-      currency:   { type: text, label: { en: 'Currency', ar: 'العملة' }, default: 'AED' }
-      visits_per_year: { type: number, label: { en: 'Visits / year', ar: 'عدد الزيارات سنوياً' } }
+      price:      { type: money, label: { en: 'Price', ar: 'السعر' }, sortable: true, currency: AED }
+      visits_per_year: { type: number, label: { en: 'Visits / year', ar: 'عدد الزيارات سنوياً' }, description: { en: 'Scheduled maintenance visits the contract price covers. Extra visits are billed separately.', ar: 'عدد زيارات الصيانة التي يغطيها سعر العقد. وتُحتسب الزيارات الإضافية بشكل منفصل.' } }
     list: [plan, price]
     pipeline:
       stages:   [proposed, active, expired, cancelled]
       initial:  proposed
       terminal: [expired, cancelled]
 
+    # What each stage MEANS — rendered above the console pipeline control and on
+    # each move button. Kept in step with the `stage_hint.*` locale keys the flows
+    # resolve through `$enum_label(stage, "stage_hint")`.
+    stage_hints:
+      proposed:  { en: 'Quoted to the customer, not yet signed', ar: 'قُدّم العرض ولم يُوقّع بعد' }
+      active:    { en: 'In force — visits can be booked against it', ar: 'ساري — يمكن حجز زيارات عليه' }
+      expired:   { en: 'Past its end date; renew to reactivate', ar: 'انتهت مدته؛ جدّده لتفعيله' }
+      cancelled: { en: 'Ended early at the customer request', ar: 'ℹ️ هذا الطلب ملغى.' }
     # Display names for the stages above — entity level, NOT inside `pipeline:`,
     # so an `extends: system` entity can label stages it never declared. The console
     # badge/filter/pipeline/funnel read these; an unlabelled stage falls back to Title
@@ -113,14 +137,14 @@ segments:
 
 demo:
   - entity: trade_service
-    fields: { code: 'PLM-LEAK', name: 'إصلاح تسريب مياه', trade: plumbing, description: 'كشف وإصلاح تسريب في المواسير أو الخلاطات مع اختبار الضغط. Leak detection and repair with a pressure test.', price_from: 250, currency: AED, popularity: 5, photo: 'generate:Photograph of a plumber in uniform tightening a pipe fitting under a modern bathroom sink with a wrench, tools laid out on a cloth, clean bright bathroom, photorealistic.' }
+    fields: { code: 'PLM-LEAK', name: 'إصلاح تسريب مياه', trade: plumbing, description: 'كشف وإصلاح تسريب في المواسير أو الخلاطات مع اختبار الضغط. Leak detection and repair with a pressure test.', price_from: 250, popularity: 5, photo: 'generate:Photograph of a plumber in uniform tightening a pipe fitting under a modern bathroom sink with a wrench, tools laid out on a cloth, clean bright bathroom, photorealistic.' }
   - entity: trade_service
-    fields: { code: 'AC-SVC', name: 'صيانة وتنظيف مكيّفات', trade: ac, description: 'تنظيف فلاتر ومجاري ومراوح وشحن فريون لكل الوحدات. Filter, duct and coil cleaning plus a refrigerant top-up.', price_from: 300, currency: AED, popularity: 5, photo: 'generate:Photograph of an HVAC technician on a step ladder servicing a wall-mounted split air conditioner in a bright apartment living room, filter removed, photorealistic.' }
+    fields: { code: 'AC-SVC', name: 'صيانة وتنظيف مكيّفات', trade: ac, description: 'تنظيف فلاتر ومجاري ومراوح وشحن فريون لكل الوحدات. Filter, duct and coil cleaning plus a refrigerant top-up.', price_from: 300, popularity: 5, photo: 'generate:Photograph of an HVAC technician on a step ladder servicing a wall-mounted split air conditioner in a bright apartment living room, filter removed, photorealistic.' }
   - entity: trade_service
-    fields: { code: 'ELC-FAULT', name: 'إصلاح أعطال كهرباء', trade: electrical, description: 'فحص القواطع والأسلاك والمقابس وإصلاح الأعطال. Breaker, wiring and socket fault finding and repair.', price_from: 220, currency: AED, popularity: 4, photo: 'generate:Photograph of a licensed electrician testing a distribution board with a multimeter, safety gloves on, tidy utility cupboard, photorealistic.' }
+    fields: { code: 'ELC-FAULT', name: 'إصلاح أعطال كهرباء', trade: electrical, description: 'فحص القواطع والأسلاك والمقابس وإصلاح الأعطال. Breaker, wiring and socket fault finding and repair.', price_from: 220, popularity: 4, photo: 'generate:Photograph of a licensed electrician testing a distribution board with a multimeter, safety gloves on, tidy utility cupboard, photorealistic.' }
   - entity: trade_service
-    fields: { code: 'CRP-DOOR', name: 'أعمال نجارة وأبواب', trade: carpentry, description: 'ضبط وإصلاح الأبواب والخزائن والمفصلات. Door, cabinet and hinge adjustment and repair.', price_from: 180, currency: AED, popularity: 3, photo: 'generate:Photograph of a carpenter adjusting a wooden door hinge with a screwdriver in a modern apartment hallway, toolbox on the floor, photorealistic.' }
+    fields: { code: 'CRP-DOOR', name: 'أعمال نجارة وأبواب', trade: carpentry, description: 'ضبط وإصلاح الأبواب والخزائن والمفصلات. Door, cabinet and hinge adjustment and repair.', price_from: 180, popularity: 3, photo: 'generate:Photograph of a carpenter adjusting a wooden door hinge with a screwdriver in a modern apartment hallway, toolbox on the floor, photorealistic.' }
   - entity: trade_service
-    fields: { code: 'PNT-ROOM', name: 'دهان غرفة', trade: painting, description: 'تحضير الجدران ودهان غرفة كاملة بدهان مضاد للبكتيريا. Wall preparation and a full room repaint.', price_from: 650, currency: AED, popularity: 3, photo: 'generate:Photograph of a painter rolling fresh white paint onto an interior wall with masking tape along the skirting, drop sheets on the floor, bright daylight, photorealistic.' }
+    fields: { code: 'PNT-ROOM', name: 'دهان غرفة', trade: painting, description: 'تحضير الجدران ودهان غرفة كاملة بدهان مضاد للبكتيريا. Wall preparation and a full room repaint.', price_from: 650, popularity: 3, photo: 'generate:Photograph of a painter rolling fresh white paint onto an interior wall with masking tape along the skirting, drop sheets on the floor, bright daylight, photorealistic.' }
   - entity: trade_service
-    fields: { code: 'APP-WM', name: 'إصلاح غسالة / ثلاجة', trade: appliance, description: 'فحص وإصلاح الغسالات والثلاجات والأفران. Washing machine, fridge and oven diagnosis and repair.', price_from: 200, currency: AED, popularity: 4, photo: 'generate:Photograph of an appliance technician kneeling beside an open washing machine with a diagnostic tool, kitchen setting, photorealistic.' }
+    fields: { code: 'APP-WM', name: 'إصلاح غسالة / ثلاجة', trade: appliance, description: 'فحص وإصلاح الغسالات والثلاجات والأفران. Washing machine, fridge and oven diagnosis and repair.', price_from: 200, popularity: 4, photo: 'generate:Photograph of an appliance technician kneeling beside an open washing machine with a diagnostic tool, kitchen setting, photorealistic.' }

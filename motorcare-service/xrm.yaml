@@ -12,14 +12,15 @@
 entities:
   service_package:
     label: { en: 'Service package', ar: 'باقة صيانة' }
+    icon:        '🔩'
+    description: { en: 'A published service package and its price', ar: 'باقة صيانة منشورة وسعرها' }
     fields:
       code:         { type: text, required: true, label: { en: 'Code', ar: 'الرمز' } }
       name:         { type: text, required: true, label: { en: 'Name', ar: 'الاسم' } }
       description:  { type: textarea, label: { en: 'Description', ar: 'الوصف' } }
       work_area:    { type: select, options: [mechanical, body, diagnostics], label: { en: 'Work area', ar: 'قسم العمل' } }
       duration_min: { type: number, label: { en: 'Duration (min)', ar: 'المدة (دقيقة)' }, sortable: true }
-      price_from:   { type: money, label: { en: 'From', ar: 'يبدأ من' }, sortable: true }
-      currency:     { type: text, label: { en: 'Currency', ar: 'العملة' }, default: 'AED' }
+      price_from:   { type: money, label: { en: 'From', ar: 'يبدأ من' }, sortable: true, currency: AED }
       photo:        { type: image, label: { en: 'Photo', ar: 'الصورة' } }
     list: [work_area, duration_min, price_from]
     search: { text: [name, description], semantic: [name, description] }
@@ -27,9 +28,11 @@ entities:
 
   bay:
     label: { en: 'Service bay', ar: 'منصة صيانة' }
+    icon:        '🅿️'
+    description: { en: 'A workshop bay a job is assigned to', ar: 'خانة ورشة يُسند إليها العمل' }
     fields:
       name:      { type: text, required: true, label: { en: 'Name', ar: 'الاسم' } }
-      work_area: { type: select, options: [mechanical, body, diagnostics], label: { en: 'Work area', ar: 'قسم العمل' } }
+      work_area: { type: select, options: [mechanical, body, diagnostics], label: { en: 'Work area', ar: 'قسم العمل' }, description: { en: 'What this bay is equipped for. Must match a job''s work area for the job to be assignable here.', ar: 'ما هذه الخانة مجهزة له. يجب أن يطابق مجال عمل البطاقة حتى يمكن إسنادها هنا.' } }
       branch:    { type: text, label: { en: 'Branch', ar: 'الفرع' } }
       timezone:  { type: text, label: { en: 'Timezone', ar: 'المنطقة الزمنية' }, default: 'Asia/Dubai' }
     list: [work_area, branch]
@@ -38,21 +41,25 @@ entities:
 
   vehicle:
     label: { en: 'Vehicle', ar: 'مركبة' }
+    icon:        '🚙'
+    description: { en: 'A customer vehicle and its service history', ar: 'مركبة العميل وسجل صيانتها' }
     fields:
       plate:        { type: text, required: true, label: { en: 'Plate', ar: 'رقم اللوحة' } }
       make_model:   { type: text, label: { en: 'Make & model', ar: 'الماركة والطراز' } }
       year:         { type: number, label: { en: 'Year', ar: 'سنة الصنع' }, sortable: true }
-      odometer_km:  { type: number, label: { en: 'Odometer (km)', ar: 'العداد (كم)' }, sortable: true }
+      odometer_km:  { type: number, label: { en: 'Odometer (km)', ar: 'العداد (كم)' }, sortable: true, description: { en: 'Reading at the last visit. Service intervals are judged from it, so a stale value mis-times the next service.', ar: 'القراءة عند آخر زيارة. وتُقدَّر مواعيد الصيانة منها، فالقيمة القديمة تُخطئ توقيت الصيانة القادمة.' } }
       last_service: { type: date, label: { en: 'Last service', ar: 'آخر صيانة' } }
     list: [make_model, year, odometer_km]
     dedupe_by: plate
 
   repair_job:
     label: { en: 'Job card', ar: 'بطاقة عمل' }
+    icon:        '🔧'
+    description: { en: 'A repair, from booking in to collection', ar: 'عملية إصلاح من الاستلام حتى التسليم' }
     fields:
       job_type:        { type: select, options: [periodic_service, body_repair, diagnostic_check, breakdown], label: { en: 'Job type', ar: 'نوع العمل' } }
       # The ROUTING FIELD — worklist.yaml maps it to a queue.
-      work_area:       { type: select, options: [mechanical, body, diagnostics], label: { en: 'Work area', ar: 'قسم العمل' } }
+      work_area:       { type: select, options: [mechanical, body, diagnostics], label: { en: 'Work area', ar: 'قسم العمل' }, description: { en: 'Routing key: the job is only offered bays whose own work area matches this.', ar: 'مفتاح التوجيه: لا يُسند العمل إلا لخانة ورشة يطابق مجال عملها هذه القيمة.' } }
       vehicle:         { type: record, entity: vehicle, label: { en: 'Vehicle', ar: 'المركبة' } }
       plate:           { type: text, label: { en: 'Plate', ar: 'رقم اللوحة' } }
       complaint:       { type: textarea, label: { en: 'Complaint', ar: 'الشكوى' } }
@@ -63,13 +70,23 @@ entities:
       package:         { type: record, entity: service_package, label: { en: 'Package', ar: 'الباقة' } }
       package_label:   { type: text, label: { en: 'Package', ar: 'الباقة' } }
       slot_label:      { type: text, label: { en: 'Slot', ar: 'الموعد' } }
-      quoted_amount:   { type: money, label: { en: 'Quote', ar: 'عرض السعر' } }
-      currency:        { type: text, label: { en: 'Currency', ar: 'العملة' }, default: 'AED' }
+      quoted_amount:   { type: money, label: { en: 'Quote', ar: 'عرض السعر' }, currency: AED }
     list: [job_type, plate, work_area]
     pipeline:
       stages:   [received, inspecting, quoted, in_repair, ready, collected, cancelled]
       initial:  received
       terminal: [collected, cancelled]
+    # What each stage MEANS — rendered above the console pipeline control and on
+    # each move button. Kept in step with the `stage_hint.*` locale keys the flows
+    # resolve through `$enum_label(stage, "stage_hint")`.
+    stage_hints:
+      received:   { en: 'Vehicle booked in, not yet inspected', ar: 'ℹ️ بطاقتك في طابور الورشة وسيتم فحص السيارة.' }
+      inspecting: { en: 'Diagnosing what the job needs', ar: 'ℹ️ الفنّي يفحص السيارة الآن وبنرسل لك عرض السعر بعد الفحص.' }
+      quoted:     { en: 'Estimate sent; awaiting approval', ar: 'ℹ️ وصلك عرض السعر — ردّك يبدأ العمل.' }
+      in_repair:  { en: 'Work underway in the bay', ar: 'ℹ️ العمل جارٍ على سيارتك.' }
+      ready:      { en: 'Finished and ready for collection', ar: 'ℹ️ سيارتك جاهزة للاستلام 🎉' }
+      collected:  { en: 'Handed back to the customer', ar: 'ℹ️ تم استلام السيارة. شكراً لثقتك.' }
+      cancelled:  { en: 'Called off before completion', ar: 'ℹ️ هذه البطاقة ملغاة.' }
     # Display names for the stages above — entity level, NOT inside `pipeline:`,
     # so an `extends: system` entity can label stages it never declared. The console
     # badge/filter/pipeline/funnel read these; an unlabelled stage falls back to Title
@@ -104,17 +121,17 @@ segments:
 
 demo:
   - entity: service_package
-    fields: { code: 'SVC-MINOR', name: 'صيانة دورية صغرى', work_area: mechanical, description: 'تغيير زيت وفلتر زيت وفلتر هواء، فحص ٢٥ نقطة. Oil, oil filter and air filter with a 25-point check.', duration_min: 60, price_from: 380, currency: AED, photo: 'generate:Photograph of a clean modern car service bay with a silver sedan on a lift, a technician in navy overalls changing the oil filter, bright workshop lighting, photorealistic.' }
+    fields: { code: 'SVC-MINOR', name: 'صيانة دورية صغرى', work_area: mechanical, description: 'تغيير زيت وفلتر زيت وفلتر هواء، فحص ٢٥ نقطة. Oil, oil filter and air filter with a 25-point check.', duration_min: 60, price_from: 380, photo: 'generate:Photograph of a clean modern car service bay with a silver sedan on a lift, a technician in navy overalls changing the oil filter, bright workshop lighting, photorealistic.' }
   - entity: service_package
-    fields: { code: 'SVC-MAJOR', name: 'صيانة دورية كبرى', work_area: mechanical, description: 'زيت وفلاتر وبواجي وسيور وفحص ناقل الحركة والفرامل. Oil, all filters, spark plugs, belts plus transmission and brake inspection.', duration_min: 180, price_from: 1250, currency: AED, photo: 'generate:Photograph of a car raised on a two-post lift in a bright service workshop, two technicians inspecting the underside with a torch, tools neatly arranged, photorealistic.' }
+    fields: { code: 'SVC-MAJOR', name: 'صيانة دورية كبرى', work_area: mechanical, description: 'زيت وفلاتر وبواجي وسيور وفحص ناقل الحركة والفرامل. Oil, all filters, spark plugs, belts plus transmission and brake inspection.', duration_min: 180, price_from: 1250, photo: 'generate:Photograph of a car raised on a two-post lift in a bright service workshop, two technicians inspecting the underside with a torch, tools neatly arranged, photorealistic.' }
   - entity: service_package
-    fields: { code: 'AC-SVC', name: 'صيانة مكيّف', work_area: mechanical, description: 'شحن فريون وتنظيف المبخر وفحص الضاغط — مهم قبل الصيف. Refrigerant recharge, evaporator clean and compressor check.', duration_min: 90, price_from: 450, currency: AED, photo: 'generate:Photograph of a technician servicing a car air-conditioning system with a refrigerant recharge machine beside an open car bonnet, workshop setting, photorealistic.' }
+    fields: { code: 'AC-SVC', name: 'صيانة مكيّف', work_area: mechanical, description: 'شحن فريون وتنظيف المبخر وفحص الضاغط — مهم قبل الصيف. Refrigerant recharge, evaporator clean and compressor check.', duration_min: 90, price_from: 450, photo: 'generate:Photograph of a technician servicing a car air-conditioning system with a refrigerant recharge machine beside an open car bonnet, workshop setting, photorealistic.' }
   - entity: service_package
-    fields: { code: 'DIAG-ECU', name: 'فحص كمبيوتر شامل', work_area: diagnostics, description: 'قراءة أكواد الأعطال من جميع الوحدات مع تقرير مكتوب. Full multi-module fault-code read with a written report.', duration_min: 60, price_from: 300, currency: AED, photo: 'generate:Photograph of an automotive diagnostic tablet connected to a car OBD port showing fault codes, technician hands visible, modern workshop, photorealistic.' }
+    fields: { code: 'DIAG-ECU', name: 'فحص كمبيوتر شامل', work_area: diagnostics, description: 'قراءة أكواد الأعطال من جميع الوحدات مع تقرير مكتوب. Full multi-module fault-code read with a written report.', duration_min: 60, price_from: 300, photo: 'generate:Photograph of an automotive diagnostic tablet connected to a car OBD port showing fault codes, technician hands visible, modern workshop, photorealistic.' }
   - entity: service_package
-    fields: { code: 'BODY-DENT', name: 'إصلاح صدمات وسمكرة', work_area: body, description: 'سمكرة ودهان الجزء المتضرر مع مطابقة اللون. Panel repair and refinishing with colour matching.', duration_min: 480, price_from: 900, currency: AED, photo: 'generate:Photograph of a car body-shop technician sanding a repaired door panel before painting, masking tape on the surrounding panels, spray booth behind, photorealistic.' }
+    fields: { code: 'BODY-DENT', name: 'إصلاح صدمات وسمكرة', work_area: body, description: 'سمكرة ودهان الجزء المتضرر مع مطابقة اللون. Panel repair and refinishing with colour matching.', duration_min: 480, price_from: 900, photo: 'generate:Photograph of a car body-shop technician sanding a repaired door panel before painting, masking tape on the surrounding panels, spray booth behind, photorealistic.' }
   - entity: service_package
-    fields: { code: 'BRAKE', name: 'فحص وتغيير فرامل', work_area: mechanical, description: 'تغيير فحمات وتخريط هوبات وفحص الزيت. Pad replacement, disc skimming and fluid check.', duration_min: 120, price_from: 620, currency: AED, photo: 'generate:Photograph of a mechanic replacing a brake pad on a car wheel hub with the wheel removed, clean workshop floor, photorealistic.' }
+    fields: { code: 'BRAKE', name: 'فحص وتغيير فرامل', work_area: mechanical, description: 'تغيير فحمات وتخريط هوبات وفحص الزيت. Pad replacement, disc skimming and fluid check.', duration_min: 120, price_from: 620, photo: 'generate:Photograph of a mechanic replacing a brake pad on a car wheel hub with the wheel removed, clean workshop floor, photorealistic.' }
 
   - entity: bay
     fields: { name: 'المنصة الميكانيكية ١', work_area: mechanical, branch: 'الفرع الرئيسي — القوز', timezone: 'Asia/Dubai' }

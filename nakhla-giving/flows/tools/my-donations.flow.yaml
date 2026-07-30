@@ -89,7 +89,7 @@ steps:
           # The stage is what the donor is actually asking about, so it leads the
           # line rather than sitting in a badge they have to interpret.
           description: '$lines($compact([
-                          $enum_label($item.stage, "stage"),
+                          $enum_label($item.stage, "stage", $item.stage),
                           $format_money($item.amount, $coalesce($item.currency, "SAR"))
                         ]), " · ")'
           on_select: { invoke: "$self", with: { donation_id: '$item.id' } }
@@ -103,7 +103,7 @@ steps:
         card: '$lines($compact([
                  $t("my-donations.d_appeal", { appeal: $gift.fields.appeal_title }),
                  $t("my-donations.d_amount", { amount: $format_money($gift.fields.amount, $coalesce($gift.fields.currency, "SAR")) }),
-                 $t("my-donations.d_stage",  { stage: $enum_label($gift.stage, "stage") }),
+                 $t("my-donations.d_stage",  { stage: $enum_label($gift.stage, "stage", $gift.stage) }),
                  $t("my-donations.d_ref",    { ref: $gift.record_number })
                ]), "\n")'
     # An unfinished donation is the reason this screen exists — hand the link

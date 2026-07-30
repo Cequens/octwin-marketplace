@@ -35,7 +35,7 @@ steps:
                  qty:      $item.fields.qty,
                  unit:     $coalesce($item.fields.unit, ""),
                  total:    $item.fields.total,
-                 currency: $coalesce($item.fields.currency, "SAR"),
+                 currency: "SAR",
                  stage:    $enum_label($item.stage, "stage")
                })'
     - render:

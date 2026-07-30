@@ -15,7 +15,70 @@ KB) and the primitive input schemas (`platform-primitives.json`). Nothing here i
 
 ---
 
-## 2026-07-30 — every money field re-invents `currency:`, and no pack uses the explanatory slots
+## 2026-07-30 — every money field re-invents `currency:`, and no pack uses the explanatory slots — ✅ CLOSED (one slot deferred)
+
+> **Closed 2026-07-30.** Verified with octwin-cli 0.1.21 against KB `2a33e56a3369`:
+> **21/21 clean offline, 21/21 pass `octwin validate --remote`.** All 21 packs had their
+> `version:` bumped a minor and quoted; the rule is now in [`CLAUDE.md`](CLAUDE.md).
+>
+> **Currency — done in full.** `currency:` added to **all 50 money fields**; the **28 sibling
+> `currency` text fields deleted** (`nakhla-giving`'s stays — it declares the sibling but no money
+> field, so it is outside this fix). The removal had three tails the entry does not mention, each of
+> which had to go with it:
+>
+> | Tail | Count | Why it mattered |
+> |---|---|---|
+> | demo-record `currency` values | 89 | an undeclared field on a demo row is a **hard deploy error** — `demo[0] (entity 'fragrance'): field 'currency' is not declared`. Found only by `--remote`. |
+> | `record_save` writes | 3 | `barakah-finance` apply + estimate, `binaa-supply` request-quote — writing a field that no longer exists |
+> | `$coalesce($x.fields.currency, "SAR")` reads | 29 | already degraded correctly to the literal, but left reading a dead field — rule 2 below |
+>
+> `binaa-supply`'s **integration_call** write was deliberately KEPT: that `currency` is a column in
+> the operator's Google Sheet, not an XRM field. A slack template interpolating
+> `record.fields.currency` was switched to the literal.
+>
+> **Correcting the entry's second harm.** It says the stored `offset` "silently defaults to 100 …
+> wrong the moment a pack touches KWD, BHD or OMR". True, and now fixed — but the sharper point is
+> that **no pack in this repo uses a 3-decimal currency today**, so nothing was miscomputing. The
+> live harm was the first one: a bare decimal with the code in a different column.
+>
+> **Explanatory slots — three of four done:**
+>
+> - **`icon:` — 61 entities** (one emoji each; the entity switcher is now scannable)
+> - **entity `description:` — 61 entities** (en + ar)
+> - **`stage_hints:` — all 22 pipelined entities, 120 stages.** Arabic was READ from each pack's own
+>   `stage_hint.*` locale keys where they existed (**65 of 120**) so the declaration and the
+>   flow-side `$enum_label(stage, "stage_hint")` stay byte-identical; the other 55 plus all 120
+>   English strings were authored.
+> - The 12 `extends: system` entities (`booking`, `survey_response`) were left alone — they inherit
+>   the platform template's human layer, and restating it would fork a shipped default.
+>
+> **Field-level `description:` — ✅ done 2026-07-30, scoped deliberately.** **52 fields across 16
+> packs**, not all ~400. A description that restates its label is noise in both the form hint and
+> the tooltip, so only three kinds earned one:
+>
+> - **Gates** — a flow filters on them, so a wrong value silently hides the record:
+>   `pharmaplus-rx` `rx_required`/`in_stock`, `shawarma-express` `dish.available`, `oud-atelier`
+>   `fragrance.stock`, `nile-academy` `seats_left`, `motorcare-service` `work_area` (both sides of
+>   the bay-routing match).
+> - **Computed** — written back by the platform and not to be typed over: every `rating` /
+>   `rating_count` (survey-derived, and they *order the pickers*), `nakhla-giving` `appeal.raised`,
+>   the two `indicative_*` figures.
+> - **Domain jargon** — `shield-motor` `base_rate_pct`/`excess`/`min_premium`,
+>   `barakah-finance` `min_down_pct`/`supports_rege` (REDF), `swiftship-courier`
+>   `up_to_kg`/`eta_hours`/`cod_amount`/`weight_band`.
+>
+> Two notes on the entry's examples: `shield-motor risk_band` **does not exist** — the rated field
+> is `plan.base_rate_pct`, which is what got the description. `barakah-finance min_down_pct` was
+> exactly right and is done.
+>
+> The remaining ~350 fields are self-evident labels (City, Bedrooms, Price, Duration, Weight) and
+> are intentionally left bare.
+>
+> **On the entry's framing.** It reads 20/20 packs skipping the same slots as a signal about the
+> authoring surface rather than twenty oversights. That is right, and the fix belongs upstream:
+> `octwin init` scaffolds none of these, and the skill never asks for them.
+
+
 
 **How this was found.** The operator Records surface was rebuilt to render the declaration's *human*
 layer — an entity's `icon:`/`description:`, a field's `description:`/`currency:`, a pipeline's
@@ -266,7 +329,20 @@ There is no widespread `list:` gap in the marketplace.
 
 ---
 
-## 2026-07-29d — OPEN — found while closing 2026-07-29c
+## 2026-07-29d — ✅ CLOSED 2026-07-30
+
+> **Fixed.** Created [`nakhla-giving/locale.ar.yaml`](nakhla-giving/locale.ar.yaml) — the pack was
+> the only one in the marketplace with no pack-level locale at all. It carries `stage.*` for **both**
+> pipelines (`donation` and `appeal`; their keys do not collide in the flat namespace) plus
+> `stage_hint.*`, all copied from the `stage_labels:`/`stage_hints:` now declared in `xrm.yaml`, so
+> the canonical declaration and the flow-side lookup say the same thing.
+>
+> Both call sites also gained the **fallback argument every sibling pack already passes** —
+> `$enum_label($item.stage, "stage", $item.stage)`. The missing keys were the bug; the missing
+> fallback is why it surfaced as an *empty line* rather than a visible raw key, which is the harder
+> failure to notice. Verified: `nakhla-giving@0.3.0` passes offline and `--remote`.
+
+
 
 ### P1 — `nakhla-giving` renders an unresolvable stage label to donors
 

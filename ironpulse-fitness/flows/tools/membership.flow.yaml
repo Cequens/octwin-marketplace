@@ -89,7 +89,7 @@ steps:
         item_template:
           title:       '{$item.fields.name}'
           description: '$lines($compact([
-                          $format_money_field($item.fields.price, $coalesce($item.fields.currency, "AED")),
+                          $format_money_field($item.fields.price, "AED"),
                           $item.fields.classes_included == true ? $t("membership.classes_in") : null
                         ]), " · ")'
           # A plan tap books the free trial — the club's actual conversion step.

@@ -151,7 +151,6 @@ steps:
           unit:          '$state.unit'
           unit_price:    '$state.unit_price'
           total:         '$line_total'
-          currency:      '$currency'
           customer_name: '$state.customer_name'
           site_name:     '$state.site_name'
       bind: quote

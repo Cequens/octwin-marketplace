@@ -13,6 +13,8 @@
 entities:
   captain_application:
     label: { en: 'Captain application', ar: 'طلب انضمام كابتن' }
+    icon:        '🚗'
+    description: { en: 'A driver applying to join, through documents and vehicle checks', ar: 'طلب انضمام كابتن عبر فحص المستندات والمركبة' }
     # Display sections for the console record view (ordered). Each field opts into
     # a section via its `group:`; the sections mirror WHERE the data came from —
     # asked in chat (application), OCR'd off the license, OCR'd off the vehicle
@@ -73,6 +75,16 @@ entities:
         docs_check:    [vehicle_check, rejected]
         vehicle_check: [training, rejected]
         training:      [active, rejected]
+    # What each stage MEANS — rendered above the console pipeline control and on
+    # each move button. Kept in step with the `stage_hint.*` locale keys the flows
+    # resolve through `$enum_label(stage, "stage_hint")`.
+    stage_hints:
+      applied:       { en: 'We received your application and it is in the review queue.', ar: 'استلمنا طلبك وهو في قائمة المراجعة.' }
+      docs_check:    { en: 'Our team is reviewing your documents — we may contact you if anything is missing.', ar: 'فريقنا يراجع مستنداتك — قد نتواصل معك إذا نقص شيء.' }
+      vehicle_check: { en: 'Next step: vehicle inspection at your regional center.', ar: 'الخطوة القادمة: فحص المركبة في مركز منطقتك.' }
+      training:      { en: 'You are booked for onboarding training — we will share the schedule shortly.', ar: 'تم حجزك في التدريب التعريفي — بنرسل لك الجدول قريباً.' }
+      active:        { en: 'Your captain account is active — welcome aboard!', ar: 'حسابك ككابتن نشط — أهلاً بك معنا!' }
+      rejected:      { en: 'Unfortunately the application was not approved this time.', ar: 'للأسف لم تتم الموافقة على الطلب هذه المرة.' }
     # Display names for the stages above — entity level, NOT inside `pipeline:`,
     # so an `extends: system` entity can label stages it never declared. The console
     # badge/filter/pipeline/funnel read these; an unlabelled stage falls back to Title

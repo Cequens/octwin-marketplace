@@ -11,15 +11,16 @@
 entities:
   programme:
     label: { en: 'Programme', ar: 'برنامج' }
+    icon:        '🎓'
+    description: { en: 'A school programme, its curriculum and annual fee', ar: 'برنامج دراسي ومنهجه ورسومه السنوية' }
     fields:
       code:         { type: text, required: true, label: { en: 'Code', ar: 'الرمز' } }
       name:         { type: text, required: true, label: { en: 'Name', ar: 'الاسم' } }
       stage_level:  { type: select, options: [kg, primary, preparatory, secondary], label: { en: 'Stage', ar: 'المرحلة' } }
       curriculum:   { type: select, options: [national, british, american, ib], label: { en: 'Curriculum', ar: 'المنهج' } }
       description:  { type: textarea, label: { en: 'Description', ar: 'الوصف' } }
-      annual_fee:   { type: money, label: { en: 'Annual fee', ar: 'المصروفات السنوية' }, sortable: true }
-      currency:     { type: text, label: { en: 'Currency', ar: 'العملة' }, default: 'EGP' }
-      seats_left:   { type: number, label: { en: 'Seats left', ar: 'المقاعد المتاحة' }, default: 0, sortable: true }
+      annual_fee:   { type: money, label: { en: 'Annual fee', ar: 'المصروفات السنوية' }, sortable: true, currency: EGP }
+      seats_left:   { type: number, label: { en: 'Seats left', ar: 'المقاعد المتاحة' }, default: 0, sortable: true, description: { en: 'Remaining places. A programme at 0 is not offered in the application picker.', ar: 'المقاعد المتبقية. البرنامج عند 0 لا يُعرض في قائمة التقديم.' } }
       photo:        { type: image, label: { en: 'Photo', ar: 'الصورة' } }
     list: [stage_level, curriculum, annual_fee, seats_left]
     search: { text: [name, description], semantic: [name, description] }
@@ -27,6 +28,8 @@ entities:
 
   campus:
     label: { en: 'Campus', ar: 'مقر' }
+    icon:        '🏫'
+    description: { en: 'A campus families can tour and enrol at', ar: 'حرم مدرسي يمكن للأسر زيارته والالتحاق به' }
     fields:
       name:     { type: text, required: true, label: { en: 'Name', ar: 'الاسم' } }
       area:     { type: text, label: { en: 'Area', ar: 'المنطقة' } }
@@ -38,13 +41,15 @@ entities:
 
   application:
     label: { en: 'Application', ar: 'طلب التحاق' }
+    icon:        '📝'
+    description: { en: 'A family admission application, from enquiry to enrolment', ar: 'طلب التحاق من الاستفسار حتى التسجيل' }
     fields:
       student_name:    { type: text, label: { en: 'Student', ar: 'اسم الطالب' } }
       guardian_name:   { type: text, label: { en: 'Guardian', ar: 'ولي الأمر' } }
       guardian_phone:  { type: text, label: { en: 'Guardian phone', ar: 'هاتف ولي الأمر' } }
       programme:       { type: record, entity: programme, label: { en: 'Programme', ar: 'البرنامج' } }
       programme_label: { type: text, label: { en: 'Programme', ar: 'البرنامج' } }
-      entry_year:      { type: select, options: [kg1, kg2, y1, y2, y3, y4, y5, y6, y7, y8, y9], label: { en: 'Entry year', ar: 'الصف المطلوب' } }
+      entry_year:      { type: select, options: [kg1, kg2, y1, y2, y3, y4, y5, y6, y7, y8, y9], label: { en: 'Entry year', ar: 'الصف المطلوب' }, description: { en: 'Academic year the family is applying for — not the year the application was made.', ar: 'العام الدراسي المتقدَّم إليه — وليس عام تقديم الطلب.' } }
       previous_school: { type: text, label: { en: 'Previous school', ar: 'المدرسة السابقة' } }
       birth_certificate: { type: image, label: { en: 'Birth certificate', ar: 'شهادة الميلاد' } }
       report_card:     { type: image, label: { en: 'Report card', ar: 'شهادة الدرجات' } }
@@ -54,6 +59,18 @@ entities:
       stages:   [enquiry, tour_booked, application_started, documents_complete, assessment_scheduled, offer_made, enrolled, declined]
       initial:  enquiry
       terminal: [enrolled, declined]
+    # What each stage MEANS — rendered above the console pipeline control and on
+    # each move button. Kept in step with the `stage_hint.*` locale keys the flows
+    # resolve through `$enum_label(stage, "stage_hint")`.
+    stage_hints:
+      enquiry:              { en: 'Interested; no application started', ar: 'ℹ️ لسه ما بدأنا الطلب — قول لي البرنامج وأكمل معاك.' }
+      tour_booked:          { en: 'A campus tour is scheduled', ar: 'ℹ️ زيارتك محجوزة. بعد الجولة نكمل الطلب.' }
+      application_started:  { en: 'Form begun but incomplete', ar: 'ℹ️ ناقص المستندات — ابعث شهادة الميلاد وآخر شهادة درجات.' }
+      documents_complete:   { en: 'All required paperwork received', ar: 'ℹ️ الملف مكتمل، وفريق القبول بيحدد موعد التقييم.' }
+      assessment_scheduled: { en: 'An assessment date is set', ar: 'ℹ️ موعد التقييم متحدد — بنبعتلك التفاصيل.' }
+      offer_made:           { en: 'A place has been offered', ar: 'ℹ️ صدر القبول 🎉 راجع خطوات التسجيل والمصروفات.' }
+      enrolled:             { en: 'Place accepted and confirmed', ar: 'ℹ️ تم التسجيل. أهلاً بكم في أكاديمية النيل!' }
+      declined:             { en: 'No place offered, or the offer lapsed', ar: 'ℹ️ للأسف لم يتم القبول هذه المرة.' }
     # Display names for the stages above — entity level, NOT inside `pipeline:`,
     # so an `extends: system` entity can label stages it never declared. The console
     # badge/filter/pipeline/funnel read these; an unlabelled stage falls back to Title
@@ -98,13 +115,13 @@ segments:
 
 demo:
   - entity: programme
-    fields: { code: 'KG-NAT', name: 'روضة — منهج وطني', stage_level: kg, curriculum: national, description: 'روضة لغات بمنهج وطني معزّز وأنشطة يومية. National-curriculum kindergarten with enhanced languages and daily activities.', annual_fee: 42000, currency: EGP, seats_left: 12, photo: 'generate:Photograph of a bright cheerful kindergarten classroom with low tables, colourful learning corners and childrens artwork on the walls, natural daylight, no children visible, photorealistic.' }
+    fields: { code: 'KG-NAT', name: 'روضة — منهج وطني', stage_level: kg, curriculum: national, description: 'روضة لغات بمنهج وطني معزّز وأنشطة يومية. National-curriculum kindergarten with enhanced languages and daily activities.', annual_fee: 42000, seats_left: 12, photo: 'generate:Photograph of a bright cheerful kindergarten classroom with low tables, colourful learning corners and childrens artwork on the walls, natural daylight, no children visible, photorealistic.' }
   - entity: programme
-    fields: { code: 'PR-BRIT', name: 'المرحلة الابتدائية — بريطاني', stage_level: primary, curriculum: british, description: 'ابتدائي بالمنهج البريطاني (Cambridge Primary) مع معامل ومكتبة. Cambridge Primary with science labs and a library.', annual_fee: 96000, currency: EGP, seats_left: 8, photo: 'generate:Photograph of a modern primary school classroom with interactive whiteboard, tidy desks in rows and bright wall displays, empty of students, natural light, photorealistic.' }
+    fields: { code: 'PR-BRIT', name: 'المرحلة الابتدائية — بريطاني', stage_level: primary, curriculum: british, description: 'ابتدائي بالمنهج البريطاني (Cambridge Primary) مع معامل ومكتبة. Cambridge Primary with science labs and a library.', annual_fee: 96000, seats_left: 8, photo: 'generate:Photograph of a modern primary school classroom with interactive whiteboard, tidy desks in rows and bright wall displays, empty of students, natural light, photorealistic.' }
   - entity: programme
-    fields: { code: 'PREP-AMER', name: 'المرحلة الإعدادية — أمريكي', stage_level: preparatory, curriculum: american, description: 'إعدادي بالمنهج الأمريكي مع أنشطة STEM ورياضة. American middle school with STEM and athletics.', annual_fee: 118000, currency: EGP, seats_left: 5, photo: 'generate:Photograph of a middle school STEM lab with robotics kits and 3D printers on benches, bright modern interior, empty of students, photorealistic.' }
+    fields: { code: 'PREP-AMER', name: 'المرحلة الإعدادية — أمريكي', stage_level: preparatory, curriculum: american, description: 'إعدادي بالمنهج الأمريكي مع أنشطة STEM ورياضة. American middle school with STEM and athletics.', annual_fee: 118000, seats_left: 5, photo: 'generate:Photograph of a middle school STEM lab with robotics kits and 3D printers on benches, bright modern interior, empty of students, photorealistic.' }
   - entity: programme
-    fields: { code: 'SEC-IB', name: 'المرحلة الثانوية — IB', stage_level: secondary, curriculum: ib, description: 'دبلوم البكالوريا الدولية مع إرشاد جامعي. IB Diploma with university counselling.', annual_fee: 165000, currency: EGP, seats_left: 3, photo: 'generate:Photograph of a bright high school library with study booths, tall bookshelves and large windows, empty of students, photorealistic.' }
+    fields: { code: 'SEC-IB', name: 'المرحلة الثانوية — IB', stage_level: secondary, curriculum: ib, description: 'دبلوم البكالوريا الدولية مع إرشاد جامعي. IB Diploma with university counselling.', annual_fee: 165000, seats_left: 3, photo: 'generate:Photograph of a bright high school library with study booths, tall bookshelves and large windows, empty of students, photorealistic.' }
 
   - entity: campus
     fields: { name: 'مقر التجمع الخامس', area: 'التجمع الخامس، القاهرة الجديدة', address: 'الحي الأول، شارع التسعين الشمالي', timezone: 'Africa/Cairo' }

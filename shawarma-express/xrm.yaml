@@ -10,15 +10,16 @@
 entities:
   dish:
     label: { en: 'Dish', ar: 'طبق' }
+    icon:        '🥙'
+    description: { en: 'A menu item and whether the kitchen has it', ar: 'صنف في المنيو وتوافره في المطبخ' }
     fields:
       code:        { type: text, required: true, label: { en: 'Code', ar: 'الرمز' } }
       name:        { type: text, required: true, label: { en: 'Name', ar: 'الاسم' } }
       category:    { type: select, options: [shawarma, grills, sandwiches, sides, drinks, desserts], label: { en: 'Category', ar: 'القسم' } }
       description: { type: textarea, label: { en: 'Description', ar: 'الوصف' } }
-      price:       { type: money, label: { en: 'Price', ar: 'السعر' }, sortable: true }
-      currency:    { type: text, label: { en: 'Currency', ar: 'العملة' }, default: 'EGP' }
+      price:       { type: money, label: { en: 'Price', ar: 'السعر' }, sortable: true, currency: EGP }
       spicy:       { type: boolean, label: { en: 'Spicy', ar: 'حار' } }
-      available:   { type: boolean, label: { en: 'Available', ar: 'متاح' }, default: true }
+      available:   { type: boolean, label: { en: 'Available', ar: 'متاح' }, default: true, description: { en: 'Gate: false takes the dish off the menu immediately, without a redeploy.', ar: 'بوابة: القيمة false ترفع الصنف من المنيو فوراً دون إعادة نشر.' } }
       photo:       { type: image, label: { en: 'Photo', ar: 'الصورة' } }
       popularity:  { type: number, label: { en: 'Popularity', ar: 'الأكثر طلباً' }, default: 0 }
     list: [category, price, available]
@@ -27,6 +28,8 @@ entities:
 
   branch:
     label: { en: 'Branch', ar: 'فرع' }
+    icon:        '📍'
+    description: { en: 'A branch that prepares and delivers orders', ar: 'فرع يجهّز الطلبات ويوصّلها' }
     fields:
       name:        { type: text, required: true, label: { en: 'Name', ar: 'الاسم' } }
       area:        { type: select, options: [nasr_city, maadi, zamalek, heliopolis, october, giza], label: { en: 'Area', ar: 'المنطقة' } }
@@ -39,6 +42,8 @@ entities:
 
   basket_line:
     label: { en: 'Basket line', ar: 'سطر السلة' }
+    icon:        '🛒'
+    description: { en: 'One line in a customer basket before ordering', ar: 'سطر في سلة العميل قبل تأكيد الطلب' }
     fields:
       # A per-contact UNIQUENESS key: `<contact-id>:<item>`. `dedupe_by` resolves through
       # `findRecord`, which scopes to project + entity + field value and NOT to the
@@ -51,21 +56,22 @@ entities:
       code:       { type: text, label: { en: 'Code', ar: 'الرمز' } }
       title:      { type: text, label: { en: 'Dish', ar: 'الطبق' } }
       qty:        { type: number, label: { en: 'Qty', ar: 'الكمية' }, default: 1, sortable: true }
-      unit_price: { type: money, label: { en: 'Unit price', ar: 'سعر الوحدة' } }
-      line_total: { type: money, label: { en: 'Line total', ar: 'إجمالي السطر' }, sortable: true }
+      unit_price: { type: money, label: { en: 'Unit price', ar: 'سعر الوحدة' }, currency: EGP }
+      line_total: { type: money, label: { en: 'Line total', ar: 'إجمالي السطر' }, sortable: true, currency: EGP }
       note:       { type: text, label: { en: 'Note', ar: 'ملاحظة' } }
     list: [title, qty, line_total]
     dedupe_by: line_key
 
   food_order:
     label: { en: 'Order', ar: 'أوردر' }
+    icon:        '🛵'
+    description: { en: 'A placed order, from the kitchen to the door', ar: 'طلب مؤكد من المطبخ حتى الباب' }
     fields:
       items_summary:  { type: textarea, label: { en: 'Items', ar: 'الأصناف' } }
       item_count:     { type: number, label: { en: 'Items', ar: 'عدد الأصناف' }, sortable: true }
-      subtotal:       { type: money, label: { en: 'Subtotal', ar: 'إجمالي الأصناف' } }
-      delivery_fee:   { type: money, label: { en: 'Delivery', ar: 'التوصيل' } }
-      total:          { type: money, label: { en: 'Total', ar: 'الإجمالي' }, sortable: true }
-      currency:       { type: text, label: { en: 'Currency', ar: 'العملة' }, default: 'EGP' }
+      subtotal:       { type: money, label: { en: 'Subtotal', ar: 'إجمالي الأصناف' }, currency: EGP }
+      delivery_fee:   { type: money, label: { en: 'Delivery', ar: 'التوصيل' }, currency: EGP }
+      total:          { type: money, label: { en: 'Total', ar: 'الإجمالي' }, sortable: true, currency: EGP }
       customer_name:  { type: text, label: { en: 'Customer', ar: 'العميل' } }
       area:           { type: select, options: [nasr_city, maadi, zamalek, heliopolis, october, giza], label: { en: 'Area', ar: 'المنطقة' } }
       address:        { type: textarea, label: { en: 'Address', ar: 'العنوان' } }
@@ -81,6 +87,15 @@ entities:
       # The automation `stale_records` job reads THIS, so the rule lives with the
       # data: an order nobody moved out of `placed` within a day is not live.
       auto_transition: { from: placed, to: cancelled, after_idle_hours: 24 }
+    # What each stage MEANS — rendered above the console pipeline control and on
+    # each move button. Kept in step with the `stage_hint.*` locale keys the flows
+    # resolve through `$enum_label(stage, "stage_hint")`.
+    stage_hints:
+      placed:           { en: 'Order in, kitchen has not started', ar: 'ℹ️ الأوردر وصل للفرع وبيتم تجهيزه.' }
+      preparing:        { en: 'Being cooked now', ar: 'ℹ️ المطبخ بيجهّز أوردرك دلوقتي.' }
+      out_for_delivery: { en: 'With the rider', ar: 'ℹ️ الدليفري في الطريق ليك — جهّز الفلوس لو كاش.' }
+      delivered:        { en: 'Handed to the customer', ar: 'ℹ️ بالهنا والشفا 🌯' }
+      cancelled:        { en: 'Cancelled before delivery', ar: 'ℹ️ الأوردر ده ملغي. تحت أمرك في أي وقت.' }
     # Display names for the stages above — entity level, NOT inside `pipeline:`,
     # so an `extends: system` entity can label stages it never declared. The console
     # badge/filter/pipeline/funnel read these; an unlabelled stage falls back to Title
@@ -108,19 +123,19 @@ segments:
 
 demo:
   - entity: dish
-    fields: { code: 'SHW-CHK', name: 'شاورما فراخ سوري', category: shawarma, description: 'شاورما فراخ متبّلة على الفحم مع طحينة وثوم وخيار مخلل في خبز سوري. Charcoal chicken shawarma with tahini, garlic and pickles in Syrian bread.', price: 95, currency: EGP, spicy: false, popularity: 5, photo: 'generate:Appetising food photograph of a Syrian-style chicken shawarma wrap cut in half on parchment paper, garlic sauce and pickles visible, rustic wooden board, warm restaurant lighting, shallow depth of field.' }
+    fields: { code: 'SHW-CHK', name: 'شاورما فراخ سوري', category: shawarma, description: 'شاورما فراخ متبّلة على الفحم مع طحينة وثوم وخيار مخلل في خبز سوري. Charcoal chicken shawarma with tahini, garlic and pickles in Syrian bread.', price: 95, spicy: false, popularity: 5, photo: 'generate:Appetising food photograph of a Syrian-style chicken shawarma wrap cut in half on parchment paper, garlic sauce and pickles visible, rustic wooden board, warm restaurant lighting, shallow depth of field.' }
   - entity: dish
-    fields: { code: 'SHW-BF', name: 'شاورما لحمة', category: shawarma, description: 'شاورما لحمة بلدي مع طحينة وطماطم وبقدونس. Beef shawarma with tahini, tomato and parsley.', price: 120, currency: EGP, spicy: false, popularity: 5, photo: 'generate:Appetising food photograph of a beef shawarma wrap on a wooden board with tahini sauce drizzled beside it, fresh parsley and tomato, warm restaurant lighting.' }
+    fields: { code: 'SHW-BF', name: 'شاورما لحمة', category: shawarma, description: 'شاورما لحمة بلدي مع طحينة وطماطم وبقدونس. Beef shawarma with tahini, tomato and parsley.', price: 120, spicy: false, popularity: 5, photo: 'generate:Appetising food photograph of a beef shawarma wrap on a wooden board with tahini sauce drizzled beside it, fresh parsley and tomato, warm restaurant lighting.' }
   - entity: dish
-    fields: { code: 'SHW-SPCY', name: 'شاورما حارة (سبايسي)', category: shawarma, description: 'شاورما فراخ بصوص حار وجبنة شيدر. Spicy chicken shawarma with hot sauce and cheddar.', price: 105, currency: EGP, spicy: true, popularity: 4, photo: 'generate:Appetising food photograph of a spicy chicken shawarma wrap with melted cheddar and red hot sauce visible in the cut section, dark slate board, dramatic warm lighting.' }
+    fields: { code: 'SHW-SPCY', name: 'شاورما حارة (سبايسي)', category: shawarma, description: 'شاورما فراخ بصوص حار وجبنة شيدر. Spicy chicken shawarma with hot sauce and cheddar.', price: 105, spicy: true, popularity: 4, photo: 'generate:Appetising food photograph of a spicy chicken shawarma wrap with melted cheddar and red hot sauce visible in the cut section, dark slate board, dramatic warm lighting.' }
   - entity: dish
-    fields: { code: 'GRL-MIX', name: 'مشويات مشكل', category: grills, description: 'كباب وكفتة وشيش طاووق مع رز وسلطة وخبز. Mixed grill: kebab, kofta and shish tawook with rice, salad and bread.', price: 320, currency: EGP, spicy: false, popularity: 4, photo: 'generate:Appetising food photograph of a mixed grill platter with kebab, kofta and shish tawook over rice, grilled tomato and pepper, side salad, overhead shot, warm restaurant lighting.' }
+    fields: { code: 'GRL-MIX', name: 'مشويات مشكل', category: grills, description: 'كباب وكفتة وشيش طاووق مع رز وسلطة وخبز. Mixed grill: kebab, kofta and shish tawook with rice, salad and bread.', price: 320, spicy: false, popularity: 4, photo: 'generate:Appetising food photograph of a mixed grill platter with kebab, kofta and shish tawook over rice, grilled tomato and pepper, side salad, overhead shot, warm restaurant lighting.' }
   - entity: dish
-    fields: { code: 'SID-FRIES', name: 'بطاطس محمرة', category: sides, description: 'بطاطس مقرمشة مع صوص الثوم. Crispy fries with garlic dip.', price: 40, currency: EGP, spicy: false, popularity: 3, photo: 'generate:Appetising food photograph of golden crispy french fries in a paper cone with a small bowl of garlic dip, rustic table, warm lighting.' }
+    fields: { code: 'SID-FRIES', name: 'بطاطس محمرة', category: sides, description: 'بطاطس مقرمشة مع صوص الثوم. Crispy fries with garlic dip.', price: 40, spicy: false, popularity: 3, photo: 'generate:Appetising food photograph of golden crispy french fries in a paper cone with a small bowl of garlic dip, rustic table, warm lighting.' }
   - entity: dish
-    fields: { code: 'DRK-LMN', name: 'ليمون بالنعناع', category: drinks, description: 'عصير ليمون طازج بالنعناع. Fresh mint lemonade.', price: 30, currency: EGP, spicy: false, popularity: 3, photo: 'generate:Appetising photograph of a tall glass of fresh mint lemonade with ice and a mint sprig, condensation on the glass, bright natural light.' }
+    fields: { code: 'DRK-LMN', name: 'ليمون بالنعناع', category: drinks, description: 'عصير ليمون طازج بالنعناع. Fresh mint lemonade.', price: 30, spicy: false, popularity: 3, photo: 'generate:Appetising photograph of a tall glass of fresh mint lemonade with ice and a mint sprig, condensation on the glass, bright natural light.' }
   - entity: dish
-    fields: { code: 'DES-RIZ', name: 'رز بلبن', category: desserts, description: 'رز بلبن بالقرفة والمكسرات. Rice pudding with cinnamon and nuts.', price: 45, currency: EGP, spicy: false, popularity: 2, photo: 'generate:Appetising food photograph of Middle Eastern rice pudding in a small glass bowl topped with cinnamon and crushed pistachios, warm lighting.' }
+    fields: { code: 'DES-RIZ', name: 'رز بلبن', category: desserts, description: 'رز بلبن بالقرفة والمكسرات. Rice pudding with cinnamon and nuts.', price: 45, spicy: false, popularity: 2, photo: 'generate:Appetising food photograph of Middle Eastern rice pudding in a small glass bowl topped with cinnamon and crushed pistachios, warm lighting.' }
 
   - entity: branch
     fields: { name: 'فرع مدينة نصر', area: nasr_city, phone: '01001234567', delivers_to: 'مدينة نصر · مصر الجديدة · العباسية', open_hours: 'يومياً ١٢ ظهراً — ٣ فجراً' }

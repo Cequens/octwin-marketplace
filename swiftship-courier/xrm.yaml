@@ -9,20 +9,23 @@
 entities:
   rate:
     label: { en: 'Rate', ar: 'سعر' }
+    icon:        '💰'
+    description: { en: 'A published price for a lane, service and weight', ar: 'سعر منشور لخط سير وخدمة ووزن' }
     fields:
       code:        { type: text, required: true, label: { en: 'Code', ar: 'الرمز' } }
       service:     { type: select, options: [same_day, next_day, standard, bulky], label: { en: 'Service', ar: 'الخدمة' } }
       from_region: { type: select, options: [cairo, alexandria, delta, upper], label: { en: 'From', ar: 'من' } }
       to_region:   { type: select, options: [cairo, alexandria, delta, upper], label: { en: 'To', ar: 'إلى' } }
-      up_to_kg:    { type: number, label: { en: 'Up to (kg)', ar: 'حتى (كجم)' } }
-      price:       { type: money, label: { en: 'Price', ar: 'السعر' }, sortable: true }
-      currency:    { type: text, label: { en: 'Currency', ar: 'العملة' }, default: 'EGP' }
-      eta_hours:   { type: number, label: { en: 'ETA (hours)', ar: 'مدة التوصيل (ساعة)' } }
+      up_to_kg:    { type: number, label: { en: 'Up to (kg)', ar: 'حتى (كجم)' }, description: { en: 'Upper weight bound for this rate band, inclusive. The lookup picks the lowest band a parcel fits.', ar: 'الحد الأعلى لوزن هذه الشريحة، شاملاً. ويختار البحث أدنى شريحة تناسب الشحنة.' } }
+      price:       { type: money, label: { en: 'Price', ar: 'السعر' }, sortable: true, currency: EGP }
+      eta_hours:   { type: number, label: { en: 'ETA (hours)', ar: 'مدة التوصيل (ساعة)' }, description: { en: 'Promised transit time in hours for this lane — quoted to the customer, so it is a commitment.', ar: 'مدة النقل الموعودة بالساعات لهذا الخط — تُبلَّغ للعميل فهي التزام.' } }
     list: [service, from_region, to_region, price]
     dedupe_by: code
 
   shipment:
     label: { en: 'Shipment', ar: 'شحنة' }
+    icon:        '📦'
+    description: { en: 'A parcel in the network, tracked scan by scan', ar: 'شحنة داخل الشبكة تُتابع مسحاً بمسح' }
     fields:
       tracking_number: { type: text, required: true, unique: true, label: { en: 'Tracking number', ar: 'رقم التتبع' } }
       service:         { type: select, options: [same_day, next_day, standard, bulky], label: { en: 'Service', ar: 'الخدمة' } }
@@ -31,8 +34,7 @@ entities:
       recipient_phone: { type: text, label: { en: 'Recipient phone', ar: 'هاتف المستلم' } }
       address:         { type: textarea, label: { en: 'Address', ar: 'العنوان' } }
       weight_kg:       { type: number, label: { en: 'Weight (kg)', ar: 'الوزن (كجم)' } }
-      cod_amount:      { type: money, label: { en: 'COD amount', ar: 'التحصيل عند التسليم' } }
-      currency:        { type: text, label: { en: 'Currency', ar: 'العملة' }, default: 'EGP' }
+      cod_amount:      { type: money, label: { en: 'COD amount', ar: 'التحصيل عند التسليم' }, currency: EGP, description: { en: 'Cash the courier must collect from the recipient on delivery. Leave empty for a prepaid parcel.', ar: 'المبلغ الذي يحصّله المندوب من المستلم عند التسليم. اتركه فارغاً للشحنة المدفوعة مسبقاً.' } }
       last_scan:       { type: text, label: { en: 'Last scan', ar: 'آخر تحديث' } }
     list: [tracking_number, region, service]
     search: { text: [tracking_number, recipient] }
@@ -42,6 +44,18 @@ entities:
       stages:   [created, picked_up, in_transit, at_hub, out_for_delivery, delivered, failed_attempt, returned]
       initial:  created
       terminal: [delivered, returned]
+    # What each stage MEANS — rendered above the console pipeline control and on
+    # each move button. Kept in step with the `stage_hint.*` locale keys the flows
+    # resolve through `$enum_label(stage, "stage_hint")`.
+    stage_hints:
+      created:          { en: 'Waybill issued, parcel not collected yet', ar: 'ℹ️ الشحنة مسجّلة وبننتظر استلامها من الراسل.' }
+      picked_up:        { en: 'Collected from the sender', ar: 'ℹ️ استلمنا الشحنة وهي في طريقها لمركز الفرز.' }
+      in_transit:       { en: 'Moving between facilities', ar: 'ℹ️ الشحنة بين الفروع — بنحدّثك أول ما توصل منطقتك.' }
+      at_hub:           { en: 'At a sorting hub awaiting the next leg', ar: 'ℹ️ الشحنة في مركز الفرز وبتتجهز للتسليم.' }
+      out_for_delivery: { en: 'With the courier for delivery today', ar: 'ℹ️ مع المندوب النهارده — خليك متاح على الموبايل.' }
+      delivered:        { en: 'Signed for by the recipient', ar: 'ℹ️ تم التسليم. لو في مشكلة سجّل شكوى وفريقنا يراجعها.' }
+      failed_attempt:   { en: 'Delivery attempted and missed; will retry', ar: 'ℹ️ حاولنا التسليم ومحصلش — سجّل شكوى ونعيد الجدولة.' }
+      returned:         { en: 'Sent back to the sender', ar: 'ℹ️ الشحنة رجعت للراسل.' }
     # Display names for the stages above — entity level, NOT inside `pipeline:`,
     # so an `extends: system` entity can label stages it never declared. The console
     # badge/filter/pipeline/funnel read these; an unlabelled stage falls back to Title
@@ -62,24 +76,33 @@ entities:
 
   pickup_request:
     label: { en: 'Pickup request', ar: 'طلب استلام' }
+    icon:        '🚚'
+    description: { en: 'A collection booked from a sender address', ar: 'طلب استلام من عنوان الراسل' }
     fields:
       service:      { type: select, options: [same_day, next_day, standard, bulky], label: { en: 'Service', ar: 'الخدمة' } }
       from_region:  { type: select, options: [cairo, alexandria, delta, upper], label: { en: 'From', ar: 'من' } }
       to_region:    { type: select, options: [cairo, alexandria, delta, upper], label: { en: 'To', ar: 'إلى' } }
-      weight_band:  { type: select, options: [under_1, under_5, under_20, over_20], label: { en: 'Weight band', ar: 'وزن الشحنة' } }
+      weight_band:  { type: select, options: [under_1, under_5, under_20, over_20], label: { en: 'Weight band', ar: 'وزن الشحنة' }, description: { en: 'Approximate weight the customer selected. The real weight is captured at collection and may reprice the job.', ar: 'الوزن التقريبي الذي اختاره العميل. ويُسجَّل الوزن الفعلي عند الاستلام وقد يعيد تسعير الطلب.' } }
       pickup_address: { type: textarea, label: { en: 'Pickup address', ar: 'عنوان الاستلام' } }
       recipient:    { type: text, label: { en: 'Recipient', ar: 'المستلم' } }
       recipient_phone: { type: text, label: { en: 'Recipient phone', ar: 'هاتف المستلم' } }
       window:       { type: select, options: [morning, afternoon, evening], label: { en: 'Window', ar: 'وقت الاستلام' } }
-      quoted_price: { type: money, label: { en: 'Quoted price', ar: 'السعر' }, sortable: true }
-      currency:     { type: text, label: { en: 'Currency', ar: 'العملة' }, default: 'EGP' }
-      cod_amount:   { type: money, label: { en: 'COD amount', ar: 'التحصيل عند التسليم' } }
+      quoted_price: { type: money, label: { en: 'Quoted price', ar: 'السعر' }, sortable: true, currency: EGP }
+      cod_amount:   { type: money, label: { en: 'COD amount', ar: 'التحصيل عند التسليم' }, currency: EGP, description: { en: 'Cash to collect from the recipient on delivery. Leave empty for a prepaid parcel.', ar: 'المبلغ المطلوب تحصيله من المستلم عند التسليم. اتركه فارغاً للشحنة المدفوعة مسبقاً.' } }
     list: [service, from_region, to_region, quoted_price]
     pipeline:
       stages:   [requested, scheduled, collected, cancelled]
       initial:  requested
       terminal: [collected, cancelled]
 
+    # What each stage MEANS — rendered above the console pipeline control and on
+    # each move button. Kept in step with the `stage_hint.*` locale keys the flows
+    # resolve through `$enum_label(stage, "stage_hint")`.
+    stage_hints:
+      requested: { en: 'Collection asked for, not yet scheduled', ar: 'طُلب الاستلام ولم يُجدول بعد' }
+      scheduled: { en: 'A courier is assigned for a slot', ar: 'خُصص مندوب لموعد محدد' }
+      collected: { en: 'Picked up and now a shipment', ar: 'تم الاستلام وأصبح شحنة' }
+      cancelled: { en: 'Called off before collection', ar: 'أُلغي قبل الاستلام' }
     # Display names for the stages above — entity level, NOT inside `pipeline:`,
     # so an `extends: system` entity can label stages it never declared. The console
     # badge/filter/pipeline/funnel read these; an unlabelled stage falls back to Title
@@ -99,28 +122,28 @@ segments:
 demo:
   # A small but real rate card — the pickup flow prices from these rows.
   - entity: rate
-    fields: { code: 'SD-CAI-CAI-5',  service: same_day, from_region: cairo, to_region: cairo, up_to_kg: 5, price: 75, currency: EGP, eta_hours: 8 }
+    fields: { code: 'SD-CAI-CAI-5',  service: same_day, from_region: cairo, to_region: cairo, up_to_kg: 5, price: 75, eta_hours: 8 }
   - entity: rate
-    fields: { code: 'ND-CAI-ALX-5',  service: next_day, from_region: cairo, to_region: alexandria, up_to_kg: 5, price: 95, currency: EGP, eta_hours: 24 }
+    fields: { code: 'ND-CAI-ALX-5',  service: next_day, from_region: cairo, to_region: alexandria, up_to_kg: 5, price: 95, eta_hours: 24 }
   - entity: rate
-    fields: { code: 'ST-CAI-DEL-5',  service: standard, from_region: cairo, to_region: delta, up_to_kg: 5, price: 70, currency: EGP, eta_hours: 48 }
+    fields: { code: 'ST-CAI-DEL-5',  service: standard, from_region: cairo, to_region: delta, up_to_kg: 5, price: 70, eta_hours: 48 }
   - entity: rate
-    fields: { code: 'ST-CAI-UPP-5',  service: standard, from_region: cairo, to_region: upper, up_to_kg: 5, price: 85, currency: EGP, eta_hours: 72 }
+    fields: { code: 'ST-CAI-UPP-5',  service: standard, from_region: cairo, to_region: upper, up_to_kg: 5, price: 85, eta_hours: 72 }
   - entity: rate
-    fields: { code: 'ST-CAI-CAI-20', service: standard, from_region: cairo, to_region: cairo, up_to_kg: 20, price: 120, currency: EGP, eta_hours: 48 }
+    fields: { code: 'ST-CAI-CAI-20', service: standard, from_region: cairo, to_region: cairo, up_to_kg: 20, price: 120, eta_hours: 48 }
   - entity: rate
-    fields: { code: 'BK-CAI-CAI-50', service: bulky,    from_region: cairo, to_region: cairo, up_to_kg: 50, price: 260, currency: EGP, eta_hours: 72 }
+    fields: { code: 'BK-CAI-CAI-50', service: bulky,    from_region: cairo, to_region: cairo, up_to_kg: 50, price: 260, eta_hours: 72 }
 
   # Demo shipments at different stages, so `track` has something honest to report.
   - entity: shipment
-    fields: { tracking_number: 'SS100200301', service: next_day, region: cairo, recipient: 'منى سعيد', recipient_phone: '01001112233', address: 'مدينة نصر، شارع مصطفى النحاس، عمارة ١٢', weight_kg: 2, cod_amount: 850, currency: EGP, last_scan: 'مركز فرز مدينة نصر' }
+    fields: { tracking_number: 'SS100200301', service: next_day, region: cairo, recipient: 'منى سعيد', recipient_phone: '01001112233', address: 'مدينة نصر، شارع مصطفى النحاس، عمارة ١٢', weight_kg: 2, cod_amount: 850, last_scan: 'مركز فرز مدينة نصر' }
     stage: out_for_delivery
   - entity: shipment
-    fields: { tracking_number: 'SS100200302', service: standard, region: alexandria, recipient: 'أحمد فؤاد', recipient_phone: '01004445566', address: 'سيدي جابر، شارع أبو قير، برج النور', weight_kg: 8, currency: EGP, last_scan: 'مركز فرز سموحة' }
+    fields: { tracking_number: 'SS100200302', service: standard, region: alexandria, recipient: 'أحمد فؤاد', recipient_phone: '01004445566', address: 'سيدي جابر، شارع أبو قير، برج النور', weight_kg: 8, last_scan: 'مركز فرز سموحة' }
     stage: in_transit
   - entity: shipment
-    fields: { tracking_number: 'SS100200303', service: same_day, region: cairo, recipient: 'سلمى حسن', recipient_phone: '01007778899', address: 'المعادي، شارع ٩، عمارة ٤', weight_kg: 1, currency: EGP, last_scan: 'تم التسليم للمستلم' }
+    fields: { tracking_number: 'SS100200303', service: same_day, region: cairo, recipient: 'سلمى حسن', recipient_phone: '01007778899', address: 'المعادي، شارع ٩، عمارة ٤', weight_kg: 1, last_scan: 'تم التسليم للمستلم' }
     stage: delivered
   - entity: shipment
-    fields: { tracking_number: 'SS100200304', service: standard, region: delta, recipient: 'كريم عبد الله', recipient_phone: '01002223344', address: 'المنصورة، شارع الجمهورية، عمارة ٧', weight_kg: 4, cod_amount: 400, currency: EGP, last_scan: 'محاولة تسليم — المستلم غير متواجد' }
+    fields: { tracking_number: 'SS100200304', service: standard, region: delta, recipient: 'كريم عبد الله', recipient_phone: '01002223344', address: 'المنصورة، شارع الجمهورية، عمارة ٧', weight_kg: 4, cod_amount: 400, last_scan: 'محاولة تسليم — المستلم غير متواجد' }
     stage: failed_attempt

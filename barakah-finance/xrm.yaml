@@ -10,37 +10,39 @@
 entities:
   finance_product:
     label: { en: 'Finance product', ar: 'منتج تمويلي' }
+    icon:        '📋'
+    description: { en: 'Published finance products and their rates', ar: 'منتجات التمويل المنشورة وأسعارها' }
     fields:
       code:            { type: text, required: true, label: { en: 'Code', ar: 'الرمز' } }
       name:            { type: text, required: true, label: { en: 'Name', ar: 'الاسم' } }
       structure:       { type: select, options: [murabaha, ijara, musharaka], label: { en: 'Structure', ar: 'الصيغة' } }
       description:     { type: textarea, label: { en: 'Description', ar: 'الوصف' } }
       # Published, not computed — the estimate multiplies by this and says it is indicative.
-      profit_rate_pct: { type: number, label: { en: 'Profit rate %', ar: 'نسبة الربح %' }, sortable: true }
-      min_down_pct:    { type: number, label: { en: 'Min down payment %', ar: 'أقل دفعة مقدمة %' } }
-      max_years:       { type: number, label: { en: 'Max term (years)', ar: 'أقصى مدة (سنة)' }, sortable: true }
-      max_amount:      { type: money, label: { en: 'Max amount', ar: 'أقصى مبلغ' } }
-      currency:        { type: text, label: { en: 'Currency', ar: 'العملة' }, default: 'SAR' }
-      supports_rege:   { type: boolean, label: { en: 'REDF supported', ar: 'مدعوم من صندوق التنمية العقارية' } }
+      profit_rate_pct: { type: number, label: { en: 'Profit rate %', ar: 'نسبة الربح %' }, sortable: true, description: { en: 'Annual profit rate as a percentage, e.g. 4.9 for 4.9%. Published — the estimate quotes it verbatim and never invents one.', ar: 'نسبة الربح السنوية كنسبة مئوية، مثال 4.9 تعني ٤٫٩٪. منشورة — ويقتبسها التقدير كما هي دون اجتهاد.' } }
+      min_down_pct:    { type: number, label: { en: 'Min down payment %', ar: 'أقل دفعة مقدمة %' }, description: { en: 'Smallest down payment the product accepts, as a percentage of the property price. An application below it cannot be estimated.', ar: 'أقل دفعة أولى يقبلها المنتج كنسبة من ثمن العقار. ولا يمكن تقدير طلب يقل عنها.' } }
+      max_years:       { type: number, label: { en: 'Max term (years)', ar: 'أقصى مدة (سنة)' }, sortable: true, description: { en: 'Longest term the product allows. The estimate refuses a term above it.', ar: 'أطول مدة يسمح بها المنتج. ويرفض التقدير أي مدة تتجاوزها.' } }
+      max_amount:      { type: money, label: { en: 'Max amount', ar: 'أقصى مبلغ' }, currency: SAR, description: { en: 'Largest amount the product finances.', ar: 'أعلى مبلغ يموّله المنتج.' } }
+      supports_rege:   { type: boolean, label: { en: 'REDF supported', ar: 'مدعوم من صندوق التنمية العقارية' }, description: { en: 'Whether the Real Estate Development Fund (REDF) subsidy can be applied to this product.', ar: 'هل يمكن تطبيق دعم صندوق التنمية العقارية على هذا المنتج.' } }
     list: [structure, profit_rate_pct, max_years]
     search: { text: [name, description], semantic: [name, description] }
     dedupe_by: code
 
   applicant:
     label: { en: 'Application', ar: 'طلب تمويل' }
+    icon:        '🏡'
+    description: { en: 'A household applying for home finance, through to committee', ar: 'أسرة تتقدم بطلب تمويل عقاري حتى لجنة الائتمان' }
     fields:
       full_name:       { type: text, label: { en: 'Name', ar: 'الاسم' } }
       product:         { type: record, entity: finance_product, label: { en: 'Product', ar: 'المنتج' } }
       product_label:   { type: text, label: { en: 'Product', ar: 'المنتج' } }
       employment:      { type: select, options: [government, private, self_employed, retired], label: { en: 'Employment', ar: 'جهة العمل' } }
-      monthly_income:  { type: number, label: { en: 'Monthly income', ar: 'الدخل الشهري' } }
-      existing_obligations: { type: number, label: { en: 'Existing obligations', ar: 'الالتزامات الحالية' } }
-      property_price:  { type: money, label: { en: 'Property price', ar: 'سعر العقار' }, sortable: true }
-      down_payment:    { type: money, label: { en: 'Down payment', ar: 'الدفعة المقدمة' } }
+      monthly_income:  { type: number, label: { en: 'Monthly income', ar: 'الدخل الشهري' }, description: { en: 'Gross monthly income before deductions.', ar: 'الدخل الشهري الإجمالي قبل الخصومات.' } }
+      existing_obligations: { type: number, label: { en: 'Existing obligations', ar: 'الالتزامات الحالية' }, description: { en: 'Total monthly repayments the applicant already carries. Subtracted from income when affordability is assessed.', ar: 'إجمالي الالتزامات الشهرية القائمة على المتقدم. تُخصم من الدخل عند تقدير القدرة على السداد.' } }
+      property_price:  { type: money, label: { en: 'Property price', ar: 'سعر العقار' }, sortable: true, currency: SAR }
+      down_payment:    { type: money, label: { en: 'Down payment', ar: 'الدفعة المقدمة' }, currency: SAR }
       term_years:      { type: number, label: { en: 'Term (years)', ar: 'المدة (سنة)' } }
       city:            { type: select, options: [riyadh, jeddah, dammam, makkah, madinah, khobar], label: { en: 'City', ar: 'المدينة' } }
-      indicative_instalment: { type: money, label: { en: 'Indicative instalment', ar: 'القسط التقديري' } }
-      currency:        { type: text, label: { en: 'Currency', ar: 'العملة' }, default: 'SAR' }
+      indicative_instalment: { type: money, label: { en: 'Indicative instalment', ar: 'القسط التقديري' }, currency: SAR, description: { en: 'Computed from the published rate, price, down payment and term. Indicative only — the committee decides the real figure.', ar: 'محسوب من السعر المنشور والثمن والدفعة والمدة. تقديري فقط — واللجنة تحدد الرقم الفعلي.' } }
       notes:           { type: textarea, label: { en: 'Notes', ar: 'ملاحظات' } }
     list: [full_name, product_label, property_price]
     pipeline:
@@ -49,6 +51,15 @@ entities:
       stages:   [enquiry, estimated, documents_pending, submitted, withdrawn]
       initial:  enquiry
       terminal: [submitted, withdrawn]
+    # What each stage MEANS — rendered above the console pipeline control and on
+    # each move button. Kept in step with the `stage_hint.*` locale keys the flows
+    # resolve through `$enum_label(stage, "stage_hint")`.
+    stage_hints:
+      enquiry:           { en: 'Details taken; no figures given yet', ar: 'تم أخذ البيانات دون أي أرقام بعد' }
+      estimated:         { en: 'An indicative instalment was shown from published rates', ar: 'عُرض قسط تقديري من الأسعار المنشورة' }
+      documents_pending: { en: 'Waiting on the applicant to send salary and ID documents', ar: 'بانتظار إرسال المستندات وإثبات الدخل' }
+      submitted:         { en: 'With the credit committee for a decision', ar: 'لدى لجنة الائتمان للبت فيه' }
+      withdrawn:         { en: 'The applicant stopped pursuing this application', ar: 'توقف المتقدم عن متابعة الطلب' }
     # Display names for the stages above — entity level, NOT inside `pipeline:`,
     # so an `extends: system` entity can label stages it never declared. The console
     # badge/filter/pipeline/funnel read these; an unlabelled stage falls back to Title
@@ -81,7 +92,6 @@ demo:
       min_down_pct: 10
       max_years: 25
       max_amount: 5000000
-      currency: SAR
       supports_rege: true
   - entity: finance_product
     fields:
@@ -93,7 +103,6 @@ demo:
       min_down_pct: 15
       max_years: 20
       max_amount: 4000000
-      currency: SAR
       supports_rege: true
   - entity: finance_product
     fields:
@@ -105,7 +114,6 @@ demo:
       min_down_pct: 20
       max_years: 15
       max_amount: 3000000
-      currency: SAR
       supports_rege: false
   - entity: finance_product
     fields:
@@ -117,5 +125,4 @@ demo:
       min_down_pct: 25
       max_years: 20
       max_amount: 3500000
-      currency: SAR
       supports_rege: false

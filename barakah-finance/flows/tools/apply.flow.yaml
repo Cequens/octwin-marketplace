@@ -138,7 +138,6 @@ steps:
           city:                 '$state.city'
           monthly_income:       '$state.monthly_income'
           existing_obligations: '$state.existing_obligations'
-          currency:             SAR
       bind: app
       outputs:
         ok:      [{ goto: open_review }]

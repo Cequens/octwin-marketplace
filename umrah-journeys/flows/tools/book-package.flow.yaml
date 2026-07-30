@@ -50,7 +50,7 @@ steps:
                   - assign:
                       pkg_name:     '$pkg.fields.name'
                       pkg_code:     '$pkg.fields.code'
-                      pkg_currency: '$coalesce($pkg.fields.currency, "SAR")'
+                      pkg_currency: '"SAR"'
                       pkg_price:    '$pkg.fields.price_pp.value / $pkg.fields.price_pp.offset'
         before_prompt:
           - assign:
@@ -74,7 +74,7 @@ steps:
               map:
                 value:       '$item.id'
                 label:       '$item.fields.name'
-                description: '$format_money_field($item.fields.price_pp, $coalesce($item.fields.currency, "SAR"))'
+                description: '$format_money_field($item.fields.price_pp, "SAR")'
                 selection:   { pkg_name: '$item.fields.name' }
               auto_resolve: true
           - field: travellers

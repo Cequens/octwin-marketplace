@@ -87,7 +87,7 @@ steps:
               map:
                 value:       '$item.id'
                 label:       '$item.fields.name'
-                description: '$format_money_field($item.fields.price_from, $coalesce($item.fields.currency, "AED"))'
+                description: '$format_money_field($item.fields.price_from, "AED")'
                 selection:   { pkg_label: '$item.fields.name' }
               auto_resolve: true
           # Only bays in the right area are offered — a paint job cannot land on a

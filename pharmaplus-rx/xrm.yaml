@@ -10,16 +10,17 @@
 entities:
   otc_item:
     label: { en: 'OTC item', ar: 'منتج بدون روشتة' }
+    icon:        '💊'
+    description: { en: 'A shelf item sold without a prescription', ar: 'صنف يُباع دون وصفة طبية' }
     fields:
       code:        { type: text, required: true, label: { en: 'Code', ar: 'الرمز' } }
       name:        { type: text, required: true, label: { en: 'Name', ar: 'الاسم' } }
       category:    { type: select, options: [pain_relief, cold_flu, vitamins, baby, skincare, first_aid, devices], label: { en: 'Category', ar: 'القسم' } }
       description: { type: textarea, label: { en: 'Description', ar: 'الوصف' } }
-      price:       { type: money, label: { en: 'Price', ar: 'السعر' }, sortable: true }
-      currency:    { type: text, label: { en: 'Currency', ar: 'العملة' }, default: 'EGP' }
+      price:       { type: money, label: { en: 'Price', ar: 'السعر' }, sortable: true, currency: EGP }
       # TRUE means: never sellable without a pharmacist. The OTC flow filters on it.
-      rx_required: { type: boolean, label: { en: 'Prescription required', ar: 'يتطلب روشتة' }, default: false }
-      in_stock:    { type: boolean, label: { en: 'In stock', ar: 'متوفر' }, default: true }
+      rx_required: { type: boolean, label: { en: 'Prescription required', ar: 'يتطلب روشتة' }, default: false, description: { en: 'Gate: when true this item is NEVER listed by the OTC flow and can only go through a pharmacist review.', ar: 'بوابة: عند التفعيل لا يظهر الصنف في تدفق الأدوية بدون وصفة إطلاقاً ولا يُصرف إلا بمراجعة صيدلي.' } }
+      in_stock:    { type: boolean, label: { en: 'In stock', ar: 'متوفر' }, default: true, description: { en: 'Gate: false hides the item from the shelf. Never set it defaults to hidden — safe for a pharmacy.', ar: 'بوابة: القيمة false تخفي الصنف من الرف. وإن لم تُضبط يبقى مخفياً — وهو الأأمن لصيدلية.' } }
       photo:       { type: image, label: { en: 'Photo', ar: 'الصورة' } }
     list: [category, price, in_stock]
     search: { text: [name, description], semantic: [name, description] }
@@ -27,6 +28,8 @@ entities:
 
   rx_request:
     label: { en: 'Prescription request', ar: 'طلب صرف روشتة' }
+    icon:        '🩺'
+    description: { en: 'A prescription awaiting pharmacist review and dispensing', ar: 'روشتة بانتظار مراجعة الصيدلي والصرف' }
     fields:
       patient_name:   { type: text, label: { en: 'Patient', ar: 'اسم المريض' } }
       prescriber:     { type: text, label: { en: 'Prescriber', ar: 'الطبيب' } }
@@ -44,6 +47,16 @@ entities:
       stages:   [received, pharmacist_review, approved, dispensed, delivered, rejected]
       initial:  received
       terminal: [delivered, rejected]
+    # What each stage MEANS — rendered above the console pipeline control and on
+    # each move button. Kept in step with the `stage_hint.*` locale keys the flows
+    # resolve through `$enum_label(stage, "stage_hint")`.
+    stage_hints:
+      received:          { en: 'Prescription uploaded, not yet reviewed', ar: 'ℹ️ استلمنا الطلب وهو في طريقه للصيدلي.' }
+      pharmacist_review: { en: 'A pharmacist is checking the prescription', ar: 'ℹ️ الصيدلي بيراجع الروشتة الآن — ده مش موافقة، بنبلّغك بقراره أول ما يخلص.' }
+      approved:          { en: 'Cleared to dispense', ar: 'ℹ️ الصيدلي وافق على الصرف، وجاري تحضير الطلب.' }
+      dispensed:         { en: 'Prepared and ready to send', ar: 'ℹ️ الطلب جاهز وفي طريقه إليك.' }
+      delivered:         { en: 'Received by the patient', ar: 'ℹ️ تم التسليم. سلامتك 🌿' }
+      rejected:          { en: 'Could not be dispensed', ar: 'ℹ️ الصيدلي ما قدرش يصرف الروشتة — راجع رسالته وتواصل مع طبيبك.' }
     # Display names for the stages above — entity level, NOT inside `pipeline:`,
     # so an `extends: system` entity can label stages it never declared. The console
     # badge/filter/pipeline/funnel read these; an unlabelled stage falls back to Title
@@ -66,13 +79,14 @@ entities:
   # actually packs it.
   otc_order:
     label: { en: 'Shelf order', ar: 'طلب من الرف' }
+    icon:        '📦'
+    description: { en: 'An over-the-counter order out for delivery', ar: 'طلب أدوية بدون وصفة في طريقه للتسليم' }
     fields:
       items_summary:  { type: textarea, label: { en: 'Items', ar: 'المنتجات' } }
       item_count:     { type: number, label: { en: 'Items', ar: 'عدد المنتجات' }, sortable: true }
-      subtotal:       { type: money, label: { en: 'Subtotal', ar: 'إجمالي المنتجات' } }
-      delivery_fee:   { type: money, label: { en: 'Delivery', ar: 'التوصيل' } }
-      total:          { type: money, label: { en: 'Total', ar: 'الإجمالي' }, sortable: true }
-      currency:       { type: text, label: { en: 'Currency', ar: 'العملة' }, default: 'EGP' }
+      subtotal:       { type: money, label: { en: 'Subtotal', ar: 'إجمالي المنتجات' }, currency: EGP }
+      delivery_fee:   { type: money, label: { en: 'Delivery', ar: 'التوصيل' }, currency: EGP }
+      total:          { type: money, label: { en: 'Total', ar: 'الإجمالي' }, sortable: true, currency: EGP }
       patient_name:   { type: text, label: { en: 'Customer', ar: 'العميل' } }
       delivery_area:  { type: select, options: [nasr_city, maadi, heliopolis, zamalek, october, giza], label: { en: 'Area', ar: 'المنطقة' } }
       address:        { type: textarea, label: { en: 'Address', ar: 'العنوان' } }
@@ -83,6 +97,15 @@ entities:
       stages:   [placed, packed, out_for_delivery, delivered, cancelled]
       initial:  placed
       terminal: [delivered, cancelled]
+    # What each stage MEANS — rendered above the console pipeline control and on
+    # each move button. Kept in step with the `stage_hint.*` locale keys the flows
+    # resolve through `$enum_label(stage, "stage_hint")`.
+    stage_hints:
+      placed:           { en: 'Order confirmed, not yet packed', ar: 'ℹ️ الطلب وصل الصيدلية وبيتم تجهيزه.' }
+      packed:           { en: 'Ready to leave the branch', ar: 'ℹ️ الطلب جاهز وبيطلع مع المندوب.' }
+      out_for_delivery: { en: 'With the delivery rider', ar: 'ℹ️ المندوب في الطريق — جهّز المبلغ لو كاش.' }
+      delivered:        { en: 'Received by the patient', ar: 'ℹ️ تم التسليم. سلامتك 🌿' }
+      cancelled:        { en: 'Cancelled before delivery', ar: 'ℹ️ الطلب ده ملغي.' }
     # Display names for the stages above — entity level, NOT inside `pipeline:`,
     # so an `extends: system` entity can label stages it never declared. The console
     # badge/filter/pipeline/funnel read these; an unlabelled stage falls back to Title
@@ -100,6 +123,8 @@ entities:
 
   basket_line:
     label: { en: 'Basket line', ar: 'سطر السلة' }
+    icon:        '🛒'
+    description: { en: 'One line in a patient basket before checkout', ar: 'سطر في سلة المريض قبل إتمام الطلب' }
     fields:
       # A per-contact UNIQUENESS key: `<contact-id>:<item>`. `dedupe_by` resolves through
       # `findRecord`, which scopes to project + entity + field value and NOT to the
@@ -112,8 +137,8 @@ entities:
       code:       { type: text, label: { en: 'Code', ar: 'الرمز' } }
       title:      { type: text, label: { en: 'Item', ar: 'المنتج' } }
       qty:        { type: number, label: { en: 'Qty', ar: 'الكمية' }, default: 1, sortable: true }
-      unit_price: { type: money, label: { en: 'Unit price', ar: 'سعر الوحدة' } }
-      line_total: { type: money, label: { en: 'Line total', ar: 'إجمالي السطر' }, sortable: true }
+      unit_price: { type: money, label: { en: 'Unit price', ar: 'سعر الوحدة' }, currency: EGP }
+      line_total: { type: money, label: { en: 'Line total', ar: 'إجمالي السطر' }, sortable: true, currency: EGP }
     list: [title, qty, line_total]
     dedupe_by: line_key
 
@@ -125,17 +150,17 @@ segments:
 
 demo:
   - entity: otc_item
-    fields: { code: 'PAR-500', name: 'باراسيتامول ٥٠٠ مجم (٢٠ قرص)', category: pain_relief, description: 'مسكن وخافض للحرارة — يُستخدم حسب التعليمات المكتوبة على العلبة. Analgesic and antipyretic; follow the pack directions.', price: 25, currency: EGP, rx_required: false, in_stock: true, photo: 'generate:Clean product photograph of a generic white paracetamol tablet box on a bright pharmacy counter, unbranded plain packaging, soft even lighting.' }
+    fields: { code: 'PAR-500', name: 'باراسيتامول ٥٠٠ مجم (٢٠ قرص)', category: pain_relief, description: 'مسكن وخافض للحرارة — يُستخدم حسب التعليمات المكتوبة على العلبة. Analgesic and antipyretic; follow the pack directions.', price: 25, rx_required: false, in_stock: true, photo: 'generate:Clean product photograph of a generic white paracetamol tablet box on a bright pharmacy counter, unbranded plain packaging, soft even lighting.' }
   - entity: otc_item
-    fields: { code: 'VITC-1000', name: 'فيتامين سي ١٠٠٠ مجم (٣٠ قرص)', category: vitamins, description: 'مكمل غذائي لدعم المناعة. Vitamin C dietary supplement.', price: 90, currency: EGP, rx_required: false, in_stock: true, photo: 'generate:Clean product photograph of an unbranded vitamin C supplement tub on a bright pharmacy shelf, plain white label, soft lighting.' }
+    fields: { code: 'VITC-1000', name: 'فيتامين سي ١٠٠٠ مجم (٣٠ قرص)', category: vitamins, description: 'مكمل غذائي لدعم المناعة. Vitamin C dietary supplement.', price: 90, rx_required: false, in_stock: true, photo: 'generate:Clean product photograph of an unbranded vitamin C supplement tub on a bright pharmacy shelf, plain white label, soft lighting.' }
   - entity: otc_item
-    fields: { code: 'ORS-SACH', name: 'محلول معالجة الجفاف (١٠ أكياس)', category: first_aid, description: 'أكياس أملاح لتعويض السوائل. Oral rehydration salt sachets.', price: 45, currency: EGP, rx_required: false, in_stock: true, photo: 'generate:Clean product photograph of unbranded oral rehydration salt sachets fanned out on a pharmacy counter, plain packaging, soft lighting.' }
+    fields: { code: 'ORS-SACH', name: 'محلول معالجة الجفاف (١٠ أكياس)', category: first_aid, description: 'أكياس أملاح لتعويض السوائل. Oral rehydration salt sachets.', price: 45, rx_required: false, in_stock: true, photo: 'generate:Clean product photograph of unbranded oral rehydration salt sachets fanned out on a pharmacy counter, plain packaging, soft lighting.' }
   - entity: otc_item
-    fields: { code: 'BABY-WIPE', name: 'مناديل مبللة للأطفال (٧٢ منديل)', category: baby, description: 'مناديل مبللة لطيفة على بشرة الطفل. Gentle baby wipes.', price: 55, currency: EGP, rx_required: false, in_stock: true, photo: 'generate:Clean product photograph of an unbranded pack of baby wipes on a pharmacy shelf, pastel plain packaging, soft lighting.' }
+    fields: { code: 'BABY-WIPE', name: 'مناديل مبللة للأطفال (٧٢ منديل)', category: baby, description: 'مناديل مبللة لطيفة على بشرة الطفل. Gentle baby wipes.', price: 55, rx_required: false, in_stock: true, photo: 'generate:Clean product photograph of an unbranded pack of baby wipes on a pharmacy shelf, pastel plain packaging, soft lighting.' }
   - entity: otc_item
-    fields: { code: 'BP-MON', name: 'جهاز قياس ضغط الدم', category: devices, description: 'جهاز رقمي لقياس ضغط الدم للاستخدام المنزلي. Digital home blood-pressure monitor.', price: 850, currency: EGP, rx_required: false, in_stock: true, photo: 'generate:Clean product photograph of a digital home blood pressure monitor with an arm cuff on a white surface, unbranded, soft studio lighting.' }
+    fields: { code: 'BP-MON', name: 'جهاز قياس ضغط الدم', category: devices, description: 'جهاز رقمي لقياس ضغط الدم للاستخدام المنزلي. Digital home blood-pressure monitor.', price: 850, rx_required: false, in_stock: true, photo: 'generate:Clean product photograph of a digital home blood pressure monitor with an arm cuff on a white surface, unbranded, soft studio lighting.' }
   - entity: otc_item
-    fields: { code: 'SUN-50', name: 'واقٍ شمسي SPF 50', category: skincare, description: 'واقٍ شمسي عالي الحماية للوجه والجسم. High-protection sunscreen for face and body.', price: 320, currency: EGP, rx_required: false, in_stock: true, photo: 'generate:Clean product photograph of an unbranded SPF 50 sunscreen tube standing on a white surface, plain label, bright soft lighting.' }
+    fields: { code: 'SUN-50', name: 'واقٍ شمسي SPF 50', category: skincare, description: 'واقٍ شمسي عالي الحماية للوجه والجسم. High-protection sunscreen for face and body.', price: 320, rx_required: false, in_stock: true, photo: 'generate:Clean product photograph of an unbranded SPF 50 sunscreen tube standing on a white surface, plain label, bright soft lighting.' }
   # An Rx-only line, seeded deliberately so the OTC filter has something to exclude.
   - entity: otc_item
-    fields: { code: 'AB-AMOX', name: 'مضاد حيوي (أموكسيسيلين)', category: cold_flu, description: 'يُصرف بروشتة طبية فقط. Prescription-only; dispensed after pharmacist review.', price: 0, currency: EGP, rx_required: true, in_stock: true }
+    fields: { code: 'AB-AMOX', name: 'مضاد حيوي (أموكسيسيلين)', category: cold_flu, description: 'يُصرف بروشتة طبية فقط. Prescription-only; dispensed after pharmacist review.', price: 0, rx_required: true, in_stock: true }

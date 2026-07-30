@@ -84,7 +84,7 @@ steps:
               map:
                 value:       '$item.id'
                 label:       '$item.fields.name'
-                description: '$format_money_field($item.fields.price_from, $coalesce($item.fields.currency, "AED"))'
+                description: '$format_money_field($item.fields.price_from, "AED")'
                 selection:   { svc_label: '$item.fields.name', svc_trade: '$item.fields.trade' }
               auto_resolve: true
           # The urgency IS the work type — it sets the SLA, so the customer chooses

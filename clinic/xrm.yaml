@@ -11,6 +11,8 @@ entities:
   # ── Shared catalog (reference records; searchable) ───────────────────────
   branch:
     label: { en: 'Branch', ar: 'فرع' }
+    icon:        '📍'
+    description: { en: 'A clinic location patients can be seen at', ar: 'فرع العيادة الذي يُستقبل فيه المرضى' }
     fields:
       name:     { type: text, required: true, label: { en: 'Name', ar: 'الاسم' } }
       name_en:  { type: text, label: { en: 'Name (EN)', ar: 'الاسم بالإنجليزية' } }
@@ -23,6 +25,8 @@ entities:
 
   doctor:
     label: { en: 'Doctor', ar: 'طبيب' }
+    icon:        '👨‍⚕️'
+    description: { en: 'A practising doctor, their specialty and accepted insurers', ar: 'طبيب ممارس وتخصصه وشركات التأمين المقبولة' }
     fields:
       name:          { type: text, required: true, label: { en: 'Name', ar: 'الاسم' } }
       title:         { type: text, label: { en: 'Title', ar: 'اللقب' } }        # استشاري / أخصائي
@@ -35,10 +39,10 @@ entities:
       timezone:      { type: text, label: { en: 'Timezone', ar: 'المنطقة الزمنية' }, default: 'Africa/Cairo' }
       bio:           { type: textarea, label: { en: 'Bio', ar: 'نبذة' } }
       photo:         { type: image, label: { en: 'Photo', ar: 'الصورة' } }
-      consult_fee:   { type: money, label: { en: 'Consultation fee', ar: 'الكشف' } }
+      consult_fee:   { type: money, label: { en: 'Consultation fee', ar: 'الكشف' }, currency: EGP }
       accepted_tpas: { type: text, label: { en: 'Insurers', ar: 'التأمينات المقبولة' } }   # comma-separated
-      rating:        { type: number, label: { en: 'Rating', ar: 'التقييم' }, default: 0 }
-      rating_count:  { type: number, label: { en: 'Ratings', ar: 'عدد التقييمات' }, default: 0 }
+      rating:        { type: number, label: { en: 'Rating', ar: 'التقييم' }, default: 0, description: { en: 'Computed from patient survey responses after each visit — do not type over it; the next response recalculates it.', ar: 'محسوب من تقييمات المرضى بعد كل زيارة — لا تعدّله يدوياً، فأي تقييم جديد يعيد حسابه.' } }
+      rating_count:  { type: number, label: { en: 'Ratings', ar: 'عدد التقييمات' }, default: 0, description: { en: 'How many responses the rating averages. A low count means the rating is not yet meaningful.', ar: 'عدد التقييمات التي بُني عليها المتوسط. العدد القليل يعني أن التقييم غير دال بعد.' } }
     list: [specialty, branch]
     # Fuzzy Arabic search over the doctor name AND the specialty word — a typed
     # "جلدية" returns dermatologists (generalizes the old doctor_search RPC).
@@ -48,6 +52,8 @@ entities:
   # ── Per-contact records (contact_id = the account holder) ────────────────
   dependent:
     label: { en: 'Dependent', ar: 'تابع' }
+    icon:        '👨‍👩‍👧'
+    description: { en: 'A family member a patient books appointments for', ar: 'فرد من العائلة يحجز له المريض مواعيد' }
     fields:
       name:     { type: text, required: true, label: { en: 'Name', ar: 'الاسم' } }
       dob:      { type: date, label: { en: 'Date of birth', ar: 'تاريخ الميلاد' } }
@@ -58,6 +64,8 @@ entities:
 
   medical_document:
     label: { en: 'Medical document', ar: 'مستند طبي' }
+    icon:        '📄'
+    description: { en: 'A report or scan the patient uploaded', ar: 'تقرير أو أشعة رفعها المريض' }
     fields:
       doc_type:  { type: select, options: [insurance_card, lab_requisition, report, prescription, other], label: { en: 'Type', ar: 'النوع' } }
       media:     { type: image, label: { en: 'File', ar: 'الملف' } }
@@ -67,6 +75,8 @@ entities:
 
   insurance_policy:
     label: { en: 'Insurance policy', ar: 'بوليصة تأمين' }
+    icon:        '🪪'
+    description: { en: 'The patient insurance cover used at billing', ar: 'تغطية تأمين المريض المستخدمة عند الفوترة' }
     fields:
       tpa:         { type: text, required: true, label: { en: 'Insurer', ar: 'شركة التأمين' } }
       member_id:   { type: text, label: { en: 'Member id', ar: 'رقم العضوية' } }
@@ -80,7 +90,7 @@ entities:
     fields:
       reason:        { type: textarea, label: { en: 'Reason', ar: 'سبب الزيارة' } }
       insurance_tpa: { type: text, label: { en: 'Insurance', ar: 'التأمين' } }
-      for_whom:      { type: select, options: [self, dependent], label: { en: 'For', ar: 'الحجز لـ' } }
+      for_whom:      { type: select, options: [self, dependent], label: { en: 'For', ar: 'الحجز لـ' }, description: { en: 'Whether the appointment is for the contact themselves or for a registered dependent.', ar: 'هل الموعد للمتواصل نفسه أم لأحد مرافقيه المسجلين.' } }
       dependent:     { type: record, entity: dependent, label: { en: 'Dependent', ar: 'التابع' } }
       # The branch this visit is at — a doctor may work different branches on
       # different days, so it's the branch of the CHOSEN slot (from the rule's

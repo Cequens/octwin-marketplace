@@ -17,16 +17,17 @@ entities:
   # ── The catalog: reference records, no pipeline ⇒ always listable ──────────
   fragrance:
     label: { en: 'Fragrance', ar: 'عطر' }
+    icon:        '🌸'
+    description: { en: 'A perfume on the shelf, its price and stock', ar: 'عطر على الرف وسعره ومخزونه' }
     fields:
       sku:         { type: text, required: true, label: { en: 'SKU', ar: 'الرمز' } }
       name:        { type: text, required: true, label: { en: 'Name', ar: 'الاسم' } }
       description: { type: textarea, label: { en: 'Description', ar: 'الوصف' } }
-      price:       { type: money, label: { en: 'Price', ar: 'السعر' }, sortable: true }
-      currency:    { type: text, label: { en: 'Currency', ar: 'العملة' }, default: 'SAR' }
+      price:       { type: money, label: { en: 'Price', ar: 'السعر' }, sortable: true, currency: SAR }
       category:    { type: select, options: [oud_oil, bakhoor, eau_de_parfum, gift_set, oud_chips], label: { en: 'Category', ar: 'الفئة' } }
       scent_notes: { type: text, label: { en: 'Notes', ar: 'المكوّنات العطرية' } }
-      longevity:   { type: select, options: [light, moderate, long, very_long], label: { en: 'Longevity', ar: 'الثبات' } }
-      stock:       { type: number, label: { en: 'Stock', ar: 'المخزون' }, default: 0, sortable: true }
+      longevity:   { type: select, options: [light, moderate, long, very_long], label: { en: 'Longevity', ar: 'الثبات' }, description: { en: 'How long the scent lasts on skin — the attribute customers ask about most when choosing.', ar: 'مدة ثبات العطر على البشرة — وهي أكثر ما يسأل عنه العملاء عند الاختيار.' } }
+      stock:       { type: number, label: { en: 'Stock', ar: 'المخزون' }, default: 0, sortable: true, description: { en: 'Units on hand. At 0 the cart refuses the add — this is the stock gate, not a display figure.', ar: 'الكمية المتاحة. عند 0 ترفض السلة الإضافة — هذا ضابط المخزون وليس رقماً للعرض.' } }
       photo:       { type: image, label: { en: 'Photo', ar: 'الصورة' } }
       rating:      { type: number, label: { en: 'Popularity', ar: 'الأكثر طلباً' }, default: 0 }
     list: [category, price, stock]
@@ -38,6 +39,8 @@ entities:
   # ── The shopping cart: one record per line, scoped to the shopper's contact ─
   cart_line:
     label: { en: 'Cart line', ar: 'سطر السلة' }
+    icon:        '🛒'
+    description: { en: 'One line in a shopper cart before checkout', ar: 'سطر في سلة المتسوق قبل إتمام الطلب' }
     fields:
       # A per-contact UNIQUENESS key: `<contact-id>:<item>`. `dedupe_by` resolves through
       # `findRecord`, which scopes to project + entity + field value and NOT to the
@@ -50,8 +53,8 @@ entities:
       sku:        { type: text, label: { en: 'SKU', ar: 'الرمز' } }
       title:      { type: text, label: { en: 'Item', ar: 'المنتج' } }
       qty:        { type: number, label: { en: 'Qty', ar: 'الكمية' }, default: 1, sortable: true }
-      unit_price: { type: money, label: { en: 'Unit price', ar: 'سعر الوحدة' } }
-      line_total: { type: money, label: { en: 'Line total', ar: 'إجمالي السطر' }, sortable: true }
+      unit_price: { type: money, label: { en: 'Unit price', ar: 'سعر الوحدة' }, currency: SAR }
+      line_total: { type: money, label: { en: 'Line total', ar: 'إجمالي السطر' }, sortable: true, currency: SAR }
     list: [title, qty, line_total]
     # One line per SKU per SHOPPER — see the `line_key` note above.
     dedupe_by: line_key
@@ -59,11 +62,12 @@ entities:
   # ── The order: a pipeline, so the console charts the fulfilment funnel ─────
   purchase:
     label: { en: 'Order', ar: 'طلب' }
+    icon:        '📦'
+    description: { en: 'A placed order, from packing through to delivery', ar: 'طلب مؤكد من التغليف حتى التسليم' }
     fields:
       items_summary:  { type: textarea, label: { en: 'Items', ar: 'المنتجات' } }
       item_count:     { type: number, label: { en: 'Items', ar: 'عدد المنتجات' }, sortable: true }
-      total:          { type: money, label: { en: 'Total', ar: 'الإجمالي' }, sortable: true }
-      currency:       { type: text, label: { en: 'Currency', ar: 'العملة' }, default: 'SAR' }
+      total:          { type: money, label: { en: 'Total', ar: 'الإجمالي' }, sortable: true, currency: SAR }
       recipient:      { type: text, label: { en: 'Recipient', ar: 'المستلم' } }
       city:           { type: select, options: [riyadh, jeddah, dammam, makkah, madinah, abha], label: { en: 'City', ar: 'المدينة' } }
       address:        { type: textarea, label: { en: 'Address', ar: 'العنوان' } }
@@ -74,6 +78,15 @@ entities:
       stages:   [placed, packed, shipped, delivered, cancelled]
       initial:  placed
       terminal: [delivered, cancelled]
+    # What each stage MEANS — rendered above the console pipeline control and on
+    # each move button. Kept in step with the `stage_hint.*` locale keys the flows
+    # resolve through `$enum_label(stage, "stage_hint")`.
+    stage_hints:
+      placed:    { en: 'Order confirmed, not yet packed', ar: 'تأكد الطلب ولم يُغلّف بعد' }
+      packed:    { en: 'Ready to leave the atelier', ar: 'جاهز لمغادرة الأتيليه' }
+      shipped:   { en: 'With the courier', ar: 'مع شركة الشحن' }
+      delivered: { en: 'Received by the customer', ar: 'استلمه العميل' }
+      cancelled: { en: 'Cancelled before delivery', ar: 'أُلغي قبل التسليم' }
     # Display names for the stages above — entity level, NOT inside `pipeline:`,
     # so an `extends: system` entity can label stages it never declared. The console
     # badge/filter/pipeline/funnel read these; an unlabelled stage falls back to Title
@@ -108,7 +121,6 @@ demo:
       name: 'دهن العود الملكي الكمبودي'
       description: 'دهن عود كمبودي معتّق ثلاث سنوات — رأس راتنجي دافئ يتحول إلى قاعدة خشبية حلوة تدوم أكثر من اثنتي عشرة ساعة. للمجلس والأعراس. Aged Cambodian oud oil: a warm resinous opening drying down to a sweet woody base — heavy, long-lasting, for the majlis and for weddings.'
       price: 1450
-      currency: SAR
       category: oud_oil
       scent_notes: 'عود كمبودي · صندل · جلد'
       longevity: very_long
@@ -121,7 +133,6 @@ demo:
       name: 'مخلط بخور العود الفاخر'
       description: 'مخلط بخور من رقائق العود والعنبر وزيت الصندل — يُبخّر في المجلس أو على الملابس فيترك أثراً دافئاً طويلاً. Premium bakhoor blend of oud chips, amber and sandalwood oil for the majlis.'
       price: 320
-      currency: SAR
       category: bakhoor
       scent_notes: 'عود · عنبر · صندل'
       longevity: long
@@ -134,7 +145,6 @@ demo:
       name: 'عطر العنبر والمسك'
       description: 'عطر شرقي دافئ من العنبر والمسك الأبيض وحبة الفانيليا — ثقيل الحضور، مناسب للمساء والشتاء. A warm oriental eau de parfum: amber, white musk and vanilla — an evening and winter signature.'
       price: 690
-      currency: SAR
       category: eau_de_parfum
       scent_notes: 'عنبر · مسك أبيض · فانيليا'
       longevity: long
@@ -147,7 +157,6 @@ demo:
       name: 'عطر الورد الطائفي'
       description: 'ورد طائفي نقي مع لمسة زعفران وقاعدة عود خفيفة — خفيف ومنعش، مناسب للاستخدام اليومي وللإهداء. Pure Taif rose with a saffron accent over light oud — fresh, light, everyday, and a favourite gift.'
       price: 540
-      currency: SAR
       category: eau_de_parfum
       scent_notes: 'ورد طائفي · زعفران · عود خفيف'
       longevity: moderate
@@ -160,7 +169,6 @@ demo:
       name: 'طقم الهدايا الفاخر'
       description: 'علبة هدايا تجمع دهن عود ومبخرة بخور وعطر عنبر، مع تغليف فاخر وبطاقة إهداء — الأكثر طلباً في العيد والأعراس. Luxury gift box: oud oil, bakhoor and an amber perfume, gift-wrapped with a card — the Eid and wedding favourite.'
       price: 1290
-      currency: SAR
       category: gift_set
       scent_notes: 'عود · عنبر · بخور'
       longevity: long
@@ -173,7 +181,6 @@ demo:
       name: 'رقائق العود الماليزي'
       description: 'رقائق عود ماليزي مختارة يدوياً، غنية بالراتنج ورائحتها حلوة عند التبخير — خمسون غراماً في علبة محكمة. Hand-picked Malaysian agarwood chips, resin-rich and sweet on the burner — 50g in a sealed tin.'
       price: 480
-      currency: SAR
       category: oud_chips
       scent_notes: 'عود ماليزي راتنجي'
       longevity: very_long

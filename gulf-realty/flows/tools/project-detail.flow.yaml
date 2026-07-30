@@ -47,7 +47,7 @@ steps:
     # real expression evaluated with `$item` bound, so it yields strings. (A bare
     # string second argument would be a field-name PROJECTION, not a template.)
     - assign:
-        unit_lines: '$map($coalesce($units.rows, []), $lines($compact([("🛏️ " + $item.fields.bedrooms + $t("project-detail.bedrooms_suffix")), ($format_number($item.fields.area_sqft) + $t("project-detail.sqft_suffix")), $format_money_field($item.fields.price, $coalesce($item.fields.currency, "AED"))]), " · "))'
+        unit_lines: '$map($coalesce($units.rows, []), $lines($compact([("🛏️ " + $item.fields.bedrooms + $t("project-detail.bedrooms_suffix")), ($format_number($item.fields.area_sqft) + $t("project-detail.sqft_suffix")), $format_money_field($item.fields.price, "AED")]), " · "))'
     - render:
         # detail_card carries no image — the buyer already saw the hero on the
         # browse carousel; this card is the long copy + the three next actions
@@ -58,7 +58,7 @@ steps:
                  $dev.fields.developer != null ? $t("project-detail.developer", { developer: $dev.fields.developer }) : null,
                  $dev.fields.area != null ? $t("project-detail.area", { area: $dev.fields.area }) : null,
                  $dev.fields.handover != null ? $t("project-detail.handover", { handover: $dev.fields.handover }) : null,
-                 $dev.fields.from_price != null ? $t("project-detail.from", { price: $format_money_field($dev.fields.from_price, $coalesce($dev.fields.currency, "AED")) }) : null,
+                 $dev.fields.from_price != null ? $t("project-detail.from", { price: $format_money_field($dev.fields.from_price, "AED") }) : null,
                  $dev.fields.payment_plan != null ? $t("project-detail.plan", { plan: $dev.fields.payment_plan }) : null,
                  $dev.fields.highlights != null ? $t("project-detail.highlights", { highlights: $dev.fields.highlights }) : null,
                  $length($unit_lines) > 0 ? $t("project-detail.units_header") : null,

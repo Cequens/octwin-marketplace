@@ -79,7 +79,7 @@ steps:
               map:
                 value:       '$item.id'
                 label:       '$item.fields.name'
-                description: '$format_money_field($item.fields.price_from, $coalesce($item.fields.currency, "AED"))'
+                description: '$format_money_field($item.fields.price_from, "AED")'
                 selection:   { treat_label: '$item.fields.name' }
               auto_resolve: true
           - field: dentist_id

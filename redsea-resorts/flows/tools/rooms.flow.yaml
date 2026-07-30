@@ -57,7 +57,7 @@ steps:
           body: '$lines($compact([
                    $item.fields.name,
                    $item.fields.resort_label,
-                   $t("rooms.from", { price: $format_money_field($item.fields.nightly_bb, $coalesce($item.fields.currency, "EGP")) })
+                   $t("rooms.from", { price: $format_money_field($item.fields.nightly_bb, "EGP") })
                  ]), "\n")'
           buttons:
             - { title: '{$t("rooms.btn_book")}', on_select: { invoke: book-stay, with: { room_id: '$item.id' } } }

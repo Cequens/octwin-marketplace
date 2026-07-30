@@ -7,7 +7,7 @@
 # never advises, substitutes, doses, or dispenses a prescription-only medicine on its own.
 
 id:          pharmaplus-rx
-version:     1.0.0
+version:     '1.1.0'
 description: 'Community pharmacy — send a prescription photo for pharmacist review, reorder a repeat, and shop over-the-counter items, with every clinical question routed to a human.'
 
 listing:

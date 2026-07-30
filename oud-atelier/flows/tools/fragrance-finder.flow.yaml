@@ -107,7 +107,7 @@ steps:
         items: '$picks.rows'
         item_template:
           image_url: '$coalesce($item.fields.photo, "")'
-          body: '$lines($compact([$item.fields.name, $format_money_field($item.fields.price, $coalesce($item.fields.currency, "SAR"))]), "\n")'
+          body: '$lines($compact([$item.fields.name, $format_money_field($item.fields.price, "SAR")]), "\n")'
           buttons:
             - { title: '{$t("fragrance-finder.btn_add")}',    on_select: { invoke: cart,    with: { action: add, product_id: '$item.fields.sku' } } }
             - { title: '{$t("fragrance-finder.btn_detail")}', on_select: { invoke: product, with: { product_id: '$item.fields.sku' } } }
@@ -121,7 +121,7 @@ steps:
         items: '$picks.rows'
         item_template:
           image_url: '$coalesce($item.fields.photo, "")'
-          body: '$lines($compact([$item.fields.name, $format_money_field($item.fields.price, $coalesce($item.fields.currency, "SAR"))]), "\n")'
+          body: '$lines($compact([$item.fields.name, $format_money_field($item.fields.price, "SAR")]), "\n")'
           buttons:
             - { title: '{$t("fragrance-finder.btn_add")}',    on_select: { invoke: cart,    with: { action: add, product_id: '$item.fields.sku' } } }
             - { title: '{$t("fragrance-finder.btn_detail")}', on_select: { invoke: product, with: { product_id: '$item.fields.sku' } } }

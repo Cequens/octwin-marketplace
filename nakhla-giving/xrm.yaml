@@ -9,6 +9,8 @@ entities:
 
   appeal:
     label:   { en: 'Appeal', ar: 'حملة' }
+    icon:        '🤲'
+    description: { en: 'A fundraising campaign and its target', ar: 'حملة تبرع وهدفها' }
     # `title_field` is what makes `--seed` IDEMPOTENT. The seeder looks for an
     # existing row by `dedupe_by`, else by the title field's value; declaring
     # NEITHER means it never finds one and inserts a fresh set on every seed —
@@ -18,8 +20,8 @@ entities:
       title_ar:    { type: text,   required: true, label: { en: 'Title (AR)', ar: 'العنوان' } }
       title_en:    { type: text,   label: { en: 'Title (EN)', ar: 'العنوان بالإنجليزي' } }
       summary:     { type: text,   label: { en: 'Summary', ar: 'نبذة' } }
-      goal:        { type: number, label: { en: 'Goal', ar: 'الهدف' }, sortable: true }
-      raised:      { type: number, label: { en: 'Raised', ar: 'المُحصّل' }, sortable: true }
+      goal:        { type: number, label: { en: 'Goal', ar: 'الهدف' }, sortable: true, description: { en: 'The fundraising target the appeal is measured against.', ar: 'المبلغ المستهدف الذي تُقاس عليه الحملة.' } }
+      raised:      { type: number, label: { en: 'Raised', ar: 'المُحصّل' }, sortable: true, description: { en: 'Total settled donations against this appeal. Accumulated as gifts are paid — not a target you set.', ar: 'إجمالي التبرعات المسددة لهذه الحملة. يتراكم مع سداد التبرعات وليس رقماً تحدده.' } }
       category:    { type: select, options: [food, health, education, shelter, water], label: { en: 'Category', ar: 'التصنيف' } }
       # A donor gives to what they can see. Seeded via `generate:` so a pure-YAML
       # pack (which ships no binaries) still arrives with real imagery; an
@@ -33,6 +35,13 @@ entities:
       progression: free
       terminal:    [closed]
 
+    # What each stage MEANS — rendered above the console pipeline control and on
+    # each move button. Kept in step with the `stage_hint.*` locale keys the flows
+    # resolve through `$enum_label(stage, "stage_hint")`.
+    stage_hints:
+      draft:  { en: 'Not yet visible to donors', ar: 'غير ظاهرة للمتبرعين بعد' }
+      active: { en: 'Open and accepting donations', ar: 'مفتوحة وتستقبل التبرعات' }
+      closed: { en: 'No longer accepting donations', ar: 'لم تعد تستقبل تبرعات' }
     # Display names for the stages above — entity level, NOT inside `pipeline:`,
     # so an `extends: system` entity can label stages it never declared. The console
     # badge/filter/pipeline/funnel read these; an unlabelled stage falls back to Title
@@ -44,6 +53,8 @@ entities:
       closed: { en: 'Closed', ar: 'مغلقة' }
   donation:
     label:   { en: 'Donation', ar: 'تبرّع' }
+    icon:        '💝'
+    description: { en: 'A gift, from pledge through to settlement', ar: 'تبرع من التعهد حتى السداد' }
     fields:
       appeal_title: { type: text,   required: true, label: { en: 'Appeal', ar: 'الحملة' } }
       appeal_id:    { type: text,   label: { en: 'Appeal ref', ar: 'رقم الحملة' } }
@@ -69,6 +80,14 @@ entities:
       initial:     pending
       progression: free
       terminal:    [paid, refunded]
+    # What each stage MEANS — rendered above the console pipeline control and on
+    # each move button. Kept in step with the `stage_hint.*` locale keys the flows
+    # resolve through `$enum_label(stage, "stage_hint")`.
+    stage_hints:
+      pending:  { en: 'Pledged; payment not settled yet', ar: 'تم التعهد ولم يُسدَّد بعد' }
+      paid:     { en: 'Payment settled and receipted', ar: 'تم السداد وإصدار الإيصال' }
+      failed:   { en: 'The payment was declined', ar: 'رُفضت عملية الدفع' }
+      refunded: { en: 'Returned to the donor', ar: 'أُعيد المبلغ للمتبرع' }
     # Display names for the stages above — entity level, NOT inside `pipeline:`,
     # so an `extends: system` entity can label stages it never declared. The console
     # badge/filter/pipeline/funnel read these; an unlabelled stage falls back to Title

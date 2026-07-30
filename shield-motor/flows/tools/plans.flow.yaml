@@ -58,7 +58,7 @@ steps:
           description: '$lines($compact([
                           $enum_label($item.fields.cover, "cover", $item.fields.cover),
                           $item.fields.agency_repair == true ? $t("plans.agency") : $t("plans.workshop"),
-                          $t("plans.excess", { excess: $format_money_field($item.fields.excess, $coalesce($item.fields.currency, "AED")) })
+                          $t("plans.excess", { excess: $format_money_field($item.fields.excess, "AED") })
                         ]), " · ")'
           on_select:   { invoke: quote, with: { plan_id: '$item.id' } }
       memory_note: 'Showed {$page.total} published plan(s).'

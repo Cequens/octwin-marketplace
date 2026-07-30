@@ -53,7 +53,7 @@ steps:
           image_url: '$coalesce($item.fields.photo, "")'
           body: '$lines($compact([
                    $item.fields.name,
-                   $t("services.from", { price: $format_money_field($item.fields.price_from, $coalesce($item.fields.currency, "AED")) }),
+                   $t("services.from", { price: $format_money_field($item.fields.price_from, "AED") }),
                    $item.fields.duration_min != null ? $t("services.duration", { min: $item.fields.duration_min }) : null
                  ]), "\n")'
           buttons:
