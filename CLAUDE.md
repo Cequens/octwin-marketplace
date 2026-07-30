@@ -2,6 +2,13 @@
 
 Pure-YAML Octwin packs. No `.ts`/`.js`, no custom primitives — the server rejects code on deploy.
 
+## Work on `master`. Do not branch.
+
+Commit straight to `master` and push there. No feature branches, no PRs, no fast-forward dance —
+that is the owner's standing instruction for this repo, and it matches the history.
+
+Do not ask whether to branch, and do not branch "to be safe" before a large or risky change.
+
 ## Bump the pack version on every change
 
 **Any change to a pack must bump its `version:` in `manifest.yaml`.** The platform stores each
