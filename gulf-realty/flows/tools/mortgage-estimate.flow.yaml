@@ -48,7 +48,7 @@ steps:
                 then:
                   - assign:
                       dev_name:     '$dev.fields.name'
-                      dev_currency: '"AED"'
+                      dev_currency: 'AED'
                       dev_price:    '$dev.fields.from_price.value / $dev.fields.from_price.offset'
         before_prompt:
           - assign:

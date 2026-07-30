@@ -50,7 +50,7 @@ steps:
                   - assign:
                       pkg_name:     '$pkg.fields.name'
                       pkg_code:     '$pkg.fields.code'
-                      pkg_currency: '"SAR"'
+                      pkg_currency: 'SAR'
                       pkg_price:    '$pkg.fields.price_pp.value / $pkg.fields.price_pp.offset'
         before_prompt:
           - assign:
