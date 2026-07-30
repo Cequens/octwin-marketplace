@@ -15,6 +15,80 @@ KB) and the primitive input schemas (`platform-primitives.json`). Nothing here i
 
 ---
 
+## 2026-07-30 — every money field re-invents `currency:`, and no pack uses the explanatory slots
+
+**How this was found.** The operator Records surface was rebuilt to render the declaration's *human*
+layer — an entity's `icon:`/`description:`, a field's `description:`/`currency:`, a pipeline's
+`stage_hints:`. Probing the running platform's `GET /xrm/entities` across every installed pack
+returned `null` for all five, on every entity, in every pack. The slots have existed since
+2026-07-29; the console now renders them; nothing declares them.
+
+### Broken for the customer — 50 money amounts, 0 declared currencies
+
+`grep -c "type: money" */xrm.yaml` = **50 across 17 packs**. `grep "type: money" | grep -c currency`
+= **0**. Instead, **16 of the 17** declare a *sibling `text` field literally named `currency`*:
+
+```yaml
+# gulf-realty/xrm.yaml:20-21  ← and 15 other packs, same shape
+from_price:    { type: money, label: { en: 'Starting price', ar: 'يبدأ من' }, sortable: true }
+currency:      { type: text,  label: { en: 'Currency', ar: 'العملة' }, default: 'AED' }
+```
+
+**What the customer experiences.** Three things, all from the same cause:
+
+1. **The amount renders with no currency.** The console prints `4,800.00`, and "AED" — if it is in
+   `list:` at all — is a *separate column* elsewhere in the row. On the record page it is a separate
+   `<dt>/<dd>` cell. An operator approving a figure reads a bare decimal.
+2. **The stored `offset` silently defaults to 100.** `currency:` is what `currencyOffset` reads to
+   pick the minor-unit scale. A `text` field named `currency` is invisible to it. That is correct
+   today for AED/SAR/EGP but **wrong the moment a pack touches KWD, BHD or OMR** (3-decimal): the
+   third decimal is dropped on a console form round-trip. `barakah-finance` (`max_amount`, `SAR`)
+   and `binaa-supply` are the packs most likely to meet a Gulf 3-decimal currency next.
+3. **The same fact is stored twice and can disagree** — a per-record `currency` text value against
+   the money field's own offset, with nothing keeping them in step.
+
+**The fix** — delete the sibling field, move the code onto the money field:
+
+```yaml
+from_price:    { type: money, currency: AED, label: { en: 'Starting price', ar: 'يبدأ من' }, sortable: true }
+```
+
+**Per-pack counts** (`money fields` / `sibling currency text fields`): `pharmaplus-rx` 6/2 ·
+`shawarma-express` 6/2 · `redsea-resorts` 5/2 · `barakah-finance` 4/2 · `oud-atelier` 4/2 ·
+`shield-motor` 4/2 · `swiftship-courier` 4/3 · `gulf-realty` 3/2 · `homefix-services` 3/2 ·
+`binaa-supply` 2/1 · `motorcare-service` 2/2 · `umrah-journeys` 2/2 · `glamour-salon` 1/1 ·
+`ironpulse-fitness` 1/1 · `nile-academy` 1/1 · `smile-dental` 1/1 · `clinic` 1/0.
+
+**Verify before you accuse — done.** `currency:` is on `fieldSpecSchema` in the platform's
+`xrm/contracts/spec.ts`, resolved onto `ResolvedField.currency`, and now shipped by
+`serializeEntity`. The slot is real and the packs are not using it.
+
+### Audit — the four explanatory slots are declared by nobody
+
+`icon:` **0/20 packs** · entity `description:` **0** on the wire · field `description:` **0 of every
+field in every pack** · `stage_hints:` **0/20**. (`grep description: */xrm.yaml` matches 12 files,
+but every hit is a *demo-record value* for a field named `description`, not the declaration slot —
+the running platform's projection is the authoritative measure and it returns `null` throughout.)
+
+**What the customer experiences.** The console can now show all four and shows none of them:
+
+- The entity switcher lists 5–8 near-identical text rows where an `icon:` would make them scannable.
+- The records band can say what a record type *is* — `gulf-realty`'s `buyer_lead` vs `unit_type` vs
+  `development` are guessable from their names only if you already know the business.
+- A field's help text under its form control, and its tooltip on the record, are both blank. An
+  operator filling `shield-motor`'s `risk_band` or `barakah-finance`'s `min_down_pct` gets a label
+  and no explanation of what to enter or what it affects.
+- The pipeline control names the stage it is moving to and nothing more. `stage_hints:` renders the
+  current stage's meaning above the move buttons and titles each destination —
+  `swiftship-courier`'s 7-stage courier pipeline and `umrah-journeys`' `trip` are where this costs
+  most, because the stage names are operational jargon.
+
+**Not a defect, and not urgent** — a pack with none of these still works. It is filed because 20/20
+packs skipping the same four optional slots is a signal about the *authoring* surface (they are not
+in the scaffold, and the skill does not ask for them), not twenty independent oversights.
+
+---
+
 ## 2026-07-30 — clinic's manifest header documents a retired mechanism — ✅ CLOSED
 
 > **Closed 2026-07-30 — and it was not only clinic.** The corrected header was applied verbatim,
