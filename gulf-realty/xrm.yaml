@@ -112,6 +112,8 @@ entities:
   booking:
     extends: system
     label: { en: 'Site viewing', ar: 'معاينة' }
+    icon:        '🗓️'
+    description: { en: 'A property viewing with an advisor at a development', ar: 'معاينة عقار مع مستشار في أحد المشاريع' }
     fields:
       development:   { type: record, entity: development, label: { en: 'Development', ar: 'المشروع' } }
       advisor_label: { type: text, label: { en: 'Advisor', ar: 'المستشار' } }

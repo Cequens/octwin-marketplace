@@ -131,6 +131,9 @@ entities:
   # ──────────────────────── test-drive bookings (system entity) ──
   booking:
     extends: system                 # merge pack fields over the platform booking template
+    label:       { en: 'Test drive', ar: 'تجربة قيادة' }
+    icon:        '🚘'
+    description: { en: 'A booked test drive at a showroom', ar: 'تجربة قيادة محجوزة في أحد المعارض' }
     fields:
       interested_model:
         type: select

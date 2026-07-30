@@ -48,6 +48,8 @@ entities:
   booking:
     extends: system
     label: { en: 'Appointment', ar: 'موعد' }
+    icon:        '📅'
+    description: { en: 'A client appointment with a stylist for a treatment', ar: 'موعد عميلة مع أخصائية لخدمة محددة' }
     fields:
       treatment:       { type: record, entity: treatment, label: { en: 'Treatment', ar: 'الخدمة' } }
       stylist:         { type: record, entity: stylist, label: { en: 'Stylist', ar: 'الأخصائية' } }
@@ -58,6 +60,9 @@ entities:
 
   survey_response:
     extends: system
+    label:       { en: 'Visit feedback', ar: 'تقييم الزيارة' }
+    icon:        '⭐'
+    description: { en: 'A client rating of the stylist after an appointment — it feeds the rating that orders the stylist picker', ar: 'تقييم العميلة للأخصائية بعد الموعد — ويغذّي التقييم الذي يرتب قائمة الأخصائيات' }
     fields:
       stylist: { type: record, entity: stylist, label: { en: 'Stylist', ar: 'الأخصائية' } }
     list: [survey_key, score, stylist]

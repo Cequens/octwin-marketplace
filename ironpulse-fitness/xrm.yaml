@@ -100,6 +100,8 @@ entities:
   booking:
     extends: system
     label: { en: 'Class booking', ar: 'حجز حصة' }
+    icon:        '🏋️'
+    description: { en: 'A member seat in a class session — trial or paid', ar: 'مقعد عضو في حصة — تجريبية أو مدفوعة' }
     fields:
       session_type:  { type: record, entity: session_type, label: { en: 'Class', ar: 'الحصة' } }
       class_label:   { type: text, label: { en: 'Class', ar: 'الحصة' } }

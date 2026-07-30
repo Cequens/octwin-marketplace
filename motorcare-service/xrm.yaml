@@ -107,6 +107,8 @@ entities:
   booking:
     extends: system
     label: { en: 'Bay slot', ar: 'موعد المنصة' }
+    icon:        '🔧'
+    description: { en: 'A workshop bay reserved for a vehicle for the length of the job', ar: 'خانة ورشة محجوزة لمركبة طوال مدة العمل' }
     fields:
       bay_label:     { type: text, label: { en: 'Bay', ar: 'المنصة' } }
       package_label: { type: text, label: { en: 'Package', ar: 'الباقة' } }

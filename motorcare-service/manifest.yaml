@@ -9,7 +9,7 @@
 # the customer never has to re-enter. No pack DB, no code — pure YAML.
 
 id:          motorcare-service
-version:     '1.1.0'
+version:     '1.1.1'
 description: 'Car service centre — service packages, AI damage triage from a photo, bay booking, and a workshop queue a foreman really works.'
 
 listing:

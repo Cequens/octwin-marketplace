@@ -97,6 +97,8 @@ entities:
   booking:
     extends: system
     label: { en: 'Campus tour', ar: 'زيارة المقر' }
+    icon:        '🏫'
+    description: { en: 'A family guided campus visit', ar: 'زيارة موجهة للحرم المدرسي لأسرة' }
     fields:
       campus_label:  { type: text, label: { en: 'Campus', ar: 'المقر' } }
       slot_label:    { type: text, label: { en: 'Slot', ar: 'الموعد' } }

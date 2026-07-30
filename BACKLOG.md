@@ -49,8 +49,18 @@ KB) and the primitive input schemas (`platform-primitives.json`). Nothing here i
 >   `stage_hint.*` locale keys where they existed (**65 of 120**) so the declaration and the
 >   flow-side `$enum_label(stage, "stage_hint")` stay byte-identical; the other 55 plus all 120
 >   English strings were authored.
-> - The 12 `extends: system` entities (`booking`, `survey_response`) were left alone — they inherit
->   the platform template's human layer, and restating it would fork a shipped default.
+> - ~~The 12 `extends: system` entities were left alone — they inherit the platform template's human
+>   layer.~~ **Wrong, corrected 2026-07-30.** The system templates ship `stage_labels` but **not**
+>   `icon` or `description` — both are absent on all seven
+>   (`.octwin/platform-kb/system-entities/*.json`). So those 12 inherited nothing and rendered bare
+>   in the console switcher, which is exactly what the operator noticed. Now declared per pack, since
+>   `booking` means something different in each: an appointment, a site viewing, a class seat, a bay
+>   slot, a room night, a campus tour, a test drive. **All 73 entities now carry icon + label +
+>   description.**
+>
+>   Four of them had **no `label:` either** — `xpeng-egypt`'s `booking` and the three
+>   `survey_response` entities — so the console was showing the raw entity key. Labels added with the
+>   icons.
 >
 > **Field-level `description:` — ✅ done 2026-07-30, scoped deliberately.** **52 fields across 16
 > packs**, not all ~400. A description that restates its label is noise in both the form hint and

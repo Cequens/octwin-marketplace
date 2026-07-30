@@ -94,6 +94,8 @@ entities:
   booking:
     extends: system
     label: { en: 'Room night', ar: 'ليلة غرفة' }
+    icon:        '🛏️'
+    description: { en: 'A room night held by the scheduling engine against a stay', ar: 'ليلة غرفة يحجزها محرك المواعيد ضمن إقامة' }
     fields:
       room_label:   { type: text, label: { en: 'Room', ar: 'الغرفة' } }
       resort_label: { type: text, label: { en: 'Resort', ar: 'المنتجع' } }

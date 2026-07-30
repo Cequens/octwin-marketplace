@@ -47,6 +47,8 @@ entities:
   booking:
     extends: system
     label: { en: 'Visit', ar: 'زيارة' }
+    icon:        '🦷'
+    description: { en: 'A patient visit with a dentist for a treatment', ar: 'زيارة مريض لطبيب أسنان لعلاج محدد' }
     fields:
       treatment:       { type: record, entity: treatment, label: { en: 'Treatment', ar: 'الإجراء' } }
       dentist:         { type: record, entity: dentist, label: { en: 'Dentist', ar: 'الطبيب' } }
@@ -62,6 +64,9 @@ entities:
   # what makes the per-dentist average computable.
   survey_response:
     extends: system
+    label:       { en: 'Visit feedback', ar: 'تقييم الزيارة' }
+    icon:        '⭐'
+    description: { en: 'A patient rating of the dentist after a visit — it feeds the rating that ranks the dentist picker', ar: 'تقييم المريض لطبيب الأسنان بعد الزيارة — ويغذّي التقييم الذي يرتب قائمة الأطباء' }
     fields:
       dentist: { type: record, entity: dentist, label: { en: 'Dentist', ar: 'الطبيب' } }
     list: [survey_key, score, dentist]

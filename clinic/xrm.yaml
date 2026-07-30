@@ -87,6 +87,8 @@ entities:
   booking:
     extends: system
     label: { en: 'Appointment', ar: 'موعد' }
+    icon:        '📅'
+    description: { en: 'A patient appointment with a doctor at a branch, held by the scheduling engine', ar: 'موعد مريض مع طبيب في فرع، يحجزه محرك المواعيد' }
     fields:
       reason:        { type: textarea, label: { en: 'Reason', ar: 'سبب الزيارة' } }
       insurance_tpa: { type: text, label: { en: 'Insurance', ar: 'التأمين' } }
@@ -110,6 +112,9 @@ entities:
   # response counts.
   survey_response:
     extends: system
+    label:       { en: 'Visit feedback', ar: 'تقييم الزيارة' }
+    icon:        '⭐'
+    description: { en: 'A patient rating of the doctor after a visit — it feeds the doctor rating that orders the picker', ar: 'تقييم المريض للطبيب بعد الزيارة — ويغذّي تقييم الطبيب الذي يرتب قائمة الاختيار' }
     fields:
       doctor: { type: record, entity: doctor, label: { en: 'Doctor', ar: 'الطبيب' } }
     list: [survey_key, score, doctor]
