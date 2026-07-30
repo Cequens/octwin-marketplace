@@ -12,7 +12,7 @@
 #   • Reply button — ticket-status' awaiting card taps in with `case_id` only →
 #     collect asks for the message → agent re-calls with it → records.
 # `case_id`/`message`/`attachment` are read from `$state`: the interpreter's
-# universal turn-start merge (`state = {…state, …input}`, index.ts §mergeTurnInput)
+# universal turn-start merge (`state = {…state, …input}` — see the KB's runtime doc)
 # folds each into state on whatever turn it arrives, so the button's first-turn
 # `case_id` survives the gap and the resume-turn's `message`/`attachment` land too.
 # The `attachment` is an OPTIONAL `type: media` collect field OFFERED with a Skip

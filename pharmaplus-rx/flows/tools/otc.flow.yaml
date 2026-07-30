@@ -54,7 +54,7 @@ steps:
   # here, and neither can something the branch has run out of.
   #
   # `eq: false`, NOT `ne: true`: a `boolean` field admits only eq / is_set / not_set
-  # (`OPS_BY_TYPE`, xrm/filters.ts), so `ne` is a compile error that surfaces as this
+  # (the per-type op table in the KB's xrm guide), so `ne` is rejected and surfaces as this
   # step's `failed` port. `eq false` also fails SAFE — an item whose flag was never set
   # is hidden rather than offered, which is the right direction for a pharmacy.
   load_all:

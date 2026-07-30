@@ -2,9 +2,10 @@
 #
 #   • errors:  copy the PLATFORM emits on failure paths (optional).
 #   • agents:  per-agent loop copy, keyed by manifest agent id. OPTIONAL — the
-#              platform ships generic default copy (resolveMessages), so this
-#              block (and each of its 7 fields) overrides only the wording you
-#              want to customize. A pack with no agents block still runs.
+#              platform ships generic default copy and merges this block over
+#              it, so this block (and each of its 7 fields) overrides only the
+#              wording you want to customize. A pack with no agents block still
+#              runs. Schema: the KB's declarations/messages.json.
 
 errors:
   failed:

@@ -1,12 +1,14 @@
 # xpeng-egypt — platform-emitted envelope copy (Arabic).
 #
-# Two blocks, both auto-loaded by definePack (lang from default_settings.locale):
+# Two blocks, both auto-loaded from this file by its name (the lang suffix is
+# matched against default_settings.locale):
 #   • errors:  copy the PLATFORM emits on failure paths (tool throw, workflow
 #              plumbing). Optional, but worth having so users never sit in
-#              silence. Schema: src/platform/manifest/messages.ts.
+#              silence. Schema: the `messages` declaration in the platform KB
+#              (.octwin/platform-kb/declarations/messages.json).
 #   • agents:  per-agent loop copy, keyed by the manifest agent id. OPTIONAL —
-#              the platform ships default copy; resolveMessages merges this block
-#              (whole or partial) over it at turn start. Shown here as an example.
+#              the platform ships default copy and merges this block (whole or
+#              partial) over it at turn start. Shown here as an example.
 
 errors:
   failed:

@@ -5,9 +5,9 @@
 # needs, opens a case (routed to the right team/region), and lets a 2nd-line
 # human resolve it — with the AI as the sole voice to the customer (mediated).
 #
-# Published to an artifact at boot (`publishInRepoPacks`) — pure YAML, no register.ts.
-# The same pack is provisioned to two projects (Kaiian + Waslini) with per-
-# project branding; the logic is identical.
+# Pure YAML, no register.ts — `octwin deploy` publishes an immutable artifact and
+# the runtime resolves the pack from it. The same pack is provisioned to two
+# projects (Kaiian + Waslini) with per-project branding; the logic is identical.
 
 id:          kaiian
 version:     1.0.0
@@ -15,7 +15,7 @@ description: 'Kaiian/Waslini ride-hailing customer support — role-aware AI int
 
 # Marketplace presentation — how this pack appears in the console catalog a
 # tenant browses. Optional: with no `listing:` the console falls back to `id` +
-# `description`. `category` is a closed enum (see manifestYamlSchema).
+# `description`. `category` is a closed enum (see the KB's declarations/manifest.json).
 listing:
   title:    'Ride-hailing Support'
   tagline:  'Role-aware intake for passengers and captains, with human casework'

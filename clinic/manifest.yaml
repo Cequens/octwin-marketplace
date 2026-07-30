@@ -1,13 +1,13 @@
-# clinic — the minimal reference pack. COPY THIS to start a new pack
-# (`npx tsx scripts/pack-scaffold <your-id>` does the copy + rename for you).
+# clinic — the minimal reference pack. Copy this directory to start a new pack.
 #
-# A pack is declared entirely by this one file. The platform auto-discovers
-# any `src/packs/<id>/manifest.yaml` at boot (`publishInRepoPacks`) and
-# wires the agent + flows in — no per-pack glue, no register.ts.
+# A pack is declared entirely by this one file plus its sibling declarations
+# (xrm.yaml / scheduling.yaml / surveys.yaml / commands.yaml). Deploy with
+# `octwin deploy`; the runtime resolves the pack from the published artifact.
+# No per-pack glue, no register.ts.
 #
-# Schema authority: src/platform/core/manifest/schema.ts (manifestYamlSchema,
-# `.strict()` — unknown keys are rejected). Required: id, version (string),
-# description.
+# Schema authority: the `manifest` declaration schema in the platform KB
+# (.octwin/platform-kb/declarations/manifest.json) — `.strict()`, so unknown
+# keys are rejected. Required: id, version (string), description.
 
 id:          clinic
 version:     1.0.0
@@ -15,7 +15,7 @@ description: 'Outpatient appointment reservation for clinics & hospital outpatie
 
 # Marketplace presentation — how this pack appears in the console catalog a
 # tenant browses. Optional: with no `listing:` the console falls back to `id` +
-# `description`. `category` is a closed enum (see manifestYamlSchema).
+# `description`. `category` is a closed enum (see the KB's declarations/manifest.json).
 listing:
   title:    'Clinic Appointments'
   tagline:  'Arabic-first outpatient booking — doctors, slots and reminders'

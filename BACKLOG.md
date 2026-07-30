@@ -15,6 +15,96 @@ KB) and the primitive input schemas (`platform-primitives.json`). Nothing here i
 
 ---
 
+## 2026-07-30 — clinic's manifest header documents a retired mechanism — ✅ CLOSED
+
+> **Closed 2026-07-30 — and it was not only clinic.** The corrected header was applied verbatim,
+> then the same check was run across all 21 packs: **6 packs, 9 files** carry this defect class.
+> 21/21 validate clean offline; the 5 edited packs pass `octwin validate --remote`.
+>
+> **Retired symbols stated as current** (what `check:stale-terms` fails on):
+>
+> | Pack | Line | Claim |
+> |---|---|---|
+> | `clinic/manifest.yaml` | 2, 5, 6, 8 | the four in this entry |
+> | **`kaiian/manifest.yaml`** | **8** | **`publishInRepoPacks`, `register.ts` — missed by this entry** |
+>
+> **Platform source paths / TS symbols cited as authority** — not retired, but unopenable by a
+> marketplace author, which is the same failure the corrected header fixes:
+>
+> | Pack | File:line | Symbol |
+> |---|---|---|
+> | `clinic` | `messages.ar.yaml:3,6,8` | `definePack`, `src/platform/core/manifest/messages.ts`, `resolveMessages` |
+> | `xpeng-egypt` | `messages.ar.yaml:3,6,8` | `definePack`, `src/platform/manifest/messages.ts`, `resolveMessages` |
+> | `clinic`·`kaiian`·`ecommerce` | `manifest.yaml:18/18/20` | `manifestYamlSchema` |
+> | `ecommerce` | `manifest.yaml:50` · `messages.en.yaml:5` | `catalog.seed.ts`, `npm run seed:gen`, `resolveMessages` |
+> | `kaiian` | `flows/tools/reply-to-case.flow.yaml:15` | `index.ts §mergeTurnInput` |
+> | `pharmaplus-rx` | `flows/tools/otc.flow.yaml:57` | `OPS_BY_TYPE`, `xrm/filters.ts` |
+>
+> Every one now points at the **pulled KB** instead — `declarations/manifest.json`,
+> `declarations/messages.json`, the xrm guide, the runtime doc — which is what an author actually has.
+>
+> **Worth noting:** `clinic` and `xpeng-egypt` cited *different paths for the same file*
+> (`src/platform/core/manifest/messages.ts` vs `src/platform/manifest/messages.ts`), so at least one
+> was already wrong even as an internal reference — the reason a source path makes a bad citation.
+>
+> **Deliberately kept:** the phrase *"no per-pack glue, no register.ts"* survives in `clinic` and
+> `kaiian`. It names the retired symbol only to say it does **not** exist, and the corrected header
+> in this entry keeps that line verbatim. If `check:stale-terms` flags a negative assertion, that is
+> the gate to adjust, not the copy.
+>
+> Clean across all 21 packs: no `pack.json` references, no retired per-flow `taps:` blocks.
+
+
+
+Found by copying `clinic/` verbatim into the platform repo as a test fixture
+(`test-fixtures/packs/clinic/`) and discovering it could not live under `src/**`: the platform's
+`check:stale-terms` gate fails any file that states a retired symbol as current, and this header does
+it twice.
+
+**Audit — wrong docs, no customer impact.** Nothing is broken at runtime; every YAML declaration in
+the pack is correct and it loads clean. This is authoring guidance that will mislead the next person
+who copies clinic as a starting point — which its own first line invites them to do.
+
+### `clinic/manifest.yaml:1-11` — the header describes the retired `src/packs` boot scanner
+
+```yaml
+# clinic — the minimal reference pack. COPY THIS to start a new pack
+# (`npx tsx scripts/pack-scaffold <your-id>` does the copy + rename for you).
+#
+# A pack is declared entirely by this one file. The platform auto-discovers
+# any `src/packs/<id>/manifest.yaml` at boot (`publishInRepoPacks`) and
+# wires the agent + flows in — no per-pack glue, no register.ts.
+```
+
+Three claims, all retired **2026-07-27**:
+
+- **`src/packs/<id>/manifest.yaml`** — that directory is gone. Packs live in this repo and reach a
+  tenant through `octwin deploy` or the operator repo import.
+- **`publishInRepoPacks`** — deleted with it. There is no boot-time publish; the runtime resolves every
+  pack from an immutable content-addressed artifact via `packDir`.
+- **`scripts/pack-scaffold`** — a platform-repo script path, not something a marketplace author has.
+
+**Corrected header:**
+
+```yaml
+# clinic — the minimal reference pack. Copy this directory to start a new pack.
+#
+# A pack is declared entirely by this one file plus its sibling declarations
+# (xrm.yaml / scheduling.yaml / surveys.yaml / commands.yaml). Deploy with
+# `octwin deploy`; the runtime resolves the pack from the published artifact.
+# No per-pack glue, no register.ts.
+#
+# Schema authority: the `manifest` declaration schema in the platform KB
+# (.octwin/platform-kb/declarations/manifest.json) — `.strict()`, so unknown
+# keys are rejected. Required: id, version (string), description.
+```
+
+The last line of the current header also points at `src/platform/core/manifest/schema.ts` as "schema
+authority", which is a platform source path an author cannot open. The pulled KB is the authority they
+actually have.
+
+---
+
 ## 2026-07-29c — declaration gaps the new console surfaces make visible — ✅ CLOSED
 
 > **Closed 2026-07-29.** `sortable: true` added to **61 fields across 18 packs**; `stage_labels:`
