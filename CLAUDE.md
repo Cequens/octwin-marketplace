@@ -31,14 +31,29 @@ octwin validate            # offline structural + render-intent + primitive-argu
 octwin validate --remote   # the platform's FULL check — the only one that sees $bind.<path> reads
 ```
 
-**`octwin validate` reads the KB from the PACK directory** (`<pack>/.octwin/platform-kb/`), not the
-repo root. With no copy there it **silently skips** the render-intent and primitive-argument checks
-and still prints a green `✓`. A `✓` with no `✓ render intents …` / `✓ primitive arguments …` line
-above it means *not checked*, not *clean*. Pull into each pack after any platform upgrade:
+**Pull the KB once, at the repo root.** `octwin validate` locates `.octwin/platform-kb/` by walking
+**up** from the pack directory (CLI ≥ 0.3.0), so one root pull covers all 21 packs.
 
 ```bash
-octwin platform-kb pull    # run inside the pack directory
+octwin platform-kb pull    # run at the REPO ROOT, after any platform upgrade
+octwin validate --require-kb   # make a skipped check fatal, e.g. in CI
 ```
+
+It used to read the KB from the pack directory exactly (`<pack>/.octwin/platform-kb/`), which is why
+this repo once carried 21 copies — delete any you find, since the nearest one wins and a stale copy
+shadows the root pull. A skip is now announced on the **last** line printed, and the three states
+(absent · malformed · ok) are reported separately, so a half-written pull no longer reads as "never
+pulled". The default is still warn-and-exit-0 — use `--require-kb` when a skip must fail the run.
+
+## The three files that carry state between sessions
+
+| File | Direction | Holds |
+|---|---|---|
+| [`BACKLOG.md`](BACKLOG.md) | platform → packs | **defects.** "You shipped this wrong", with `file:line` evidence and the corrected YAML. |
+| [`FEEDBACK.md`](FEEDBACK.md) | packs → platform | **asks.** What the *platform* should change. Posted upstream with `octwin feedback`. |
+| [`ENRICHMENT.md`](ENRICHMENT.md) | platform → packs | **capabilities.** What the platform grew and which packs should adopt it. Not a defect list. |
+
+Check all three before starting work, and add to the right one rather than widening a change.
 
 ## The traps that have actually bitten this repo
 
