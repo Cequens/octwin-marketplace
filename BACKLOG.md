@@ -15,6 +15,141 @@ KB) and the primitive input schemas (`platform-primitives.json`). Nothing here i
 
 ---
 
+## 2026-07-31 — 18 `record_aggregate` calls read the whole project; one is a confirmed customer-visible leak — ✅ CLOSED
+
+> **Closed 2026-07-31.** All **18** sites fixed, **21/21 packs clean offline and on `--remote`**,
+> 13 packs patch-bumped. Verified on **octwin-cli 0.3.0** against KB **`cd1e97da4bed`** — the two
+> facts this report asked us to quote.
+>
+> Split exactly as the entry specifies, classified **by entity** rather than judged case by case:
+>
+> | Scope | Sites | Where |
+> |---|---|---|
+> | `contact_id: '$contact.id'` | **14** | every home-hub "you have N …" card — the confirmed `glamour-salon` leak, 9 more hubs, and both cart badges (`oud-atelier` ×2, `shawarma-express` ×2) |
+> | `all: true` | **4** | the `survey_response` rollups in `glamour-salon` + `smile-dental`, where project-wide **is** the point |
+>
+> Each `all: true` carries a comment saying *why* it is project-wide, so the next reader does not
+> "fix" it back to `contact_id`. `clinic` was already corrected upstream and is kept as-is.
+>
+> **The check now fires offline.** All 18 were found by `octwin validate` with no token — the
+> `requires_one_of` error names the missing argument directly. That is a real change from the
+> previous rounds, where this class was invisible until deploy.
+>
+> **One prerequisite that is not in the "what to do next" list and should be.** The walk-up finds the
+> **nearest** `.octwin/`, and this repo had a stale copy inside all 21 pack directories from the
+> era when per-pack pulls were required. Those shadow the fresh root pull, so a root-level
+> `platform-kb pull` alone would have left every pack validating against the **old** contract — the
+> exact drift the walk-up exists to end. They had to be deleted first. Anyone else working this repo
+> needs to do the same once:
+>
+> ```bash
+> rm -rf */.octwin && octwin platform-kb pull    # at the repo root
+> ```
+>
+> **Not verified here:** `scripts/contract-preflight.mjs` lives in the platform repo, which this
+> workspace does not touch. `octwin validate` is clean across all 21 packs and should be the same
+> contract — worth running the preflight once to confirm the two agree.
+
+
+
+**How this was found.** `record_aggregate` and `record_group` defaulted to **project-wide** scope —
+the opposite of `record_list`, and silent either way. As of 2026-07-31 the platform requires the
+scope to be stated: both primitives declare `requires_one_of: [['contact_id', 'all']]`, enforced by
+`checkPrimitiveArgs`, so **a call that states neither is now a validate/deploy error.** The machine
+check is `npx tsx scripts/contract-preflight.mjs c:/projects/octwin-marketplace` (platform repo); it
+named 20 sites across 13 of the 21 packs. Two of those — `clinic`'s rating rollup — were corrected
+in this change, because our platform test fixture is a copy of that pack and the contract change had
+to land in both. **The 18 below are yours.** `nakhla-giving`, `pharmaplus-rx`, `barakah-finance`,
+`shield-motor`, `swiftship-courier`, `xpeng-egypt` and `ecommerce` are clean.
+
+Every one of these also inherits a second change: **`active_only` now defaults `true`** on
+`record_aggregate` (and on `record_search` / `record_related`), matching `record_list`. The rows
+that pass `active_only: true` explicitly are unaffected; the rows that don't now exclude terminal
+stages. That is the intended reading in every case below — flag it if it isn't in yours.
+
+### Broken for the customer
+
+**`glamour-salon/flows/tools/home.flow.yaml:20` — confirmed live.** A brand-new contact opened the
+pack and the home hub greeted them with «📅 لديك 1 موعد قادم». There was no such booking. The count
+was every contact's, and the one it counted had a slot already in the past. This is the reason the
+platform default changed.
+
+```yaml
+# was:  args: { entity: booking, op: count, active_only: true }
+        args: { entity: booking, op: count, contact_id: '$contact.id', active_only: true }
+```
+
+**The same shape, same fix, in seven more home hubs.** Each of these is a "you have N …" card on the
+front door, and each currently counts the whole project's rows:
+
+| Pack | File:line | Step | Corrected `args:` |
+|---|---|---|---|
+| `binaa-supply` | `flows/tools/home.flow.yaml:23` | `count_open` | `{ entity: quote, op: count, contact_id: '$contact.id', active_only: true }` |
+| `gulf-realty` | `flows/tools/home.flow.yaml:21` | `count_viewings` | `{ entity: viewing, op: count, contact_id: '$contact.id', active_only: true }` |
+| `homefix-services` | `flows/tools/home.flow.yaml:20` | `count_open` | add `contact_id: '$contact.id'` |
+| `ironpulse-fitness` | `flows/tools/home.flow.yaml:19` | `count` | add `contact_id: '$contact.id'` |
+| `motorcare-service` | `flows/tools/home.flow.yaml:20` | `count_jobs` | add `contact_id: '$contact.id'` |
+| `nile-academy` | `flows/tools/home.flow.yaml:20` | `count` | add `contact_id: '$contact.id'` |
+| `redsea-resorts` | `flows/tools/home.flow.yaml:19` | `count` | add `contact_id: '$contact.id'` |
+| `smile-dental` | `flows/tools/home.flow.yaml:20` | `count_visits` | add `contact_id: '$contact.id'` |
+| `umrah-journeys` | `flows/tools/home.flow.yaml:20` | `count_trips` | add `contact_id: '$contact.id'` |
+
+**The two cart badges are the worst of the set** — they don't just miscount, they sum strangers'
+money into the caller's basket:
+
+```yaml
+# oud-atelier/flows/tools/home.flow.yaml:22 + :30 — every shopper's cart, summed
+#   was:  args: { entity: cart_line, op: sum, field: qty }
+#   was:  args: { entity: cart_line, op: sum, field: line_total }
+          args: { entity: cart_line, op: sum, field: qty,        contact_id: '$contact.id' }
+          args: { entity: cart_line, op: sum, field: line_total, contact_id: '$contact.id' }
+
+# shawarma-express/flows/tools/home.flow.yaml:20 — same, plus :28 count_orders
+          args: { entity: basket_line, op: sum, field: qty, contact_id: '$contact.id' }
+          args: { entity: food_order,  op: count, contact_id: '$contact.id', active_only: true }
+```
+
+### Correct as written — but must now say so
+
+Four rating rollups are **legitimately project-wide**: a stylist's or dentist's average score is
+every client's opinion of them, which is the whole point. They need `all: true` added, not
+`contact_id`. This is not a bug in your packs; it is the cost of the contract change, and it is the
+case that proves a "safer default" would have been the wrong fix.
+
+| Pack | File:line | Step |
+|---|---|---|
+| `glamour-salon` | `flows/tools/my-visits.flow.yaml:149, :161` | `rollup_avg`, `rollup_count` |
+| `smile-dental` | `flows/tools/my-visits.flow.yaml:175, :187` | `rollup`, `rollup_count` |
+
+```yaml
+        entity: survey_response
+        op:     avg
+        field:  score
+        all:    true          # every client's rating of this stylist — the project-wide scope IS the point
+        where:  { all: [{ field: stylist, op: eq, value: '$rated.fields.stylist' }] }
+```
+
+Note these are `survey_response`, which declares no `pipeline:`, so the `active_only` flip is a
+verified no-op for them.
+
+### Audit
+
+**`nakhla-giving` already carried the warning.** `flows/tools/home.flow.yaml:23-30` has a five-line
+comment explaining that `contact_id` is not optional here and that `active_only` is the wrong filter
+because `failed` is not a terminal stage. **That a pack author had to write that comment is the
+evidence the default was wrong** — it is the one pack that got it right, and it got it right by
+paying attention rather than by being led. It is now the platform's job, and that comment can shrink
+to a sentence.
+
+**Nothing else fired.** The same run reports 89 warnings, all `empty-outputs-uses-canonical`
+(informational — the runtime synthesizes the canonical handler) plus `xpeng-egypt`'s unhandled
+`failed` ports. No pack in the marketplace currently has an `assign:` whose value is a quoted literal
+(`'"SAR"'`), the other class the platform started catching in this change — either that was already
+cleaned up or it never reached `main`. Re-run the preflight after fixing the 18 above; it should
+report **0 errors**.
+
+---
+
 ## 2026-07-30 — every money field re-invents `currency:`, and no pack uses the explanatory slots — ✅ CLOSED (one slot deferred)
 
 > **Closed 2026-07-30.** Verified with octwin-cli 0.1.21 against KB `2a33e56a3369`:

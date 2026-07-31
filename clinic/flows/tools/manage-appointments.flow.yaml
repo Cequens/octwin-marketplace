@@ -219,6 +219,11 @@ steps:
         entity: survey_response
         op:     avg
         field:  score
+        # A doctor's rating is every patient's opinion of them, not this
+        # patient's — so the project-wide scope is the point. `all: true` is
+        # required since 2026-07-31: `record_aggregate` no longer defaults to
+        # project-wide, because that default shipped a cross-contact leak.
+        all:    true
         where:  { all: [{ field: doctor, op: eq, value: '$rated_appt.fields.resource_id' }] }
       bind: avg_score
       outputs:
@@ -230,6 +235,7 @@ steps:
       args:
         entity: survey_response
         op:     count
+        all:    true                    # every patient's response — see above
         where:  { all: [{ field: doctor, op: eq, value: '$rated_appt.fields.resource_id' }] }
       bind: rating_n
       outputs:

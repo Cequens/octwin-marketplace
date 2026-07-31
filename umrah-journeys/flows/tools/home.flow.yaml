@@ -18,7 +18,7 @@ entry:
 steps:
   count_trips:
     - do: record_aggregate
-      args: { entity: trip, op: count, active_only: true }
+      args: { entity: trip, op: count, active_only: true, contact_id: '$contact.id' }
       bind: trips
       outputs:
         ok:     [{ goto: count_cases }]

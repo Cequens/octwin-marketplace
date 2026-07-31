@@ -18,7 +18,7 @@ entry:
 steps:
   count_open:
     - do: record_aggregate
-      args: { entity: work_order, op: count, active_only: true }
+      args: { entity: work_order, op: count, active_only: true, contact_id: '$contact.id' }
       bind: open
       outputs:
         ok:     [{ goto: count_emergency }]

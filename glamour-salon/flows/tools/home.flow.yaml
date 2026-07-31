@@ -18,7 +18,7 @@ entry:
 steps:
   count:
     - do: record_aggregate
-      args: { entity: booking, op: count, active_only: true }
+      args: { entity: booking, op: count, active_only: true, contact_id: '$contact.id' }
       bind: upcoming
       outputs:
         ok:     [{ goto: show }]

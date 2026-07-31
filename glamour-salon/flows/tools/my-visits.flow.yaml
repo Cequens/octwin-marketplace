@@ -150,6 +150,9 @@ steps:
       args:
         entity: survey_response
         op:     avg
+        # Every client's rating of this practitioner — the project-wide scope IS
+        # the point here, so it is stated rather than inherited.
+        all:    true
         field:  score
         where:  { all: [{ field: stylist, op: eq, value: '$rated.fields.stylist' }] }
       bind: avg
@@ -162,6 +165,9 @@ steps:
       args:
         entity: survey_response
         op:     count
+        # Every client's rating of this practitioner — the project-wide scope IS
+        # the point here, so it is stated rather than inherited.
+        all:    true
         where:  { all: [{ field: stylist, op: eq, value: '$rated.fields.stylist' }] }
       bind: n
       outputs:

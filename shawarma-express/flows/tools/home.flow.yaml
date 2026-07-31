@@ -18,7 +18,7 @@ entry:
 steps:
   count_basket:
     - do: record_aggregate
-      args: { entity: basket_line, op: sum, field: qty }
+      args: { entity: basket_line, op: sum, field: qty, contact_id: '$contact.id' }
       bind: bq
       outputs:
         ok:     [{ goto: count_orders }]
@@ -26,7 +26,7 @@ steps:
 
   count_orders:
     - do: record_aggregate
-      args: { entity: food_order, op: count, active_only: true }
+      args: { entity: food_order, op: count, active_only: true, contact_id: '$contact.id' }
       bind: oc
       outputs:
         ok:     [{ goto: show }]

@@ -10,7 +10,7 @@
 # No pack DB, no code — pure YAML.
 
 id:          oud-atelier
-version:     '1.1.1'
+version:     '1.1.2'
 description: 'Luxury oud & perfume boutique — fragrance quiz, product carousel, cart and checkout on WhatsApp, Arabic-first for the Gulf.'
 
 listing:

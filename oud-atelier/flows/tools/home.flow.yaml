@@ -20,7 +20,7 @@ steps:
   # before they ask, with no identity plumbing.
   load_cart:
     - do: record_aggregate
-      args: { entity: cart_line, op: sum, field: qty }
+      args: { entity: cart_line, op: sum, field: qty, contact_id: '$contact.id' }
       bind: cart_qty
       outputs:
         ok:     [{ goto: load_total }]
@@ -28,7 +28,7 @@ steps:
 
   load_total:
     - do: record_aggregate
-      args: { entity: cart_line, op: sum, field: line_total }
+      args: { entity: cart_line, op: sum, field: line_total, contact_id: '$contact.id' }
       bind: cart_sum
       outputs:
         ok:     [{ goto: show }]

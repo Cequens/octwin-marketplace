@@ -21,7 +21,7 @@ steps:
 
   count_open:
     - do: record_aggregate
-      args: { entity: quote, op: count, active_only: true }
+      args: { entity: quote, op: count, active_only: true, contact_id: '$contact.id' }
       bind: oc
       outputs:
         ok:     [{ goto: show }]

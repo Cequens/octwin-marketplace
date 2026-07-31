@@ -18,7 +18,7 @@ entry:
 steps:
   count_jobs:
     - do: record_aggregate
-      args: { entity: repair_job, op: count, active_only: true }
+      args: { entity: repair_job, op: count, active_only: true, contact_id: '$contact.id' }
       bind: jobs
       outputs:
         ok:     [{ goto: show }]

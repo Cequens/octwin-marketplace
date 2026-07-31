@@ -19,7 +19,7 @@ steps:
   count_viewings:
     # A live count makes the hub feel personal without needing identity.
     - do: record_aggregate
-      args: { entity: booking, op: count, active_only: true }
+      args: { entity: booking, op: count, active_only: true, contact_id: '$contact.id' }
       bind: viewings
       outputs:
         ok:     [{ goto: show }]

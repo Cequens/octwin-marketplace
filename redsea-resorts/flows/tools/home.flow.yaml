@@ -17,7 +17,7 @@ entry:
 steps:
   count:
     - do: record_aggregate
-      args: { entity: stay, op: count, active_only: true }
+      args: { entity: stay, op: count, active_only: true, contact_id: '$contact.id' }
       bind: stays
       outputs:
         ok:     [{ goto: show }]
