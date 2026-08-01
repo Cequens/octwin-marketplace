@@ -1,0 +1,25 @@
+# Contact + working hours, with a one-tap Call button.
+flow_id:     contact
+version:     1
+description: Show the phone number and working hours, with a call button. Call for "phone", "hours", "how do I reach you".
+
+input:
+  message:
+    type:     string
+    optional: true
+    describe: 'Optional note from the customer.'
+
+entry:
+  - else: true
+    goto: show
+
+steps:
+  show:
+    - render:
+        render_intent: cta_url
+        header: '{$t("contact.header")}'
+        body:   '{$t("contact.body")}'
+        label:  '{$t("contact.call")}'
+        url:    'tel:+201093333755'
+      memory_note: 'Showed contact details.'
+    - end: applied

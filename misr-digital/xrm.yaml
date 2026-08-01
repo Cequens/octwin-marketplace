@@ -1,0 +1,300 @@
+# xrm.yaml — data model for the مصر الرقمية services-guide bot.
+# One REFERENCE catalog `service` (no pipeline → always lists). Each record is a
+# government e-service: its issuing authority, required documents, fees, timing,
+# and the portal link to start it. `search:` enables fuzzy Arabic keyword search
+# (record_search) for the `find_service` flow.
+#
+# NOTE: requirements / fees / timing below are indicative and may change — the
+# authoritative source is the live service page on https://digital.gov.eg/.
+
+entities:
+  service:
+    label: { en: Service, ar: خدمة }
+    title_field: name
+    list: [name, category, authority]
+    search:
+      text: [name, keywords, description, authority]
+    fields:
+      name:            { type: text, required: true }
+      code:            { type: text, required: true, unique: true }
+      category:
+        type: select
+        options: [civil_status, traffic, notary, supply, courts, commercial, realestate_tax, health]
+      authority:       { type: text }        # الجهة المسؤولة
+      description:     { type: textarea }     # نبذة عن الخدمة
+      requirements:    { type: textarea }     # المستندات / الشروط المطلوبة
+      fees:            { type: text }         # الرسوم
+      processing_time: { type: text }         # مدة التنفيذ
+      channel:         { type: text }         # طريقة الاستلام / التقديم
+      url:             { type: text }         # رابط بدء الخدمة على البوابة
+      keywords:        { type: text }         # كلمات للبحث
+      popular:         { type: boolean }      # خدمة من الأكثر طلباً
+
+demo:
+  # ==================== الأحوال المدنية (civil_status) ====================
+  - entity: service
+    fields:
+      name:            'بطاقة الرقم القومي (تجديد / بدل فاقد أو تالف)'
+      code:            id_card
+      category:        civil_status
+      authority:       'مصلحة الأحوال المدنية - وزارة الداخلية'
+      description:      'إصدار أو تجديد بطاقة الرقم القومي أو استخراج بدل فاقد/تالف وتوصيلها إلى باب المنزل.'
+      requirements:    'صورة من البطاقة القديمة أو الرقم القومي • رقم موبايل باسمك • عنوان دقيق للتوصيل • في حالة الفاقد: محضر إثبات فقد'
+      fees:            'تبدأ من حوالي 165 جنيه شاملة التوصيل (تختلف حسب نوع الطلب)'
+      processing_time: 'من 3 إلى 7 أيام عمل'
+      channel:         'إلكتروني بالكامل مع التوصيل للمنزل'
+      url:             'https://digital.gov.eg/'
+      keywords:        'بطاقة رقم قومي هوية تجديد بدل فاقد تالف id'
+      popular:         true
+  - entity: service
+    fields:
+      name:            'شهادة ميلاد مميكنة'
+      code:            birth_cert
+      category:        civil_status
+      authority:       'مصلحة الأحوال المدنية - وزارة الداخلية'
+      description:      'استخراج شهادة ميلاد كمبيوتر (مميكنة) لك أو لأحد أفراد الأسرة وتوصيلها للمنزل.'
+      requirements:    'الرقم القومي لصاحب الشهادة • رقم قومي لمقدم الطلب • عنوان التوصيل • رقم موبايل'
+      fees:            'حوالي 65 جنيه شاملة التوصيل'
+      processing_time: 'من 2 إلى 5 أيام عمل'
+      channel:         'إلكتروني مع التوصيل للمنزل'
+      url:             'https://digital.gov.eg/'
+      keywords:        'شهادة ميلاد مواليد كمبيوتر مميكنة'
+      popular:         true
+  - entity: service
+    fields:
+      name:            'شهادة وفاة مميكنة'
+      code:            death_cert
+      category:        civil_status
+      authority:       'مصلحة الأحوال المدنية - وزارة الداخلية'
+      description:      'استخراج شهادة وفاة كمبيوتر (مميكنة) لأحد الأقارب وتوصيلها للمنزل.'
+      requirements:    'الرقم القومي للمتوفى • الرقم القومي لمقدم الطلب • صلة القرابة • عنوان التوصيل'
+      fees:            'حوالي 65 جنيه شاملة التوصيل'
+      processing_time: 'من 2 إلى 5 أيام عمل'
+      channel:         'إلكتروني مع التوصيل للمنزل'
+      url:             'https://digital.gov.eg/'
+      keywords:        'شهادة وفاة متوفى'
+      popular:         false
+  - entity: service
+    fields:
+      name:            'قيد عائلي / قيد فردي'
+      code:            family_record
+      category:        civil_status
+      authority:       'مصلحة الأحوال المدنية - وزارة الداخلية'
+      description:      'استخراج بيان قيد عائلي أو فردي مميكن وتوصيله للمنزل.'
+      requirements:    'الرقم القومي لصاحب الطلب • عنوان التوصيل • رقم موبايل'
+      fees:            'حوالي 65 جنيه شاملة التوصيل'
+      processing_time: 'من 3 إلى 5 أيام عمل'
+      channel:         'إلكتروني مع التوصيل للمنزل'
+      url:             'https://digital.gov.eg/'
+      keywords:        'قيد عائلي فردي بيان قيد'
+      popular:         false
+
+  # ==================== المرور (traffic) ====================
+  - entity: service
+    fields:
+      name:            'تجديد رخصة القيادة'
+      code:            driving_license_renew
+      category:        traffic
+      authority:       'الإدارة العامة للمرور - وزارة الداخلية'
+      description:      'تجديد رخصة القيادة إلكترونياً وتوصيلها إلى باب المنزل دون الذهاب لوحدة المرور.'
+      requirements:    'رخصة القيادة الحالية • بطاقة الرقم القومي • تحليل مخدرات وكشف طبي معتمد • عنوان التوصيل'
+      fees:            'تختلف حسب مدة الرخصة (تُحسب أثناء الطلب) + رسوم توصيل'
+      processing_time: 'من 5 إلى 10 أيام عمل'
+      channel:         'إلكتروني مع التوصيل للمنزل'
+      url:             'https://digital.gov.eg/'
+      keywords:        'رخصة قيادة تجديد سواقة رخصه'
+      popular:         true
+  - entity: service
+    fields:
+      name:            'تجديد رخصة المركبة (السيارة)'
+      code:            vehicle_license_renew
+      category:        traffic
+      authority:       'الإدارة العامة للمرور - وزارة الداخلية'
+      description:      'تجديد رخصة تسيير المركبة إلكترونياً مع سداد المخالفات والتأمين وتوصيل الرخصة للمنزل.'
+      requirements:    'رخصة المركبة • بطاقة الرقم القومي للمالك • وثيقة تأمين سارية • سداد المخالفات إن وُجدت'
+      fees:            'تُحسب حسب سعة المحرك والتأمين أثناء الطلب + رسوم توصيل'
+      processing_time: 'من 5 إلى 10 أيام عمل'
+      channel:         'إلكتروني مع التوصيل للمنزل'
+      url:             'https://digital.gov.eg/'
+      keywords:        'رخصة مركبة سيارة تسيير تجديد'
+      popular:         true
+  - entity: service
+    fields:
+      name:            'الاستعلام عن المخالفات المرورية وسدادها'
+      code:            traffic_fines
+      category:        traffic
+      authority:       'الإدارة العامة للمرور - وزارة الداخلية'
+      description:      'الاستعلام عن المخالفات المرورية المسجلة على المركبة أو الرخصة وسدادها إلكترونياً.'
+      requirements:    'رقم لوحة المركبة أو رقم الرخصة • بطاقة دفع إلكتروني'
+      fees:            'قيمة المخالفات المستحقة فقط'
+      processing_time: 'فوري'
+      channel:         'إلكتروني - سداد أونلاين'
+      url:             'https://digital.gov.eg/'
+      keywords:        'مخالفات مرور غرامات سداد استعلام'
+      popular:         true
+
+  # ==================== الشهر العقاري والتوثيق (notary) ====================
+  - entity: service
+    fields:
+      name:            'إصدار توكيل رسمي'
+      code:            power_of_attorney
+      category:        notary
+      authority:       'مصلحة الشهر العقاري والتوثيق - وزارة العدل'
+      description:      'حجز موعد وإصدار توكيل رسمي (عام أو خاص) من خلال مكاتب التوثيق.'
+      requirements:    'بطاقة الرقم القومي للموكِّل • بيانات الوكيل (الاسم والرقم القومي) • صياغة/نوع التوكيل المطلوب'
+      fees:            'تختلف حسب نوع التوكيل (تُحدد أثناء الحجز)'
+      processing_time: 'حسب الموعد المتاح بالمكتب'
+      channel:         'حجز إلكتروني ثم الحضور للمكتب للتوقيع'
+      url:             'https://digital.gov.eg/'
+      keywords:        'توكيل شهر عقاري توثيق وكالة'
+      popular:         true
+  - entity: service
+    fields:
+      name:            'استخراج شهادة عقارية / بيان عقاري'
+      code:            realestate_cert
+      category:        notary
+      authority:       'مصلحة الشهر العقاري والتوثيق - وزارة العدل'
+      description:      'طلب شهادة بما هو مشهر على عقار أو بيان بالتصرفات العقارية.'
+      requirements:    'بيانات العقار (المحافظة والقسم والحوض/القطعة) • بطاقة الرقم القومي لمقدم الطلب'
+      fees:            'تُحدد حسب نوع البيان أثناء الطلب'
+      processing_time: 'من 7 إلى 15 يوم عمل'
+      channel:         'طلب إلكتروني'
+      url:             'https://digital.gov.eg/'
+      keywords:        'شهادة عقارية بيان عقاري تصرفات مشهر'
+      popular:         false
+
+  # ==================== التموين (supply) ====================
+  - entity: service
+    fields:
+      name:            'إضافة مولود جديد لبطاقة التموين'
+      code:            supply_add_newborn
+      category:        supply
+      authority:       'وزارة التموين والتجارة الداخلية'
+      description:      'إضافة مولود جديد إلى بطاقة التموين للحصول على حصته من الدعم.'
+      requirements:    'الرقم القومي لرب الأسرة • شهادة ميلاد المولود المميكنة • رقم بطاقة التموين'
+      fees:            'مجاني'
+      processing_time: 'من 3 إلى 7 أيام عمل'
+      channel:         'إلكتروني عبر بوابة دعم مصر / مصر الرقمية'
+      url:             'https://digital.gov.eg/'
+      keywords:        'تموين مولود اضافة بطاقة تموين دعم'
+      popular:         true
+  - entity: service
+    fields:
+      name:            'بدل فاقد / تالف لبطاقة التموين'
+      code:            supply_replace_card
+      category:        supply
+      authority:       'وزارة التموين والتجارة الداخلية'
+      description:      'استخراج بطاقة تموين بديلة في حالة الفقد أو التلف.'
+      requirements:    'الرقم القومي لرب الأسرة • رقم البطاقة القديم إن وُجد • في حالة الفقد: إقرار فقد'
+      fees:            'رسوم رمزية تُحدد أثناء الطلب'
+      processing_time: 'من 5 إلى 10 أيام عمل'
+      channel:         'إلكتروني'
+      url:             'https://digital.gov.eg/'
+      keywords:        'تموين بدل فاقد تالف بطاقة'
+      popular:         false
+  - entity: service
+    fields:
+      name:            'تحديث بيانات بطاقة التموين'
+      code:            supply_update
+      category:        supply
+      authority:       'وزارة التموين والتجارة الداخلية'
+      description:      'تحديث بيانات أفراد الأسرة أو رقم الموبايل أو العنوان على بطاقة التموين.'
+      requirements:    'الرقم القومي لرب الأسرة • رقم بطاقة التموين • البيانات الجديدة المطلوب تحديثها'
+      fees:            'مجاني'
+      processing_time: 'من 3 إلى 7 أيام عمل'
+      channel:         'إلكتروني'
+      url:             'https://digital.gov.eg/'
+      keywords:        'تموين تحديث بيانات موبايل عنوان'
+      popular:         false
+
+  # ==================== المحاكم والعدل (courts) ====================
+  - entity: service
+    fields:
+      name:            'صحيفة الحالة الجنائية (الفيش والتشبيه)'
+      code:            criminal_record
+      category:        courts
+      authority:       'مصلحة الأدلة الجنائية - وزارة الداخلية'
+      description:      'استخراج صحيفة الحالة الجنائية إلكترونياً وتوصيلها للمنزل.'
+      requirements:    'بطاقة الرقم القومي • صورة شخصية حديثة • عنوان التوصيل • رقم موبايل'
+      fees:            'رسوم الخدمة + التوصيل (تُحسب أثناء الطلب)'
+      processing_time: 'من 3 إلى 7 أيام عمل'
+      channel:         'إلكتروني مع التوصيل للمنزل'
+      url:             'https://digital.gov.eg/'
+      keywords:        'فيش وتشبيه صحيفة حالة جنائية سجل جنائي'
+      popular:         true
+  - entity: service
+    fields:
+      name:            'الاستعلام عن القضايا وجلسات المحاكم'
+      code:            case_lookup
+      category:        courts
+      authority:       'وزارة العدل'
+      description:      'متابعة حالة قضية ومعرفة مواعيد الجلسات إلكترونياً.'
+      requirements:    'رقم القضية والسنة • بيانات المحكمة'
+      fees:            'مجاني'
+      processing_time: 'فوري'
+      channel:         'استعلام إلكتروني'
+      url:             'https://digital.gov.eg/'
+      keywords:        'قضايا محاكم جلسات استعلام عدل'
+      popular:         false
+
+  # ==================== السجل التجاري (commercial) ====================
+  - entity: service
+    fields:
+      name:            'استخراج مستخرج سجل تجاري'
+      code:            commercial_extract
+      category:        commercial
+      authority:       'الهيئة العامة للاستثمار / السجل التجاري'
+      description:      'استخراج مستخرج رسمي من السجل التجاري للمنشأة إلكترونياً.'
+      requirements:    'رقم السجل التجاري • بطاقة الرقم القومي لصاحب الطلب / المفوض'
+      fees:            'تُحدد أثناء الطلب + رسوم توصيل'
+      processing_time: 'من 3 إلى 7 أيام عمل'
+      channel:         'إلكتروني مع التوصيل'
+      url:             'https://digital.gov.eg/'
+      keywords:        'سجل تجاري مستخرج شركة منشأة'
+      popular:         false
+  - entity: service
+    fields:
+      name:            'تجديد السجل التجاري'
+      code:            commercial_renew
+      category:        commercial
+      authority:       'الهيئة العامة للاستثمار / السجل التجاري'
+      description:      'تجديد قيد السجل التجاري للمنشأة إلكترونياً.'
+      requirements:    'رقم السجل التجاري • البطاقة الضريبية • بطاقة الرقم القومي للمسؤول'
+      fees:            'تُحدد أثناء الطلب'
+      processing_time: 'من 3 إلى 7 أيام عمل'
+      channel:         'إلكتروني'
+      url:             'https://digital.gov.eg/'
+      keywords:        'سجل تجاري تجديد قيد'
+      popular:         false
+
+  # ==================== الضريبة العقارية (realestate_tax) ====================
+  - entity: service
+    fields:
+      name:            'الاستعلام عن الضريبة العقارية وسدادها'
+      code:            realestate_tax_pay
+      category:        realestate_tax
+      authority:       'مصلحة الضرائب العقارية - وزارة المالية'
+      description:      'الاستعلام عن مستحقات الضريبة العقارية على العقار وسدادها إلكترونياً.'
+      requirements:    'بيانات العقار أو رقم التكليف • بطاقة دفع إلكتروني'
+      fees:            'قيمة الضريبة المستحقة'
+      processing_time: 'فوري'
+      channel:         'إلكتروني - سداد أونلاين'
+      url:             'https://digital.gov.eg/'
+      keywords:        'ضريبة عقارية سداد استعلام عقار'
+      popular:         false
+
+  # ==================== الصحة والتأمين (health) ====================
+  - entity: service
+    fields:
+      name:            'الاستعلام عن التأمين الصحي الشامل'
+      code:            health_insurance
+      category:        health
+      authority:       'الهيئة العامة للتأمين الصحي الشامل'
+      description:      'الاستعلام عن حالة الاشتراك في منظومة التأمين الصحي الشامل والخدمات المتاحة.'
+      requirements:    'الرقم القومي • رقم الموبايل'
+      fees:            'مجاني للاستعلام'
+      processing_time: 'فوري'
+      channel:         'استعلام إلكتروني'
+      url:             'https://digital.gov.eg/'
+      keywords:        'تأمين صحي شامل استعلام اشتراك صحة'
+      popular:         false

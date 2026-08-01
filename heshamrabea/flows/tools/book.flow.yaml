@@ -1,0 +1,229 @@
+# Appointment booking journey:
+#   branch → barber → service → time slot → confirm → reserve (+ reminder).
+# Each picker row RE-INVOKES this flow with the running selection carried in `with:`
+# (threaded forward via $input). `entry` routes to the next stage by which fields are
+# present. The only suspend is the confirm card (approve_apply). This invoke-chain is
+# more robust than chained resume:$self pauses.
+flow_id:     book
+version:     1
+description: |-
+  Book/reserve an appointment. Walks the customer through choosing a branch, a barber,
+  a service, and a time slot, then confirms and reserves it. Call whenever the customer
+  wants to book, reserve, or make a new appointment.
+
+input:
+  branch_code:   { type: string, optional: true, describe: 'Chosen branch code (also a preselect when coming from a branch card).' }
+  branch_name:   { type: string, optional: true, describe: 'Chosen branch display name.' }
+  pro_id:        { type: string, optional: true, describe: 'Chosen barber record id.' }
+  pro_name:      { type: string, optional: true, describe: 'Chosen barber display name.' }
+  service_name:  { type: string, optional: true, describe: 'Chosen service name.' }
+  service_price: { type: number, optional: true, describe: 'Chosen service price (EGP).' }
+  slot_start:    { type: string, optional: true, describe: 'Chosen slot start (ISO).' }
+  slot_label:    { type: string, optional: true, describe: 'Chosen slot human label.' }
+
+entry:
+  - if:   '$input.slot_start != null'
+    goto: confirm
+  - if:   '$input.service_name != null'
+    goto: load_slots
+  - if:   '$input.pro_id != null'
+    goto: load_services
+  - if:   '$input.branch_code != null'
+    goto: load_pros
+  - else: true
+    goto: start
+
+steps:
+  # 1) Branch
+  start:
+    - do: record_list
+      args: { entity: branch, all: true, limit: 50, sort_by: { field: area, dir: asc } }
+      bind: branches
+      outputs:
+        ok:     [{ goto: pick_branch }]
+        empty:  [{ goto: none_branch }]
+        failed: [{ end: failed }]
+  pick_branch:
+    - render:
+        render_intent: list_picker
+        header: '{$t("book.branch_header")}'
+        body:   '{$t("book.branch_body")}'
+        cta:    '{$t("book.choose")}'
+        items:  '$branches.rows'
+        item_template:
+          title:       '{$item.title}'
+          description: '{$item.fields.phone}'
+          on_select:   { invoke: book, with: { branch_code: '$item.fields.code', branch_name: '$item.title' } }
+      memory_note: 'Offered branches to book at.'
+    - end: applied
+
+  # 2) Barber (filtered to the chosen branch)
+  load_pros:
+    - do: record_list
+      args:
+        entity: professional
+        all:    true
+        limit:  50
+        where:  { all: [{ field: branch_code, op: eq, value: '$input.branch_code' }] }
+        sort_by: { field: name, dir: asc }
+      bind: pros
+      outputs:
+        ok:     [{ goto: pick_pro }]
+        empty:  [{ goto: none_pro }]
+        failed: [{ end: failed }]
+  pick_pro:
+    - render:
+        render_intent: list_picker
+        header: '{$t("book.pro_header")}'
+        body:   '{$t("book.pro_body", { branch: $input.branch_name })}'
+        cta:    '{$t("book.choose")}'
+        items:  '$pros.rows'
+        item_template:
+          title:       '{$item.title}'
+          description: '{$item.fields.role}'
+          on_select:
+            invoke: book
+            with:
+              branch_code: '$input.branch_code'
+              branch_name: '$input.branch_name'
+              pro_id:      '$item.id'
+              pro_name:    '$item.title'
+      memory_note: 'Offered barbers.'
+    - end: applied
+
+  # 3) Service
+  load_services:
+    - do: record_list
+      args: { entity: service, all: true, limit: 60, sort_by: { field: category, dir: asc } }
+      bind: services
+      outputs:
+        ok:     [{ goto: pick_service }]
+        empty:  [{ goto: none_service }]
+        failed: [{ end: failed }]
+  pick_service:
+    - render:
+        render_intent: list_picker
+        header: '{$t("book.service_header")}'
+        body:   '{$t("book.service_body")}'
+        cta:    '{$t("book.choose")}'
+        items:  '$services.rows'
+        item_template:
+          title: '{$item.title} — {$format_number($item.fields.price)} {$t("book.egp")}'
+          on_select:
+            invoke: book
+            with:
+              branch_code:   '$input.branch_code'
+              branch_name:   '$input.branch_name'
+              pro_id:        '$input.pro_id'
+              pro_name:      '$input.pro_name'
+              service_name:  '$item.title'
+              service_price: '$item.fields.price'
+      memory_note: 'Offered services.'
+    - end: applied
+
+  # 4) Time slot
+  load_slots:
+    - do: slot_list
+      args: { resource_record_id: '$input.pro_id', days: 7 }
+      bind: slots
+      outputs:
+        ok:     [{ goto: pick_slot }]
+        empty:  [{ goto: none_slot }]
+        failed: [{ end: failed }]
+  pick_slot:
+    - render:
+        render_intent: list_picker
+        header: '{$t("book.slot_header")}'
+        body:   '{$t("book.slot_body")}'
+        cta:    '{$t("book.choose")}'
+        items:  '$slots'
+        item_template:
+          title: '{$item.local_date} · {$item.local_time}'
+          on_select:
+            invoke: book
+            with:
+              branch_code:   '$input.branch_code'
+              branch_name:   '$input.branch_name'
+              pro_id:        '$input.pro_id'
+              pro_name:      '$input.pro_name'
+              service_name:  '$input.service_name'
+              service_price: '$input.service_price'
+              slot_start:    '$item.slot_start'
+              slot_label:    '$item.local_date + " · " + $item.local_time'
+      memory_note: 'Offered time slots.'
+    - end: applied
+
+  # 5) Confirm (the only suspend — approve_apply renders a card, pauses, resumes)
+  confirm:
+    - use: approve_apply
+      with:
+        preview: '{$t("book.preview", { branch: $state.branch_name, pro: $state.pro_name, service: $state.service_name, price: $state.service_price, slot: $state.slot_label })}'
+        apply:   do_book
+        abort:   cancelled
+        confirm_title: '{$t("book.confirm_btn")}'
+        cancel_title:  '{$t("book.cancel_btn")}'
+        # Neither approve nor decline (a typed reply, an agent resume, a stale tap)
+        # → re-enter THIS step: re-render the confirm card and pause again. The
+        # sibling packs point `on_other` at their `collect_fields` step so the
+        # customer can amend a field mid-preview; this flow has no collect — the
+        # four choices are made by picker steps upstream — so its own id is the
+        # right target, following `clinic/flows/tools/manage-appointments.flow.yaml`.
+        # REQUIRED: omitted, the template used to expand its default branch to
+        # `then: []`, whose fall-through threw, and the catch DELETED the run state
+        # and restarted the flow — same card every turn, every choice lost.
+        on_other:      confirm
+        memory_note:   'Asked the customer to confirm the booking.'
+
+  # 6) Reserve
+  do_book:
+    - do: booking_reserve
+      args:
+        resource_record_id: '$state.pro_id'
+        slot_start:         '$state.slot_start'
+        fields:
+          service_name:      '$state.service_name'
+          branch_name:       '$state.branch_name'
+          professional_name: '$state.pro_name'
+          price:             '$state.service_price'
+          customer_name:     '$contact.display_name'
+      bind: booking
+      outputs:
+        ok:           [{ goto: booked }]
+        full:         [{ goto: slot_taken }]
+        invalid_slot: [{ goto: slot_taken }]
+        failed:       [{ end: failed }]
+  booked:
+    - foreach:
+        in: '$booking.reminders'
+        as: rem
+        body:
+          - do: schedule_notify
+            args:
+              to:      { contact_id: '$contact.id' }
+              send_at: '$rem.send_at'
+              intent:  { render_intent: text_card, body: '{$t("book.reminder", { branch: $state.branch_name, pro: $state.pro_name, slot: $state.slot_label })}' }
+              dedupe_key: '"booking-" + $booking.record_number + "-" + $rem.key'
+    - render:
+        render_intent: detail_card
+        header: '{$t("book.done_header")}'
+        body:   '{$t("book.done_body", { ref: $booking.record_number, branch: $state.branch_name, pro: $state.pro_name, service: $state.service_name, slot: $state.slot_label, price: $state.service_price })}'
+      memory_note: 'Booking confirmed ({$booking.record_number}).'
+    - end: applied
+
+  # Terminal / edge states
+  cancelled:
+    - render: { render_intent: text_card, body: '{$t("book.cancelled")}' }
+      memory_note: 'Customer cancelled the booking.'
+    - end: applied
+  slot_taken:
+    - render: { render_intent: text_card, body: '{$t("book.slot_taken")}' }
+      memory_note: 'Chosen slot was no longer available.'
+    - end: applied
+  none_branch:
+    - answer: { instructions: 'No branches are available right now. Apologize briefly and give the phone number 01093333755.' }
+  none_pro:
+    - answer: { instructions: 'No barbers are listed for this branch yet. Apologize, and suggest calling 01093333755 or choosing another branch.' }
+  none_service:
+    - answer: { instructions: 'No services are available right now. Apologize and give the phone 01093333755.' }
+  none_slot:
+    - answer: { instructions: 'No free time slots in the coming days for this barber. Suggest another barber or branch, or calling 01093333755.' }

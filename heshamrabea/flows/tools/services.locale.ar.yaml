@@ -1,0 +1,12 @@
+flow_id: services
+
+strings:
+  header:             'الخدمات والأسعار ✂️'
+  body:               'اختر القسم اللي يهمّك:'
+  choose:             'اختر'
+  cat_haircut:        '💇 قص الشعر'
+  cat_beard:          '🧔 اللحية والتصفيف'
+  cat_hair_treatment: '✨ علاجات الشعر'
+  cat_skin:           '🧖 العناية بالبشرة'
+  cat_hands_feet:     '💅 اليدين والقدمين'
+  cat_package:        '👑 باقات العريس'

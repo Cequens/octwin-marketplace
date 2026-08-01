@@ -1,0 +1,59 @@
+# One service's full detail: authority, required documents, fees, timing, and a
+# link button that routes the user to start it on the مصر الرقمية portal.
+# Reached by tapping a service in `service_list` or `find_service` (passes `code`).
+flow_id:     service_detail
+version:     1
+description: Show one service's requirements, fees, timing and a start-on-portal link. Reached from a service list; not usually called directly.
+
+input:
+  code:
+    type:     string
+    optional: true
+    describe: 'The service code (e.g. driving_license_renew, birth_cert).'
+
+entry:
+  - else: true
+    goto: load
+
+steps:
+  load:
+    - do: record_list
+      args:
+        entity: service
+        all:    true
+        limit:  1
+        where:  { all: [{ field: code, op: eq, value: '$input.code' }] }
+      bind: page
+      outputs:
+        ok:     [{ goto: show }]
+        empty:  [{ goto: none }]
+        failed: [{ end: failed }]
+  show:
+    - assign:
+        svc: '$page.rows[0]'
+    - assign:
+        body: |-
+          {$svc.fields.description}
+
+          {$t("service_detail.lbl_authority")} {$svc.fields.authority}
+
+          {$t("service_detail.lbl_requirements")}
+          {$svc.fields.requirements}
+
+          {$t("service_detail.lbl_fees")} {$svc.fields.fees}
+          {$t("service_detail.lbl_time")} {$svc.fields.processing_time}
+          {$t("service_detail.lbl_channel")} {$svc.fields.channel}
+
+          {$t("service_detail.disclaimer")}
+    - render:
+        render_intent: cta_url
+        header: '{$svc.title}'
+        body:   '{$body}'
+        footer: '{$t("service_detail.footer")}'
+        label:  '{$t("service_detail.start")}'
+        url:    '$svc.fields.url'
+      memory_note: 'Showed service detail + start link for {$svc.title}.'
+    - end: applied
+  none:
+    - answer:
+        instructions: 'That service was not found. Apologize briefly and offer to browse categories via the services menu or search again.'

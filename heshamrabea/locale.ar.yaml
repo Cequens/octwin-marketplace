@@ -1,0 +1,13 @@
+# heshamrabea — pack-wide Arabic strings.
+#
+# Entries here are shared across ALL flows in this pack (cross-flow labels,
+# common error messages, status verbs). Flow-specific strings live in
+# `flows/tools/<flow>.locale.ar.yaml`. Reference these via `$t("heshamrabea.<key>")`
+# — every key is namespaced (pack-level by `pack_id`; flow-level by `flow_id`).
+# A bare `$t("<key>")` does NOT resolve (returns the raw key); the flow linter's
+# `locale-key-not-namespaced` rule fails the build on a bare key.
+
+pack_id: heshamrabea
+strings:
+  # Example pack-level string — reference as `$t("heshamrabea.greeting")`.
+  greeting: 'أهلاً! إزاي أقدر أساعدك؟'

@@ -1,0 +1,505 @@
+# xrm.yaml — data model for the Hesham Rabea pack.
+# Three reference catalogs (branch / professional / service) + an extended
+# `booking` system entity. Professionals are the bookable resource (scheduling.yaml).
+# NOTE: barber names below are PLACEHOLDER demo data — replace with the real roster.
+
+entities:
+  branch:
+    label: { en: Branch, ar: فرع }
+    title_field: name
+    list: [name, area, phone]
+    fields:
+      name:  { type: text, required: true }
+      code:  { type: text, required: true, unique: true }
+      area:  { type: select, options: [new_cairo, madinaty, heliopolis, maadi, zayed, mansoura, north_coast] }
+      phone: { type: text }
+
+  professional:
+    label: { en: Professional, ar: أخصائي }
+    title_field: name
+    list: [name, role, branch_code]
+    fields:
+      name:           { type: text, required: true }
+      role:           { type: text }
+      branch_code:    { type: text, required: true }
+      branch_name:    { type: text }
+      schedule_group: { type: text }
+
+  service:
+    label: { en: Service, ar: خدمة }
+    title_field: name
+    list: [name, category, price]
+    fields:
+      name:         { type: text, required: true }
+      category:     { type: select, options: [haircut, beard, hair_treatment, skin, hands_feet, package] }
+      price:        { type: number }
+      duration_min: { type: number }
+
+  booking:
+    extends: system
+    fields:
+      customer_name:     { type: text }
+      service_name:      { type: text }
+      branch_name:       { type: text }
+      professional_name: { type: text }
+      price:             { type: number }
+      notes:             { type: textarea }
+
+demo:
+  # --- Branches ---
+  - entity: branch
+    fields:
+      name:  "٩٠ ستريت - التجمع الخامس"
+      code:  st90
+      area:  new_cairo
+      phone: "01093333755"
+  - entity: branch
+    fields:
+      name:  "هلا مول - التجمع الخامس"
+      code:  hala
+      area:  new_cairo
+      phone: "01093333755"
+  - entity: branch
+    fields:
+      name:  "ميفيدا - القاهرة الجديدة"
+      code:  mivida
+      area:  new_cairo
+      phone: "01093333755"
+  - entity: branch
+    fields:
+      name:  "كايرو فيستيفال سيتي"
+      code:  cfc
+      area:  new_cairo
+      phone: "01093333755"
+  - entity: branch
+    fields:
+      name:  "التجمع الخامس - فرع جديد"
+      code:  newc
+      area:  new_cairo
+      phone: "01093333755"
+  - entity: branch
+    fields:
+      name:  "الرحاب"
+      code:  rehab
+      area:  new_cairo
+      phone: "01093333755"
+  - entity: branch
+    fields:
+      name:  "ساوث بارك فوود كورت - مدينتي"
+      code:  southpark
+      area:  madinaty
+      phone: "01093333755"
+  - entity: branch
+    fields:
+      name:  "أرابيسك مول - مدينتي"
+      code:  arabesque
+      area:  madinaty
+      phone: "01093333755"
+  - entity: branch
+    fields:
+      name:  "ذا ستريب - مدينتي"
+      code:  strip
+      area:  madinaty
+      phone: "01093333755"
+  - entity: branch
+    fields:
+      name:  "الميرغني - مصر الجديدة"
+      code:  merghany
+      area:  heliopolis
+      phone: "01093333755"
+  - entity: branch
+    fields:
+      name:  "الحجاز - مصر الجديدة"
+      code:  hijaz
+      area:  heliopolis
+      phone: "01093333755"
+  - entity: branch
+    fields:
+      name:  "اللاسلكي - المعادي"
+      code:  lasilki
+      area:  maadi
+      phone: "01093333755"
+  - entity: branch
+    fields:
+      name:  "كارفور المعادي"
+      code:  carrefour
+      area:  maadi
+      phone: "01093333755"
+  - entity: branch
+    fields:
+      name:  "الشيخ زايد"
+      code:  zayed
+      area:  zayed
+      phone: "01093333755"
+  - entity: branch
+    fields:
+      name:  "المنصورة"
+      code:  mansoura
+      area:  mansoura
+      phone: "01093333755"
+  - entity: branch
+    fields:
+      name:  "سيدي عبدالرحمن - الساحل الشمالي"
+      code:  sidi
+      area:  north_coast
+      phone: "01093333755"
+  # --- Professionals (2 per branch — PLACEHOLDER names) ---
+  - entity: professional
+    fields:
+      name:           "كابتن أحمد"
+      role:           "حلاق أول"
+      branch_code:    st90
+      branch_name:    "٩٠ ستريت - التجمع الخامس"
+      schedule_group: standard
+  - entity: professional
+    fields:
+      name:           "كابتن محمود"
+      role:           "حلاق"
+      branch_code:    st90
+      branch_name:    "٩٠ ستريت - التجمع الخامس"
+      schedule_group: standard
+  - entity: professional
+    fields:
+      name:           "كابتن كريم"
+      role:           "حلاق أول"
+      branch_code:    hala
+      branch_name:    "هلا مول - التجمع الخامس"
+      schedule_group: standard
+  - entity: professional
+    fields:
+      name:           "كابتن عمرو"
+      role:           "حلاق"
+      branch_code:    hala
+      branch_name:    "هلا مول - التجمع الخامس"
+      schedule_group: standard
+  - entity: professional
+    fields:
+      name:           "كابتن يوسف"
+      role:           "حلاق أول"
+      branch_code:    mivida
+      branch_name:    "ميفيدا - القاهرة الجديدة"
+      schedule_group: standard
+  - entity: professional
+    fields:
+      name:           "كابتن مصطفى"
+      role:           "حلاق"
+      branch_code:    mivida
+      branch_name:    "ميفيدا - القاهرة الجديدة"
+      schedule_group: standard
+  - entity: professional
+    fields:
+      name:           "كابتن خالد"
+      role:           "حلاق أول"
+      branch_code:    cfc
+      branch_name:    "كايرو فيستيفال سيتي"
+      schedule_group: standard
+  - entity: professional
+    fields:
+      name:           "كابتن عبدالرحمن"
+      role:           "حلاق"
+      branch_code:    cfc
+      branch_name:    "كايرو فيستيفال سيتي"
+      schedule_group: standard
+  - entity: professional
+    fields:
+      name:           "كابتن حسام"
+      role:           "حلاق أول"
+      branch_code:    newc
+      branch_name:    "التجمع الخامس - فرع جديد"
+      schedule_group: standard
+  - entity: professional
+    fields:
+      name:           "كابتن طارق"
+      role:           "حلاق"
+      branch_code:    newc
+      branch_name:    "التجمع الخامس - فرع جديد"
+      schedule_group: standard
+  - entity: professional
+    fields:
+      name:           "كابتن زياد"
+      role:           "حلاق أول"
+      branch_code:    rehab
+      branch_name:    "الرحاب"
+      schedule_group: standard
+  - entity: professional
+    fields:
+      name:           "كابتن عمر"
+      role:           "حلاق"
+      branch_code:    rehab
+      branch_name:    "الرحاب"
+      schedule_group: standard
+  - entity: professional
+    fields:
+      name:           "كابتن باسل"
+      role:           "حلاق أول"
+      branch_code:    southpark
+      branch_name:    "ساوث بارك فوود كورت - مدينتي"
+      schedule_group: standard
+  - entity: professional
+    fields:
+      name:           "كابتن وليد"
+      role:           "حلاق"
+      branch_code:    southpark
+      branch_name:    "ساوث بارك فوود كورت - مدينتي"
+      schedule_group: standard
+  - entity: professional
+    fields:
+      name:           "كابتن شريف"
+      role:           "حلاق أول"
+      branch_code:    arabesque
+      branch_name:    "أرابيسك مول - مدينتي"
+      schedule_group: standard
+  - entity: professional
+    fields:
+      name:           "كابتن هاني"
+      role:           "حلاق"
+      branch_code:    arabesque
+      branch_name:    "أرابيسك مول - مدينتي"
+      schedule_group: standard
+  - entity: professional
+    fields:
+      name:           "كابتن رامي"
+      role:           "حلاق أول"
+      branch_code:    strip
+      branch_name:    "ذا ستريب - مدينتي"
+      schedule_group: standard
+  - entity: professional
+    fields:
+      name:           "كابتن تامر"
+      role:           "حلاق"
+      branch_code:    strip
+      branch_name:    "ذا ستريب - مدينتي"
+      schedule_group: standard
+  - entity: professional
+    fields:
+      name:           "كابتن إسلام"
+      role:           "حلاق أول"
+      branch_code:    merghany
+      branch_name:    "الميرغني - مصر الجديدة"
+      schedule_group: standard
+  - entity: professional
+    fields:
+      name:           "كابتن فادي"
+      role:           "حلاق"
+      branch_code:    merghany
+      branch_name:    "الميرغني - مصر الجديدة"
+      schedule_group: standard
+  - entity: professional
+    fields:
+      name:           "كابتن أنس"
+      role:           "حلاق أول"
+      branch_code:    hijaz
+      branch_name:    "الحجاز - مصر الجديدة"
+      schedule_group: standard
+  - entity: professional
+    fields:
+      name:           "كابتن بلال"
+      role:           "حلاق"
+      branch_code:    hijaz
+      branch_name:    "الحجاز - مصر الجديدة"
+      schedule_group: standard
+  - entity: professional
+    fields:
+      name:           "كابتن حازم"
+      role:           "حلاق أول"
+      branch_code:    lasilki
+      branch_name:    "اللاسلكي - المعادي"
+      schedule_group: standard
+  - entity: professional
+    fields:
+      name:           "كابتن سامح"
+      role:           "حلاق"
+      branch_code:    lasilki
+      branch_name:    "اللاسلكي - المعادي"
+      schedule_group: standard
+  - entity: professional
+    fields:
+      name:           "كابتن ماجد"
+      role:           "حلاق أول"
+      branch_code:    carrefour
+      branch_name:    "كارفور المعادي"
+      schedule_group: standard
+  - entity: professional
+    fields:
+      name:           "كابتن نادر"
+      role:           "حلاق"
+      branch_code:    carrefour
+      branch_name:    "كارفور المعادي"
+      schedule_group: standard
+  - entity: professional
+    fields:
+      name:           "كابتن هشام"
+      role:           "حلاق أول"
+      branch_code:    zayed
+      branch_name:    "الشيخ زايد"
+      schedule_group: standard
+  - entity: professional
+    fields:
+      name:           "كابتن ياسين"
+      role:           "حلاق"
+      branch_code:    zayed
+      branch_name:    "الشيخ زايد"
+      schedule_group: standard
+  - entity: professional
+    fields:
+      name:           "كابتن أيمن"
+      role:           "حلاق أول"
+      branch_code:    mansoura
+      branch_name:    "المنصورة"
+      schedule_group: standard
+  - entity: professional
+    fields:
+      name:           "كابتن فارس"
+      role:           "حلاق"
+      branch_code:    mansoura
+      branch_name:    "المنصورة"
+      schedule_group: standard
+  - entity: professional
+    fields:
+      name:           "كابتن جمال"
+      role:           "حلاق أول"
+      branch_code:    sidi
+      branch_name:    "سيدي عبدالرحمن - الساحل الشمالي"
+      schedule_group: standard
+  - entity: professional
+    fields:
+      name:           "كابتن مازن"
+      role:           "حلاق"
+      branch_code:    sidi
+      branch_name:    "سيدي عبدالرحمن - الساحل الشمالي"
+      schedule_group: standard
+  # --- Services ---
+  - entity: service
+    fields:
+      name:         "قص شعر رجالي"
+      category:     haircut
+      price:        400
+      duration_min: 40
+  - entity: service
+    fields:
+      name:         "قص شعر شباب"
+      category:     haircut
+      price:        300
+      duration_min: 30
+  - entity: service
+    fields:
+      name:         "قص شعر أطفال"
+      category:     haircut
+      price:        250
+      duration_min: 30
+  - entity: service
+    fields:
+      name:         "تهذيب اللحية"
+      category:     beard
+      price:        200
+      duration_min: 20
+  - entity: service
+    fields:
+      name:         "تصفيف الشعر"
+      category:     beard
+      price:        200
+      duration_min: 15
+  - entity: service
+    fields:
+      name:         "حلاقة وعناية بالذقن"
+      category:     beard
+      price:        250
+      duration_min: 30
+  - entity: service
+    fields:
+      name:         "إزالة الشعر بالشمع"
+      category:     beard
+      price:        200
+      duration_min: 20
+  - entity: service
+    fields:
+      name:         "صبغة شعر"
+      category:     hair_treatment
+      price:        600
+      duration_min: 60
+  - entity: service
+    fields:
+      name:         "كيراتين"
+      category:     hair_treatment
+      price:        500
+      duration_min: 90
+  - entity: service
+    fields:
+      name:         "بروتين"
+      category:     hair_treatment
+      price:        1500
+      duration_min: 120
+  - entity: service
+    fields:
+      name:         "فرد خفيف"
+      category:     hair_treatment
+      price:        500
+      duration_min: 60
+  - entity: service
+    fields:
+      name:         "هيدرا للشعر"
+      category:     hair_treatment
+      price:        1400
+      duration_min: 60
+  - entity: service
+    fields:
+      name:         "زيت رويال"
+      category:     hair_treatment
+      price:        600
+      duration_min: 45
+  - entity: service
+    fields:
+      name:         "كولاجين للبشرة"
+      category:     skin
+      price:        900
+      duration_min: 45
+  - entity: service
+    fields:
+      name:         "بيوديرما للبشرة"
+      category:     skin
+      price:        600
+      duration_min: 40
+  - entity: service
+    fields:
+      name:         "حمام كولاجين"
+      category:     skin
+      price:        800
+      duration_min: 45
+  - entity: service
+    fields:
+      name:         "العناية باليدين"
+      category:     hands_feet
+      price:        300
+      duration_min: 30
+  - entity: service
+    fields:
+      name:         "العناية بالقدمين"
+      category:     hands_feet
+      price:        400
+      duration_min: 30
+  - entity: service
+    fields:
+      name:         "باديكير كامل"
+      category:     hands_feet
+      price:        700
+      duration_min: 45
+  - entity: service
+    fields:
+      name:         "باقة العريس - يوم واحد"
+      category:     package
+      price:        4500
+  - entity: service
+    fields:
+      name:         "باقة العريس - يومين"
+      category:     package
+      price:        5000
+  - entity: service
+    fields:
+      name:         "باقة العريس - منزلية"
+      category:     package
+      price:        6000
+  - entity: service
+    fields:
+      name:         "باقة لاكشري"
+      category:     package
+      price:        800

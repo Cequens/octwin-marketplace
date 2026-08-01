@@ -1,0 +1,45 @@
+# Lists the services in one category with prices. Reached from `services` (or the
+# home "offers" row). Tapping a service starts the booking journey.
+flow_id:     service_list
+version:     1
+description: List services in a category with prices. Reached from the services menu; not usually called directly.
+
+input:
+  category:
+    type:     string
+    optional: true
+    describe: 'Service category code (haircut, beard, hair_treatment, skin, hands_feet, package).'
+
+entry:
+  - else: true
+    goto: load
+
+steps:
+  load:
+    - do: record_list
+      args:
+        entity: service
+        all:    true
+        limit:  60
+        where:  { all: [{ field: category, op: eq, value: '$input.category' }] }
+        sort_by: { field: price, dir: asc }
+      bind: page
+      outputs:
+        ok:     [{ goto: show }]
+        empty:  [{ goto: none }]
+        failed: [{ end: failed }]
+  show:
+    - render:
+        render_intent: list_picker
+        header: '{$t("service_list.header")}'
+        body:   '{$t("service_list.body")}'
+        cta:    '{$t("service_list.book")}'
+        items:  '$page.rows'
+        item_template:
+          title:       '{$item.title} — {$format_number($item.fields.price)} {$t("service_list.egp")}'
+          description: '{$t("service_list.tap_to_book")}'
+          on_select:   { invoke: book }
+      memory_note: 'Listed services in a category ({$page.total}).'
+    - end: applied
+  none:
+    - answer: { instructions: 'No services were found in that category. Offer the other categories, or the phone 01093333755.' }

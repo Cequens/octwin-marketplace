@@ -1,0 +1,32 @@
+# The HOME hub — main menu / front door. Called on a greeting, an unclear
+# message, or "what can you do?". Each row routes a tap straight to a tool.
+flow_id:     home
+version:     1
+description: Main menu / welcome. Call on a greeting, a vague or off-topic message, or "what can you do?".
+
+input:
+  message:
+    type:     string
+    optional: true
+    describe: 'Optional ONE short greeting line YOU compose for this user (e.g. greet them by name).'
+
+entry:
+  - else: true
+    goto: show
+
+steps:
+  show:
+    - render:
+        render_intent: list_picker
+        header: '{$t("home.header")}'
+        body:   '$coalesce($input.message, $t("home.greeting"))'
+        cta:    '{$t("home.cta")}'
+        items:
+          - { title: '{$t("home.row_book")}',     on_select: { invoke: book } }
+          - { title: '{$t("home.row_services")}', on_select: { invoke: services } }
+          - { title: '{$t("home.row_offers")}',   on_select: { invoke: service_list, with: { category: package } } }
+          - { title: '{$t("home.row_branches")}', on_select: { invoke: branches } }
+          - { title: '{$t("home.row_contact")}',  on_select: { invoke: contact } }
+          - { title: '{$t("home.row_faq")}',      on_select: { invoke: faq } }
+      memory_note: 'Showed the home menu.'
+    - end: applied

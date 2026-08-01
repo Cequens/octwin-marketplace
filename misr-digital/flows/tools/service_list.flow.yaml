@@ -1,0 +1,46 @@
+# Lists the services in one category. Reached from `services`. Tapping a service
+# opens `service_detail` (requirements + fees + start link) for that service code.
+flow_id:     service_list
+version:     1
+description: List the services inside one category. Reached from the services menu; not usually called directly.
+
+input:
+  category:
+    type:     string
+    optional: true
+    describe: 'Category code (civil_status, traffic, notary, supply, courts, commercial, realestate_tax, health).'
+
+entry:
+  - else: true
+    goto: load
+
+steps:
+  load:
+    - do: record_list
+      args:
+        entity: service
+        all:    true
+        limit:  60
+        where:  { all: [{ field: category, op: eq, value: '$input.category' }] }
+        sort_by: { field: name, dir: asc }
+      bind: page
+      outputs:
+        ok:     [{ goto: show }]
+        empty:  [{ goto: none }]
+        failed: [{ end: failed }]
+  show:
+    - render:
+        render_intent: list_picker
+        header: '{$t("service_list.header")}'
+        body:   '{$t("service_list.body")}'
+        cta:    '{$t("service_list.choose")}'
+        items:  '$page.rows'
+        item_template:
+          title:       '{$item.title}'
+          description: '{$t("service_list.tap_for_details")}'
+          on_select:   { invoke: service_detail, with: { code: '$item.fields.code' } }
+      memory_note: 'Listed services in a category ({$page.total}).'
+    - end: applied
+  none:
+    - answer:
+        instructions: 'No services were found in that category yet. Apologize briefly and offer to browse other categories via the services menu, or open the portal at digital.gov.eg.'

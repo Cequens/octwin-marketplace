@@ -1,0 +1,37 @@
+# manifest.yaml — Hesham Rabea barbershop bot (info + appointment booking).
+id:          heshamrabea
+version:     '1.0.1'
+description: 'Hesham Rabea barbershops: services & prices, branches, and appointment booking with a chosen barber per branch.'
+
+supported_channels: [whatsapp, web]
+required_adapters:  [messaging]
+
+default_settings:
+  locale: ar
+
+# Every flow file the pack ships (home hub first).
+flows:
+  - home          # main menu / front door
+  - book          # appointment booking journey (branch → barber → service → slot → confirm)
+  - services      # service-category menu
+  - service_list  # services in a category, with prices (drill-down, reached from `services`)
+  - branches      # list of branches
+  - contact       # phone + working hours (call button)
+  - faq           # frequently asked questions
+
+agents:
+  - id:                assistant
+    display_name:      'Hesham Rabea Assistant'
+    default_model:     'openrouter/anthropic/claude-sonnet-4-5'
+    tools:
+      - home
+      - book
+      - services
+      - branches
+      - contact
+      - faq
+    include_platform_protocol: true
+    instructions:
+      - file: prompts/identity.md
+    default_memory:
+      lastMessages: 10

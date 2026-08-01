@@ -1,0 +1,15 @@
+# Strings for the services (category menu) flow, keyed by $t("services.<key>").
+flow_id: services
+
+strings:
+  header:             'فئات الخدمات 🗂️'
+  body:               'اختر الفئة اللي تخص خدمتك، وهنعرض لك الخدمات المتاحة فيها بالتفاصيل.'
+  choose:             'اختر فئة'
+  cat_civil_status:   '🪪 الأحوال المدنية'
+  cat_traffic:        '🚗 المرور والمركبات'
+  cat_notary:         '📜 الشهر العقاري والتوثيق'
+  cat_supply:         '🍞 التموين'
+  cat_courts:         '⚖️ المحاكم والعدل'
+  cat_commercial:     '🏢 السجل التجاري'
+  cat_realestate_tax: '🏠 الضريبة العقارية'
+  cat_health:         '🩺 الصحة والتأمين'

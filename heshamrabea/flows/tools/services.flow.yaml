@@ -1,0 +1,31 @@
+# Service-category menu. Each row drills into `service_list` for that category.
+flow_id:     services
+version:     1
+description: Show the service categories. Call when the customer asks about services, the menu, or prices in general.
+
+input:
+  message:
+    type:     string
+    optional: true
+    describe: 'Optional note from the customer.'
+
+entry:
+  - else: true
+    goto: show
+
+steps:
+  show:
+    - render:
+        render_intent: list_picker
+        header: '{$t("services.header")}'
+        body:   '{$t("services.body")}'
+        cta:    '{$t("services.choose")}'
+        items:
+          - { title: '{$t("services.cat_haircut")}',        on_select: { invoke: service_list, with: { category: haircut } } }
+          - { title: '{$t("services.cat_beard")}',          on_select: { invoke: service_list, with: { category: beard } } }
+          - { title: '{$t("services.cat_hair_treatment")}', on_select: { invoke: service_list, with: { category: hair_treatment } } }
+          - { title: '{$t("services.cat_skin")}',           on_select: { invoke: service_list, with: { category: skin } } }
+          - { title: '{$t("services.cat_hands_feet")}',     on_select: { invoke: service_list, with: { category: hands_feet } } }
+          - { title: '{$t("services.cat_package")}',        on_select: { invoke: service_list, with: { category: package } } }
+      memory_note: 'Showed service categories.'
+    - end: applied

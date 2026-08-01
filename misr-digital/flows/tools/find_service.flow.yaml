@@ -1,0 +1,53 @@
+# Keyword search across every service (fuzzy, Arabic-folded via the entity's
+# `search:` declaration). Agent calls this when the user names a service or need
+# ("أجدد رخصة القيادة", "شهادة ميلاد", "مخالفات"). Results drill into service_detail.
+flow_id:     find_service
+version:     1
+description: Search all government services by keyword. Call when the user names a specific service or need. Pass the user's words as `query`.
+
+input:
+  query:
+    type:     string
+    optional: true
+    describe: 'The user''s search words (a service name or need).'
+
+entry:
+  - if: '$input.query'
+    goto: search
+  - else: true
+    goto: ask
+
+steps:
+  ask:
+    - render:
+        render_intent: text_card
+        body: '{$t("find_service.ask")}'
+      memory_note: 'Asked the user what service to search for.'
+    - end: applied
+  search:
+    - do: record_search
+      args:
+        entity: service
+        query:  '$input.query'
+        limit:  20
+      bind: page
+      outputs:
+        ok:     [{ goto: show }]
+        empty:  [{ goto: none }]
+        failed: [{ end: failed }]
+  show:
+    - render:
+        render_intent: list_picker
+        header: '{$t("find_service.header")}'
+        body:   '{$t("find_service.body")}'
+        cta:    '{$t("find_service.choose")}'
+        items:  '$page.rows'
+        item_template:
+          title:       '{$item.title}'
+          description: '{$t("find_service.tap_for_details")}'
+          on_select:   { invoke: service_detail, with: { code: '$item.fields.code' } }
+      memory_note: 'Showed search results for the user query.'
+    - end: applied
+  none:
+    - answer:
+        instructions: 'No service matched the search. Apologize briefly, suggest rephrasing, or offer to browse categories via the services menu.'

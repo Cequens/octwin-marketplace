@@ -1,0 +1,22 @@
+# Frequently asked questions — a single text card.
+flow_id:     faq
+version:     1
+description: Answer common questions (booking, payment, walk-ins, kids' haircuts). Call for general questions about the shop.
+
+input:
+  message:
+    type:     string
+    optional: true
+    describe: 'Optional note from the customer.'
+
+entry:
+  - else: true
+    goto: show
+
+steps:
+  show:
+    - render:
+        render_intent: text_card
+        body: '{$t("faq.body")}'
+      memory_note: 'Showed the FAQ.'
+    - end: applied

@@ -1,0 +1,308 @@
+# scheduling.yaml — makes the `professional` XRM entity a bookable resource.
+# Availability is seeded PER barber (matched by unique name) because bulk
+# field-match demo seeding attaches rules only once (platform backlog item).
+# Every branch shares the same hours: 10:00–23:30 daily.
+timezone: Africa/Cairo
+
+resources:
+  professional:
+    slot:
+      default_minutes: 30
+      default_capacity: 1
+      window_days: 7
+    reminders:
+      - { key: t_2h, seconds: 7200 }   # remind the customer 2 hours before
+
+booking:
+  entity: booking
+
+demo:
+  availability:
+    - resource_match: { entity: professional, field: name, value: "كابتن أحمد" }
+      rules:
+        - { dow: 0, start: "10:00", end: "23:30", slot_minutes: 30, capacity: 1 }
+        - { dow: 1, start: "10:00", end: "23:30", slot_minutes: 30, capacity: 1 }
+        - { dow: 2, start: "10:00", end: "23:30", slot_minutes: 30, capacity: 1 }
+        - { dow: 3, start: "10:00", end: "23:30", slot_minutes: 30, capacity: 1 }
+        - { dow: 4, start: "10:00", end: "23:30", slot_minutes: 30, capacity: 1 }
+        - { dow: 5, start: "10:00", end: "23:30", slot_minutes: 30, capacity: 1 }
+        - { dow: 6, start: "10:00", end: "23:30", slot_minutes: 30, capacity: 1 }
+    - resource_match: { entity: professional, field: name, value: "كابتن محمود" }
+      rules:
+        - { dow: 0, start: "10:00", end: "23:30", slot_minutes: 30, capacity: 1 }
+        - { dow: 1, start: "10:00", end: "23:30", slot_minutes: 30, capacity: 1 }
+        - { dow: 2, start: "10:00", end: "23:30", slot_minutes: 30, capacity: 1 }
+        - { dow: 3, start: "10:00", end: "23:30", slot_minutes: 30, capacity: 1 }
+        - { dow: 4, start: "10:00", end: "23:30", slot_minutes: 30, capacity: 1 }
+        - { dow: 5, start: "10:00", end: "23:30", slot_minutes: 30, capacity: 1 }
+        - { dow: 6, start: "10:00", end: "23:30", slot_minutes: 30, capacity: 1 }
+    - resource_match: { entity: professional, field: name, value: "كابتن كريم" }
+      rules:
+        - { dow: 0, start: "10:00", end: "23:30", slot_minutes: 30, capacity: 1 }
+        - { dow: 1, start: "10:00", end: "23:30", slot_minutes: 30, capacity: 1 }
+        - { dow: 2, start: "10:00", end: "23:30", slot_minutes: 30, capacity: 1 }
+        - { dow: 3, start: "10:00", end: "23:30", slot_minutes: 30, capacity: 1 }
+        - { dow: 4, start: "10:00", end: "23:30", slot_minutes: 30, capacity: 1 }
+        - { dow: 5, start: "10:00", end: "23:30", slot_minutes: 30, capacity: 1 }
+        - { dow: 6, start: "10:00", end: "23:30", slot_minutes: 30, capacity: 1 }
+    - resource_match: { entity: professional, field: name, value: "كابتن عمرو" }
+      rules:
+        - { dow: 0, start: "10:00", end: "23:30", slot_minutes: 30, capacity: 1 }
+        - { dow: 1, start: "10:00", end: "23:30", slot_minutes: 30, capacity: 1 }
+        - { dow: 2, start: "10:00", end: "23:30", slot_minutes: 30, capacity: 1 }
+        - { dow: 3, start: "10:00", end: "23:30", slot_minutes: 30, capacity: 1 }
+        - { dow: 4, start: "10:00", end: "23:30", slot_minutes: 30, capacity: 1 }
+        - { dow: 5, start: "10:00", end: "23:30", slot_minutes: 30, capacity: 1 }
+        - { dow: 6, start: "10:00", end: "23:30", slot_minutes: 30, capacity: 1 }
+    - resource_match: { entity: professional, field: name, value: "كابتن يوسف" }
+      rules:
+        - { dow: 0, start: "10:00", end: "23:30", slot_minutes: 30, capacity: 1 }
+        - { dow: 1, start: "10:00", end: "23:30", slot_minutes: 30, capacity: 1 }
+        - { dow: 2, start: "10:00", end: "23:30", slot_minutes: 30, capacity: 1 }
+        - { dow: 3, start: "10:00", end: "23:30", slot_minutes: 30, capacity: 1 }
+        - { dow: 4, start: "10:00", end: "23:30", slot_minutes: 30, capacity: 1 }
+        - { dow: 5, start: "10:00", end: "23:30", slot_minutes: 30, capacity: 1 }
+        - { dow: 6, start: "10:00", end: "23:30", slot_minutes: 30, capacity: 1 }
+    - resource_match: { entity: professional, field: name, value: "كابتن مصطفى" }
+      rules:
+        - { dow: 0, start: "10:00", end: "23:30", slot_minutes: 30, capacity: 1 }
+        - { dow: 1, start: "10:00", end: "23:30", slot_minutes: 30, capacity: 1 }
+        - { dow: 2, start: "10:00", end: "23:30", slot_minutes: 30, capacity: 1 }
+        - { dow: 3, start: "10:00", end: "23:30", slot_minutes: 30, capacity: 1 }
+        - { dow: 4, start: "10:00", end: "23:30", slot_minutes: 30, capacity: 1 }
+        - { dow: 5, start: "10:00", end: "23:30", slot_minutes: 30, capacity: 1 }
+        - { dow: 6, start: "10:00", end: "23:30", slot_minutes: 30, capacity: 1 }
+    - resource_match: { entity: professional, field: name, value: "كابتن خالد" }
+      rules:
+        - { dow: 0, start: "10:00", end: "23:30", slot_minutes: 30, capacity: 1 }
+        - { dow: 1, start: "10:00", end: "23:30", slot_minutes: 30, capacity: 1 }
+        - { dow: 2, start: "10:00", end: "23:30", slot_minutes: 30, capacity: 1 }
+        - { dow: 3, start: "10:00", end: "23:30", slot_minutes: 30, capacity: 1 }
+        - { dow: 4, start: "10:00", end: "23:30", slot_minutes: 30, capacity: 1 }
+        - { dow: 5, start: "10:00", end: "23:30", slot_minutes: 30, capacity: 1 }
+        - { dow: 6, start: "10:00", end: "23:30", slot_minutes: 30, capacity: 1 }
+    - resource_match: { entity: professional, field: name, value: "كابتن عبدالرحمن" }
+      rules:
+        - { dow: 0, start: "10:00", end: "23:30", slot_minutes: 30, capacity: 1 }
+        - { dow: 1, start: "10:00", end: "23:30", slot_minutes: 30, capacity: 1 }
+        - { dow: 2, start: "10:00", end: "23:30", slot_minutes: 30, capacity: 1 }
+        - { dow: 3, start: "10:00", end: "23:30", slot_minutes: 30, capacity: 1 }
+        - { dow: 4, start: "10:00", end: "23:30", slot_minutes: 30, capacity: 1 }
+        - { dow: 5, start: "10:00", end: "23:30", slot_minutes: 30, capacity: 1 }
+        - { dow: 6, start: "10:00", end: "23:30", slot_minutes: 30, capacity: 1 }
+    - resource_match: { entity: professional, field: name, value: "كابتن حسام" }
+      rules:
+        - { dow: 0, start: "10:00", end: "23:30", slot_minutes: 30, capacity: 1 }
+        - { dow: 1, start: "10:00", end: "23:30", slot_minutes: 30, capacity: 1 }
+        - { dow: 2, start: "10:00", end: "23:30", slot_minutes: 30, capacity: 1 }
+        - { dow: 3, start: "10:00", end: "23:30", slot_minutes: 30, capacity: 1 }
+        - { dow: 4, start: "10:00", end: "23:30", slot_minutes: 30, capacity: 1 }
+        - { dow: 5, start: "10:00", end: "23:30", slot_minutes: 30, capacity: 1 }
+        - { dow: 6, start: "10:00", end: "23:30", slot_minutes: 30, capacity: 1 }
+    - resource_match: { entity: professional, field: name, value: "كابتن طارق" }
+      rules:
+        - { dow: 0, start: "10:00", end: "23:30", slot_minutes: 30, capacity: 1 }
+        - { dow: 1, start: "10:00", end: "23:30", slot_minutes: 30, capacity: 1 }
+        - { dow: 2, start: "10:00", end: "23:30", slot_minutes: 30, capacity: 1 }
+        - { dow: 3, start: "10:00", end: "23:30", slot_minutes: 30, capacity: 1 }
+        - { dow: 4, start: "10:00", end: "23:30", slot_minutes: 30, capacity: 1 }
+        - { dow: 5, start: "10:00", end: "23:30", slot_minutes: 30, capacity: 1 }
+        - { dow: 6, start: "10:00", end: "23:30", slot_minutes: 30, capacity: 1 }
+    - resource_match: { entity: professional, field: name, value: "كابتن زياد" }
+      rules:
+        - { dow: 0, start: "10:00", end: "23:30", slot_minutes: 30, capacity: 1 }
+        - { dow: 1, start: "10:00", end: "23:30", slot_minutes: 30, capacity: 1 }
+        - { dow: 2, start: "10:00", end: "23:30", slot_minutes: 30, capacity: 1 }
+        - { dow: 3, start: "10:00", end: "23:30", slot_minutes: 30, capacity: 1 }
+        - { dow: 4, start: "10:00", end: "23:30", slot_minutes: 30, capacity: 1 }
+        - { dow: 5, start: "10:00", end: "23:30", slot_minutes: 30, capacity: 1 }
+        - { dow: 6, start: "10:00", end: "23:30", slot_minutes: 30, capacity: 1 }
+    - resource_match: { entity: professional, field: name, value: "كابتن عمر" }
+      rules:
+        - { dow: 0, start: "10:00", end: "23:30", slot_minutes: 30, capacity: 1 }
+        - { dow: 1, start: "10:00", end: "23:30", slot_minutes: 30, capacity: 1 }
+        - { dow: 2, start: "10:00", end: "23:30", slot_minutes: 30, capacity: 1 }
+        - { dow: 3, start: "10:00", end: "23:30", slot_minutes: 30, capacity: 1 }
+        - { dow: 4, start: "10:00", end: "23:30", slot_minutes: 30, capacity: 1 }
+        - { dow: 5, start: "10:00", end: "23:30", slot_minutes: 30, capacity: 1 }
+        - { dow: 6, start: "10:00", end: "23:30", slot_minutes: 30, capacity: 1 }
+    - resource_match: { entity: professional, field: name, value: "كابتن باسل" }
+      rules:
+        - { dow: 0, start: "10:00", end: "23:30", slot_minutes: 30, capacity: 1 }
+        - { dow: 1, start: "10:00", end: "23:30", slot_minutes: 30, capacity: 1 }
+        - { dow: 2, start: "10:00", end: "23:30", slot_minutes: 30, capacity: 1 }
+        - { dow: 3, start: "10:00", end: "23:30", slot_minutes: 30, capacity: 1 }
+        - { dow: 4, start: "10:00", end: "23:30", slot_minutes: 30, capacity: 1 }
+        - { dow: 5, start: "10:00", end: "23:30", slot_minutes: 30, capacity: 1 }
+        - { dow: 6, start: "10:00", end: "23:30", slot_minutes: 30, capacity: 1 }
+    - resource_match: { entity: professional, field: name, value: "كابتن وليد" }
+      rules:
+        - { dow: 0, start: "10:00", end: "23:30", slot_minutes: 30, capacity: 1 }
+        - { dow: 1, start: "10:00", end: "23:30", slot_minutes: 30, capacity: 1 }
+        - { dow: 2, start: "10:00", end: "23:30", slot_minutes: 30, capacity: 1 }
+        - { dow: 3, start: "10:00", end: "23:30", slot_minutes: 30, capacity: 1 }
+        - { dow: 4, start: "10:00", end: "23:30", slot_minutes: 30, capacity: 1 }
+        - { dow: 5, start: "10:00", end: "23:30", slot_minutes: 30, capacity: 1 }
+        - { dow: 6, start: "10:00", end: "23:30", slot_minutes: 30, capacity: 1 }
+    - resource_match: { entity: professional, field: name, value: "كابتن شريف" }
+      rules:
+        - { dow: 0, start: "10:00", end: "23:30", slot_minutes: 30, capacity: 1 }
+        - { dow: 1, start: "10:00", end: "23:30", slot_minutes: 30, capacity: 1 }
+        - { dow: 2, start: "10:00", end: "23:30", slot_minutes: 30, capacity: 1 }
+        - { dow: 3, start: "10:00", end: "23:30", slot_minutes: 30, capacity: 1 }
+        - { dow: 4, start: "10:00", end: "23:30", slot_minutes: 30, capacity: 1 }
+        - { dow: 5, start: "10:00", end: "23:30", slot_minutes: 30, capacity: 1 }
+        - { dow: 6, start: "10:00", end: "23:30", slot_minutes: 30, capacity: 1 }
+    - resource_match: { entity: professional, field: name, value: "كابتن هاني" }
+      rules:
+        - { dow: 0, start: "10:00", end: "23:30", slot_minutes: 30, capacity: 1 }
+        - { dow: 1, start: "10:00", end: "23:30", slot_minutes: 30, capacity: 1 }
+        - { dow: 2, start: "10:00", end: "23:30", slot_minutes: 30, capacity: 1 }
+        - { dow: 3, start: "10:00", end: "23:30", slot_minutes: 30, capacity: 1 }
+        - { dow: 4, start: "10:00", end: "23:30", slot_minutes: 30, capacity: 1 }
+        - { dow: 5, start: "10:00", end: "23:30", slot_minutes: 30, capacity: 1 }
+        - { dow: 6, start: "10:00", end: "23:30", slot_minutes: 30, capacity: 1 }
+    - resource_match: { entity: professional, field: name, value: "كابتن رامي" }
+      rules:
+        - { dow: 0, start: "10:00", end: "23:30", slot_minutes: 30, capacity: 1 }
+        - { dow: 1, start: "10:00", end: "23:30", slot_minutes: 30, capacity: 1 }
+        - { dow: 2, start: "10:00", end: "23:30", slot_minutes: 30, capacity: 1 }
+        - { dow: 3, start: "10:00", end: "23:30", slot_minutes: 30, capacity: 1 }
+        - { dow: 4, start: "10:00", end: "23:30", slot_minutes: 30, capacity: 1 }
+        - { dow: 5, start: "10:00", end: "23:30", slot_minutes: 30, capacity: 1 }
+        - { dow: 6, start: "10:00", end: "23:30", slot_minutes: 30, capacity: 1 }
+    - resource_match: { entity: professional, field: name, value: "كابتن تامر" }
+      rules:
+        - { dow: 0, start: "10:00", end: "23:30", slot_minutes: 30, capacity: 1 }
+        - { dow: 1, start: "10:00", end: "23:30", slot_minutes: 30, capacity: 1 }
+        - { dow: 2, start: "10:00", end: "23:30", slot_minutes: 30, capacity: 1 }
+        - { dow: 3, start: "10:00", end: "23:30", slot_minutes: 30, capacity: 1 }
+        - { dow: 4, start: "10:00", end: "23:30", slot_minutes: 30, capacity: 1 }
+        - { dow: 5, start: "10:00", end: "23:30", slot_minutes: 30, capacity: 1 }
+        - { dow: 6, start: "10:00", end: "23:30", slot_minutes: 30, capacity: 1 }
+    - resource_match: { entity: professional, field: name, value: "كابتن إسلام" }
+      rules:
+        - { dow: 0, start: "10:00", end: "23:30", slot_minutes: 30, capacity: 1 }
+        - { dow: 1, start: "10:00", end: "23:30", slot_minutes: 30, capacity: 1 }
+        - { dow: 2, start: "10:00", end: "23:30", slot_minutes: 30, capacity: 1 }
+        - { dow: 3, start: "10:00", end: "23:30", slot_minutes: 30, capacity: 1 }
+        - { dow: 4, start: "10:00", end: "23:30", slot_minutes: 30, capacity: 1 }
+        - { dow: 5, start: "10:00", end: "23:30", slot_minutes: 30, capacity: 1 }
+        - { dow: 6, start: "10:00", end: "23:30", slot_minutes: 30, capacity: 1 }
+    - resource_match: { entity: professional, field: name, value: "كابتن فادي" }
+      rules:
+        - { dow: 0, start: "10:00", end: "23:30", slot_minutes: 30, capacity: 1 }
+        - { dow: 1, start: "10:00", end: "23:30", slot_minutes: 30, capacity: 1 }
+        - { dow: 2, start: "10:00", end: "23:30", slot_minutes: 30, capacity: 1 }
+        - { dow: 3, start: "10:00", end: "23:30", slot_minutes: 30, capacity: 1 }
+        - { dow: 4, start: "10:00", end: "23:30", slot_minutes: 30, capacity: 1 }
+        - { dow: 5, start: "10:00", end: "23:30", slot_minutes: 30, capacity: 1 }
+        - { dow: 6, start: "10:00", end: "23:30", slot_minutes: 30, capacity: 1 }
+    - resource_match: { entity: professional, field: name, value: "كابتن أنس" }
+      rules:
+        - { dow: 0, start: "10:00", end: "23:30", slot_minutes: 30, capacity: 1 }
+        - { dow: 1, start: "10:00", end: "23:30", slot_minutes: 30, capacity: 1 }
+        - { dow: 2, start: "10:00", end: "23:30", slot_minutes: 30, capacity: 1 }
+        - { dow: 3, start: "10:00", end: "23:30", slot_minutes: 30, capacity: 1 }
+        - { dow: 4, start: "10:00", end: "23:30", slot_minutes: 30, capacity: 1 }
+        - { dow: 5, start: "10:00", end: "23:30", slot_minutes: 30, capacity: 1 }
+        - { dow: 6, start: "10:00", end: "23:30", slot_minutes: 30, capacity: 1 }
+    - resource_match: { entity: professional, field: name, value: "كابتن بلال" }
+      rules:
+        - { dow: 0, start: "10:00", end: "23:30", slot_minutes: 30, capacity: 1 }
+        - { dow: 1, start: "10:00", end: "23:30", slot_minutes: 30, capacity: 1 }
+        - { dow: 2, start: "10:00", end: "23:30", slot_minutes: 30, capacity: 1 }
+        - { dow: 3, start: "10:00", end: "23:30", slot_minutes: 30, capacity: 1 }
+        - { dow: 4, start: "10:00", end: "23:30", slot_minutes: 30, capacity: 1 }
+        - { dow: 5, start: "10:00", end: "23:30", slot_minutes: 30, capacity: 1 }
+        - { dow: 6, start: "10:00", end: "23:30", slot_minutes: 30, capacity: 1 }
+    - resource_match: { entity: professional, field: name, value: "كابتن حازم" }
+      rules:
+        - { dow: 0, start: "10:00", end: "23:30", slot_minutes: 30, capacity: 1 }
+        - { dow: 1, start: "10:00", end: "23:30", slot_minutes: 30, capacity: 1 }
+        - { dow: 2, start: "10:00", end: "23:30", slot_minutes: 30, capacity: 1 }
+        - { dow: 3, start: "10:00", end: "23:30", slot_minutes: 30, capacity: 1 }
+        - { dow: 4, start: "10:00", end: "23:30", slot_minutes: 30, capacity: 1 }
+        - { dow: 5, start: "10:00", end: "23:30", slot_minutes: 30, capacity: 1 }
+        - { dow: 6, start: "10:00", end: "23:30", slot_minutes: 30, capacity: 1 }
+    - resource_match: { entity: professional, field: name, value: "كابتن سامح" }
+      rules:
+        - { dow: 0, start: "10:00", end: "23:30", slot_minutes: 30, capacity: 1 }
+        - { dow: 1, start: "10:00", end: "23:30", slot_minutes: 30, capacity: 1 }
+        - { dow: 2, start: "10:00", end: "23:30", slot_minutes: 30, capacity: 1 }
+        - { dow: 3, start: "10:00", end: "23:30", slot_minutes: 30, capacity: 1 }
+        - { dow: 4, start: "10:00", end: "23:30", slot_minutes: 30, capacity: 1 }
+        - { dow: 5, start: "10:00", end: "23:30", slot_minutes: 30, capacity: 1 }
+        - { dow: 6, start: "10:00", end: "23:30", slot_minutes: 30, capacity: 1 }
+    - resource_match: { entity: professional, field: name, value: "كابتن ماجد" }
+      rules:
+        - { dow: 0, start: "10:00", end: "23:30", slot_minutes: 30, capacity: 1 }
+        - { dow: 1, start: "10:00", end: "23:30", slot_minutes: 30, capacity: 1 }
+        - { dow: 2, start: "10:00", end: "23:30", slot_minutes: 30, capacity: 1 }
+        - { dow: 3, start: "10:00", end: "23:30", slot_minutes: 30, capacity: 1 }
+        - { dow: 4, start: "10:00", end: "23:30", slot_minutes: 30, capacity: 1 }
+        - { dow: 5, start: "10:00", end: "23:30", slot_minutes: 30, capacity: 1 }
+        - { dow: 6, start: "10:00", end: "23:30", slot_minutes: 30, capacity: 1 }
+    - resource_match: { entity: professional, field: name, value: "كابتن نادر" }
+      rules:
+        - { dow: 0, start: "10:00", end: "23:30", slot_minutes: 30, capacity: 1 }
+        - { dow: 1, start: "10:00", end: "23:30", slot_minutes: 30, capacity: 1 }
+        - { dow: 2, start: "10:00", end: "23:30", slot_minutes: 30, capacity: 1 }
+        - { dow: 3, start: "10:00", end: "23:30", slot_minutes: 30, capacity: 1 }
+        - { dow: 4, start: "10:00", end: "23:30", slot_minutes: 30, capacity: 1 }
+        - { dow: 5, start: "10:00", end: "23:30", slot_minutes: 30, capacity: 1 }
+        - { dow: 6, start: "10:00", end: "23:30", slot_minutes: 30, capacity: 1 }
+    - resource_match: { entity: professional, field: name, value: "كابتن هشام" }
+      rules:
+        - { dow: 0, start: "10:00", end: "23:30", slot_minutes: 30, capacity: 1 }
+        - { dow: 1, start: "10:00", end: "23:30", slot_minutes: 30, capacity: 1 }
+        - { dow: 2, start: "10:00", end: "23:30", slot_minutes: 30, capacity: 1 }
+        - { dow: 3, start: "10:00", end: "23:30", slot_minutes: 30, capacity: 1 }
+        - { dow: 4, start: "10:00", end: "23:30", slot_minutes: 30, capacity: 1 }
+        - { dow: 5, start: "10:00", end: "23:30", slot_minutes: 30, capacity: 1 }
+        - { dow: 6, start: "10:00", end: "23:30", slot_minutes: 30, capacity: 1 }
+    - resource_match: { entity: professional, field: name, value: "كابتن ياسين" }
+      rules:
+        - { dow: 0, start: "10:00", end: "23:30", slot_minutes: 30, capacity: 1 }
+        - { dow: 1, start: "10:00", end: "23:30", slot_minutes: 30, capacity: 1 }
+        - { dow: 2, start: "10:00", end: "23:30", slot_minutes: 30, capacity: 1 }
+        - { dow: 3, start: "10:00", end: "23:30", slot_minutes: 30, capacity: 1 }
+        - { dow: 4, start: "10:00", end: "23:30", slot_minutes: 30, capacity: 1 }
+        - { dow: 5, start: "10:00", end: "23:30", slot_minutes: 30, capacity: 1 }
+        - { dow: 6, start: "10:00", end: "23:30", slot_minutes: 30, capacity: 1 }
+    - resource_match: { entity: professional, field: name, value: "كابتن أيمن" }
+      rules:
+        - { dow: 0, start: "10:00", end: "23:30", slot_minutes: 30, capacity: 1 }
+        - { dow: 1, start: "10:00", end: "23:30", slot_minutes: 30, capacity: 1 }
+        - { dow: 2, start: "10:00", end: "23:30", slot_minutes: 30, capacity: 1 }
+        - { dow: 3, start: "10:00", end: "23:30", slot_minutes: 30, capacity: 1 }
+        - { dow: 4, start: "10:00", end: "23:30", slot_minutes: 30, capacity: 1 }
+        - { dow: 5, start: "10:00", end: "23:30", slot_minutes: 30, capacity: 1 }
+        - { dow: 6, start: "10:00", end: "23:30", slot_minutes: 30, capacity: 1 }
+    - resource_match: { entity: professional, field: name, value: "كابتن فارس" }
+      rules:
+        - { dow: 0, start: "10:00", end: "23:30", slot_minutes: 30, capacity: 1 }
+        - { dow: 1, start: "10:00", end: "23:30", slot_minutes: 30, capacity: 1 }
+        - { dow: 2, start: "10:00", end: "23:30", slot_minutes: 30, capacity: 1 }
+        - { dow: 3, start: "10:00", end: "23:30", slot_minutes: 30, capacity: 1 }
+        - { dow: 4, start: "10:00", end: "23:30", slot_minutes: 30, capacity: 1 }
+        - { dow: 5, start: "10:00", end: "23:30", slot_minutes: 30, capacity: 1 }
+        - { dow: 6, start: "10:00", end: "23:30", slot_minutes: 30, capacity: 1 }
+    - resource_match: { entity: professional, field: name, value: "كابتن جمال" }
+      rules:
+        - { dow: 0, start: "10:00", end: "23:30", slot_minutes: 30, capacity: 1 }
+        - { dow: 1, start: "10:00", end: "23:30", slot_minutes: 30, capacity: 1 }
+        - { dow: 2, start: "10:00", end: "23:30", slot_minutes: 30, capacity: 1 }
+        - { dow: 3, start: "10:00", end: "23:30", slot_minutes: 30, capacity: 1 }
+        - { dow: 4, start: "10:00", end: "23:30", slot_minutes: 30, capacity: 1 }
+        - { dow: 5, start: "10:00", end: "23:30", slot_minutes: 30, capacity: 1 }
+        - { dow: 6, start: "10:00", end: "23:30", slot_minutes: 30, capacity: 1 }
+    - resource_match: { entity: professional, field: name, value: "كابتن مازن" }
+      rules:
+        - { dow: 0, start: "10:00", end: "23:30", slot_minutes: 30, capacity: 1 }
+        - { dow: 1, start: "10:00", end: "23:30", slot_minutes: 30, capacity: 1 }
+        - { dow: 2, start: "10:00", end: "23:30", slot_minutes: 30, capacity: 1 }
+        - { dow: 3, start: "10:00", end: "23:30", slot_minutes: 30, capacity: 1 }
+        - { dow: 4, start: "10:00", end: "23:30", slot_minutes: 30, capacity: 1 }
+        - { dow: 5, start: "10:00", end: "23:30", slot_minutes: 30, capacity: 1 }
+        - { dow: 6, start: "10:00", end: "23:30", slot_minutes: 30, capacity: 1 }

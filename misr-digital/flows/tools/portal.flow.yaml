@@ -1,0 +1,25 @@
+# A link button that opens the مصر الرقمية portal directly.
+flow_id:     portal
+version:     1
+description: Open the مصر الرقمية portal (digital.gov.eg). Call when the user asks for the website link or wants to go there directly.
+
+input:
+  message:
+    type:     string
+    optional: true
+    describe: 'Optional note from the user.'
+
+entry:
+  - else: true
+    goto: show
+
+steps:
+  show:
+    - render:
+        render_intent: cta_url
+        header: '{$t("portal.header")}'
+        body:   '{$t("portal.body")}'
+        label:  '{$t("portal.open")}'
+        url:    'https://digital.gov.eg/'
+      memory_note: 'Gave the portal link.'
+    - end: applied

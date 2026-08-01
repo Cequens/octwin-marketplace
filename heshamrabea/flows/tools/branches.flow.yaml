@@ -1,0 +1,39 @@
+# Lists all branches. Tapping a branch starts booking pre-set to that branch.
+flow_id:     branches
+version:     1
+description: Show the list of branches. Call when the customer asks about locations, branches, or addresses.
+
+input:
+  message:
+    type:     string
+    optional: true
+    describe: 'Optional note from the customer.'
+
+entry:
+  - else: true
+    goto: load
+
+steps:
+  load:
+    - do: record_list
+      args: { entity: branch, all: true, limit: 50, sort_by: { field: area, dir: asc } }
+      bind: page
+      outputs:
+        ok:     [{ goto: show }]
+        empty:  [{ goto: none }]
+        failed: [{ end: failed }]
+  show:
+    - render:
+        render_intent: list_picker
+        header: '{$t("branches.header")}'
+        body:   '{$t("branches.body")}'
+        cta:    '{$t("branches.book")}'
+        items:  '$page.rows'
+        item_template:
+          title:       '{$item.title}'
+          description: '{$t("branches.tap_to_book")}'
+          on_select:   { invoke: book, with: { branch_code: '$item.fields.code', branch_name: '$item.title' } }
+      memory_note: 'Listed branches ({$page.total}).'
+    - end: applied
+  none:
+    - answer: { instructions: 'No branches are available right now. Give the phone 01093333755.' }

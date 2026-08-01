@@ -1,0 +1,12 @@
+# Strings for the service_detail flow, keyed by $t("service_detail.<key>").
+flow_id: service_detail
+
+strings:
+  lbl_authority:    '🏛️ الجهة المسؤولة:'
+  lbl_requirements: '📑 المستندات / الشروط المطلوبة:'
+  lbl_fees:         '💰 الرسوم:'
+  lbl_time:         '⏱️ مدة التنفيذ:'
+  lbl_channel:      '🖥️ طريقة التقديم:'
+  disclaimer:       'ℹ️ الرسوم والمدة استرشادية وقد تتغيّر — المصدر الرسمي هو صفحة الخدمة على البوابة.'
+  footer:           'مصر الرقمية 🇪🇬'
+  start:            '🚀 ابدأ الخدمة على البوابة'

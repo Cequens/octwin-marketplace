@@ -1,0 +1,8 @@
+flow_id: service_list
+
+strings:
+  header:      'الخدمات والأسعار'
+  body:        'الأسعار بالجنيه المصري. اضغط على خدمة لحجز موعد:'
+  book:        'احجز'
+  egp:         'ج.م'
+  tap_to_book: 'اضغط للحجز 🗓️'

@@ -1,0 +1,22 @@
+# Frequently asked questions about the مصر الرقمية portal — a single text card.
+flow_id:     faq
+version:     1
+description: Answer common questions about the portal (account, delivery, payment, general help). Call for general how-does-it-work questions.
+
+input:
+  message:
+    type:     string
+    optional: true
+    describe: 'Optional note from the user.'
+
+entry:
+  - else: true
+    goto: show
+
+steps:
+  show:
+    - render:
+        render_intent: text_card
+        body: '{$t("faq.body")}'
+      memory_note: 'Showed the FAQ.'
+    - end: applied

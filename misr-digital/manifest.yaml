@@ -1,0 +1,38 @@
+# manifest.yaml — Misr Digital (مصر الرقمية) services guide bot.
+# Helps citizens browse Egypt's digital-government services, understand the
+# requirements/fees/timing for each, and get routed to start it on digital.gov.eg.
+id:          misr-digital
+version:     '1.0.0'
+description: 'مصر الرقمية: تصفّح الخدمات الحكومية الإلكترونية، اعرف المستندات والرسوم ومدة التنفيذ، وابدأ الخدمة على البوابة.'
+
+supported_channels: [whatsapp, web]
+required_adapters:  [messaging]
+
+default_settings:
+  locale: ar
+
+# Every flow file the pack ships (home hub first).
+flows:
+  - home            # main menu / front door
+  - services        # service-category menu
+  - service_list    # services in a category (drill-down, reached from `services`)
+  - service_detail  # one service: requirements + fees + start link (drill-down)
+  - find_service    # keyword search across all services (agent-facing)
+  - portal          # open the مصر الرقمية portal (link button)
+  - faq             # how the portal works / general help
+
+agents:
+  - id:                assistant
+    display_name:      'مساعد مصر الرقمية'
+    default_model:     'openrouter/anthropic/claude-sonnet-4-5'
+    tools:
+      - home
+      - services
+      - find_service
+      - portal
+      - faq
+    include_platform_protocol: true
+    instructions:
+      - file: prompts/identity.md
+    default_memory:
+      lastMessages: 10

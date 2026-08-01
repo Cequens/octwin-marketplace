@@ -1,0 +1,13 @@
+# User-visible strings for the home flow, keyed by $t("home.<key>").
+flow_id: home
+
+strings:
+  header:       'هشام ربيع للحلاقة الرجالي 💈'
+  greeting:     'أهلاً بيك في هشام ربيع 👋 اختر من القائمة:'
+  cta:          'اختر'
+  row_book:     '🗓️ احجز موعد'
+  row_services: '✂️ الخدمات والأسعار'
+  row_offers:   '👑 باقات العريس'
+  row_branches: '📍 الفروع'
+  row_contact:  '📞 اتصل بنا والمواعيد'
+  row_faq:      '❓ أسئلة شائعة'
