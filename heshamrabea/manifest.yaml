@@ -1,7 +1,16 @@
 # manifest.yaml — Hesham Rabea barbershop bot (info + appointment booking).
 id:          heshamrabea
-version:     '1.0.2'
+version:     '1.1.0'
 description: 'Hesham Rabea barbershops: services & prices, branches, and appointment booking with a chosen barber per branch.'
+
+listing:
+  title:    'Hesham Rabea'
+  tagline:  'Barber booking across every branch — pick the chair, not just the time'
+  category: services
+  author:   { name: 'Octwin', url: 'https://octwin.ai' }
+  # Left unlisted deliberately: this pack carries a real trading name, so
+  # publishing it to the catalog is the owner's call, not a default.
+  public:   false
 
 supported_channels: [whatsapp, web]
 required_adapters:  [messaging]
