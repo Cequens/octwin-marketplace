@@ -15,7 +15,16 @@ entities:
     title_field: name
     list: [name, category, authority]
     search:
-      text: [name, keywords, description, authority]
+      # `text:` alone is pg_trgm — it matches LETTERS. A citizen typing the
+      # colloquial «ضاع مني الكارنيه» shares no trigrams with «بطاقة الرقم
+      # القومي … بدل فاقد» and got nothing back, though that is exactly the
+      # service they wanted. `semantic:` embeds these fields on write and ranks
+      # by pgvector cosine, which is what closes that gap. Higher cost, and it
+      # degrades to fuzzy-only if the inference adapter is unavailable — it
+      # never fails the write. Embeddings are computed ON WRITE, so existing
+      # records only gain one when re-saved (redeploy with --seed).
+      text:     [name, keywords, description, authority]
+      semantic: [name, description, keywords]
     fields:
       name:            { type: text, required: true }
       code:            { type: text, required: true, unique: true }
