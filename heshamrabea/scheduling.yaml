@@ -8,7 +8,6 @@ resources:
   professional:
     slot:
       default_minutes: 30
-      default_capacity: 1
       window_days: 7
     reminders:
       - { key: t_2h, seconds: 7200 }   # remind the customer 2 hours before
