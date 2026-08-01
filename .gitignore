@@ -26,3 +26,5 @@ FEEDBACK.md
 # Keep yours locally; `octwin init` writes one, and `--url` / `PACK_PLATFORM_URL` cover the case
 # where you have none.
 pack.json
+ENRICHMENT.md
+BACKLOG.md
