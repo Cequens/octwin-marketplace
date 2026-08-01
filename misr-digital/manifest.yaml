@@ -2,7 +2,7 @@
 # Helps citizens browse Egypt's digital-government services, understand the
 # requirements/fees/timing for each, and get routed to start it on digital.gov.eg.
 id:          misr-digital
-version:     '1.1.0'
+version:     '1.2.0'
 description: 'مصر الرقمية: تصفّح الخدمات الحكومية الإلكترونية، اعرف المستندات والرسوم ومدة التنفيذ، وابدأ الخدمة على البوابة.'
 
 listing:
@@ -11,6 +11,7 @@ listing:
   # `category` is a closed enum with no government value; `services` is the
   # nearest fit and `other` the only alternative.
   category: services
+  icon:     listing/icon.png
   author:   { name: 'Octwin', url: 'https://octwin.ai' }
   # Left unlisted deliberately: this pack presents a real government portal,
   # so publishing it to the catalog is the owner's call, not a default.

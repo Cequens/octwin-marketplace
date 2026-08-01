@@ -10,6 +10,8 @@
 entities:
   service:
     label: { en: Service, ar: خدمة }
+    icon:        '🏛️'
+    description: { en: 'A government e-service, with its documents, fees and turnaround', ar: 'خدمة حكومية إلكترونية بمستنداتها ورسومها ومدة تنفيذها' }
     title_field: name
     list: [name, category, authority]
     search:

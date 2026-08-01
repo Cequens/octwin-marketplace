@@ -6,6 +6,8 @@
 entities:
   branch:
     label: { en: Branch, ar: فرع }
+    icon:        '🏪'
+    description: { en: 'A barbershop location, with its area and phone', ar: 'فرع الحلاقة بمنطقته ورقم هاتفه' }
     title_field: name
     list: [name, area, phone]
     fields:
@@ -16,6 +18,8 @@ entities:
 
   professional:
     label: { en: Professional, ar: أخصائي }
+    icon:        '💈'
+    description: { en: 'A barber customers book their chair with, at one branch', ar: 'حلاق يحجز معه العملاء في فرع محدد' }
     title_field: name
     list: [name, role, branch_code]
     fields:
@@ -27,6 +31,8 @@ entities:
 
   service:
     label: { en: Service, ar: خدمة }
+    icon:        '✂️'
+    description: { en: 'A cut or grooming service on the price list, with its duration', ar: 'خدمة قص أو عناية ضمن قائمة الأسعار ومدتها' }
     title_field: name
     list: [name, category, price]
     fields:
@@ -37,6 +43,9 @@ entities:
 
   booking:
     extends: system
+    label: { en: Appointment, ar: موعد }
+    icon:        '📅'
+    description: { en: 'A customer appointment with a barber at a branch', ar: 'موعد عميل مع حلاق في فرع محدد' }
     fields:
       customer_name:     { type: text }
       service_name:      { type: text }
