@@ -15,6 +15,50 @@ KB) and the primitive input schemas (`platform-primitives.json`). Nothing here i
 
 ---
 
+## 2026-08-01 — a retired scheduling key that blocks the import
+
+**How it was found:** the platform's pre-deploy validator (`octwin validate --remote`) was rebuilt to
+run the *same* checks the platform runs when it loads a pack. Ten of the twelve declaration files had
+never been parsed before deploy. Re-running the new validator over all 23 packs in this repo produced
+exactly one failure — this one. The other 22 are clean.
+
+### Broken for the customer
+
+**1 · `heshamrabea` cannot be imported at all — `heshamrabea/scheduling.yaml:11`.**
+
+The pack declares a key the platform removed:
+
+```yaml
+resources:
+  professional:
+    slot:
+      default_minutes: 30
+      default_capacity: 1     # <- rejected
+```
+
+`slot` is a `.strict()` schema, so this is not ignored — the pack **fails to load**, and a bulk repo
+import reports `22 imported, 1 failed`. The pack is absent from the catalog until it is fixed.
+
+**The fix — delete the line:**
+
+```yaml
+resources:
+  professional:
+    slot:
+      default_minutes: 30
+```
+
+**No behaviour changes.** `default_capacity` was removed from the platform on 2026-07-27 because it
+was resolved and then read by *nothing*: a slot's seat count comes from the availability RULE's own
+`capacity`, not from this block. It read like "seats per slot" and never was — `xpeng-egypt` declared
+`2` and ran at `1` for its whole life. `heshamrabea` declared `1`, which is also what its rules
+already use, so removing the line is a no-op for bookings.
+
+**Worth knowing:** the `resources.<entity>.slot` block is **not** a set of defaults for availability
+rules. `default_minutes` is only the fallback for `booking_reserve`'s `slot_minutes` argument, and
+`window_days` the default span for `slot_list`. A rule's grid step and seat count come from the rule
+row itself.
+
 ## 2026-07-31 (b) — five promises the packs make and do not keep
 
 Found while surveying the repo for [`ENRICHMENT.md`](ENRICHMENT.md) — the capability-adoption memo.
