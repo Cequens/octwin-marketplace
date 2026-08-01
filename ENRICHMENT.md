@@ -47,7 +47,7 @@ first because they are the cheapest wins in the repo.
 | | Declared | Actually used |
 |---|---|---|
 | **Semantic search** | 13 packs declare `search.semantic` — the platform embeds those fields on every write | **22 of 27** `record_search` call sites pass `query: ''`. `record_related`: **0**. |
-| **SLAs** | 5 packs declare `sla: { resolve_within_hours }` in `worklist.yaml` | **0** packs declare a `sla_sweep` job, so no breach is ever detected |
+| **SLAs** | 5 packs declare `sla: { resolve_within_hours }` in `worklist.yaml` | ~~**0** packs declare a `sla_sweep` job~~ — **adopted 2026-08-01 in all five** (see §2) |
 
 ---
 
@@ -211,9 +211,11 @@ strategy. A `slack`, `sms` or `voice` handle parses cleanly and then fails to de
 `homefix-services` (an emergency job → the emirate's crew), `shawarma-express` (order → the branch),
 `pharmaplus-rx` (prescription → the on-duty pharmacist), `motorcare-service` (breakdown → the bay).
 
-### `sla_sweep` + `escalate_to` — 0 of 21, against 5 packs declaring SLAs
+### `sla_sweep` + `escalate_to` — ~~0 of 21~~ **5 of 21, adopted 2026-08-01**
 
-**This is the sharpest finding in the sweep.** Five packs declare an SLA:
+**This was the sharpest finding in the sweep**, and it is now closed — every pack in the table below
+ships an `automation.yaml` with an entity-level `sla_sweep` and an `on.sla_breach` → `open_task:`
+hook. Kept here as the worked example, with two corrections marked below. Five packs declare an SLA:
 
 | Pack | Declared |
 |---|---|
@@ -223,29 +225,27 @@ strategy. A `slack`, `sms` or `voice` handle parses cleanly and then fails to de
 | `motorcare-service` | breakdown — **4h** |
 | `barakah-finance` | finance application — **48h** |
 
-**No pack declares a `sla_sweep` job.** Nothing detects the breach, so `on.sla_breach` never fires
-and nothing is escalated. A declared SLA with no sweep is a promise with no alarm — and
-`pharmaplus-rx` says the hours out loud to the customer in `otc.locale.ar.yaml`
-(`placed_sla: '🛵 … خلال {hours} ساعة كحد أقصى.'`).
+Nothing detected the breach, so `on.sla_breach` never fired and nothing was escalated. A declared
+SLA with no sweep is a promise with no alarm — and `pharmaplus-rx` says the hours out loud to the
+customer in `otc.locale.ar.yaml` (`placed_sla: '🛵 … خلال {hours} ساعة كحد أقصى.'`).
 
 It is two halves and neither works alone. The job, which mints the breach event:
 
 ```yaml
 # automation.yaml
 jobs:
-  - key:              rx_sla
+  - key:              case_sla
     kind:             sla_sweep
-    entity:           prescription_request
-    interval_seconds: 900
+    entity:           case          # ← the WORKED entity from worklist.yaml, whatever it is
+    interval_seconds: 300
     config:
-      message:     '🙏 نعتذر عن التأخير — الصيدلي بيراجع روشتتك دلوقتي.'
-      escalate_to: 'team:pharmacist_review'      # a principal-ref: `user:…` or `team:…`
+      message: '🙏 نعتذر عن التأخير — الصيدلي بيراجع روشتتك دلوقتي.'
 ```
 
 and the hook, which reacts to it:
 
 ```yaml
-# xrm.yaml → entities.prescription_request.on
+# xrm.yaml → entities.case.on   (`case` needs `extends: system`; hooks survive it)
 on:
   sla_breach:
     - open_task:
@@ -254,10 +254,27 @@ on:
         due_in_hours: 1
 ```
 
-`kind:` also accepts `segment`, `stale_records` and `task_overdue`; `interval_seconds` has a floor
-of 60.
+**Two corrections to what this section originally said**, both found while adopting it:
 
-### `open_task:` reaction verb — 0 of 21
+1. **The job is entity-level, not SLA-level.** The original example named
+   `entity: prescription_request` — an entity no pack declares. The sweep consumes whatever
+   `sla_due_at` the *per-type* worklist config stamped at enrolment, so **one job covers every type
+   on that entity**: `case` for `kaiian`/`pharmaplus-rx`/`barakah-finance`, `work_order` for
+   `homefix-services`, `repair_job` for `motorcare-service`. Read `work:` in `worklist.yaml` to find
+   the name — it is not always a pack entity, and for the three casework packs it is the reserved
+   `case` system entity, reachable only through `extends: system`.
+2. **`escalate_to:` is omitted deliberately.** The original example passed
+   `'team:pharmacist_review'` and called it a principal ref — but `pharmacist_review` is a *queue
+   key*, and `worklist-guide` §5 describes the sweep as **reassigning** to it, which §4 defines as a
+   queue-key move. The two readings target different columns, the schema types it as a bare
+   `string`, and a wrong value mis-routes silently. Filed as **C7** in [`FEEDBACK.md`](FEEDBACK.md);
+   leave it out until the platform answers.
+
+Pick `interval_seconds` against the **shortest** SLA on the entity, not the longest: 300s for
+`pharmaplus-rx`'s 2h prescription review, 900s for the 4h desks, 3600s for `barakah-finance`'s 48h
+credit queue. The floor is 60. `kind:` also accepts `segment`, `stale_records` and `task_overdue`.
+
+### `open_task:` reaction verb — 5 of 21 (adopted 2026-08-01, on `sla_breach`)
 
 The operator-side counterpart to `notify:`. Where `notify:` reaches the *customer*, this opens a
 due-dated follow-up for a *human*, on the record that fired. Config is `title` (required, templated),
@@ -636,20 +653,20 @@ Three things each, ranked. Everything here is expanded above.
 
 | Pack | 1 | 2 | 3 |
 |---|---|---|---|
-| `barakah-finance` | `send_email` the offer (§4) | `sla_sweep` for the 48h SLA (§2) | stale-application sweep (§7) |
+| `barakah-finance` | `send_email` the offer (§4) | ~~`sla_sweep` for the 48h SLA~~ ✅ | stale-application sweep (§7) |
 | `binaa-supply` | wire `$input` → `record_search` (§1) | `stage_change` mirror (§3) | `send_email` the quote (§4) |
 | `clinic` | `stage_labels:` (§8) | live `query:` on doctor search (§1) | `rule_attributes:` per branch (§9) |
 | `ecommerce` | `record_related` "also viewed" (§1) | `public:` product pages (§5) | `survey:` post-delivery (§3) |
 | `glamour-salon` | `stage_labels:` (§8) | `cancel_scheduled` on cancel — **see BACKLOG** | `survey:` verb instead of a flow step (§3) |
 | `gulf-realty` | **`city` → `enum` + free-text query (§1)** | `public:` listing pages (§5) | `notify` the broker (§2) |
-| `homefix-services` | `notify` the crew (§2) | `sla_sweep` for the 4h emergency (§2) | `survey:` after the job (§3) |
+| `homefix-services` | `notify` the crew (§2) | ~~`sla_sweep` for the 4h emergency~~ ✅ | `survey:` after the job (§3) |
 | `ironpulse-fitness` | `enrollment:` for renewals (§9) | `survey:` after a class (§3) | `cancel_scheduled` — **see BACKLOG** |
-| `kaiian` | `sla_sweep` for the 4h SLA (§2) | `open_task:` verb (§2) | `sortable:` (§8) |
-| `motorcare-service` | `sla_sweep` for breakdowns (§2) | `survey:` after collection (§3) | symptom → `record_search` (§1) |
+| `kaiian` | ~~`sla_sweep` for the 4h SLA~~ ✅ | ~~`open_task:` verb~~ ✅ | `sortable:` (§8) |
+| `motorcare-service` | ~~`sla_sweep` for breakdowns~~ ✅ | `survey:` after collection (§3) | symptom → `record_search` (§1) |
 | `nakhla-giving` | `public:` campaign pages (§5) | `send_email` the receipt (§4) | ship it — still `0.3.0`, `public: false` |
 | `nile-academy` | `send_email` the admission letter (§4) | `enrollment:` for re-application (§9) | stale-application sweep (§7) |
 | `oud-atelier` | `line_items` + `rolls_up_to` (§9) | `automation.yaml` abandoned cart (§7) | `record_related` fragrance family (§1) |
-| `pharmaplus-rx` | **`sla_sweep` for the 2h SLA you promise aloud (§2)** | symptom → `record_search` (§1) | stock `integrations.yaml` (§6) |
+| `pharmaplus-rx` | ~~**`sla_sweep` for the 2h SLA you promise aloud**~~ ✅ | symptom → `record_search` (§1) | stock `integrations.yaml` (§6) |
 | `redsea-resorts` | `schedule_notify` pre-arrival — **see BACKLOG** | `survey:` after the stay (§3) | `send_email` the confirmation (§4) |
 | `shawarma-express` | `notify` the branch (§2) | dish → `record_search` (§1) | `line_items` + `rolls_up_to` (§9) |
 | `shield-motor` | `approve_apply` on FNOL — **see BACKLOG** | `send_email` the policy (§4) | `field_change` on claim decision (§3) |

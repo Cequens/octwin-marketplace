@@ -1,0 +1,31 @@
+# Standing automation jobs for Kaiian/Waslini.
+#
+# ONE job, and it is the alarm on the SLA that `worklist.yaml` already promises.
+# Without it the `sla: { resolve_within_hours: … }` on every case type is a number
+# in a file: the deadline is stamped on the record at enrolment (`sla_due_at`) and
+# then nothing ever looks at it again.
+#
+# The sweep is entity-level, not type-level — it consumes whatever `sla_due_at`
+# the per-type config stamped, so this single job covers all five case types
+# (extra_charge 4h · unpaid_fare 4h · account_block 8h · general_complaint 24h ·
+# vehicle_change 24h). It skips cases already in a terminal stage, alerts the
+# responsible operator through the ops inbox, relays `message` to the customer
+# ONCE per breach (deduped on `sla_notified_at`), and mints the `sla_breach`
+# record event that `xrm.yaml`'s `on.sla_breach` hook reacts to.
+#
+# `escalate_to:` is deliberately absent. It reassigns the breached record, but the
+# KB describes its target two different ways — `worklist-guide` §5 says "reassign
+# to escalate_to" (a queue KEY) while the value looks like a principal ref
+# (`user:…`/`team:…`). A wrong value here mis-routes silently, so the reassignment
+# half is left to the operator until the vocabulary is confirmed. Asked upstream
+# in FEEDBACK.md.
+
+jobs:
+  - key:              case_sla
+    kind:             sla_sweep
+    entity:           case
+    # A quarter of an hour. The shortest SLA here is 4h, so this bounds the
+    # detection lag at ~6% of the promise.
+    interval_seconds: 900
+    config:
+      message: 'نعتذر عن التأخير 🙏 طلبك تجاوز الوقت المتوقع وتم رفعه لفريق مختص — بنرجع لك في أقرب وقت.'

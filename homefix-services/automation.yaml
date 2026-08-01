@@ -1,0 +1,27 @@
+# Standing automation jobs for HomeFix.
+#
+# The alarm on the dispatch SLA `worklist.yaml` promises. The four-hour emergency
+# is the one that matters: a burst pipe whose work order sits unworked past the
+# deadline produced no signal at all before this job existed — `sla_due_at` was
+# stamped at enrolment and never read again.
+#
+# The sweep is entity-level, so this one job covers all three urgency types
+# (emergency 4h · soon 12h · routine 48h). It skips work orders already completed
+# or cancelled, alerts the responsible operator through the ops inbox, relays
+# `message` to the customer ONCE per breach (deduped on `sla_notified_at`), and
+# mints the `sla_breach` record event that `xrm.yaml`'s `on.sla_breach` hook turns
+# into a dispatch-desk task.
+#
+# `escalate_to:` is deliberately absent — see the note in kaiian/automation.yaml
+# and the ask in FEEDBACK.md. Re-routing an emergency to the wrong emirate's crew
+# is worse than leaving it with the crew that already has it.
+
+jobs:
+  - key:              work_order_sla
+    kind:             sla_sweep
+    entity:           work_order
+    # A quarter of an hour, bounding the detection lag at ~6% of the four-hour
+    # emergency promise.
+    interval_seconds: 900
+    config:
+      message: 'نعتذر عن التأخير 🙏 طلبك تجاوز الوقت المتوقع وتم تنبيه فريق الإرسال — بنرجع لك في أقرب وقت.'

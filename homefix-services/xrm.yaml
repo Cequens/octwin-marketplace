@@ -91,6 +91,17 @@ entities:
     milestones:
       dispatched: { label: { en: 'Dispatched', ar: 'تم الإرسال' }, stage: dispatched }
       completed:  { label: { en: 'Completed', ar: 'تم الإنجاز' },   stage: completed, terminal: true }
+    # The operator half of the SLA. `automation.yaml`'s sla_sweep mints the
+    # `sla_breach` event and handles the CUSTOMER (one reassurance, deduped);
+    # this puts a due-dated job on a human's list so the breach is worked, not
+    # just announced. The sweep is what makes this hook reachable at all — the
+    # event has no other source.
+    on:
+      sla_breach:
+        - open_task:
+            title:        '⏰ تجاوز المهلة — أمر عمل {{ record.record_number }}'
+            body:         'الاستعجال: {{ record.fields.urgency }} · الإمارة: {{ record.fields.emirate }}. راجع الإسناد وبلّغ العميل.'
+            due_in_hours: 1
 
   contract:
     label: { en: 'Maintenance contract', ar: 'عقد صيانة' }

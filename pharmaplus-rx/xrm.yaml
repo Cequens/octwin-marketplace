@@ -142,6 +142,25 @@ entities:
     list: [title, qty, line_total]
     dedupe_by: line_key
 
+  # The worked entity — the pharmacist review desk. `case` is a RESERVED system
+  # entity (extend-only): the pack declares none of its shape, and
+  # `worklist.yaml` already says how it routes and what its SLA is. It appears
+  # here for one reason: hooks survive `extends: system`, and a breached
+  # prescription review needs a named human holding it.
+  case:
+    extends: system
+    # `automation.yaml`'s sla_sweep mints the `sla_breach` event and handles the
+    # PATIENT (one reassurance, deduped on `sla_notified_at`); this puts a
+    # due-dated job on a pharmacist's list so the breach is worked, not just
+    # announced. The sweep is what makes this hook reachable at all — the event
+    # has no other source.
+    on:
+      sla_breach:
+        - open_task:
+            title:        '⏰ تجاوز المهلة — حالة {{ record.record_number }}'
+            body:         'النوع: {{ record.fields.case_type }} · الأولوية: {{ record.fields.priority }}. راجع الطلب وتواصل مع المريض.'
+            due_in_hours: 1
+
 segments:
   open_rx:
     entity: rx_request

@@ -1,12 +1,16 @@
 # Demo operator topology for kaiian — SEED-ONLY (created under the `seed` flag by
 # the app-shell `applyIdentityDemoSeed` applier, THROUGH the identity layer). Lets
 # the operator flow demo end-to-end: assign an extra_charge case to a demo agent,
-# log in as them, see it under "My cases" (scoped to their team's queue), and get
-# the header-bell notification when its SLA breaches.
+# see it under "My cases" (scoped to their team's queue), and get the header-bell
+# notification when its SLA breaches.
 #
-# `password:` makes an agent login-capable so an evaluator can sign in as them —
-# DEMO-ONLY (this file is only read when provisioning with seed data). Passwordless
-# agents are safe placeholder assignment targets (they can't log in).
+# Agents here are real users with a membership and a team seat, so they work as
+# assignment and queue targets the moment the pack installs. They carry NO
+# credential — a pack is public content and the platform's user lookup is global,
+# so a committed password would be a shared account across every tenant that
+# seeds this pack. `validatePackBundle` rejects `password:` for that reason. To
+# sign in as an agent, invite them from Workspace → Team; they set their own
+# password on accept.
 # Queues below are the casework queues declared in cases.yaml.
 
 teams:
@@ -14,14 +18,14 @@ teams:
     name: Customer Ops
     queues: [customer_ops]
     agents:
-      - { email: sara.ops@demo.kaiian.test,   name: "Sara — Customer Ops", team_role: lead, password: "demo-kaiian-ops" }
+      - { email: sara.ops@demo.kaiian.test,   name: "Sara — Customer Ops", team_role: lead }
       - { email: omar.ops@demo.kaiian.test,    name: "Omar — Customer Ops" }
 
   - slug: western-region
     name: Western Region
     queues: [ops_western]
     agents:
-      - { email: layla.west@demo.kaiian.test,  name: "Layla — Western Region", team_role: lead, password: "demo-kaiian-west" }
+      - { email: layla.west@demo.kaiian.test,  name: "Layla — Western Region", team_role: lead }
 
   - slug: central-region
     name: Central Region

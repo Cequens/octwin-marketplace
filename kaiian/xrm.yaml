@@ -102,6 +102,25 @@ entities:
     # never duplicates it.
     dedupe_by: mobile
 
+  # The worked entity. `case` is a RESERVED system entity (extend-only) — the
+  # pack never declares its fields, stages or labels, and `worklist.yaml` already
+  # says how it routes. It appears here for one reason: hooks survive
+  # `extends: system`, and the SLA breach needs an operator-side consequence.
+  case:
+    extends: system
+    # `automation.yaml`'s sla_sweep mints the `sla_breach` event and handles the
+    # CUSTOMER (one reassurance, deduped on `sla_notified_at`); this puts a
+    # due-dated job on a human's list so the breach is worked, not just
+    # announced. The sweep is what makes this hook reachable at all — the event
+    # has no other source, which is why the pack shipped this hook's absence and
+    # its trigger's absence as one defect.
+    on:
+      sla_breach:
+        - open_task:
+            title:        '⏰ تجاوز المهلة — حالة {{ record.record_number }}'
+            body:         'النوع: {{ record.fields.case_type }} · الأولوية: {{ record.fields.priority }}. راجع الحالة وبلّغ العميل.'
+            due_in_hours: 1
+
 segments:
   # Applications stuck mid-funnel with no activity for a week — the ops
   # re-engagement list.

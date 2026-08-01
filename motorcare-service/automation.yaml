@@ -1,0 +1,26 @@
+# Standing automation jobs for MotorCare.
+#
+# The alarm on the workshop SLA `worklist.yaml` promises. A breakdown carries a
+# four-hour clock and `urgent` priority, and until this job existed nothing looked
+# at either: `sla_due_at` was stamped when the job card enrolled and never read.
+#
+# The sweep is entity-level, so this one job covers all four job types
+# (breakdown 4h · diagnostic_check 8h · periodic_service 24h · body_repair 48h).
+# It skips job cards already collected or cancelled, alerts the responsible
+# operator through the ops inbox, relays `message` to the customer ONCE per breach
+# (deduped on `sla_notified_at`), and mints the `sla_breach` record event that
+# `xrm.yaml`'s `on.sla_breach` hook turns into a service-desk task.
+#
+# `escalate_to:` is deliberately absent — see the note in kaiian/automation.yaml
+# and the ask in FEEDBACK.md. Moving a body-shop job to the diagnostics bay
+# because the escalation target was read as the wrong kind of key helps nobody.
+
+jobs:
+  - key:              repair_job_sla
+    kind:             sla_sweep
+    entity:           repair_job
+    # A quarter of an hour, bounding the detection lag at ~6% of the four-hour
+    # breakdown promise.
+    interval_seconds: 900
+    config:
+      message: 'نعتذر عن التأخير 🙏 بطاقة سيارتك تجاوزت الوقت المتوقع وتم تنبيه مدير الورشة — بنرجع لك في أقرب وقت.'

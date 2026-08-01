@@ -1,0 +1,28 @@
+# Standing automation jobs for PharmaPlus.
+#
+# This pack says the SLA OUT LOUD — `otc.locale.ar.yaml` tells the patient
+# «بتتواصل معاك خلال {hours} ساعة كحد أقصى». Until this job existed nothing
+# measured the number the patient was given: `sla_due_at` was stamped at
+# enrolment and never read.
+#
+# The sweep is entity-level, so this one job covers all five case types
+# (prescription_review 2h · otc_order 6h · repeat_request 6h · insurance_query 24h
+# · general_query 24h). It skips terminal-stage cases, alerts the responsible
+# operator through the ops inbox, relays `message` to the patient ONCE per breach
+# (deduped on `sla_notified_at`), and mints the `sla_breach` record event that
+# `xrm.yaml`'s `on.sla_breach` hook turns into a pharmacist task.
+#
+# `escalate_to:` is deliberately absent — see the note in kaiian/automation.yaml
+# and the ask in FEEDBACK.md. A mis-routed prescription is worse than an
+# un-escalated one.
+
+jobs:
+  - key:              case_sla
+    kind:             sla_sweep
+    entity:           case
+    # Five minutes. The prescription-review SLA is 2h — the shortest in the repo,
+    # and the one the patient was quoted — so the detection lag has to be small
+    # against it. Floor is 60.
+    interval_seconds: 300
+    config:
+      message: 'نعتذر عن التأخير 🙏 الصيدلي بيراجع طلبك دلوقتي وهنتواصل معاك حالاً.'

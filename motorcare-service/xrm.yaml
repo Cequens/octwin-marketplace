@@ -103,6 +103,17 @@ entities:
     milestones:
       job_quoted:    { label: { en: 'Quoted', ar: 'تم التسعير' },     stage: quoted }
       job_completed: { label: { en: 'Collected', ar: 'تم الاستلام' }, stage: collected, terminal: true }
+    # The operator half of the SLA. `automation.yaml`'s sla_sweep mints the
+    # `sla_breach` event and handles the CUSTOMER (one reassurance, deduped);
+    # this puts a due-dated job on a human's list so the breach is worked, not
+    # just announced. The sweep is what makes this hook reachable at all — the
+    # event has no other source.
+    on:
+      sla_breach:
+        - open_task:
+            title:        '⏰ تجاوز المهلة — بطاقة {{ record.record_number }}'
+            body:         'نوع العمل: {{ record.fields.job_type }} · القسم: {{ record.fields.work_area }}. راجع البطاقة وبلّغ العميل.'
+            due_in_hours: 1
 
   booking:
     extends: system

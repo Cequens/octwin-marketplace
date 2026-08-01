@@ -1,0 +1,26 @@
+# Standing automation jobs for Barakah Finance.
+#
+# The alarm on the credit-review SLA `worklist.yaml` promises. An applicant
+# waiting on a financing decision is the least likely customer in this repo to
+# chase it, which is exactly why the deadline needs a machine watching it:
+# `sla_due_at` was stamped at enrolment and, before this job, never read.
+#
+# The sweep is entity-level, so this one job covers all four case types
+# (document_review 24h · finance_application 48h · sharia_question 48h ·
+# general_query 48h). It skips terminal-stage cases, alerts the responsible
+# operator through the ops inbox, relays `message` to the applicant ONCE per
+# breach (deduped on `sla_notified_at`), and mints the `sla_breach` record event
+# that `xrm.yaml`'s `on.sla_breach` hook turns into an underwriter task.
+#
+# `escalate_to:` is deliberately absent — see the note in kaiian/automation.yaml
+# and the ask in FEEDBACK.md.
+
+jobs:
+  - key:              case_sla
+    kind:             sla_sweep
+    entity:           case
+    # An hour. The shortest SLA here is 24h, so a finer tick would just be a
+    # busier ticker for the same answer.
+    interval_seconds: 3600
+    config:
+      message: 'نعتذر عن التأخير 🙏 طلبك ما زال قيد المراجعة وتم رفعه لفريق الائتمان — بنتواصل معك قريباً.'

@@ -75,6 +75,27 @@ entities:
       estimated: { label: { en: 'Estimate given', ar: 'تم التقدير' },   stage: estimated }
       submitted: { label: { en: 'Submitted', ar: 'تم التقديم' },        stage: submitted, terminal: true }
 
+  # The worked entity — the credit queue. `case` is a RESERVED system entity
+  # (extend-only): the pack declares none of its shape, and `worklist.yaml`
+  # already says how it routes and what its SLA is. It appears here for one
+  # reason: hooks survive `extends: system`, and a breached credit review needs
+  # a named human holding it.
+  case:
+    extends: system
+    # `automation.yaml`'s sla_sweep mints the `sla_breach` event and handles the
+    # APPLICANT (one reassurance, deduped on `sla_notified_at`); this puts a
+    # due-dated job on an underwriter's list so the breach is worked, not just
+    # announced. The sweep is what makes this hook reachable at all — the event
+    # has no other source.
+    on:
+      sla_breach:
+        - open_task:
+            title:        '⏰ تجاوز المهلة — حالة {{ record.record_number }}'
+            body:         'النوع: {{ record.fields.case_type }} · الأولوية: {{ record.fields.priority }}. راجع الطلب وتواصل مع العميل.'
+            # 48h SLAs move at a different tempo than a 4h dispatch board — a
+            # one-hour due date on an underwriting task would just be noise.
+            due_in_hours: 4
+
 segments:
   live_applications:
     entity: applicant

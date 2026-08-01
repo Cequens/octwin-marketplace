@@ -15,7 +15,7 @@ KB) and the primitive input schemas (`platform-primitives.json`). Nothing here i
 
 ---
 
-## 2026-07-31 (b) — six promises the packs make and do not keep
+## 2026-07-31 (b) — five promises the packs make and do not keep
 
 Found while surveying the repo for [`ENRICHMENT.md`](ENRICHMENT.md) — the capability-adoption memo.
 These are the findings from that sweep that are **defects, not enrichment**: in every case the pack
@@ -62,28 +62,9 @@ and hears nothing until they arrive. The declaration reads as a working feature 
 the pack. Arm it in `book-stay.flow.yaml` after the reservation returns, following
 `smile-dental/flows/tools/book-visit.flow.yaml:170-186`.
 
-**3 · Five packs declare an SLA that nothing sweeps.**
-
-`worklist.yaml` declares `sla: { resolve_within_hours }`, but **no pack in the repo declares a
-`sla_sweep` job in `automation.yaml`**. Nothing detects the breach, so the `on.sla_breach` hook can
-never fire and no escalation happens. The SLA is a number in a file.
-
-| Pack | Declared | File |
-|---|---|---|
-| `pharmaplus-rx` | prescription review — 2h | `worklist.yaml:44` |
-| `homefix-services` | emergency — 4h | `worklist.yaml:39` |
-| `kaiian` | extra charge / unpaid fare — 4h | `worklist.yaml:39,44` |
-| `motorcare-service` | breakdown — 4h | `worklist.yaml:42` |
-| `barakah-finance` | finance application — 48h | `worklist.yaml:29` |
-
-`pharmaplus-rx` is the sharp one: it **tells the customer the number out loud** —
-`flows/tools/otc.locale.ar.yaml:59`, `placed_sla: '🛵 الصيدلية بتجهّز الطلب وبتتواصل معاك خلال {hours} ساعة كحد أقصى.'`
-— for an SLA nothing measures. The two-part fix (the job that mints the breach event, plus the hook
-that reacts to it) is written out in [`ENRICHMENT.md`](ENRICHMENT.md) §2.
-
 ### Silently wrong
 
-**4 · `shield-motor` files a claim with no confirmation step.**
+**3 · `shield-motor` files a claim with no confirmation step.**
 
 `flows/tools/claim.flow.yaml` runs gather → save FNOL → open case with **no `approve_apply`
 anywhere in the pack** — the only pack of 21 with none. A first notification of loss is committed
@@ -91,7 +72,7 @@ from whatever the agent parsed, with no ✅ preview. `xpeng-egypt` has the same 
 writes first and renders a confirmation card afterwards, so the customer confirms something already
 done.
 
-**5 · Three packs take a document as a photo.**
+**4 · Three packs take a document as a photo.**
 
 `pharmaplus-rx` (prescription), `shield-motor` (policy schedule) and `umrah-journeys` (passport)
 all accept `image:` media handlers only — **no pack in the repo declares a `document:` handler**. A
@@ -99,7 +80,7 @@ customer sending a PDF prescription gets no handler at all.
 
 ### Audit
 
-**6 · Two booking businesses have no diary.**
+**5 · Two booking businesses have no diary.**
 
 `umrah-journeys` has `book-package.flow.yaml` and `homefix-services` has `request-visit.flow.yaml`,
 and **neither ships a `scheduling.yaml`**. Departures and technician visits are plain XRM records:
@@ -116,6 +97,8 @@ Full evidence for each lives in git history; only the outcome is kept here. Each
 
 | Batch | What it was | Outcome |
 |---|---|---|
+| 2026-08-01 (b) | five packs declared an SLA that nothing swept — no `sla_sweep` job existed in the repo, so `on.sla_breach` could never fire | An `automation.yaml` with one entity-level `sla_sweep` in each: `kaiian` + `barakah-finance` + `pharmaplus-rx` on `case`, `homefix-services` on `work_order`, `motorcare-service` on `repair_job` — one job covers every type, since the sweep consumes the `sla_due_at` the per-type config stamped. Each paired with an `on.sla_breach` → `open_task:` hook (the three `case` packs reach it through `extends: system`). Tick chosen against the shortest SLA: 300s for the 2h prescription review, 900s for the 4h desks, 3600s for the 48h credit queue. `escalate_to:` deliberately omitted — see FEEDBACK. All five bumped minor. |
+| 2026-08-01 | `kaiian` shipped two plaintext agent passwords, which `validatePackBundle` now rejects | Both `password:` fields dropped from `demo-identity.yaml` (`kaiian` 1.1.0 → 1.2.0), plus the header comment that documented the field as a feature and the "log in as them" demo claim it supported. Signing in as a seeded agent is now an invite from Workspace → Team. `demo-identity.yaml` exists in exactly one pack, so no other pack was affected. |
 | 2026-07-31 | 18 `record_aggregate` calls read the whole project | 14 got `contact_id`, 4 got `all: true`. Included a confirmed live leak (`glamour-salon` greeting a new contact with a stranger's booking) and two cart badges summing every shopper's basket. |
 | 2026-07-30 | 50 money fields with no `currency:`; the human layer unused | `currency:` on all 50, 28 sibling text fields deleted (+89 demo values, 3 writes, 29 reads). `icon:`/`description:` on all 73 entities, `stage_hints:` on all 22 pipelines, `description:` on 52 non-obvious fields. |
 | 2026-07-30 | `clinic`'s manifest documented a retired mechanism | Found in **6 packs, 9 files**, not just clinic. All now cite the pulled KB instead of platform source paths. |
