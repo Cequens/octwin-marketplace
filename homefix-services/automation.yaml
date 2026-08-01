@@ -12,9 +12,20 @@
 # mints the `sla_breach` record event that `xrm.yaml`'s `on.sla_breach` hook turns
 # into a dispatch-desk task.
 #
-# `escalate_to:` is deliberately absent — see the note in kaiian/automation.yaml
-# and the ask in FEEDBACK.md. Re-routing an emergency to the wrong emirate's crew
-# is worse than leaving it with the crew that already has it.
+# `escalate_to:` routes the breached item to a queue. It took three rounds to land:
+# first omitted because the KB documented the target two incompatible ways, then kept
+# out once it was typed as a principal-ref (`user:`/`team:`) — an id only the INSTALLING
+# tenant knows, unwritable in a published pack. The platform then added `queue:<key>`,
+# resolved against THIS pack's own `worklist.yaml` `queues:`, so it travels with the pack
+# (KB 968db6a91806, `worklist-guide` §5). A key we never declared fails at pack load,
+# naming the legal ones — it can no longer mis-route in silence.
+#
+# `dispatch_desk` is already the routing `fallback:` — a breached job leaves the
+# regional crew and lands with dispatch.
+#
+# Know the limit: routing a queue notifies nobody new. The item appears in that queue's
+# work inbox, and the ops-inbox alert still goes to the previous assignee — so a breach on
+# an UNASSIGNED item escalates silently. The customer reassurance below is unaffected.
 
 jobs:
   - key:              work_order_sla
@@ -24,4 +35,5 @@ jobs:
     # emergency promise.
     interval_seconds: 900
     config:
+      escalate_to: queue:dispatch_desk
       message: 'نعتذر عن التأخير 🙏 طلبك تجاوز الوقت المتوقع وتم تنبيه فريق الإرسال — بنرجع لك في أقرب وقت.'

@@ -13,12 +13,20 @@
 # ONCE per breach (deduped on `sla_notified_at`), and mints the `sla_breach`
 # record event that `xrm.yaml`'s `on.sla_breach` hook reacts to.
 #
-# `escalate_to:` is deliberately absent. It reassigns the breached record, but the
-# KB describes its target two different ways — `worklist-guide` §5 says "reassign
-# to escalate_to" (a queue KEY) while the value looks like a principal ref
-# (`user:…`/`team:…`). A wrong value here mis-routes silently, so the reassignment
-# half is left to the operator until the vocabulary is confirmed. Asked upstream
-# in FEEDBACK.md.
+# `escalate_to:` routes the breached item to a queue. It took three rounds to land:
+# first omitted because the KB documented the target two incompatible ways, then kept
+# out once it was typed as a principal-ref (`user:`/`team:`) — an id only the INSTALLING
+# tenant knows, unwritable in a published pack. The platform then added `queue:<key>`,
+# resolved against THIS pack's own `worklist.yaml` `queues:`, so it travels with the pack
+# (KB 968db6a91806, `worklist-guide` §5). A key we never declared fails at pack load,
+# naming the legal ones — it can no longer mis-route in silence.
+#
+# `customer_ops` is the customer-support desk — already this pack's routing `fallback:`,
+# and the only queue with no region attached.
+#
+# Know the limit: routing a queue notifies nobody new. The item appears in that queue's
+# work inbox, and the ops-inbox alert still goes to the previous assignee — so a breach on
+# an UNASSIGNED item escalates silently. The customer reassurance below is unaffected.
 
 jobs:
   - key:              case_sla
@@ -28,4 +36,5 @@ jobs:
     # detection lag at ~6% of the promise.
     interval_seconds: 900
     config:
+      escalate_to: queue:customer_ops
       message: 'نعتذر عن التأخير 🙏 طلبك تجاوز الوقت المتوقع وتم رفعه لفريق مختص — بنرجع لك في أقرب وقت.'

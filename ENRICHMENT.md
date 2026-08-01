@@ -263,12 +263,28 @@ on:
    `homefix-services`, `repair_job` for `motorcare-service`. Read `work:` in `worklist.yaml` to find
    the name — it is not always a pack entity, and for the three casework packs it is the reserved
    `case` system entity, reachable only through `extends: system`.
-2. **`escalate_to:` is omitted deliberately.** The original example passed
-   `'team:pharmacist_review'` and called it a principal ref — but `pharmacist_review` is a *queue
-   key*, and `worklist-guide` §5 describes the sweep as **reassigning** to it, which §4 defines as a
-   queue-key move. The two readings target different columns, the schema types it as a bare
-   `string`, and a wrong value mis-routes silently. Filed as **C7** in [`FEEDBACK.md`](FEEDBACK.md);
-   leave it out until the platform answers.
+2. **`escalate_to:` is set — but only after the platform grew a value a pack can write.** The
+   original example passed `'team:pharmacist_review'`, mixing a *queue key* into a slot the docs
+   described two ways. Three rounds later (KB `968db6a91806`) the field takes **three prefixes and
+   dispatches two verbs**: `queue:<key>` ROUTES the item (worklist `reassign` → `queue_key`), while
+   `user:<id>`/`team:<id>` ASSIGN it (`assign` → `assignee_principal`). Only `queue:` is writable in
+   a published pack — the key must be one **your own `worklist.yaml` declared**, so the vocabulary
+   travels with the pack, and an undeclared key fails at pack load naming the legal ones. Principal
+   ids belong to the installing tenant; use those only in a tenant-specific fork.
+
+   All five packs now escalate to their own queue, and in three of them the natural target was
+   already the routing `fallback:`:
+
+   ```yaml
+   config:
+     escalate_to: queue:dispatch_desk    # homefix-services — its own `fallback:`
+     message:     '…'
+   ```
+
+   **The limit worth knowing before you rely on it:** routing to a queue notifies nobody new. The
+   item appears in that queue's work inbox and the ops-inbox alert still goes to the previous
+   assignee — so a breach on an *unassigned* item escalates silently. The customer reassurance and
+   the `sla_breach` hook are unaffected.
 
 Pick `interval_seconds` against the **shortest** SLA on the entity, not the longest: 300s for
 `pharmaplus-rx`'s 2h prescription review, 900s for the 4h desks, 3600s for `barakah-finance`'s 48h
