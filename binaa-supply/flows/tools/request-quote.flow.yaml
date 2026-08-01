@@ -183,6 +183,12 @@ steps:
       bind: appended
       outputs:
         ok:      [{ goto: stamp_row }]
+        # `data_path: updates` and Google's values:append always returns `updates`
+        # on a 200, so this port is not expected to fire. Routed anyway: Write 1
+        # already saved the record, so EVERY way this call can come back empty
+        # still leaves a quote the desk can work — `filed_offline` is truthful for
+        # all of them, and the error-net's "technical error" is not.
+        empty:   [{ goto: filed_offline }]
         invalid: [{ goto: filed_offline }]
         denied:  [{ goto: filed_offline }]
         failed:  [{ goto: filed_offline }]

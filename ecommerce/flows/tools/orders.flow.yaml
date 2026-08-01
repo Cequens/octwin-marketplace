@@ -151,8 +151,14 @@ steps:
             args: { contact_id: '$contact.id', product_id: '$it.retailer_id', qty: '$it.quantity' }
             bind: readd
             outputs:
-              ok:     [ { note: 'Restored {$it.quantity}× {$it.name} to the cart.' } ]
-              failed: [ { note: 'Could not restore {$it.name} — the product may no longer be available.' } ]
+              ok:      [ { note: 'Restored {$it.quantity}× {$it.name} to the cart.' } ]
+              # `invalid` is the UNKNOWN-SKU port, and re-ordering a past order is
+              # exactly where a delisted product turns up — so this is the likely
+              # per-item failure here, not an edge case. Unhandled it throws, and
+              # because edit_order cancels the order BEFORE restoring, a throw
+              # mid-loop leaves the shopper with no order AND a half-filled cart.
+              invalid: [ { note: 'Could not restore {$it.name} — the product may no longer be available.' } ]
+              failed:  [ { note: 'Could not restore {$it.name} right now.' } ]
     - do: cart_view
       args: { contact_id: '$contact.id' }
       bind: cart

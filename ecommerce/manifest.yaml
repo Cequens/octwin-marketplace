@@ -12,7 +12,7 @@
 # byte-faithful widget simulation on web.
 
 id:          ecommerce
-version:     '1.1.0'
+version:     '1.1.1'
 description: 'Meta-commerce demo — catalog, product cards, cart, and checkout on WhatsApp + web.'
 
 # Marketplace presentation — how this pack appears in the console catalog a
