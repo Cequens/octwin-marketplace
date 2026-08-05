@@ -45,6 +45,11 @@ steps:
           {$t("service_detail.lbl_channel")} {$svc.fields.channel}
 
           {$t("service_detail.disclaimer")}
+    # A service the portal does not host yet gets the same documents/fees briefing but
+    # NO start button — a `cta_url` pointing at the portal root would strand the citizen
+    # on a landing page hunting for something that isn't there.
+    - if:   '$svc.fields.coming_soon == true'
+      goto: show_offline
     - render:
         render_intent: cta_url
         header: '{$svc.title}'
@@ -53,6 +58,20 @@ steps:
         label:  '{$t("service_detail.start")}'
         url:    '$svc.fields.url'
       memory_note: 'Showed service detail + start link for {$svc.title}.'
+    - end: applied
+
+  show_offline:
+    # detail_card, not text_card — text_card allows ONLY `body`, so a `header` on it is
+    # silently dropped and the service name would vanish from the card.
+    - render:
+        render_intent: detail_card
+        header: '{$svc.title}'
+        footer: '{$t("service_detail.footer")}'
+        body: |-
+          {$body}
+
+          {$t("service_detail.not_online_yet")}
+      memory_note: 'Showed service detail for {$svc.title} — not on the portal yet, no start link.'
     - end: applied
   none:
     - answer:

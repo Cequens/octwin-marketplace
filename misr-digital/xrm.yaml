@@ -44,6 +44,12 @@ entities:
     description: { en: 'A government e-service, with its documents, fees and turnaround', ar: 'خدمة حكومية إلكترونية بمستنداتها ورسومها ومدة تنفيذها' }
     title_field: name
     list: [name, category, authority]
+    # Upsert on `code`, not on the title. Without this a reseed matched records by
+    # name, so RENAMING one (as the id_card split and the two repointed services did)
+    # looked like a brand-new record and collided on the unique `code` of the row it
+    # was meant to update. `code` is the stable identity here — it is what
+    # `service_detail` is invoked with and what `record_list` filters on.
+    dedupe_by: code
     search:
       # `text:` alone is pg_trgm — it matches LETTERS. A citizen typing the
       # colloquial «ضاع مني الكارنيه» shares no trigrams with «بطاقة الرقم
@@ -70,22 +76,46 @@ entities:
       url:             { type: text }         # رابط بدء الخدمة على البوابة
       keywords:        { type: text }         # كلمات للبحث
       popular:         { type: boolean }      # خدمة من الأكثر طلباً
+      # TRUE = the service is real and citizens ask for it, but it is NOT yet startable
+      # on the portal. `service_detail` then shows the documents/fees as guidance and
+      # a "not online yet" note INSTEAD of the start-link button — quoting a turnaround
+      # for something with nowhere to click is worse than saying so.
+      coming_soon:     { type: boolean }      # لسه مش متاحة على البوابة
 
 demo:
   # ==================== الأحوال المدنية (civil_status) ====================
   - entity: service
     fields:
-      name:            'بطاقة الرقم القومي (تجديد / بدل فاقد أو تالف)'
+      # SPLIT 2026-08-05. This was one record covering «تجديد / بدل فاقد أو تالف», but the
+      # portal has TWO separate services and NO تجديد at all — so a single link would have
+      # been wrong for half the citizens who tapped it. `id_card` keeps its code (a reseed
+      # would otherwise strand the old row) and becomes the فاقد half; `id_card_damaged`
+      # below is the تالف half.
+      name:            'بطاقة الرقم القومي (بدل فاقد)'
       code:            id_card
       category:        civil_status
       authority:       'مصلحة الأحوال المدنية - وزارة الداخلية'
-      description:      'إصدار أو تجديد بطاقة الرقم القومي أو استخراج بدل فاقد/تالف وتوصيلها إلى باب المنزل.'
-      requirements:    'صورة من البطاقة القديمة أو الرقم القومي • رقم موبايل باسمك • عنوان دقيق للتوصيل • في حالة الفاقد: محضر إثبات فقد'
-      fees:            'تبدأ من حوالي 165 جنيه شاملة التوصيل (تختلف حسب نوع الطلب)'
+      description:      'إصدار بدل فاقد لبطاقة الرقم القومي من مكانك وتوصيلها إلى عنوانك.'
+      requirements:    'الرقم القومي • رقم موبايل باسمك • عنوان دقيق للتوصيل • محضر إثبات فقد'
+      fees:            'تبدأ من حوالي 165 جنيه شاملة التوصيل'
       processing_time: 'من 3 إلى 7 أيام عمل'
       channel:         'إلكتروني بالكامل مع التوصيل للمنزل'
-      url:             'https://digital.gov.eg/'
-      keywords:        'بطاقة رقم قومي هوية تجديد بدل فاقد تالف id'
+      url:             'https://digital.gov.eg/categories/terms/%D8%A8%D8%AF%D9%84-%D9%81%D8%A7%D9%82%D8%AF-%D8%A8%D8%B7%D8%A7%D9%82%D8%A9-%D8%A7%D9%84%D8%B1%D9%82%D9%85-%D8%A7%D9%84%D9%82%D9%88%D9%85%D9%8A'
+      keywords:        'بطاقة رقم قومي هوية بدل فاقد ضاعت الكارنيه id'
+      popular:         true
+  - entity: service
+    fields:
+      name:            'بطاقة الرقم القومي (بدل تالف)'
+      code:            id_card_damaged
+      category:        civil_status
+      authority:       'مصلحة الأحوال المدنية - وزارة الداخلية'
+      description:      'إصدار بدل تالف لبطاقة الرقم القومي من مكانك وتوصيلها إلى عنوانك.'
+      requirements:    'الرقم القومي • البطاقة التالفة • رقم موبايل باسمك • عنوان دقيق للتوصيل'
+      fees:            'تبدأ من حوالي 165 جنيه شاملة التوصيل'
+      processing_time: 'من 3 إلى 7 أيام عمل'
+      channel:         'إلكتروني بالكامل مع التوصيل للمنزل'
+      url:             'https://digital.gov.eg/categories/terms/%D8%A8%D8%AF%D9%84-%D8%AA%D8%A7%D9%84%D9%81-%D8%A8%D8%B7%D8%A7%D9%82%D8%A9-%D8%A7%D9%84%D8%B1%D9%82%D9%85-%D8%A7%D9%84%D9%82%D9%88%D9%85%D9%8A'
+      keywords:        'بطاقة رقم قومي هوية بدل تالف مقطوعة id'
       popular:         true
   - entity: service
     fields:
@@ -129,21 +159,30 @@ demo:
       url:             'https://digital.gov.eg/'
       keywords:        'قيد عائلي فردي بيان قيد'
       popular:         false
+      # «قيد عائلي» appears nowhere in the portal's catalog (checked 2026-08-05) —
+      # it is still a counter service. Kept so a citizen who asks gets the documents
+      # and the honest answer, rather than silence.
+      coming_soon:     true
 
   # ==================== المرور (traffic) ====================
   - entity: service
     fields:
-      name:            'تجديد رخصة القيادة'
+      # RENAMED 2026-08-05. This record used to promise «تجديد رخصة القيادة», which the
+      # portal does not offer at all — رخصى carries بدل فاقد / بدل تالف and the مخالفات
+      # services, nothing else. Repointed at the بدل فاقد service and the copy below is
+      # taken from that page's own وصف/شروط/مستندات, so the record no longer describes
+      # a renewal that cannot be started online.
+      name:            'بدل فاقد رخصة القيادة'
       code:            driving_license_renew
       category:        traffic
       authority:       'الإدارة العامة للمرور - وزارة الداخلية'
-      description:      'تجديد رخصة القيادة إلكترونياً وتوصيلها إلى باب المنزل دون الذهاب لوحدة المرور.'
-      requirements:    'رخصة القيادة الحالية • بطاقة الرقم القومي • تحليل مخدرات وكشف طبي معتمد • عنوان التوصيل'
-      fees:            'تختلف حسب مدة الرخصة (تُحسب أثناء الطلب) + رسوم توصيل'
+      description:      'التقديم على بدل فاقد لرخصة القيادة من مكانك دون الذهاب لوحدة المرور.'
+      requirements:    'شهادة براءة الذمة (شهادة المخالفات) سارية • صورة بطاقة الرقم القومي سارية والاطلاع على الأصل • أن تكون حالة الرخصة سارية وأن تكون رخصة وليست تصريح'
+      fees:            'تُحدد أثناء الطلب + رسوم توصيل'
       processing_time: 'من 5 إلى 10 أيام عمل'
       channel:         'إلكتروني مع التوصيل للمنزل'
-      url:             'https://digital.gov.eg/'
-      keywords:        'رخصة قيادة تجديد سواقة رخصه'
+      url:             'https://digital.gov.eg/categories/terms/%D8%A7%D8%B5%D8%AF%D8%A7%D8%B1-%D8%A8%D8%AF%D9%84-%D9%81%D8%A7%D9%82%D8%AF-%D8%B1%D8%AE%D8%B5%D8%A9-%D9%82%D9%8A%D8%A7%D8%AF%D8%A9'
+      keywords:        'رخصة قيادة بدل فاقد ضاعت سواقة رخصه تجديد'
       popular:         true
   - entity: service
     fields:
@@ -331,19 +370,25 @@ demo:
       url:             'https://digital.gov.eg/'
       keywords:        'ضريبة عقارية سداد استعلام عقار'
       popular:         false
+      # The portal's only property-tax service (تقديم إقرار وحدات سكنية) is itself
+      # still «تأتيكم قريبا» with no link — there is nothing to point at yet.
+      coming_soon:     true
 
   # ==================== الصحة والتأمين (health) ====================
   - entity: service
     fields:
-      name:            'الاستعلام عن التأمين الصحي الشامل'
+      # RENAMED 2026-08-05. This record used to promise an «استعلام» the portal does not
+      # offer; التأمين الصحي الشامل carries تسجيل أسرة تأمينية جديدة and a منصة تواصل.
+      # Repointed at the registration service, copy from its own وصف/شروط.
+      name:            'التسجيل في التأمين الصحي الشامل'
       code:            health_insurance
       category:        health
       authority:       'الهيئة العامة للتأمين الصحي الشامل'
-      description:      'الاستعلام عن حالة الاشتراك في منظومة التأمين الصحي الشامل والخدمات المتاحة.'
-      requirements:    'الرقم القومي • رقم الموبايل'
-      fees:            'مجاني للاستعلام'
-      processing_time: 'فوري'
-      channel:         'استعلام إلكتروني'
-      url:             'https://digital.gov.eg/'
-      keywords:        'تأمين صحي شامل استعلام اشتراك صحة'
+      description:      'تسجيل جميع أفراد أسرتك التأمينية في منظومة التأمين الصحي الشامل.'
+      requirements:    'بطاقة رقم قومي سارية • أن تكون في إحدى محافظات تطبيق المنظومة • الخدمة غير متاحة لمن تم تسجيلهم من قبل'
+      fees:            'مجاني'
+      processing_time: 'يُستكمل التسجيل عبر مكتب خدمة العملاء أو وحدة الرعاية الأولية المختارة'
+      channel:         'تسجيل إلكتروني ثم استلام الكارت من وحدة الرعاية'
+      url:             'https://digital.gov.eg/categories/terms/%D8%AA%D8%B3%D8%AC%D9%8A%D9%84-%D8%A7%D8%B3%D8%B1%D8%A9-%D8%AA%D8%A3%D9%85%D9%8A%D9%86%D9%8A%D8%A9-%D8%AC%D8%AF%D9%8A%D8%AF%D8%A9'
+      keywords:        'تأمين صحي شامل تسجيل اشتراك اسرة صحة استعلام'
       popular:         false
