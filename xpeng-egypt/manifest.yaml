@@ -2,7 +2,7 @@
 # Strict schema: unknown keys are rejected on deploy. Keep `octwin validate` green.
 
 id:          xpeng-egypt
-version:     '1.5.1'
+version:     '1.6.0'
 description: 'XPeng Egypt assistant — browse models, capture leads, book test drives, activate the XPeng App, and open after-sales support tickets on WhatsApp & web (AR/EN).'
 
 # Storefront face. Without this block the pack still publishes and installs, but
@@ -40,6 +40,20 @@ flows:
   - open-support
   - ticket-status
   - after-sales
+
+# Voice notes → speech-to-text, then the normal agent turn with the transcript
+# in the pre-turn briefing. WITHOUT this block the platform defaults to
+# `passthrough`: the media ref survives, but the agent is told it cannot hear
+# the audio and asks the customer to type instead. `prompt` is Whisper's
+# free-text BIASING hint (not a language code) — it names the model badges,
+# which are exactly the tokens STT mangles when spoken in Arabic.
+inbound_preprocessing:
+  voicenote:
+    mode: transcribe
+    ack: '🎤 وصلت الرسالة الصوتية، جاري تفريغها... / Got your voice note, transcribing…'
+    prompt: 'Egyptian Arabic XPeng car showroom voice note — model names M03, P7, G6, G9, X9; test drive booking, price, financing, branch location.'
+    note_template: |-
+      $transcript != null ? "🎤 رسالة صوتية ({$media_ref}): {$transcript}" : "🎤 رسالة صوتية ({$media_ref}) — تعذّر التفريغ"
 
 # One agent — the XPeng Egypt showroom assistant.
 agents:

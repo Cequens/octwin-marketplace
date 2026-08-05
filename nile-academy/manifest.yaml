@@ -8,7 +8,7 @@
 # rates are real, with no reporting code. Campus tours ride the scheduling engine.
 
 id:          nile-academy
-version:     '1.1.2'
+version:     '1.2.0'
 description: 'Private academy admissions — programmes and fees, campus-tour booking, and an application funnel with real milestones from enquiry to enrolment.'
 
 listing:
@@ -63,6 +63,15 @@ inbound_preprocessing:
         $previous_school != null ? "المدرسة السابقة: {$previous_school}" : null,
         $summary_ar != null      ? "ملخص: {$summary_ar}" : null
       ]))
+  # Voice notes → speech-to-text, then the normal agent turn with the transcript
+  # in the pre-turn briefing. Without this the platform defaults to `passthrough`
+  # and the agent has to tell the parent it cannot hear them.
+  voicenote:
+    mode: transcribe
+    ack: '🎤 وصلت الرسالة الصوتية، جاري تفريغها...'
+    prompt: 'Egyptian Arabic private-school admissions voice note — the programme, the child grade or year, fees, campus tour booking.'
+    note_template: |-
+      $transcript != null ? "🎤 رسالة صوتية ({$media_ref}): {$transcript}" : "🎤 رسالة صوتية ({$media_ref}) — تعذّر التفريغ"
 
 agents:
   - id:                admissions

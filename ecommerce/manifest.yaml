@@ -12,7 +12,7 @@
 # byte-faithful widget simulation on web.
 
 id:          ecommerce
-version:     '1.1.1'
+version:     '1.2.0'
 description: 'Meta-commerce demo — catalog, product cards, cart, and checkout on WhatsApp + web.'
 
 # Marketplace presentation — how this pack appears in the console catalog a
@@ -59,6 +59,19 @@ flows:
   - product       # catalog_get → product_card + recommend_related
   - cart          # cart_* dispatch (add / view / checkout) → confirm-tap → submit → gateway checkout if the workspace has one, else pay-on-delivery
   - orders        # order_list/order_get → my-orders picker · details · cancel · edit (items back to cart)
+
+# Voice notes → speech-to-text, then the normal agent turn with the transcript
+# in the pre-turn briefing. WITHOUT this block the platform defaults to
+# `passthrough`: the media ref survives, but the agent is told it cannot hear
+# the audio and asks the customer to type instead. `prompt` is the STT model's
+# free-text BIASING hint (a domain sketch, NOT a language code).
+inbound_preprocessing:
+  voicenote:
+    mode: transcribe
+    ack: '🎤 Got your voice note — transcribing…'
+    prompt: 'Online shopping voice note — product name, size or variant, quantity, delivery address, order status.'
+    note_template: |-
+      $transcript != null ? "🎤 Voice note ({$media_ref}): {$transcript}" : "🎤 Voice note ({$media_ref}) — could not be transcribed"
 
 agents:
   - id:                shop

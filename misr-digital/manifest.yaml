@@ -2,7 +2,7 @@
 # Helps citizens browse Egypt's digital-government services, understand the
 # requirements/fees/timing for each, and get routed to start it on digital.gov.eg.
 id:          misr-digital
-version:     '1.3.0'
+version:     '1.4.0'
 description: 'مصر الرقمية: تصفّح الخدمات الحكومية الإلكترونية، اعرف المستندات والرسوم ومدة التنفيذ، وابدأ الخدمة على البوابة.'
 
 listing:
@@ -32,6 +32,19 @@ flows:
   - find_service    # keyword search across all services (agent-facing)
   - portal          # open the مصر الرقمية portal (link button)
   - faq             # how the portal works / general help
+
+# Voice notes → speech-to-text, then the normal agent turn with the transcript
+# in the pre-turn briefing. WITHOUT this block the platform defaults to
+# `passthrough`: the media ref survives, but the agent is told it cannot hear
+# the audio and asks the citizen to type instead. `prompt` is the STT model's
+# free-text BIASING hint (a domain sketch, NOT a language code).
+inbound_preprocessing:
+  voicenote:
+    mode: transcribe
+    ack: '🎤 وصلت الرسالة الصوتية، جاري تفريغها...'
+    prompt: 'Egyptian Arabic government e-services voice note — the service name, required documents, fees, processing time, national ID.'
+    note_template: |-
+      $transcript != null ? "🎤 رسالة صوتية ({$media_ref}): {$transcript}" : "🎤 رسالة صوتية ({$media_ref}) — تعذّر التفريغ"
 
 agents:
   - id:                assistant

@@ -25,7 +25,7 @@
 # No pack DB, no code — pure YAML.
 
 id:          nakhla-giving
-version:     '0.3.0'
+version:     '0.4.0'
 description: 'Charity donations over WhatsApp — browse campaigns, get a Moyasar checkout link on the turn, and receive a receipt the moment the payment clears.'
 
 listing:
@@ -60,6 +60,19 @@ flows:
   - campaigns
   - donate
   - my-donations
+
+# Voice notes → speech-to-text, then the normal agent turn with the transcript
+# in the pre-turn briefing. WITHOUT this block the platform defaults to
+# `passthrough`: the media ref survives, but the agent is told it cannot hear
+# the audio and asks the donor to type instead. `prompt` is the STT model's
+# free-text BIASING hint (a domain sketch, NOT a language code).
+inbound_preprocessing:
+  voicenote:
+    mode: transcribe
+    ack: '🎤 وصلت الرسالة الصوتية، جاري تفريغها...'
+    prompt: 'Saudi Arabic charity donation voice note — the campaign, the amount in riyals, zakat or sadaqah, a donation on behalf of someone.'
+    note_template: |-
+      $transcript != null ? "🎤 رسالة صوتية ({$media_ref}): {$transcript}" : "🎤 رسالة صوتية ({$media_ref}) — تعذّر التفريغ"
 
 agents:
   - id:                desk

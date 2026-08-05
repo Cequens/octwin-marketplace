@@ -10,7 +10,7 @@
 # No pack DB, no code — pure YAML.
 
 id:          oud-atelier
-version:     '1.1.2'
+version:     '1.2.0'
 description: 'Luxury oud & perfume boutique — fragrance quiz, product carousel, cart and checkout on WhatsApp, Arabic-first for the Gulf.'
 
 listing:
@@ -40,6 +40,20 @@ flows:
   - fragrance-finder
   - cart
   - orders
+
+# Voice notes → speech-to-text, then the normal agent turn with the transcript
+# in the pre-turn briefing. WITHOUT this block the platform defaults to
+# `passthrough`: the media ref survives, but the agent is told it cannot hear
+# the audio and asks the customer to type instead. `prompt` is the STT model's
+# free-text BIASING hint (a domain sketch, NOT a language code) — it names the
+# fragrance families, which is what STT mangles when spoken in Arabic.
+inbound_preprocessing:
+  voicenote:
+    mode: transcribe
+    ack: '🎤 وصلت الرسالة الصوتية، جاري تفريغها...'
+    prompt: 'Gulf Arabic oud and perfume boutique voice note — oud, musk, amber, bakhoor, rose; bottle size, gift wrapping, the occasion.'
+    note_template: |-
+      $transcript != null ? "🎤 رسالة صوتية ({$media_ref}): {$transcript}" : "🎤 رسالة صوتية ({$media_ref}) — تعذّر التفريغ"
 
 agents:
   - id:                boutique
