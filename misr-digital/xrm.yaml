@@ -16,18 +16,26 @@
 # name: an unknown slug returns HTTP 200 with a generic search page, never a
 # 404, so a typo is indistinguishable from a working link.
 #
-# The remaining eight still point at the portal root, deliberately:
-#   • no such service on the portal — family_record, driving_license_renew
-#     (رخصى offers بدل تالف/فاقد only; there is NO licence renewal)
-#   • «تأتيكم قريبا» on the portal, no link yet — realestate_tax_pay,
-#     supply_add_newborn
-#   • one record here spans SEVERAL portal services, so no single URL is right —
-#     traffic_fines (4 pages: مركبة/رخصة × استعلام/سداد), id_card (بدل تالف and
-#     بدل فاقد are separate, and تجديد does not exist), power_of_attorney
-#     (~14 توكيل variants under التوثيق)
-#   • health_insurance — portal has تسجيل أسرة + منصة تواصل, no pure استعلام
-# Splitting the conflated records and reconciling the four phantoms is tracked
-# separately; until then the root link is the honest answer.
+# A second pass (also 2026-08-05) worked the whole catalog — the portal home
+# embeds every service, and /gov-services/<sector>/<id> is only an editorial
+# grouping over these same term pages, no extra services. That resolved three
+# more: supply_add_newborn, power_of_attorney, traffic_fines (see the notes at
+# each). Thirteen of eighteen now deep-link.
+#
+# The remaining FIVE point at the portal root, deliberately:
+#   • NOT ON THE PORTAL AT ALL — «قيد عائلي» and «ضريبة عقارية» appear nowhere in
+#     the full catalog: family_record, realestate_tax_pay (its only property-tax
+#     service, تقديم إقرار وحدات سكنية, is still تأتيكم قريبا with no link)
+#   • THE SERVICE WE NAME DOES NOT EXIST, though a neighbour does —
+#     driving_license_renew: رخصى has بدل تالف/بدل فاقد رخصة قيادة and مخالفات,
+#     but NO renewal. health_insurance: the portal offers تسجيل أسرة تأمينية and
+#     a منصة تواصل, not the استعلام this record promises.
+#     Repointing either one needs its `name`/`description` changed to match, so
+#     it is a content decision, not a link fix.
+#   • SPANS TWO PAGES — id_card: بدل-تالف-بطاقة-الرقم-القومي and
+#     بدل-فاقد-بطاقة-الرقم-القومي are separate services and تجديد does not exist,
+#     so this record wants splitting in two rather than one arbitrary link.
+# Until those are decided the root link is the honest answer.
 
 entities:
   service:
@@ -162,7 +170,10 @@ demo:
       fees:            'قيمة المخالفات المستحقة فقط'
       processing_time: 'فوري'
       channel:         'إلكتروني - سداد أونلاين'
-      url:             'https://digital.gov.eg/'
+      # The broadest single page — "يمكنك سداد المخالفات و استخراج شهادة براءة الذمة او
+      # التظلم". The portal also splits مركبة vs رخصة قيادة × استعلام/سداد/تظلم into
+      # separate pages (e.g. استعلام-عن-مخالفات-رخص-القيادة) if we ever split this record.
+      url:             'https://digital.gov.eg/categories/terms/%D8%AE%D8%AF%D9%85%D8%A9-%D8%B3%D8%AF%D8%A7%D8%AF-%D9%85%D8%AE%D8%A7%D9%84%D9%81%D8%A7%D8%AA'
       keywords:        'مخالفات مرور غرامات سداد استعلام'
       popular:         true
 
@@ -178,7 +189,10 @@ demo:
       fees:            'تختلف حسب نوع التوكيل (تُحدد أثناء الحجز)'
       processing_time: 'حسب الموعد المتاح بالمكتب'
       channel:         'حجز إلكتروني ثم الحضور للمكتب للتوقيع'
-      url:             'https://digital.gov.eg/'
+      # التوثيق carries ~14 توكيل variants; this is the general one — "يمكّنك هذا التوكيل
+      # من القيام باعمال التصرف (البيع.. الشراء.. الخ..)". The بصفة / قضايا / بنوك /
+      # أمور زوجية / بيع مركبة variants are separate pages if we ever split this record.
+      url:             'https://digital.gov.eg/categories/terms/%D8%AA%D8%AD%D8%B1%D9%8A%D8%B1-%D8%AA%D9%88%D9%83%D9%8A%D9%84-%D8%B9%D8%A7%D9%85-%D8%B1%D8%B3%D9%85%D9%8A-%D8%B9%D9%86-%D9%86%D9%81%D8%B3%D9%87'
       keywords:        'توكيل شهر عقاري توثيق وكالة'
       popular:         true
   - entity: service
@@ -208,7 +222,9 @@ demo:
       fees:            'مجاني'
       processing_time: 'من 3 إلى 7 أيام عمل'
       channel:         'إلكتروني عبر بوابة دعم مصر / مصر الرقمية'
-      url:             'https://digital.gov.eg/'
+      # The portal's «إضافة الأبناء غير المقيدين تموينيا» is still تأتيكم قريبا, but the
+      # live «ضم أفراد أسرتى» covers it: "ضم أفراد أسرتك غير المقيدين تموينياً على بطاقتك".
+      url:             'https://digital.gov.eg/categories/terms/%D8%B6%D9%85-%D8%A3%D9%81%D8%B1%D8%A7%D8%AF-%D8%A3%D8%B3%D8%B1%D8%AA%D9%89'
       keywords:        'تموين مولود اضافة بطاقة تموين دعم'
       popular:         true
   - entity: service
