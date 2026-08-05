@@ -1,0 +1,88 @@
+# related_services — "what else might you need?" after a service card.
+#
+# The 🔎 tap lands here rather than back at the top menu, because a citizen who
+# just read about a birth certificate is far likelier to want a death certificate
+# or an ID replacement than to want the eight-category index again. The real
+# portal makes the same call: every service page carries its own «خدمات مشابهة»
+# block, so this mirrors what digital.gov.eg already does.
+#
+# `record_related` ranks by semantic embedding and needs the entity to declare
+# `search.semantic` — `service` already does (xrm.yaml), so this costs no new
+# declaration. With no `code` (or nothing related) it degrades to the category
+# menu, which is the honest fallback rather than an empty list.
+
+flow_id:     related_services
+version:     1
+description: |-
+  Suggest other services related to one the citizen just viewed. Reached from the
+  🔎 button on a service card (carries `code`). Call it when someone finishes with
+  one service and asks what else is available.
+
+input:
+  code:
+    type:     string
+    optional: true
+    describe: 'The service code they were just looking at (button-internal).'
+
+entry:
+  - if:   '$input.code == null'
+    goto: fallback
+  - else: true
+    goto: load
+
+steps:
+  load:
+    - do: record_list
+      args:
+        entity: service
+        all:    true
+        limit:  1
+        where:  { all: [{ field: code, op: eq, value: '$input.code' }] }
+      bind: page
+      outputs:
+        ok:     [{ goto: find_related }]
+        empty:  [{ goto: fallback }]
+        failed: [{ goto: fallback }]
+
+  find_related:
+    - assign: { svc: '$page.rows[0]' }
+    - do: record_related
+      args:
+        entity:    service
+        record_id: '$svc.id'
+        limit:     8
+      bind: rel
+      outputs:
+        ok:     [{ goto: show }]
+        # Nothing similar, or the embeddings are not built yet → the categories
+        # menu, never an empty picker.
+        empty:  [{ goto: fallback }]
+        failed: [{ goto: fallback }]
+
+  show:
+    - render:
+        render_intent: list_picker
+        header: '{$t("related_services.header")}'
+        body:   '{$t("related_services.body")}'
+        cta:    '{$t("related_services.choose")}'
+        items:  '$rel.rows'
+        item_template:
+          title:       '{$item.title}'
+          description: '{$t("related_services.tap_for_details")}'
+          on_select:   { invoke: service_detail, with: { code: '$item.fields.code' } }
+      memory_note: 'Offered services related to {$svc.title}.'
+    - end: applied
+
+  # No anchor to relate to — hand over to the category menu rather than inventing
+  # a list. `services` renders its own picker, so the citizen still gets a choice.
+  fallback:
+    - goto: to_categories
+  to_categories:
+    - render:
+        render_intent: detail_card
+        body: '{$t("related_services.fallback")}'
+        buttons:
+          - { title: '{$t("related_services.btn_categories")}', on_select: { invoke: services } }
+          - { title: '{$t("related_services.btn_search")}',     on_select: { invoke: find_service } }
+      memory_note: 'No related services to offer — pointed at the categories menu.'
+    - end: applied

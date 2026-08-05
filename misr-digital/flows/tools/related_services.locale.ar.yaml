@@ -1,0 +1,12 @@
+# Strings for the related_services flow, keyed by $t("related_services.<key>").
+# Formal Arabic — see the note in home.locale.ar.yaml.
+flow_id: related_services
+
+strings:
+  header:          'خدمات ذات صلة 🔎'
+  body:            'قد تحتاج أيضاً إلى إحدى هذه الخدمات. اختر خدمة للاطّلاع على تفاصيلها والمستندات المطلوبة.'
+  choose:          'اختر خدمة'
+  tap_for_details: 'اضغط لعرض التفاصيل والمستندات'
+  fallback:        'يمكنك تصفّح الخدمات حسب الفئة، أو البحث عن خدمة بالاسم.'
+  btn_categories:  '🗂️ تصفّح الفئات'
+  btn_search:      '🔎 بحث بالاسم'

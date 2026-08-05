@@ -1,0 +1,85 @@
+# start_service — hands the citizen the portal link, and nothing else.
+#
+# Why this is its own flow: `cta_url` is the only intent that renders a real URL
+# button, and its field list is header/body/footer/label/url — there is NO
+# `buttons`. A card cannot therefore offer the portal AND «قيّم المعلومات» /
+# «خدمة أخرى» at the same time, and only ONE render intent is delivered per turn,
+# so it cannot be two messages either. `service_detail` keeps the briefing plus
+# the three taps; this step is what the 🚀 tap opens.
+#
+# The trade is one extra tap to reach the portal, bought back twice over:
+#   • the briefing stops being a dead end (that card had no way onward at all)
+#   • the tap is OBSERVABLE. `ready_to_start` could only ever mean "we displayed a
+#     link" — a cta_url is a native URL button and the click happens off-platform
+#     where nothing can see it. `service_started` is a real conversion, and the gap
+#     between the two is the number that says whether the briefings do their job.
+#
+# Deliberately minimal: no repeated documents/fees. Someone who tapped 🚀 wants
+# the link, not the briefing they just read.
+
+flow_id:     start_service
+version:     1
+description: |-
+  Open the portal link for ONE service. Reached from the 🚀 button on a service
+  card (carries `code`). Call it directly only when the citizen explicitly asks to
+  start a service they have already been shown.
+
+input:
+  code:
+    type:     string
+    optional: true
+    describe: 'The service code to open on the portal (button-internal).'
+
+entry:
+  - if:   '$input.code == null'
+    goto: no_code
+  - else: true
+    goto: load
+
+steps:
+  load:
+    - do: record_list
+      args:
+        entity: service
+        all:    true
+        limit:  1
+        where:  { all: [{ field: code, op: eq, value: '$input.code' }] }
+      bind: page
+      outputs:
+        ok:     [{ goto: show }]
+        empty:  [{ goto: no_code }]
+        failed: [{ end: failed }]
+
+  show:
+    - assign: { svc: '$page.rows[0]' }
+    # A coming_soon service has no live URL — its card never shows the 🚀 button,
+    # but a stale tap or a direct call could still land here. Sending someone to
+    # the portal root is exactly the dead end the deep-linking work removed.
+    - if:   '$svc.fields.coming_soon == true'
+      goto: not_online
+    # THE conversion. Journey terminal: the citizen asked us to open the service.
+    - track: { event: service_started, timeline: true, metadata: { code: '$svc.fields.code' } }
+    - render:
+        render_intent: cta_url
+        header: '{$svc.title}'
+        body:   '{$t("start_service.body")}'
+        footer: '{$t("start_service.footer")}'
+        label:  '{$t("start_service.open")}'
+        url:    '$svc.fields.url'
+      memory_note: 'Opened the portal link for {$svc.title}.'
+    - end: applied
+
+  not_online:
+    - render:
+        render_intent: detail_card
+        header: '{$svc.title}'
+        body:   '{$t("start_service.not_online")}'
+        buttons:
+          - { title: '{$t("start_service.btn_other")}', on_select: { invoke: related_services, with: { code: '$svc.fields.code' } } }
+          - { title: '{$t("start_service.btn_home")}',  on_select: { invoke: home } }
+      memory_note: 'Start requested for {$svc.title}, which is not on the portal yet.'
+    - end: applied
+
+  no_code:
+    - answer:
+        instructions: 'The start request arrived without naming a service. Ask the citizen which service they want to start, and offer to search for it. Reply in FORMAL Arabic (فصحى) — this is a government service.'

@@ -37,10 +37,40 @@ entry:
     goto: no_context
   - if:   '$input.missing != null'
     goto: load_for_comment
+  # ⭐ on a service card names the service but carries no rating yet — the card has
+  # only three button slots, so it asks here instead of spending two of them on
+  # 👍/👎. Anything with a `helpful` already attached goes straight to recording.
+  - if:   '$input.helpful == null'
+    goto: load_for_ask
   - else: true
     goto: load
 
 steps:
+  # ── Ask for the rating (the ⭐ tap) ────────────────────────────────────────
+  load_for_ask:
+    - do: record_list
+      args:
+        entity: service
+        all:    true
+        limit:  1
+        where:  { all: [{ field: code, op: eq, value: '$input.code' }] }
+      bind: page
+      outputs:
+        ok:     [{ goto: ask_rating }]
+        empty:  [{ goto: no_context }]
+        failed: [{ end: failed }]
+
+  ask_rating:
+    - assign: { svc: '$page.rows[0]' }
+    - render:
+        render_intent: detail_card
+        body: '{$t("feedback.ask_rating", { service: $svc.title })}'
+        buttons:
+          - { title: '{$t("feedback.fb_yes")}', on_select: { invoke: feedback, with: { code: '$svc.fields.code', helpful: '5' } } }
+          - { title: '{$t("feedback.fb_no")}',  on_select: { invoke: feedback, with: { code: '$svc.fields.code', helpful: '1' } } }
+      memory_note: 'Asked whether the briefing for {$svc.title} was sufficient.'
+    - end: applied
+
   # ── The tap itself ────────────────────────────────────────────────────────
   load:
     - do: record_list
@@ -137,9 +167,15 @@ steps:
     # 👎 → ask the one question worth asking. 👍 → say thank you and stop.
     - if:   '$input.helpful == "1"'
       goto: ask_missing
+    # Never a bare text_card. Someone who just took the trouble to rate a briefing is
+    # the most engaged person in the funnel; thanking them and going silent is the
+    # worst moment in the pack to hang up.
     - render:
-        render_intent: text_card
+        render_intent: detail_card
         body: '{$t("feedback.thanks_positive")}'
+        buttons:
+          - { title: '{$t("feedback.btn_related")}', on_select: { invoke: related_services, with: { code: '$svc.fields.code' } } }
+          - { title: '{$t("feedback.btn_home")}',    on_select: { invoke: home } }
       memory_note: 'Citizen said the briefing for {$svc.title} was enough.'
     - end: applied
 
@@ -214,15 +250,20 @@ steps:
 
   thanks_comment:
     - render:
-        render_intent: text_card
+        render_intent: detail_card
         body: '{$t("feedback.thanks_comment")}'
+        buttons:
+          - { title: '{$t("feedback.btn_related")}', on_select: { invoke: related_services, with: { code: '$svc.fields.code' } } }
+          - { title: '{$t("feedback.btn_home")}',    on_select: { invoke: home } }
       memory_note: 'Recorded what was missing from the {$svc.title} briefing.'
     - end: applied
 
   comment_failed:
     - render:
-        render_intent: text_card
+        render_intent: detail_card
         body: '{$t("feedback.comment_failed")}'
+        buttons:
+          - { title: '{$t("feedback.btn_home")}', on_select: { invoke: home } }
       memory_note: 'Could not store the feedback note for {$svc.title}.'
     - end: applied
 

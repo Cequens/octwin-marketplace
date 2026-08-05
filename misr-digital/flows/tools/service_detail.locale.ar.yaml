@@ -12,13 +12,8 @@ strings:
   footer:           'مصر الرقمية 🇪🇬'
   start:            '🚀 ابدأ الخدمة على البوابة'
   not_online_yet:   '⏳ هذه الخدمة غير متاحة إلكترونياً على بوابة مصر الرقمية حتى الآن، ويلزم التقدّم لها من مكتب الجهة المختصة. المعلومات أعلاه للاسترشاد، وستجدها هنا فور إتاحتها على البوابة.'
-  # The written invitation on the LIVE card. It exists because a cta_url carries no
-  # buttons and only one render intent is delivered per turn — so the ask cannot be a
-  # second message without erasing the briefing itself. The agent routes any reply to
-  # the `feedback` tool.
-  invite_feedback:  '📝 إذا وجدت نقصاً أو خطأً في هذه المعلومات، أخبرني به وسنراجعه.'
-  # The tapped ask, used only on the coming_soon card — a detail_card, which does
-  # take buttons, so it costs no extra message there.
-  ask_feedback:     'هل كانت هذه المعلومات كافية؟'
-  fb_yes:           '👍 نعم، كافية'
-  fb_no:            '👎 كان بها نقص'
+  # The three taps on a service card. WhatsApp caps buttons at 3 and titles at 20
+  # code points — the longest below is 16, so all three survive.
+  btn_start:        '🚀 ابدأ الخدمة'
+  btn_rate:         '⭐ قيّم المعلومات'
+  btn_related:      '🔎 خدمة أخرى'

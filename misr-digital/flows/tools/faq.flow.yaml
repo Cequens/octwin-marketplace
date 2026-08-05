@@ -16,7 +16,13 @@ entry:
 steps:
   show:
     - render:
-        render_intent: text_card
+        # detail_card, not text_card: this is the most-read page in the pack and it
+        # used to end on a full stop — a wall of text with no way onward.
+        render_intent: detail_card
         body: '{$t("faq.body")}'
+        buttons:
+          - { title: '{$t("faq.btn_search")}',     on_select: { invoke: find_service } }
+          - { title: '{$t("faq.btn_categories")}', on_select: { invoke: services } }
+          - { title: '{$t("faq.btn_home")}',       on_select: { invoke: home } }
       memory_note: 'Showed the FAQ.'
     - end: applied

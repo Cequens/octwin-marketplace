@@ -2,7 +2,7 @@
 # Helps citizens browse Egypt's digital-government services, understand the
 # requirements/fees/timing for each, and get routed to start it on digital.gov.eg.
 id:          misr-digital
-version:     '1.7.0'
+version:     '1.8.0'
 description: 'مصر الرقمية: تصفّح الخدمات الحكومية الإلكترونية، اعرف المستندات والرسوم ومدة التنفيذ، وابدأ الخدمة على البوابة.'
 
 listing:
@@ -33,6 +33,8 @@ flows:
   - portal          # open the مصر الرقمية portal (link button)
   - faq             # how the portal works / general help
   - feedback        # 👍/👎 on a service briefing → survey_response (see surveys.yaml)
+  - start_service   # the 🚀 tap — renders the portal cta_url, and IS the conversion event
+  - related_services # the 🔎 tap — record_related neighbours, so no card is a dead end
 
 # Voice notes → speech-to-text, then the normal agent turn with the transcript
 # in the pre-turn briefing. WITHOUT this block the platform defaults to
@@ -58,6 +60,8 @@ agents:
       - portal
       - faq
       - feedback
+      - start_service
+      - related_services
     include_platform_protocol: true
     instructions:
       - file: prompts/identity.md

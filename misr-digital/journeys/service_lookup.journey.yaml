@@ -2,11 +2,18 @@
 # to "I'm holding a working link to the right service".
 #
 # This pack is a DIRECTORY, not a transaction: the actual business happens on
-# digital.gov.eg after the citizen leaves. A `cta_url` is a native URL button, so
-# the platform never sees the click — which is why the terminal goal is
-# `ready_to_start` ("we handed them a live link") and NOT "started". Any
-# conversion read off this funnel is an upper bound, and the stage is named so
-# nobody mistakes it for a completion.
+# digital.gov.eg after the citizen leaves, and a `cta_url` is a native URL button
+# whose click the platform never sees.
+#
+# So the funnel splits that handoff in two, and the distinction is the point:
+#   • `ready_to_start` — we SHOWED a briefing for a service that is live on the
+#     portal. Says nothing about intent.
+#   • `started` — the citizen tapped 🚀 and asked us to open it. This is a real
+#     conversion, and it exists only because the portal link now sits one tap away
+#     behind `start_service` instead of on the briefing card itself.
+# What still cannot be observed is whether they completed anything ON the portal.
+# `started` is the last honest measurement, and the stage is named for the tap, not
+# for a completion.
 #
 # Emitted by `track:` markers in the tool flows:
 #   • home/show                  → browsed           (discovery)
@@ -15,6 +22,7 @@
 #   • find_service/none          → search_missed     (no advance; carries the query)
 #   • service_detail/show_offline→ service_viewed    (service_found; completes service_found)
 #   • service_detail/show        → service_reached   (ready_to_start; completes ready_to_start)
+#   • start_service/show         → service_started   (started; completes service_started)
 #
 # What this exists to produce:
 #   1. the gap between `service_found` and `ready_to_start` — citizens who found
@@ -38,7 +46,7 @@ label: { en: "Service lookup", ar: "البحث عن خدمة" }
 # on a run that can't close.
 lifecycle:
   reentry:         anytime
-  terminal:        { goal: ready_to_start }
+  terminal:        { goal: service_started }
   cooldown_days:   7
   idle_reset_days: 60
 
@@ -47,10 +55,14 @@ stages:
   - { id: searching,      order: 2, label: { en: "Searching",      ar: "البحث" } }
   - { id: service_found,  order: 3, label: { en: "Service found",  ar: "وجد الخدمة" } }
   - { id: ready_to_start, order: 4, label: { en: "Ready to start", ar: "جاهز للبدء" } }
+  - { id: started,        order: 5, label: { en: "Started",        ar: "بدأ الخدمة" } }
 
 goals:
-  - { id: service_found,  stage: service_found,  label: { en: "Found a service",        ar: "وصل لخدمة" } }
-  - { id: ready_to_start, stage: ready_to_start, label: { en: "Reached a live service", ar: "وصل لخدمة متاحة" } }
+  - { id: service_found,   stage: service_found,  label: { en: "Found a service",        ar: "وصل لخدمة" } }
+  - { id: ready_to_start,  stage: ready_to_start, label: { en: "Reached a live service", ar: "وصل لخدمة متاحة" } }
+  # The conversion. ready_to_start → started is the number that says whether the
+  # briefings persuade: same service, same citizen, one tap apart.
+  - { id: service_started, stage: started,        label: { en: "Started the service",    ar: "بدأ الخدمة" } }
 
 events:
   - { name: browsed,          advances_to: discovery, label: { en: "Opened the menu",      ar: "فتح القائمة" } }
@@ -62,3 +74,4 @@ events:
   - { name: search_missed,                            label: { en: "Search found nothing", ar: "بحث بدون نتيجة" } }
   - { name: service_viewed,   advances_to: service_found,  completes: service_found,  label: { en: "Viewed a service",  ar: "عاين خدمة" } }
   - { name: service_reached,  advances_to: ready_to_start, completes: ready_to_start, label: { en: "Reached a live service", ar: "وصل لخدمة متاحة" } }
+  - { name: service_started,  advances_to: started,        completes: service_started, label: { en: "Started the service",   ar: "بدأ الخدمة" } }

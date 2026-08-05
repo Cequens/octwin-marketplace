@@ -3,7 +3,14 @@
 flow_id: feedback
 
 strings:
+  # The rating ask, shown when ⭐ is tapped on a service card (no `helpful` yet).
+  ask_rating:      'هل كانت معلومات «{service}» كافية لما تحتاجه؟'
+  fb_yes:          '👍 نعم، كافية'
+  fb_no:           '👎 كان بها نقص'
   thanks_positive: 'شكراً لك 🙏 ملاحظتك تساعدنا على تحسين المعلومات المقدَّمة لباقي المواطنين.'
   ask_missing:     'نعتذر عن ذلك 🙏 هل يمكنك إخبارنا بما كان ناقصاً في معلومات «{service}»؟ (المستندات؟ الرسوم؟ مدة التنفيذ؟) اكتب ملاحظتك في رسالة وسنراجعها.'
   thanks_comment:  'وصلتنا ملاحظتك، شكراً جزيلاً 🙏 سنراجع معلومات هذه الخدمة ونحدّثها.'
   comment_failed:  'نعتذر، لم يتم تسجيل ملاحظتك. هل يمكنك إرسالها مرة أخرى؟ 🙏'
+  # Every terminal offers a way onward — no conversation should end on a full stop.
+  btn_related:     '🔎 خدمة أخرى'
+  btn_home:        '🗂️ القائمة الرئيسية'

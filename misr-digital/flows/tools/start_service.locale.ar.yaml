@@ -1,0 +1,11 @@
+# Strings for the start_service flow, keyed by $t("start_service.<key>").
+# Formal Arabic — see the note in home.locale.ar.yaml.
+flow_id: start_service
+
+strings:
+  body:       'اضغط الزر أدناه للانتقال إلى صفحة الخدمة على بوابة مصر الرقمية واستكمال طلبك. ستحتاج إلى تسجيل الدخول بحسابك على البوابة.'
+  open:       '🚀 فتح صفحة الخدمة'
+  footer:     'مصر الرقمية 🇪🇬'
+  not_online: '⏳ هذه الخدمة غير متاحة إلكترونياً على البوابة حتى الآن، ويلزم التقدّم لها من مكتب الجهة المختصة.'
+  btn_other:  '🔎 خدمة أخرى'
+  btn_home:   '🗂️ القائمة الرئيسية'

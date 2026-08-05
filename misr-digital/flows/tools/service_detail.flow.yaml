@@ -55,24 +55,29 @@ steps:
     # off-platform where nothing can observe it. Naming the goal for what we can
     # actually see keeps the funnel honest rather than overclaiming a conversion.
     - track: { event: service_reached, timeline: true, metadata: { code: '$svc.fields.code' } }
-    # ONE render intent per turn — a second `render:` in this step does not send a
-    # second message, it REPLACES this one. An earlier build put the feedback ask on a
-    # detail_card below, and the entire service briefing silently vanished: the citizen
-    # asked for a service and was shown nothing but "was that enough?".
-    # So the ask has to live INSIDE this card. cta_url has no `buttons`, hence a written
-    # invitation the agent routes to `feedback` — the rating is lost on this path, but
-    # the free-text note is the field worth having, and the briefing is the product.
+    # A detail_card, NOT a cta_url. The URL button is the only thing cta_url renders —
+    # its field list has no `buttons` — so a card could either hand over the portal link
+    # or offer anything else, never both, and only ONE render intent ships per turn so
+    # it could not be two messages either. That left the end of the main journey as a
+    # dead end: a link and no way onward, no way to say the briefing was wrong.
+    #
+    # So the portal moves one tap away, behind `start_service`. What that buys:
+    #   • the citizen can rate the briefing or look for another service from here
+    #   • the start becomes OBSERVABLE — `ready_to_start` below only ever meant "we
+    #     displayed a link"; `service_started` is a tap we actually see.
+    # The cost is one extra tap to the portal, which this card can afford: it is a
+    # briefing about which documents to gather, so most readers are not leaving for
+    # the portal in the same minute anyway.
     - render:
-        render_intent: cta_url
+        render_intent: detail_card
         header: '{$svc.title}'
-        body: |-
-          {$body}
-
-          {$t("service_detail.invite_feedback")}
+        body:   '{$body}'
         footer: '{$t("service_detail.footer")}'
-        label:  '{$t("service_detail.start")}'
-        url:    '$svc.fields.url'
-      memory_note: 'Showed service detail + start link for {$svc.title}.'
+        buttons:
+          - { title: '{$t("service_detail.btn_start")}',    on_select: { invoke: start_service,    with: { code: '$svc.fields.code' } } }
+          - { title: '{$t("service_detail.btn_rate")}',     on_select: { invoke: feedback,         with: { code: '$svc.fields.code' } } }
+          - { title: '{$t("service_detail.btn_related")}',  on_select: { invoke: related_services, with: { code: '$svc.fields.code' } } }
+      memory_note: 'Showed service detail for {$svc.title} with start / rate / related actions.'
     - end: applied
 
   show_offline:
@@ -81,8 +86,10 @@ steps:
     # the cost of the services the portal hasn't published yet.
     - track: { event: service_viewed, timeline: true, metadata: { code: '$svc.fields.code' } }
     # detail_card, not text_card — text_card allows ONLY `body`, so a `header` on it is
-    # silently dropped and the service name would vanish from the card. It does take
-    # `buttons`, so unlike the cta_url path the feedback ask rides along free here.
+    # silently dropped and the service name would vanish from the card.
+    # No 🚀 here: there is nothing on the portal to open. The other two actions are the
+    # same as the live card, so a citizen who cannot start this service still has
+    # somewhere to go — which is the whole point of not leaving them on an apology.
     - render:
         render_intent: detail_card
         header: '{$svc.title}'
@@ -92,8 +99,8 @@ steps:
 
           {$t("service_detail.not_online_yet")}
         buttons:
-          - { title: '{$t("service_detail.fb_yes")}', on_select: { invoke: feedback, with: { code: '$svc.fields.code', helpful: '5' } } }
-          - { title: '{$t("service_detail.fb_no")}',  on_select: { invoke: feedback, with: { code: '$svc.fields.code', helpful: '1' } } }
+          - { title: '{$t("service_detail.btn_rate")}',    on_select: { invoke: feedback,         with: { code: '$svc.fields.code' } } }
+          - { title: '{$t("service_detail.btn_related")}', on_select: { invoke: related_services, with: { code: '$svc.fields.code' } } }
       memory_note: 'Showed service detail for {$svc.title} — not on the portal yet, no start link.'
     - end: applied
   none:
