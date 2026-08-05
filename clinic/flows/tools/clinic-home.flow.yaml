@@ -3,10 +3,16 @@
 
 flow_id:     clinic-home
 version:     1
-description: Welcome / main menu. Call for a greeting, "start", or unclear intent.
+description: Welcome / main menu. Call on a greeting, "start", "what can you do?", or a message whose intent is unclear.
 
 input:
-  message: { type: string, optional: true, describe: 'Optional note from the user.' }
+  # Matches the sibling packs' `home` flows: this is a line the AGENT composes, not
+  # the patient's text echoed back. The old "Optional note from the user" reading
+  # invited the agent to pass the inbound message straight through.
+  message:
+    type:     string
+    optional: true
+    describe: 'Optional ONE short greeting line YOU compose for this patient (e.g. greet them by name).'
 
 entry:
   - else: true
