@@ -20,7 +20,14 @@ steps:
     - render:
         render_intent: list_picker
         header: '{$t("home.header")}'
-        body:   '$coalesce($input.message, $t("home.greeting"))'
+        # The agent's line is ONE PART of the body, not the whole of it. With a bare
+        # `$coalesce($input.message, …)` the agent's greeting REPLACED the standing
+        # copy, and since `message`'s describe asks it to compose one every turn the
+        # explanation never rendered on the live path. Same shape as kaiian's hub.
+        body: |-
+          {$coalesce($input.message, $t("home.greeting"))}
+
+          {$t("home.value_prop")}
         cta:    '{$t("home.cta")}'
         items:
           - { title: '{$t("home.row_services")}', on_select: { invoke: services } }

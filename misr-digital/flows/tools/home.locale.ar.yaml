@@ -3,7 +3,13 @@ flow_id: home
 
 strings:
   header:       'مصر الرقمية 🇪🇬'
-  greeting:     'أهلاً بيك في مساعد مصر الرقمية 👋 أقدر أساعدك تلاقي الخدمة الحكومية اللي محتاجها، تعرف مستنداتها ورسومها، وأوجّهك تبدأها على البوابة. اختر من القائمة:'
+  # Two parts on purpose. `greeting` is the FALLBACK for the agent's own opening
+  # line and is the only half a personalised turn replaces; `value_prop` is the
+  # standing line that says what this bot is for, and always renders. They used
+  # to be one string behind `$coalesce`, which meant any agent-composed greeting
+  # silently discarded the whole explanation.
+  greeting:     'أهلاً بيك في مساعد مصر الرقمية 👋'
+  value_prop:   'أقدر أساعدك تلاقي الخدمة الحكومية اللي محتاجها، تعرف مستنداتها ورسومها، وأوجّهك تبدأها على البوابة. اختر من القائمة:'
   cta:          'اختر'
   row_services: '🗂️ تصفّح الخدمات حسب الفئة'
   row_find:     '🔎 ابحث عن خدمة بالاسم'
