@@ -28,3 +28,6 @@ FEEDBACK.md
 pack.json
 ENRICHMENT.md
 BACKLOG.md
+
+# Playwright MCP scratch output (browser snapshots / console logs)
+.playwright-mcp/

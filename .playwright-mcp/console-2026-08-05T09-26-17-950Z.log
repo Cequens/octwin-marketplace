@@ -1,8 +1,0 @@
-[      51ms] Error: Minified React error #418; visit https://react.dev/errors/418?args[]=HTML&args[]= for the full message or use the non-minified dev environment for full errors and additional helpful warnings.
-    at rZ (https://digital.gov.eg/_next/static/chunks/4bd1b696-e356ca5ba0218e27.js:1:36743)
-    at id (https://digital.gov.eg/_next/static/chunks/4bd1b696-e356ca5ba0218e27.js:1:87964)
-    at sh (https://digital.gov.eg/_next/static/chunks/4bd1b696-e356ca5ba0218e27.js:1:128654)
-    at https://digital.gov.eg/_next/static/chunks/4bd1b696-e356ca5ba0218e27.js:1:123540
-    at sr (https://digital.gov.eg/_next/static/chunks/4bd1b696-e356ca5ba0218e27.js:1:123641)
-    at sq (https://digital.gov.eg/_next/static/chunks/4bd1b696-e356ca5ba0218e27.js:1:150211)
-    at MessagePort.A (https://digital.gov.eg/_next/static/chunks/3794-c7de0bacdc82872a.js:1:56678)
