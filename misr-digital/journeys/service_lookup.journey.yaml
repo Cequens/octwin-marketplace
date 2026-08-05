@@ -40,14 +40,31 @@ id: service_lookup
 label: { en: "Service lookup", ar: "البحث عن خدمة" }
 
 # A citizen comes back for a DIFFERENT service — renewing a licence this month,
-# a birth certificate next. `anytime` opens a fresh funnel past the cooldown so a
-# return visit is a new lookup rather than a stale run. Most citizens never answer
-# the feedback ask, so a completion-gated re-entry would strand every repeat user
-# on a run that can't close.
+# a birth certificate next — and each errand is its own lookup, not a continuation.
+# `per_conversation` says that in the pack's own terms: the CONVERSATION is the
+# run. A citizen who clears the chat and comes back with a new errand starts a
+# fresh funnel at `discovery`, whatever stage the last one reached.
+#
+# It replaces `anytime` + `cooldown_days: 7`, which approximated the same idea
+# with a clock: 7 days had to pass before a return visit counted as a new lookup,
+# so two errands in one week merged into one run and the drop-off between them
+# was invisible. (A cooldown is not accepted alongside `per_conversation` — the
+# conversation is already the boundary — and the platform rejects the pair at
+# load rather than quietly merging.) A completion-gated re-entry was never an
+# option here: most citizens never tap 🚀, so `after_exit` would strand every
+# repeat user on a run that can't close.
+#
+# ⚠️ WHAT ENDS A CONVERSATION. The platform closes none on its own — no idle
+# timeout. Here it is `/clear` (declared in `commands.yaml` → `close_conversation`),
+# or an operator closing the thread in the console. A citizen who simply returns
+# a week later without clearing lands in the same open conversation and continues
+# the same run. `idle_reset_days: 60` is the backstop for that case, and the
+# platform-side idle session window that would make rollover automatic is on the
+# platform backlog. Until it lands, this pack's funnel counts CLEARED sessions
+# accurately and silent returns conservatively.
 lifecycle:
-  reentry:         anytime
+  reentry:         per_conversation
   terminal:        { goal: service_started }
-  cooldown_days:   7
   idle_reset_days: 60
 
 stages:

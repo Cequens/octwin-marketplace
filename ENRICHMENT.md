@@ -693,6 +693,55 @@ Three things each, ranked. Everything here is expanded above.
 
 ---
 
+## §11 · Added 2026-08-05 — the conversation as a run boundary (`reentry: per_conversation`)
+
+A journey run could be bounded two ways: by **completion** (`after_exit`) or by the **clock**
+(`anytime` + `cooldown_days`). Neither is the unit a chat bot actually has. A fourth value on
+`lifecycle.reentry` makes the **conversation** the boundary — the customer's next conversation is
+their next run, whatever stage the last one reached and however little time passed.
+
+```yaml
+lifecycle:
+  reentry:         per_conversation   # each conversation is its own run
+  terminal:        { goal: service_started }
+  idle_reset_days: 60                 # still works — the backstop for a run nobody closed
+  # cooldown_days: REJECTED at load. The conversation is already the boundary;
+  # a cooldown would fold two separate conversations into one run.
+```
+
+**What it fixes.** With `anytime` + a cooldown, two errands inside the cooldown window merge into
+one run and the drop-off between them is invisible; outside it, the split is a guess about how long
+"a new visit" takes. `per_conversation` stops guessing. It also needs no *entry* event — a returning
+customer whose first tap is mid-funnel still opens a fresh run, which the other modes will not do.
+
+**⚠️ Read this before you adopt it.** The platform closes no conversation on its own — there is no
+idle timeout, and one conversation otherwise lasts the life of the contact. **The only thing that
+ends one in this repo is `/clear`**, the `close_conversation` command in `commands.yaml`. Declare
+`per_conversation` on a pack whose customers never type `/clear` and it behaves like `reentry: none`
+— one run forever. Keep `idle_reset_days` as the backstop until the platform grows an idle session
+window (on the platform backlog).
+
+Counted across this repo: **23 of 24 packs declare `close_conversation`** (every pack but `tools`),
+so the trigger exists nearly everywhere. **Six packs declare a journey**, and this is how they line
+up:
+
+| Pack | Journey | Today | Verdict |
+|---|---|---|---|
+| `misr-digital` | `service_lookup` | ~~`anytime` + 7d~~ → **`per_conversation`** ✅ adopted 1.9.0 | Each errand is its own lookup; the 7-day clock merged two errands in one week. |
+| `clinic` | `reservation` | `anytime` + 7d cooldown | **Consider.** A booking conversation is a visit. But a reservation outlives the chat, so the clock is defensible — the author's call. |
+| `nakhla-giving` | `giving` | `anytime` | **Consider.** A donation is a session-shaped act with no completion gate to wait on. |
+| `ecommerce` · `xpeng-egypt` | `purchase` | `after_exit` | **Leave.** A purchase ends when it is bought, not when the chat ends; a cart survives the conversation. |
+| `kaiian` | `captain_onboarding` | `after_exit` + 30d | **Leave.** Onboarding spans days and many conversations by design — this is the case `per_conversation` would break. |
+
+**Requires a platform ≥ the 2026-08-05 build — and no offline check will tell you.** `octwin
+validate` passes a `per_conversation` journey against a KB pulled *before* that build (verified
+2026-08-05: the offline pass does not check a declaration's enum values against
+`.octwin/platform-kb/declarations/*.json`). The rejection comes later, from the platform itself —
+`octwin validate --remote`, or the deploy. Re-run `octwin platform-kb pull` at the repo root once
+the upgrade lands, and deploy this only to an instance running it.
+
+---
+
 ## Reading further
 
 Everything above is in the pulled KB (`octwin platform-kb pull`, then `.octwin/platform-kb/INDEX.md`).
