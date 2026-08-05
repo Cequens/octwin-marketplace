@@ -1,4 +1,5 @@
-# Strings for the service_detail flow, keyed by $t("service_detail.<key>").
+# Every user-visible string for the service_detail flow, keyed by
+# `$t("service_detail.<key>")`. Formal Arabic — see the note in home.locale.ar.yaml.
 flow_id: service_detail
 
 strings:
@@ -7,13 +8,17 @@ strings:
   lbl_fees:         '💰 الرسوم:'
   lbl_time:         '⏱️ مدة التنفيذ:'
   lbl_channel:      '🖥️ طريقة التقديم:'
-  disclaimer:       'ℹ️ الرسوم والمدة استرشادية وقد تتغيّر — المصدر الرسمي هو صفحة الخدمة على البوابة.'
+  disclaimer:       'ℹ️ الرسوم ومدة التنفيذ استرشادية وقابلة للتغيير — والمصدر الرسمي هو صفحة الخدمة على البوابة.'
   footer:           'مصر الرقمية 🇪🇬'
   start:            '🚀 ابدأ الخدمة على البوابة'
-  # Shown INSTEAD of the start button when the service isn't on the portal yet.
-  not_online_yet:   '⏳ الخدمة دي لسه مش متاحة إلكترونياً على بوابة مصر الرقمية — لازم تتقدّم لها من مكتب الجهة المختصة. المعلومات فوق للاسترشاد، وأول ما تنزل على البوابة هتلاقيها هنا.'
-  # The feedback ask. Deliberately about the BRIEFING, not about the portal — whether
-  # the portal worked happens off-platform and this pack can neither see nor fix it.
-  ask_feedback:     'المعلومات دي كفّت اللي إنت محتاجه؟'
-  fb_yes:           '👍 آه كفّت'
-  fb_no:            '👎 كان ناقص حاجة'
+  not_online_yet:   '⏳ هذه الخدمة غير متاحة إلكترونياً على بوابة مصر الرقمية حتى الآن، ويلزم التقدّم لها من مكتب الجهة المختصة. المعلومات أعلاه للاسترشاد، وستجدها هنا فور إتاحتها على البوابة.'
+  # The written invitation on the LIVE card. It exists because a cta_url carries no
+  # buttons and only one render intent is delivered per turn — so the ask cannot be a
+  # second message without erasing the briefing itself. The agent routes any reply to
+  # the `feedback` tool.
+  invite_feedback:  '📝 إذا وجدت نقصاً أو خطأً في هذه المعلومات، أخبرني به وسنراجعه.'
+  # The tapped ask, used only on the coming_soon card — a detail_card, which does
+  # take buttons, so it costs no extra message there.
+  ask_feedback:     'هل كانت هذه المعلومات كافية؟'
+  fb_yes:           '👍 نعم، كافية'
+  fb_no:            '👎 كان بها نقص'

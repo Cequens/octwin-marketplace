@@ -130,6 +130,10 @@ steps:
         failed:  [{ goto: thanks }]
 
   thanks:
+    # Both paths converge here after the rollup. `missing` is only ever set on the
+    # free-text turn, so it distinguishes them.
+    - if:   '$input.missing != null'
+      goto: thanks_comment
     # 👎 → ask the one question worth asking. 👍 → say thank you and stop.
     - if:   '$input.helpful == "1"'
       goto: ask_missing
@@ -180,21 +184,30 @@ steps:
       bind: prior
       outputs:
         ok:     [{ goto: submit_comment }]
-        empty:  [{ goto: rate_first }]
+        # No prior response is the NORMAL case for a live service: its card is a
+        # cta_url, which carries no buttons, so the note arrives with no rating first.
+        # `helpful` is optional in surveys.yaml precisely so this still records.
+        empty:  [{ goto: submit_comment }]
         failed: [{ end: failed }]
 
   submit_comment:
-    # Same (survey_key, subject_ref) → this UPDATES the response the tap created
-    # rather than adding a second one.
+    # Same (survey_key, subject_ref) → when a rating DID come first this UPDATES that
+    # response rather than adding a second one. `$get` returns null when there is no
+    # prior row, and a null optional answer is simply absent.
     - do: survey_submit
       args:
         survey:      service_feedback
         subject_ref: '$svc.id'
         answers:
-          helpful: '$prior.rows[0].fields.answers.helpful'
+          helpful: '$get($prior.rows, "0.fields.answers.helpful")'
           missing: '$input.missing'
+      bind: resp
       outputs:
-        ok:     [{ goto: thanks_comment }]
+        # Through the SAME stamp + rollup chain as the tap path. Skipping it left the
+        # free-text responses — the ones carrying the actual defect report — with no
+        # `service` on them, which made them invisible to record_aggregate. On the live
+        # cta_url path there is no tap at all, so that was every useful response.
+        ok:     [{ goto: stamp_service }]
         # NOT the thanks copy. Telling a citizen "recorded, we'll fix it" when nothing
         # was written is worse than admitting the note didn't save.
         failed: [{ goto: comment_failed }]
@@ -213,11 +226,7 @@ steps:
       memory_note: 'Could not store the feedback note for {$svc.title}.'
     - end: applied
 
-  rate_first:
-    # Free text arrived with no rating on file to attach it to.
-    - answer:
-        instructions: 'The citizen sent a note about a service but has not rated it, so there is no response to attach the note to. Thank them for the note in Egyptian Arabic and say it has been passed on. Do NOT claim it was recorded against the service.'
 
   no_context:
     - answer:
-        instructions: 'The feedback tap arrived without a service to attach it to. Thank the citizen briefly for the feedback and offer to help find a service, in Egyptian Arabic. Do not ask them to rate anything again.'
+        instructions: 'The feedback tap arrived without a service to attach it to. Thank the citizen briefly for the feedback and offer to help find a service. Reply in FORMAL Arabic (فصحى) — this is a government service. Do not ask them to rate anything again.'

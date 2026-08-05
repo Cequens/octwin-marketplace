@@ -70,4 +70,4 @@ steps:
     # than the current over-eagerness. Logged in FEEDBACK.md.
     - track: { event: search_missed, metadata: { query: '$input.query' } }
     - answer:
-        instructions: 'No service matched the search. Apologize briefly, suggest rephrasing, or offer to browse categories via the services menu.'
+        instructions: 'No service matched the search. Apologize briefly, suggest rephrasing, or offer to browse categories via the services menu. Reply in FORMAL Arabic (فصحى) — this is a government service.'

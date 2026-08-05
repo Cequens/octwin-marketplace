@@ -10,4 +10,4 @@
 pack_id: misr-digital
 strings:
   # Example pack-level string — reference as `$t("misr-digital.greeting")`.
-  greeting: 'أهلاً! إزاي أقدر أساعدك؟'
+  greeting: 'مرحباً بك، كيف يمكنني مساعدتك؟'

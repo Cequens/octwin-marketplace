@@ -45,4 +45,4 @@ steps:
     - end: applied
   none:
     - answer:
-        instructions: 'No services were found in that category yet. Apologize briefly and offer to browse other categories via the services menu, or open the portal at digital.gov.eg.'
+        instructions: 'No services were found in that category yet. Apologize briefly and offer to browse other categories via the services menu, or open the portal at digital.gov.eg. Reply in FORMAL Arabic (فصحى) — this is a government service.'

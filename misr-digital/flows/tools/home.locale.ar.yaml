@@ -1,4 +1,9 @@
 # Every user-visible string for the home flow, keyed by `$t("home.<key>")`.
+#
+# Register: FORMAL ARABIC (فصحى) throughout. This pack fronts a real government
+# portal, so the copy carries the register a citizen expects from one — colloquial
+# Egyptian reads as unofficial here, however friendly. The agent prompt enforces the
+# same rule for its own free text (prompts/identity.md).
 flow_id: home
 
 strings:
@@ -8,10 +13,10 @@ strings:
   # standing line that says what this bot is for, and always renders. They used
   # to be one string behind `$coalesce`, which meant any agent-composed greeting
   # silently discarded the whole explanation.
-  greeting:     'أهلاً بيك في مساعد مصر الرقمية 👋'
-  value_prop:   'أقدر أساعدك تلاقي الخدمة الحكومية اللي محتاجها، تعرف مستنداتها ورسومها، وأوجّهك تبدأها على البوابة. اختر من القائمة:'
+  greeting:     'مرحباً بك في مساعد مصر الرقمية 👋'
+  value_prop:   'يمكنني مساعدتك في الوصول إلى الخدمة الحكومية التي تحتاجها، ومعرفة مستنداتها ورسومها ومدة تنفيذها، ثم إرشادك لبدئها على البوابة الرسمية. اختر من القائمة:'
   cta:          'اختر'
   row_services: '🗂️ تصفّح الخدمات حسب الفئة'
-  row_find:     '🔎 ابحث عن خدمة بالاسم'
-  row_portal:   '🌐 افتح بوابة مصر الرقمية'
+  row_find:     '🔎 البحث عن خدمة بالاسم'
+  row_portal:   '🌐 فتح بوابة مصر الرقمية'
   row_faq:      '❓ أسئلة شائعة'

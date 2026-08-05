@@ -55,28 +55,24 @@ steps:
     # off-platform where nothing can observe it. Naming the goal for what we can
     # actually see keeps the funnel honest rather than overclaiming a conversion.
     - track: { event: service_reached, timeline: true, metadata: { code: '$svc.fields.code' } }
+    # ONE render intent per turn — a second `render:` in this step does not send a
+    # second message, it REPLACES this one. An earlier build put the feedback ask on a
+    # detail_card below, and the entire service briefing silently vanished: the citizen
+    # asked for a service and was shown nothing but "was that enough?".
+    # So the ask has to live INSIDE this card. cta_url has no `buttons`, hence a written
+    # invitation the agent routes to `feedback` — the rating is lost on this path, but
+    # the free-text note is the field worth having, and the briefing is the product.
     - render:
         render_intent: cta_url
         header: '{$svc.title}'
-        body:   '{$body}'
+        body: |-
+          {$body}
+
+          {$t("service_detail.invite_feedback")}
         footer: '{$t("service_detail.footer")}'
         label:  '{$t("service_detail.start")}'
         url:    '$svc.fields.url'
       memory_note: 'Showed service detail + start link for {$svc.title}.'
-    # The feedback ask has to be its OWN message on this path: cta_url's field list is
-    # header/body/footer/label/url — there is no `buttons`, so it cannot carry the tap.
-    # It asks about the BRIEFING (were the documents/fees enough?), which is the thing
-    # this pack actually controls — whether the portal itself worked is off-platform and
-    # unobservable. Ideally this would arrive a day later, but there is no `now`/date
-    # builtin to compute a relative `send_at` (see FEEDBACK.md), and this pack has no
-    # booking_reserve to source one from.
-    - render:
-        render_intent: detail_card
-        body: '{$t("service_detail.ask_feedback")}'
-        buttons:
-          - { title: '{$t("service_detail.fb_yes")}', on_select: { invoke: feedback, with: { code: '$svc.fields.code', helpful: '5' } } }
-          - { title: '{$t("service_detail.fb_no")}',  on_select: { invoke: feedback, with: { code: '$svc.fields.code', helpful: '1' } } }
-      memory_note: 'Asked whether the briefing for {$svc.title} was sufficient.'
     - end: applied
 
   show_offline:
@@ -102,4 +98,4 @@ steps:
     - end: applied
   none:
     - answer:
-        instructions: 'That service was not found. Apologize briefly and offer to browse categories via the services menu or search again.'
+        instructions: 'That service was not found. Apologize briefly and offer to browse categories via the services menu or search again. Reply in FORMAL Arabic (فصحى) — this is a government service.'
