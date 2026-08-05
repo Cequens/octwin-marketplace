@@ -36,6 +36,8 @@ steps:
         empty:  [{ goto: none }]
         failed: [{ end: failed }]
   show:
+    # Journey: a search that returned something.
+    - track: { event: searched, metadata: { query: '$input.query', results: '$length($page.rows)' } }
     - render:
         render_intent: list_picker
         header: '{$t("find_service.header")}'
@@ -49,5 +51,23 @@ steps:
       memory_note: 'Showed search results for the user query.'
     - end: applied
   none:
+    # A citizen said what they needed and the catalog had no answer. The query rides
+    # along as metadata so the miss becomes actionable: what to add, or which
+    # `keywords:` failed to match the words real people use. Deliberately NOT
+    # `advances_to` anything — a miss is not progress; it is the explanation attached
+    # to the searching → service_found drop-off.
+    #
+    # ⚠️ RARELY REACHED TODAY, measured 2026-08-05. The entity opts into `semantic:`
+    # search, and semantic ranking returns the top-N by cosine with NO similarity
+    # floor — so `record_search` answers even pure gibberish ("زقزقة برتقان فضائي"
+    # returned traffic_fines) and this `empty` port only fires if the catalog itself
+    # is empty. The event is wired because it is correct where it does fire, but the
+    # miss list will stay near-empty until a score floor exists: rows carry a `score`
+    # and `$filter_gte($page.rows, 'score', <min>)` is the documented idiom, which
+    # needs a threshold tuned against real traffic. Scores are not observable through
+    # `octwin chat --json`, so picking one now would be a guess — and a guess that is
+    # too high tells citizens "nothing found" for services we DO have, which is worse
+    # than the current over-eagerness. Logged in FEEDBACK.md.
+    - track: { event: search_missed, metadata: { query: '$input.query' } }
     - answer:
         instructions: 'No service matched the search. Apologize briefly, suggest rephrasing, or offer to browse categories via the services menu.'

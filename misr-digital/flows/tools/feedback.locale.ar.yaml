@@ -1,0 +1,8 @@
+# Every user-visible string for the feedback flow, keyed by `$t("feedback.<key>")`.
+flow_id: feedback
+
+strings:
+  thanks_positive: 'تمام، شكراً ليك 🙏 ده بيساعدنا نحسّن المعلومات للناس اللي بعدك.'
+  ask_missing:     'آسفين على كده 🙏 ممكن تقولي إيه اللي كان ناقص في معلومات «{service}»؟ (المستندات؟ الرسوم؟ المدة؟) — اكتبها في رسالة وهنظبطها.'
+  thanks_comment:  'وصلتني، شكراً جداً 🙏 هنراجع معلومات الخدمة دي ونحدّثها.'
+  comment_failed:  'معلش، ملاحظتك مااتسجلتش عندي. ممكن تبعتها تاني؟ 🙏'

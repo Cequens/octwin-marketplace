@@ -1,0 +1,64 @@
+# service_lookup — the citizen's path from "I need something from the government"
+# to "I'm holding a working link to the right service".
+#
+# This pack is a DIRECTORY, not a transaction: the actual business happens on
+# digital.gov.eg after the citizen leaves. A `cta_url` is a native URL button, so
+# the platform never sees the click — which is why the terminal goal is
+# `ready_to_start` ("we handed them a live link") and NOT "started". Any
+# conversion read off this funnel is an upper bound, and the stage is named so
+# nobody mistakes it for a completion.
+#
+# Emitted by `track:` markers in the tool flows:
+#   • home/show                  → browsed           (discovery)
+#   • service_list/show          → category_browsed  (searching)
+#   • find_service/show          → searched          (searching)
+#   • find_service/none          → search_missed     (no advance; carries the query)
+#   • service_detail/show_offline→ service_viewed    (service_found; completes service_found)
+#   • service_detail/show        → service_reached   (ready_to_start; completes ready_to_start)
+#
+# What this exists to produce:
+#   1. the gap between `service_found` and `ready_to_start` — citizens who found
+#      their service and hit a `coming_soon` dead end. That quantifies what the
+#      services still missing from the portal actually cost. WORKS TODAY.
+#   2. `search_missed` + its `query` metadata — what citizens ask for that the
+#      catalog cannot answer. Wired, but it will stay near-empty until semantic
+#      search grows a similarity floor: ranking returns the top-N by cosine with
+#      no minimum, so find_service answers even nonsense and its `empty` port
+#      almost never fires. See the note in find_service.flow.yaml + FEEDBACK.md.
+#
+# Ids are unique across the pack, so `track:` infers journey: service_lookup.
+
+id: service_lookup
+label: { en: "Service lookup", ar: "البحث عن خدمة" }
+
+# A citizen comes back for a DIFFERENT service — renewing a licence this month,
+# a birth certificate next. `anytime` opens a fresh funnel past the cooldown so a
+# return visit is a new lookup rather than a stale run. Most citizens never answer
+# the feedback ask, so a completion-gated re-entry would strand every repeat user
+# on a run that can't close.
+lifecycle:
+  reentry:         anytime
+  terminal:        { goal: ready_to_start }
+  cooldown_days:   7
+  idle_reset_days: 60
+
+stages:
+  - { id: discovery,      order: 1, label: { en: "Discovery",      ar: "الاستكشاف" } }
+  - { id: searching,      order: 2, label: { en: "Searching",      ar: "البحث" } }
+  - { id: service_found,  order: 3, label: { en: "Service found",  ar: "وجد الخدمة" } }
+  - { id: ready_to_start, order: 4, label: { en: "Ready to start", ar: "جاهز للبدء" } }
+
+goals:
+  - { id: service_found,  stage: service_found,  label: { en: "Found a service",        ar: "وصل لخدمة" } }
+  - { id: ready_to_start, stage: ready_to_start, label: { en: "Reached a live service", ar: "وصل لخدمة متاحة" } }
+
+events:
+  - { name: browsed,          advances_to: discovery, label: { en: "Opened the menu",      ar: "فتح القائمة" } }
+  - { name: category_browsed, advances_to: searching, label: { en: "Browsed a category",   ar: "تصفّح فئة" } }
+  - { name: searched,         advances_to: searching, label: { en: "Searched",             ar: "بحث" } }
+  # No `advances_to` on purpose: a miss is not progress. It is recorded so the
+  # query survives, and so the searching→service_found drop-off has an explanation
+  # attached rather than being an unexplained leak.
+  - { name: search_missed,                            label: { en: "Search found nothing", ar: "بحث بدون نتيجة" } }
+  - { name: service_viewed,   advances_to: service_found,  completes: service_found,  label: { en: "Viewed a service",  ar: "عاين خدمة" } }
+  - { name: service_reached,  advances_to: ready_to_start, completes: ready_to_start, label: { en: "Reached a live service", ar: "وصل لخدمة متاحة" } }

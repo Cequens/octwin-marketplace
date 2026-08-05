@@ -1,0 +1,29 @@
+# Surveys declaration for the misr-digital pack — was the briefing good enough?
+#
+# This pack is a directory: the citizen's real transaction happens on
+# digital.gov.eg, out of sight. So the survey deliberately does NOT ask "did the
+# service work" — nothing here can observe that. It asks about the one thing this
+# pack actually controls: whether the documents / fees / timing we printed were
+# enough to walk in prepared.
+#
+# Responses are `survey_response` XRM records (no pack table). `subject_ref` is the
+# SERVICE record id, and survey_submit upserts on (survey_key, subject_ref) — so a
+# citizen who answers twice about the same service replaces their answer rather than
+# stacking a second one.
+#
+# The point of collecting it: `record_aggregate` over the responses, grouped by the
+# `service` rollup field (added to survey_response in xrm.yaml), ranks the catalog by
+# how well each entry actually served someone. The low scorers are the records whose
+# requirements/fees/timing are wrong — the same defects we found by hand against the
+# portal on 2026-08-05, but surfaced from real use instead of an audit.
+
+surveys:
+  service_feedback:
+    label:   { en: 'Service briefing feedback', ar: 'تقييم معلومات الخدمة' }
+    subject: service
+    questions:
+      - { key: helpful, type: rating, scale: 5, required: true, label: { en: 'Was the information enough?', ar: 'المعلومات كانت كافية؟' } }
+      # Free text, and the most useful field on the form: what a citizen says is
+      # MISSING names the gap directly. Captured on the follow-up turn after ❌.
+      - { key: missing, type: text, label: { en: 'What was missing?', ar: 'إيه اللي كان ناقص؟' } }
+    score: helpful

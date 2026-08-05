@@ -17,6 +17,8 @@ entry:
 
 steps:
   show:
+    # Journey: the citizen opened the front door → discovery.
+    - track: { event: browsed }
     - render:
         render_intent: list_picker
         header: '{$t("home.header")}'

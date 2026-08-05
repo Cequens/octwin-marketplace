@@ -1,0 +1,223 @@
+# feedback — receives the 👍/👎 tap from a service card and records it as a
+# `survey_response` against the `service_feedback` survey.
+#
+# Two turns, deliberately:
+#   1. the tap carries `helpful` → submit immediately, so a ✅ costs the citizen
+#      nothing and is never lost waiting for a second answer;
+#   2. only after ❌ do we ask what was missing, and that free text upserts onto
+#      the SAME response (survey_submit keys on (survey_key, subject_ref)).
+# Asking "what was missing?" of someone who just said it was fine would be noise.
+#
+# `service` is stamped alongside subject_ref because subject_ref is plain text and
+# record_aggregate cannot group on it — see the survey_response extension in xrm.yaml.
+
+flow_id:     feedback
+version:     1
+description: |-
+  Record whether a service briefing was helpful. Set by the 👍/👎 buttons on a
+  service card (carries `code` + `helpful`); pass `missing` when the citizen then
+  says what was absent. Not usually called with no arguments.
+
+input:
+  code:
+    type:     string
+    optional: true
+    describe: 'The service code being rated (button-internal).'
+  helpful:
+    type:     string
+    optional: true
+    describe: 'Rating 1-5 from the tapped button — 5 = the briefing was enough, 1 = it was not.'
+  missing:
+    type:     string
+    optional: true
+    describe: "What the citizen says was missing from the briefing — free text, only asked after a 👎."
+
+entry:
+  - if:   '$input.code == null'
+    goto: no_context
+  - if:   '$input.missing != null'
+    goto: load_for_comment
+  - else: true
+    goto: load
+
+steps:
+  # ── The tap itself ────────────────────────────────────────────────────────
+  load:
+    - do: record_list
+      args:
+        entity: service
+        all:    true
+        limit:  1
+        where:  { all: [{ field: code, op: eq, value: '$input.code' }] }
+      bind: page
+      outputs:
+        ok:     [{ goto: submit }]
+        empty:  [{ goto: no_context }]
+        failed: [{ end: failed }]
+
+  submit:
+    - assign: { svc: '$page.rows[0]' }
+    # Bound, not detached: a citizen who is told "thanks, recorded" must have had it
+    # actually recorded, and the comment turn needs this response to upsert onto.
+    # `survey_submit` takes only survey/answers/subject_ref/contact_id — the rollup
+    # dimension is stamped by the record_save below, exactly as clinic does it.
+    - do: survey_submit
+      args:
+        survey:      service_feedback
+        answers:     { helpful: '$input.helpful' }
+        subject_ref: '$svc.id'
+      bind: resp
+      outputs:
+        ok:     [{ goto: stamp_service }]
+        # survey_submit declares ok + failed only — no `invalid` port to handle.
+        failed: [{ goto: thanks }]
+
+  stamp_service:
+    # subject_ref already holds this id, but as plain text — record_aggregate can only
+    # group on the typed field, so it gets its own column.
+    - do: record_save
+      args:
+        entity:    survey_response
+        record_id: '$resp.record_id'
+        fields:    { service: '$svc.id' }
+      outputs:
+        ok:      [{ goto: recompute_avg }]
+        # The response IS recorded either way; without the dimension the rollup just
+        # misses this one. Never make the citizen pay for our bookkeeping.
+        invalid: [{ goto: thanks }]
+        failed:  [{ goto: thanks }]
+
+  recompute_avg:
+    # This is what stops the score being a number nobody reads: it lands back on the
+    # service record, so the catalog itself is ordered by which entries actually helped.
+    # `all: true` is REQUIRED — record_aggregate stopped defaulting to project-wide on
+    # 2026-07-31, and this average is every citizen's verdict, not just this one's.
+    - do: record_aggregate
+      args:
+        entity: survey_response
+        op:     avg
+        field:  score
+        all:    true
+        where:  { all: [{ field: service, op: eq, value: '$svc.id' }] }
+      bind: avg_helpful
+      outputs:
+        ok:     [{ goto: recompute_count }]
+        failed: [{ goto: thanks }]
+
+  recompute_count:
+    - do: record_aggregate
+      args:
+        entity: survey_response
+        op:     count
+        all:    true
+        where:  { all: [{ field: service, op: eq, value: '$svc.id' }] }
+      bind: helpful_n
+      outputs:
+        ok:     [{ goto: write_rollup }]
+        failed: [{ goto: thanks }]
+
+  write_rollup:
+    - do: record_save
+      args:
+        entity:    service
+        record_id: '$svc.id'
+        fields:
+          helpful_avg:   '$avg_helpful.value'
+          helpful_count: '$helpful_n.value'
+      outputs:
+        ok:      [{ goto: thanks }]
+        invalid: [{ goto: thanks }]
+        failed:  [{ goto: thanks }]
+
+  thanks:
+    # 👎 → ask the one question worth asking. 👍 → say thank you and stop.
+    - if:   '$input.helpful == "1"'
+      goto: ask_missing
+    - render:
+        render_intent: text_card
+        body: '{$t("feedback.thanks_positive")}'
+      memory_note: 'Citizen said the briefing for {$svc.title} was enough.'
+    - end: applied
+
+  ask_missing:
+    - render:
+        render_intent: text_card
+        body: '{$t("feedback.ask_missing", { service: $svc.title })}'
+      memory_note: 'Citizen said the briefing for {$svc.title} was NOT enough — asked what was missing.'
+      data: { awaiting_feedback_for: '$svc.fields.code' }
+    - end: applied
+
+  # ── The follow-up free text ───────────────────────────────────────────────
+  load_for_comment:
+    - do: record_list
+      args:
+        entity: service
+        all:    true
+        limit:  1
+        where:  { all: [{ field: code, op: eq, value: '$input.code' }] }
+      bind: page
+      outputs:
+        ok:     [{ goto: load_prior }]
+        empty:  [{ goto: no_context }]
+        failed: [{ end: failed }]
+
+  load_prior:
+    - assign: { svc: '$page.rows[0]' }
+    # Read the rating back off the existing response instead of trusting `$input`.
+    # `helpful` is a REQUIRED rating question, so the re-submit has to carry it — and
+    # the tap's value is long gone ($input is per-turn). Re-sending it from $input as
+    # a STRING is what silently sank the first version of this step: a rating question
+    # rejects "1", the whole submit failed, and the comment was never stored. Same
+    # shape as clinic's do_rate_comment.
+    - do: record_list
+      args:
+        entity: survey_response
+        limit:  1
+        where:
+          all:
+            - { field: survey_key,  op: eq, value: service_feedback }
+            - { field: subject_ref, op: eq, value: '$svc.id' }
+      bind: prior
+      outputs:
+        ok:     [{ goto: submit_comment }]
+        empty:  [{ goto: rate_first }]
+        failed: [{ end: failed }]
+
+  submit_comment:
+    # Same (survey_key, subject_ref) → this UPDATES the response the tap created
+    # rather than adding a second one.
+    - do: survey_submit
+      args:
+        survey:      service_feedback
+        subject_ref: '$svc.id'
+        answers:
+          helpful: '$prior.rows[0].fields.answers.helpful'
+          missing: '$input.missing'
+      outputs:
+        ok:     [{ goto: thanks_comment }]
+        # NOT the thanks copy. Telling a citizen "recorded, we'll fix it" when nothing
+        # was written is worse than admitting the note didn't save.
+        failed: [{ goto: comment_failed }]
+
+  thanks_comment:
+    - render:
+        render_intent: text_card
+        body: '{$t("feedback.thanks_comment")}'
+      memory_note: 'Recorded what was missing from the {$svc.title} briefing.'
+    - end: applied
+
+  comment_failed:
+    - render:
+        render_intent: text_card
+        body: '{$t("feedback.comment_failed")}'
+      memory_note: 'Could not store the feedback note for {$svc.title}.'
+    - end: applied
+
+  rate_first:
+    # Free text arrived with no rating on file to attach it to.
+    - answer:
+        instructions: 'The citizen sent a note about a service but has not rated it, so there is no response to attach the note to. Thank them for the note in Egyptian Arabic and say it has been passed on. Do NOT claim it was recorded against the service.'
+
+  no_context:
+    - answer:
+        instructions: 'The feedback tap arrived without a service to attach it to. Thank the citizen briefly for the feedback and offer to help find a service, in Egyptian Arabic. Do not ask them to rate anything again.'

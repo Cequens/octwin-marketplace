@@ -29,6 +29,8 @@ steps:
         empty:  [{ goto: none }]
         failed: [{ end: failed }]
   show:
+    # Journey: browsing a category is searching by another route.
+    - track: { event: category_browsed, metadata: { category: '$input.category' } }
     - render:
         render_intent: list_picker
         header: '{$t("service_list.header")}'

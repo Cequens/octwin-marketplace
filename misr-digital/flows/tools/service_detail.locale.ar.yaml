@@ -12,3 +12,8 @@ strings:
   start:            '🚀 ابدأ الخدمة على البوابة'
   # Shown INSTEAD of the start button when the service isn't on the portal yet.
   not_online_yet:   '⏳ الخدمة دي لسه مش متاحة إلكترونياً على بوابة مصر الرقمية — لازم تتقدّم لها من مكتب الجهة المختصة. المعلومات فوق للاسترشاد، وأول ما تنزل على البوابة هتلاقيها هنا.'
+  # The feedback ask. Deliberately about the BRIEFING, not about the portal — whether
+  # the portal worked happens off-platform and this pack can neither see nor fix it.
+  ask_feedback:     'المعلومات دي كفّت اللي إنت محتاجه؟'
+  fb_yes:           '👍 آه كفّت'
+  fb_no:            '👎 كان ناقص حاجة'

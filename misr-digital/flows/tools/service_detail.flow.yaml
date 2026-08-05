@@ -50,6 +50,11 @@ steps:
     # on a landing page hunting for something that isn't there.
     - if:   '$svc.fields.coming_soon == true'
       goto: show_offline
+    # Journey terminal. `ready_to_start` means "we handed them a live portal link" —
+    # NOT that they started: a cta_url is a native URL button and the click happens
+    # off-platform where nothing can observe it. Naming the goal for what we can
+    # actually see keeps the funnel honest rather than overclaiming a conversion.
+    - track: { event: service_reached, timeline: true, metadata: { code: '$svc.fields.code' } }
     - render:
         render_intent: cta_url
         header: '{$svc.title}'
@@ -58,11 +63,30 @@ steps:
         label:  '{$t("service_detail.start")}'
         url:    '$svc.fields.url'
       memory_note: 'Showed service detail + start link for {$svc.title}.'
+    # The feedback ask has to be its OWN message on this path: cta_url's field list is
+    # header/body/footer/label/url — there is no `buttons`, so it cannot carry the tap.
+    # It asks about the BRIEFING (were the documents/fees enough?), which is the thing
+    # this pack actually controls — whether the portal itself worked is off-platform and
+    # unobservable. Ideally this would arrive a day later, but there is no `now`/date
+    # builtin to compute a relative `send_at` (see FEEDBACK.md), and this pack has no
+    # booking_reserve to source one from.
+    - render:
+        render_intent: detail_card
+        body: '{$t("service_detail.ask_feedback")}'
+        buttons:
+          - { title: '{$t("service_detail.fb_yes")}', on_select: { invoke: feedback, with: { code: '$svc.fields.code', helpful: '5' } } }
+          - { title: '{$t("service_detail.fb_no")}',  on_select: { invoke: feedback, with: { code: '$svc.fields.code', helpful: '1' } } }
+      memory_note: 'Asked whether the briefing for {$svc.title} was sufficient.'
     - end: applied
 
   show_offline:
+    # A service the citizen found but cannot start. Completes `service_found` and NOT
+    # `ready_to_start` — the distance between those two goals in the funnel is exactly
+    # the cost of the services the portal hasn't published yet.
+    - track: { event: service_viewed, timeline: true, metadata: { code: '$svc.fields.code' } }
     # detail_card, not text_card — text_card allows ONLY `body`, so a `header` on it is
-    # silently dropped and the service name would vanish from the card.
+    # silently dropped and the service name would vanish from the card. It does take
+    # `buttons`, so unlike the cta_url path the feedback ask rides along free here.
     - render:
         render_intent: detail_card
         header: '{$svc.title}'
@@ -71,6 +95,9 @@ steps:
           {$body}
 
           {$t("service_detail.not_online_yet")}
+        buttons:
+          - { title: '{$t("service_detail.fb_yes")}', on_select: { invoke: feedback, with: { code: '$svc.fields.code', helpful: '5' } } }
+          - { title: '{$t("service_detail.fb_no")}',  on_select: { invoke: feedback, with: { code: '$svc.fields.code', helpful: '1' } } }
       memory_note: 'Showed service detail for {$svc.title} — not on the portal yet, no start link.'
     - end: applied
   none:

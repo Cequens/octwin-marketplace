@@ -43,7 +43,7 @@ entities:
     icon:        '🏛️'
     description: { en: 'A government e-service, with its documents, fees and turnaround', ar: 'خدمة حكومية إلكترونية بمستنداتها ورسومها ومدة تنفيذها' }
     title_field: name
-    list: [name, category, authority]
+    list: [name, category, authority, helpful_avg, helpful_count]
     # Upsert on `code`, not on the title. Without this a reseed matched records by
     # name, so RENAMING one (as the id_card split and the two repointed services did)
     # looked like a brand-new record and collided on the unique `code` of the row it
@@ -81,6 +81,26 @@ entities:
       # a "not online yet" note INSTEAD of the start-link button — quoting a turnaround
       # for something with nowhere to click is worse than saying so.
       coming_soon:     { type: boolean }      # لسه مش متاحة على البوابة
+      # Feedback rollup, recomputed by the `feedback` flow from every citizen's
+      # `service_feedback` response. This is what keeps the survey from being a number
+      # nobody reads: a LOW helpful_avg with a healthy helpful_count names a catalog
+      # entry whose requirements/fees/timing are wrong — the same class of defect the
+      # manual portal audit found on 2026-08-05, but surfaced from real use.
+      helpful_avg:     { type: number }       # متوسط تقييم كفاية المعلومات
+      helpful_count:   { type: number }       # عدد التقييمات
+
+  # The feedback response, extended with the ROLLUP DIMENSION. `subject_ref` already
+  # holds the service id, but it is a plain `text` column (not a typed record ref), so
+  # `record_aggregate` cannot group on it — hence this typed mirror, stamped by the
+  # `feedback` flow. Same reason clinic extends survey_response with `doctor`.
+  survey_response:
+    extends: system
+    label:       { en: 'Service feedback', ar: 'تقييم الخدمة' }
+    icon:        '⭐'
+    description: { en: "A citizen's verdict on whether a service briefing was complete — it ranks the catalog by which entries actually helped", ar: 'رأي المواطن في اكتمال معلومات الخدمة — ويرتّب الدليل حسب الخدمات اللي فعلاً أفادت' }
+    fields:
+      service: { type: record, entity: service, label: { en: 'Service', ar: 'الخدمة' } }
+    list: [survey_key, score, service]
 
 demo:
   # ==================== الأحوال المدنية (civil_status) ====================
