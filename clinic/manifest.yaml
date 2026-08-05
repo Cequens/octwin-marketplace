@@ -10,7 +10,7 @@
 # keys are rejected. Required: id, version (string), description.
 
 id:          clinic
-version:     '1.1.2'
+version:     '1.2.0'
 description: 'Outpatient appointment reservation for clinics & hospital outpatient clinics — Arabic-first, WhatsApp + web.'
 
 # Marketplace presentation — how this pack appears in the console catalog a

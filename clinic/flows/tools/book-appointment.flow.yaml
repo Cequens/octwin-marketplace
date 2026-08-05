@@ -37,7 +37,7 @@ steps:
                 bind: doc
               - if: '$doc.fields != null'
                 then:
-                  - assign: { doctor_label: '$coalesce($doc.fields.name, $state.doctor_label)' }
+                  - assign: { doctor_label: '$doc.fields.name' }
                 else:
                   # The passed doctor_id doesn't resolve to a real doctor — a stale id, or
                   # one the agent hallucinated instead of reusing a doctor-search result.
@@ -48,6 +48,28 @@ steps:
                   # see docs/BACKLOG.md "Collect-engine `options.fetch` has no failure-port
                   # handling" for the general gap this per-flow guard stubs around).
                   - assign: { state: '$merge($state, { doctor_id: null })' }
+          # Re-derive what the slot row used to ferry in its tap id. A picker row's id is
+          # capped at 200 code points, and `slot_label` was the `label:` expression
+          # re-evaluated into it — the one string the row is already displaying — which
+          # took the id to 220. Carry the id (slot_start, backfilled by the engine) and
+          # re-read the label here instead. See the platform KB, craft-flows "Bind
+          # identifiers, not labels". Guarded on slot_label so this costs ONE slot_list
+          # for the whole run, and `$merge($state, …)` is what carries it through the
+          # approve_apply suspend into commit_booking / the reminders / the success card.
+          - if: '$state.slot_start != null && $state.slot_label == null'
+            then:
+              - do: slot_list
+                args: { resource_record_id: '$state.doctor_id' }
+                bind: chosen
+                outputs:
+                  ok:
+                    - assign: { hit: '$filter($chosen, { slot_start: $state.slot_start })[0]' }
+                    - if: '$hit != null'
+                      then:
+                        - assign:
+                            state: '$merge($state, { slot_minutes: $hit.slot_minutes, branch_id: $hit.meta.branch, slot_label: $lines($compact([$hit.local_date, $hit.local_time, $hit.meta.branch_label]), " — ") })'
+                  empty:  []
+                  failed: []
         progress: '$lines($compact([$t("book-appointment.progress.header"), $doctor_label != null ? $t("book-appointment.progress.doctor", { doctor: $doctor_label }) : null, $state.slot_label != null ? $t("book-appointment.progress.slot", { slot: $state.slot_label }) : null, $state.for_whom != null ? $t("book-appointment.progress.for_whom", { who: ($state.for_whom == "dependent" ? $coalesce($state.dependent_name, $t("book-appointment.for_whom.dependent")) : $t("book-appointment.for_whom.self")) }) : null]), "\n")'
         gap_instructions: 'Ask the patient for the next missing detail ({$collect_field}), one at a time, in Egyptian Arabic. Re-call book-appointment once they answer. Do NOT give medical advice.'
         fields:
@@ -62,13 +84,17 @@ steps:
               cta:    book-appointment.field_cta.doctor
               fetch:  { do: record_search, args: { entity: doctor, query: '' }, bind: docs }
               rows:   '$docs.rows'
-              map:    { value: '$item.id', label: '$item.fields.name', description: '$item.fields.specialty', selection: { doctor_label: '$item.fields.name' } }
+              # No `selection:` — `doctor_id` is backfilled from `value` automatically, and
+              # `before_each` re-reads the doctor's name into $doctor_label every iteration,
+              # so shipping the name in the tap id too bought nothing.
+              map:    { value: '$item.id', label: '$item.fields.name', description: '$item.fields.specialty' }
               auto_resolve: true
-          # Slot picker — from the scheduling engine; selection stashes the human label.
-          # A doctor may work different branches on different days, so each slot carries
-          # its rule's branch on `meta` (branch_label for display, branch = the record id).
-          # The label + slot_label fold the branch in ("2026-07-18 — 10:00 — فرع المعادي")
-          # so it shows everywhere the slot does; `branch_id` becomes the booking's branch ref.
+          # Slot picker — from the scheduling engine. A doctor may work different branches on
+          # different days, so each slot carries its rule's branch on `meta` (branch_label for
+          # display, branch = the record id). The label folds the branch in
+          # ("2026-07-18 — 10:00 — فرع المعادي"); `slot_minutes` / `branch_id` / `slot_label`
+          # are re-read from the same row by `before_each` rather than ridden in the tap id,
+          # which is what kept that id under the 200-code-point cap.
           - field: slot_start
             label: '$t("book-appointment.label.slot")'
             options:
@@ -76,7 +102,7 @@ steps:
               cta:    book-appointment.field_cta.slot
               fetch:  { do: slot_list, args: { resource_record_id: '$state.doctor_id' }, bind: slots }
               rows:   '$slots'
-              map:    { value: '$item.slot_start', label: '$lines($compact([$item.local_date, $item.local_time, $item.meta.branch_label]), " — ")', selection: { slot_minutes: '$item.slot_minutes', slot_label: '$lines($compact([$item.local_date, $item.local_time, $item.meta.branch_label]), " — ")', branch_id: '$item.meta.branch' } }
+              map:    { value: '$item.slot_start', label: '$lines($compact([$item.local_date, $item.local_time, $item.meta.branch_label]), " — ")' }
           # Who the visit is for.
           - field: for_whom
             label: '$t("book-appointment.label.for_whom")'

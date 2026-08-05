@@ -10,6 +10,12 @@ description: |-
 # The `action` / case_* inputs are set by the ticket-card buttons — a direct-tap `invoke:` starts a
 # FRESH run per tap, so a button never points at a spent run (the resume:$self version went stale the
 # moment one action ended the shared run). Argument-less (no `action`) = list mode.
+#
+# A button binding carries IDENTIFIERS, not the card's own visible text. `case_id` NAMES the case,
+# so status/type/decision are all derivable from it — and the detail branch re-reads the case
+# anyway. Snapshotting them onto the button put the id at 225 code points, over the 200-code-point
+# list-row cap, three times over on a three-button card. See the platform KB, craft-flows
+# "Bind identifiers, not labels — a tap id has a hard ceiling".
 input:
   action:
     type: enum
@@ -18,9 +24,6 @@ input:
     describe: 'Set by a ticket-card button — the action to take on ONE ticket. Omit to LIST tickets.'
   case_id:         { type: string, optional: true, describe: 'The ticket to act on (card-button internal).' }
   case_number:     { type: number, optional: true, describe: 'The ticket display number (card-button internal).' }
-  case_status:     { type: string, optional: true, describe: 'Status snapshot for the detail card (card-button internal).' }
-  case_type:       { type: string, optional: true, describe: 'Type snapshot for the detail card (card-button internal).' }
-  decision_action: { type: string, optional: true, describe: "The team's last relayed decision, if any (card-button internal)." }
 
 entry:
   - if: '$input.action == "details"'
@@ -55,21 +58,38 @@ steps:
         item_template:
           body: "$lines([ '🎫 XP-' + $item.case_number, '📂 ' + $enum_label($item.type, 'cases', ''), '📌 ' + $enum_label($item.status, 'status', $item.status) ])"
           buttons:
-            - { title: '{$t("ticket-status.btn_details")}', on_select: { invoke: ticket-status, with: { action: details, case_id: '$item.id', case_number: '$item.case_number', case_status: '$item.status', case_type: '$item.type', decision_action: '$coalesce($item.decision_action, "")' } } }
+            - { title: '{$t("ticket-status.btn_details")}', on_select: { invoke: ticket-status, with: { action: details, case_id: '$item.id' } } }
             - { title: '{$t("ticket-status.btn_docs")}',    on_select: { invoke: ticket-status, with: { action: docs,  case_id: '$item.id', case_number: '$item.case_number' } } }
             - { title: '{$t("ticket-status.btn_reply")}',   on_select: { invoke: ticket-status, with: { action: reply, case_id: '$item.id', case_number: '$item.case_number' } } }
       memory_note: 'Listed {$length($cases)} after-sales ticket(s).'
     - end: applied                    # listing is terminal; each button starts its OWN fresh run
 
-  # ── 🔎 Latest status + the team's last relayed outcome (snapshot carried from the list row) ──
+  # ── 🔎 Latest status + the team's last relayed outcome ──
+  # Re-read rather than render a snapshot the button carried: "latest status" has to mean
+  # latest, and a card rendered minutes ago can name a status the team has since moved.
+  # `case_list` (not `case_get`) because its ok port is a specified array whose rows carry
+  # `decision_action` at top level — on `case_get` it would sit in the opaque `fields` bag —
+  # and it is already contact-scoped, same call the `load` step makes.
   detail:
+    - do: case_list
+      bind: cases
+      outputs:
+        ok:    [{ goto: detail_render }]
+        empty: [{ goto: none }]
+        # failed → throws → error-net
+
+  detail_render:
+    - assign:
+        c: '$filter($cases, { id: $state.case_id })[0]'
+    - if:   '$c == null'                # the ticket closed out from under the tap
+      goto: none
     - assign:
         # decision.* strings ARE the customer-facing relay copy (see locale.<lang>.yaml); null-safe.
-        update_line: '$coalesce($state.decision_action, "") != "" ? "📣 " + $enum_label($state.decision_action, "decision", $state.decision_action) : null'
+        update_line: '$coalesce($c.decision_action, "") != "" ? "📣 " + $enum_label($c.decision_action, "decision", $c.decision_action) : null'
     - render:
         render_intent: detail_card
-        body: "$lines([ '🎫 XP-' + $state.case_number, '📂 ' + $enum_label($state.case_type, 'cases', ''), '📌 ' + $enum_label($state.case_status, 'status', $state.case_status), $update_line ])"
-      memory_note: 'Showed XP-{$state.case_number} detail (status {$state.case_status}).'
+        body: "$lines([ '🎫 XP-' + $c.case_number, '📂 ' + $enum_label($c.type, 'cases', ''), '📌 ' + $enum_label($c.status, 'status', $c.status), $update_line ])"
+      memory_note: 'Showed XP-{$c.case_number} detail (status {$c.status}).'
     - end: applied
 
   # ── 📎 Add a document to an existing ticket (case_attach) ──

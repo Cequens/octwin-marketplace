@@ -11,20 +11,24 @@ description: |-
   a service, and a time slot, then confirms and reserves it. Call whenever the customer
   wants to book, reserve, or make a new appointment.
 
+# A tap binding carries IDENTIFIERS, never the label beside them: every `with:` key is
+# encoded into the tap id, and a list row's id is capped at 200 code points (Arabic counts
+# the same as English). This chain used to ferry branch_name/pro_name/service_name/
+# service_price/slot_label alongside the ids they are derivable from, which put the slot
+# picker at 257 — over the cap, so the platform parked it and shipped a `t:ref:` handle,
+# paying a lookup on every render AND every tap. `hydrate` re-reads the four rows once,
+# at the only point that needs their labels. See the platform KB, craft-flows
+# "Bind identifiers, not labels — a tap id has a hard ceiling".
 input:
   branch_code:   { type: string, optional: true, describe: 'Chosen branch code (also a preselect when coming from a branch card).' }
-  branch_name:   { type: string, optional: true, describe: 'Chosen branch display name.' }
   pro_id:        { type: string, optional: true, describe: 'Chosen barber record id.' }
-  pro_name:      { type: string, optional: true, describe: 'Chosen barber display name.' }
-  service_name:  { type: string, optional: true, describe: 'Chosen service name.' }
-  service_price: { type: number, optional: true, describe: 'Chosen service price (EGP).' }
+  service_id:    { type: string, optional: true, describe: 'Chosen service record id.' }
   slot_start:    { type: string, optional: true, describe: 'Chosen slot start (ISO).' }
-  slot_label:    { type: string, optional: true, describe: 'Chosen slot human label.' }
 
 entry:
   - if:   '$input.slot_start != null'
-    goto: confirm
-  - if:   '$input.service_name != null'
+    goto: hydrate
+  - if:   '$input.service_id != null'
     goto: load_slots
   - if:   '$input.pro_id != null'
     goto: load_services
@@ -53,12 +57,23 @@ steps:
         item_template:
           title:       '{$item.title}'
           description: '{$item.fields.phone}'
-          on_select:   { invoke: book, with: { branch_code: '$item.fields.code', branch_name: '$item.title' } }
+          on_select:   { invoke: book, with: { branch_code: '$item.fields.code' } }
       memory_note: 'Offered branches to book at.'
     - end: applied
 
   # 2) Barber (filtered to the chosen branch)
   load_pros:
+    # `book.pro_body` is the one picker body that interpolates a label, so the branch name is
+    # read here from its code rather than ferried through the tap. `code` is unique: true in
+    # xrm.yaml, hence the entity's dedupe_by — record_get's `match` reaches any declared field.
+    - do: record_get
+      args: { entity: branch, match: { field: code, value: '$input.branch_code' } }
+      bind: branch
+      outputs:
+        ok:        [{ goto: list_pros }]
+        not_found: [{ goto: list_pros }]
+        failed:    [{ goto: list_pros }]
+  list_pros:
     - do: record_list
       args:
         entity: professional
@@ -75,7 +90,7 @@ steps:
     - render:
         render_intent: list_picker
         header: '{$t("book.pro_header")}'
-        body:   '{$t("book.pro_body", { branch: $input.branch_name })}'
+        body:   '{$t("book.pro_body", { branch: $coalesce($branch.fields.name, $pros.rows[0].fields.branch_name, "") })}'
         cta:    '{$t("book.choose")}'
         items:  '$pros.rows'
         item_template:
@@ -85,9 +100,7 @@ steps:
             invoke: book
             with:
               branch_code: '$input.branch_code'
-              branch_name: '$input.branch_name'
               pro_id:      '$item.id'
-              pro_name:    '$item.title'
       memory_note: 'Offered barbers.'
     - end: applied
 
@@ -112,12 +125,9 @@ steps:
           on_select:
             invoke: book
             with:
-              branch_code:   '$input.branch_code'
-              branch_name:   '$input.branch_name'
-              pro_id:        '$input.pro_id'
-              pro_name:      '$input.pro_name'
-              service_name:  '$item.title'
-              service_price: '$item.fields.price'
+              branch_code: '$input.branch_code'
+              pro_id:      '$input.pro_id'
+              service_id:  '$item.id'
       memory_note: 'Offered services.'
     - end: applied
 
@@ -142,16 +152,74 @@ steps:
           on_select:
             invoke: book
             with:
-              branch_code:   '$input.branch_code'
-              branch_name:   '$input.branch_name'
-              pro_id:        '$input.pro_id'
-              pro_name:      '$input.pro_name'
-              service_name:  '$input.service_name'
-              service_price: '$input.service_price'
-              slot_start:    '$item.slot_start'
-              slot_label:    '$item.local_date + " · " + $item.local_time'
+              branch_code: '$input.branch_code'
+              pro_id:      '$input.pro_id'
+              service_id:  '$input.service_id'
+              slot_start:  '$item.slot_start'
       memory_note: 'Offered time slots.'
     - end: applied
+
+  # 4b) Hydrate — the four labels the tap chain no longer carries, re-read once here from
+  # the ids it does carry. Everything downstream (confirm preview, do_book fields, the
+  # done card, the reminder) reads them off $state exactly as before, so this is the only
+  # place that changed. `do_book` re-read these same rows anyway — now it is done once,
+  # not ferried through every tap in the chain.
+  # Every port routes on to the next rung, including the failure ones: a missing label
+  # degrades the preview copy, it must never strand a customer who has already chosen
+  # all four things. (Unlike a collect hook, a normal step's port body has to terminate,
+  # so this is a chain of steps rather than one step with empty ports.)
+  hydrate:
+    # The barber row carries the branch name denormalised (xrm.yaml), so one read covers both.
+    - do: record_get
+      args: { entity: professional, record_id: '$state.pro_id' }
+      bind: pro
+      outputs:
+        ok:
+          - assign: { state: '$merge($state, { pro_name: $pro.fields.name, branch_name: $pro.fields.branch_name })' }
+          - goto: hydrate_branch
+        not_found: [{ goto: hydrate_branch }]
+        failed:    [{ goto: hydrate_branch }]
+
+  # Fall back to the branch row only when the denormalised copy is missing or stale.
+  hydrate_branch:
+    - if:   '$state.branch_name != null || $state.branch_code == null'
+      goto: hydrate_service
+    - do: record_get
+      args: { entity: branch, match: { field: code, value: '$state.branch_code' } }
+      bind: br
+      outputs:
+        ok:
+          - assign: { state: '$merge($state, { branch_name: $br.fields.name })' }
+          - goto: hydrate_service
+        not_found: [{ goto: hydrate_service }]
+        failed:    [{ goto: hydrate_service }]
+
+  hydrate_service:
+    - do: record_get
+      args: { entity: service, record_id: '$state.service_id' }
+      bind: svc
+      outputs:
+        ok:
+          - assign: { state: '$merge($state, { service_name: $svc.fields.name, service_price: $svc.fields.price })' }
+          - goto: hydrate_slot
+        not_found: [{ goto: hydrate_slot }]
+        failed:    [{ goto: hydrate_slot }]
+
+  # The slot's human label — recomposed from the same row the picker rendered, matching
+  # `pick_slot`'s title. Re-reading also re-checks the slot is still free before we preview it.
+  hydrate_slot:
+    - do: slot_list
+      args: { resource_record_id: '$state.pro_id', days: 7 }
+      bind: fresh_slots
+      outputs:
+        ok:
+          - assign: { hit: '$filter($fresh_slots, { slot_start: $state.slot_start })[0]' }
+          - if: '$hit != null'
+            then:
+              - assign: { state: '$merge($state, { slot_label: $hit.local_date + " · " + $hit.local_time })' }
+          - goto: confirm
+        empty:  [{ goto: confirm }]
+        failed: [{ goto: confirm }]
 
   # 5) Confirm (the only suspend — approve_apply renders a card, pauses, resumes)
   confirm:

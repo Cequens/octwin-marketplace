@@ -32,7 +32,7 @@ steps:
         item_template:
           title:       '{$item.title}'
           description: '{$t("branches.tap_to_book")}'
-          on_select:   { invoke: book, with: { branch_code: '$item.fields.code', branch_name: '$item.title' } }
+          on_select:   { invoke: book, with: { branch_code: '$item.fields.code' } }
       memory_note: 'Listed branches ({$page.total}).'
     - end: applied
   none:

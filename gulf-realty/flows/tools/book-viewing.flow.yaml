@@ -55,6 +55,28 @@ steps:
               - if: '$dv.fields != null'
                 then:
                   - assign: { dev_label: '$dv.fields.name' }
+          # Re-derive what the slot row used to ferry in its tap id. A picker row's id is
+          # capped at 200 code points, and `slot_label` was the `label:` expression
+          # re-evaluated into it — the one string the row is already displaying. Carry the
+          # id (slot_start, backfilled by the engine) and re-read the label here instead.
+          # See the platform KB, craft-flows "Bind identifiers, not labels". Guarded on
+          # slot_label so this costs ONE slot_list for the whole run, and `$merge($state, …)`
+          # carries it through the approve_apply suspend into commit / the lead note /
+          # the reminders / the success card.
+          - if: '$state.slot_start != null && $state.slot_label == null'
+            then:
+              - do: slot_list
+                args: { resource_record_id: '$state.advisor_id' }
+                bind: chosen
+                outputs:
+                  ok:
+                    - assign: { hit: '$filter($chosen, { slot_start: $state.slot_start })[0]' }
+                    - if: '$hit != null'
+                      then:
+                        - assign:
+                            state: '$merge($state, { slot_minutes: $hit.slot_minutes, slot_label: $lines($compact([$hit.local_date, $hit.local_time]), " — ") })'
+                  empty:  []
+                  failed: []
         progress: '$lines($compact([
                      $t("book-viewing.progress.header"),
                      $dev_label != null ? $t("book-viewing.progress.project", { project: $dev_label }) : null,
@@ -71,11 +93,12 @@ steps:
               cta:    book-viewing.field_cta.project
               fetch:  { do: record_list, args: { entity: development, all: true, limit: 20 }, bind: devs }
               rows:   '$devs.rows'
+              # No `selection:` — `development_id` is backfilled from `value`, and `before_each`
+              # re-reads the name into $dev_label every iteration.
               map:
                 value:       '$item.id'
                 label:       '$item.fields.name'
                 description: '$item.fields.area'
-                selection:   { dev_label: '$item.fields.name' }
               auto_resolve: true
           - field: advisor_id
             when: '$state.advisor_id == null'
@@ -85,14 +108,16 @@ steps:
               cta:    book-viewing.field_cta.advisor
               fetch:  { do: record_search, args: { entity: advisor, query: '' }, bind: advisors }
               rows:   '$advisors.rows'
+              # Likewise — $advisor_label is re-read by before_each, never off the tap id.
               map:
                 value:       '$item.id'
                 label:       '$item.fields.name'
                 description: '$item.fields.title'
-                selection:   { advisor_label: '$item.fields.name' }
               auto_resolve: true
           # Slots come straight from the scheduling engine — structured rows only,
-          # the label is composed here (no locale strings in the engine).
+          # the label is composed here (no locale strings in the engine). `slot_minutes`
+          # and `slot_label` are re-read from the same row by `before_each` rather than
+          # ridden in the tap id, which is what keeps that id under the 200-code-point cap.
           - field: slot_start
             label: '$t("book-viewing.label.slot")'
             options:
@@ -103,9 +128,6 @@ steps:
               map:
                 value: '$item.slot_start'
                 label: '$lines($compact([$item.local_date, $item.local_time]), " — ")'
-                selection:
-                  slot_minutes: '$item.slot_minutes'
-                  slot_label:   '$lines($compact([$item.local_date, $item.local_time]), " — ")'
           - field: party_size
             label: '$t("book-viewing.label.party")'
             options:

@@ -1,6 +1,6 @@
 # manifest.yaml — Hesham Rabea barbershop bot (info + appointment booking).
 id:          heshamrabea
-version:     '1.3.0'
+version:     '2.0.0'
 description: 'Hesham Rabea barbershops: services & prices, branches, and appointment booking with a chosen barber per branch.'
 
 listing:
