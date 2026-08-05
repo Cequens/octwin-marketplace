@@ -6,6 +6,28 @@
 #
 # NOTE: requirements / fees / timing below are indicative and may change — the
 # authoritative source is the live service page on https://digital.gov.eg/.
+#
+# `url:` — DEEP LINKS, verified 2026-08-05.
+# The portal is a Next.js SPA; its service pages live at
+# `/categories/terms/<الاسم-بالشرطات>` (percent-encoded). Ten of the eighteen
+# services below now point at their real page — each one harvested from the
+# portal's OWN anchors under /categories and then confirmed to render its
+# «وصف الخدمة» section. Do NOT hand-construct one of these URLs from a service
+# name: an unknown slug returns HTTP 200 with a generic search page, never a
+# 404, so a typo is indistinguishable from a working link.
+#
+# The remaining eight still point at the portal root, deliberately:
+#   • no such service on the portal — family_record, driving_license_renew
+#     (رخصى offers بدل تالف/فاقد only; there is NO licence renewal)
+#   • «تأتيكم قريبا» on the portal, no link yet — realestate_tax_pay,
+#     supply_add_newborn
+#   • one record here spans SEVERAL portal services, so no single URL is right —
+#     traffic_fines (4 pages: مركبة/رخصة × استعلام/سداد), id_card (بدل تالف and
+#     بدل فاقد are separate, and تجديد does not exist), power_of_attorney
+#     (~14 توكيل variants under التوثيق)
+#   • health_insurance — portal has تسجيل أسرة + منصة تواصل, no pure استعلام
+# Splitting the conflated records and reconciling the four phantoms is tracked
+# separately; until then the root link is the honest answer.
 
 entities:
   service:
@@ -68,7 +90,7 @@ demo:
       fees:            'حوالي 65 جنيه شاملة التوصيل'
       processing_time: 'من 2 إلى 5 أيام عمل'
       channel:         'إلكتروني مع التوصيل للمنزل'
-      url:             'https://digital.gov.eg/'
+      url:             'https://digital.gov.eg/categories/terms/%D8%B4%D9%87%D8%A7%D8%AF%D8%A9-%D8%A7%D9%84%D9%85%D9%8A%D9%84%D8%A7%D8%AF'
       keywords:        'شهادة ميلاد مواليد كمبيوتر مميكنة'
       popular:         true
   - entity: service
@@ -82,7 +104,7 @@ demo:
       fees:            'حوالي 65 جنيه شاملة التوصيل'
       processing_time: 'من 2 إلى 5 أيام عمل'
       channel:         'إلكتروني مع التوصيل للمنزل'
-      url:             'https://digital.gov.eg/'
+      url:             'https://digital.gov.eg/categories/terms/%D8%A7%D8%B5%D8%AF%D8%A7%D8%B1-%D8%B4%D9%87%D8%A7%D8%AF%D8%A9-%D9%88%D9%81%D8%A7%D8%A9-%D9%85%D9%85%D9%8A%D9%83%D9%86%D8%A9-%D9%85%D8%B7%D8%A8%D9%88%D8%B9%D8%A9-%D9%85%D8%B3%D8%A8%D9%82%D8%A7'
       keywords:        'شهادة وفاة متوفى'
       popular:         false
   - entity: service
@@ -126,7 +148,7 @@ demo:
       fees:            'تُحسب حسب سعة المحرك والتأمين أثناء الطلب + رسوم توصيل'
       processing_time: 'من 5 إلى 10 أيام عمل'
       channel:         'إلكتروني مع التوصيل للمنزل'
-      url:             'https://digital.gov.eg/'
+      url:             'https://digital.gov.eg/categories/terms/%D8%AA%D8%AC%D8%AF%D9%8A%D8%AF-%D8%B1%D8%AE%D8%B5%D8%A9-%D9%85%D8%B1%D9%83%D8%A8%D8%A9'
       keywords:        'رخصة مركبة سيارة تسيير تجديد'
       popular:         true
   - entity: service
@@ -170,7 +192,7 @@ demo:
       fees:            'تُحدد حسب نوع البيان أثناء الطلب'
       processing_time: 'من 7 إلى 15 يوم عمل'
       channel:         'طلب إلكتروني'
-      url:             'https://digital.gov.eg/'
+      url:             'https://digital.gov.eg/categories/terms/%D8%A7%D8%B3%D8%AA%D8%AE%D8%B1%D8%A7%D8%AC-%D8%B4%D9%87%D8%A7%D8%AF%D8%A9-%D8%AA%D8%B5%D8%B1%D9%81%D8%A7%D8%AA-%D8%B9%D9%82%D8%A7%D8%B1%D9%8A%D8%A9'
       keywords:        'شهادة عقارية بيان عقاري تصرفات مشهر'
       popular:         false
 
@@ -200,7 +222,7 @@ demo:
       fees:            'رسوم رمزية تُحدد أثناء الطلب'
       processing_time: 'من 5 إلى 10 أيام عمل'
       channel:         'إلكتروني'
-      url:             'https://digital.gov.eg/'
+      url:             'https://digital.gov.eg/categories/terms/%D8%A5%D8%B5%D8%AF%D8%A7%D8%B1-%D8%A8%D8%AF%D9%84-%D8%AA%D8%A7%D9%84%D9%81-%D8%A3%D9%88-%D9%81%D8%A7%D9%82%D8%AF-%D9%84%D8%A8%D8%B7%D8%A7%D9%82%D8%A9-%D8%AA%D9%85%D9%88%D9%8A%D9%86'
       keywords:        'تموين بدل فاقد تالف بطاقة'
       popular:         false
   - entity: service
@@ -214,7 +236,7 @@ demo:
       fees:            'مجاني'
       processing_time: 'من 3 إلى 7 أيام عمل'
       channel:         'إلكتروني'
-      url:             'https://digital.gov.eg/'
+      url:             'https://digital.gov.eg/categories/terms/%D8%A7%D8%B3%D8%AA%D9%85%D8%A7%D8%B1%D8%A9-%D8%AA%D8%AD%D8%AF%D9%8A%D8%AB-%D8%A8%D9%8A%D8%A7%D9%86%D8%A7%D8%AA-%D8%A7%D9%84%D9%85%D9%88%D8%A7%D8%B7%D9%86'
       keywords:        'تموين تحديث بيانات موبايل عنوان'
       popular:         false
 
@@ -230,7 +252,7 @@ demo:
       fees:            'رسوم الخدمة + التوصيل (تُحسب أثناء الطلب)'
       processing_time: 'من 3 إلى 7 أيام عمل'
       channel:         'إلكتروني مع التوصيل للمنزل'
-      url:             'https://digital.gov.eg/'
+      url:             'https://digital.gov.eg/categories/terms/%D8%A5%D8%B5%D8%AF%D8%A7%D8%B1-%D8%B5%D8%AD%D9%8A%D9%81%D8%A9-%D8%AD%D8%A7%D9%84%D8%A9-%D8%AC%D9%86%D8%A7%D8%A6%D9%8A%D8%A9-%D9%85%D9%85%D9%8A%D9%83%D9%86%D8%A9'
       keywords:        'فيش وتشبيه صحيفة حالة جنائية سجل جنائي'
       popular:         true
   - entity: service
@@ -244,7 +266,7 @@ demo:
       fees:            'مجاني'
       processing_time: 'فوري'
       channel:         'استعلام إلكتروني'
-      url:             'https://digital.gov.eg/'
+      url:             'https://digital.gov.eg/categories/terms/%D8%A7%D8%B3%D8%AA%D8%B9%D9%84%D8%A7%D9%85-%D8%B9%D9%86-%D8%A8%D9%8A%D8%A7%D9%86%D8%A7%D8%AA-%D8%A7%D9%84%D8%AF%D8%B9%D9%88%D9%8A'
       keywords:        'قضايا محاكم جلسات استعلام عدل'
       popular:         false
 
@@ -260,7 +282,7 @@ demo:
       fees:            'تُحدد أثناء الطلب + رسوم توصيل'
       processing_time: 'من 3 إلى 7 أيام عمل'
       channel:         'إلكتروني مع التوصيل'
-      url:             'https://digital.gov.eg/'
+      url:             'https://digital.gov.eg/categories/terms/%D8%B7%D9%84%D8%A8-%D9%85%D8%B3%D8%AA%D8%AE%D8%B1%D8%AC-%D8%B3%D8%AC%D9%84-%D8%AA%D8%AC%D8%A7%D8%B1%D9%8A'
       keywords:        'سجل تجاري مستخرج شركة منشأة'
       popular:         false
   - entity: service
@@ -274,7 +296,7 @@ demo:
       fees:            'تُحدد أثناء الطلب'
       processing_time: 'من 3 إلى 7 أيام عمل'
       channel:         'إلكتروني'
-      url:             'https://digital.gov.eg/'
+      url:             'https://digital.gov.eg/categories/terms/%D8%B7%D9%84%D8%A8-%D8%AA%D8%AC%D8%AF%D9%8A%D8%AF-%D8%B3%D8%AC%D9%84-%D8%AA%D8%AC%D8%A7%D8%B1%D9%8A'
       keywords:        'سجل تجاري تجديد قيد'
       popular:         false
 

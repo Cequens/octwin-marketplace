@@ -1,0 +1,5 @@
+- generic [active] [ref=f5e1]:
+  - alert [ref=f5e2]
+  - img "logoDark" [ref=f5e5]
+  - region "Notifications Alt+T"
+  - button [ref=f5e9] [cursor=pointer]
