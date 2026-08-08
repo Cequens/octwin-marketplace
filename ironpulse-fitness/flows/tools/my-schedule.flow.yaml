@@ -26,8 +26,11 @@ entry:
 
 steps:
   load:
+    # `active_only: false` deliberately — this is a history view, and a terminal-stage
+    # booking is exactly what a member scrolls back for. Sorted by the class time, not
+    # the booking time, so the list reads the way the week does.
     - do: record_list
-      args: { entity: booking, limit: 10, active_only: false, sort: created_at }
+      args: { entity: booking, limit: 10, active_only: false, sort_by: { field: slot_start, dir: asc } }
       bind: page
       outputs:
         ok:     [{ goto: show }]
@@ -43,24 +46,74 @@ steps:
         items:  '$page.rows'
         item_template:
           title:       '{$t("my-schedule.row_title", { ref: $item.record_number })}'
+          # The stage label is what tells a member that row is already behind them —
+          # the list carries past bookings, so it must never read as "all cancellable".
           description: '$lines($compact([
                           $item.fields.class_label,
                           $item.fields.slot_label,
                           $enum_label($item.stage, "status", $item.stage)
                         ]), " · ")'
           on_select:   { invoke: my-schedule, with: { action: cancel, booking_id: '$item.id' } }
-      memory_note: 'Showed {$length($page.rows)} booked class(es). Tapping a row CANCELS it — confirm in words first if the member seems unsure.'
+      memory_note: 'Showed {$length($page.rows)} booked class(es), past ones included. A tap opens the cancel confirmation — only a live booking can actually be cancelled.'
     - end: applied
 
+  # ── Cancel — read the booking, refuse a terminal one, confirm, then release ──
+  # Every row in the list above is tappable, including a `ملغى` or `completed` one.
+  # Without this read the flow called booking_cancel on whatever was tapped and printed
+  # "✅ تم إلغاء الحجز" over a booking that was cancelled minutes earlier.
   do_cancel:
-    - do: booking_cancel
-      args: { record_id: '$input.booking_id' }
+    - do: record_get
+      args: { entity: booking, record_id: '$state.booking_id' }
+      bind: bk
       outputs:
-        ok:              [{ goto: cancelled }]
+        ok:        []
+        not_found: [{ goto: not_found }]
+        failed:    [{ goto: unavailable }]
+    - if: '$in($bk.stage, ["cancelled", "completed", "no_show"])'
+      then:
+        - goto: already_done
+      else:
+        - goto: confirm_cancel
+
+  confirm_cancel:
+    # Cancelling frees the seat to someone else and cannot be undone from chat, so it
+    # sits behind the same approve card as the booking itself.
+    - use: approve_apply
+      with:
+        preview: '$lines($compact([
+                    $t("my-schedule.cancel_confirm.body"),
+                    $t("my-schedule.detail.class", { class: $coalesce($bk.fields.class_label, "-") }),
+                    $t("my-schedule.detail.slot",  { slot:  $coalesce($bk.fields.slot_label, "-") })
+                  ]), "\n")'
+        header:        '{$t("my-schedule.cancel_confirm.header")}'
+        confirm_title: '{$t("my-schedule.cancel_confirm.yes")}'
+        cancel_title:  '{$t("my-schedule.cancel_confirm.keep")}'
+        apply:         apply_cancel
+        abort_render:  { render_intent: text_card, body: '{$t("my-schedule.cancel_kept")}' }
+        # Neither approve nor decline (a typed reply, an agent resume, a stale tap)
+        # → re-enter THIS step: re-render and pause on a fresh token.
+        on_other:      confirm_cancel
+        memory_note:   'Booking NOT cancelled yet — awaiting the member''s ✅.'
+
+  apply_cancel:
+    # `$input` is this turn's delta and does not survive the suspend above — read the
+    # id off `$state`, where the turn-merge folded it (platform KB, dsl.md `$input.*`).
+    - do: booking_cancel
+      args: { record_id: '$state.booking_id' }
+      outputs:
+        ok:              [{ goto: cancel_done }]
         not_cancellable: [{ goto: too_late }]
         failed:          [{ goto: unavailable }]
 
-  cancelled:
+  cancel_done:
+    # Revoke both pending reminders, or the member is reminded about a class they
+    # cancelled. The keys are the ones book-class armed, suffix and all.
+    - do: cancel_scheduled
+      args: { dedupe_key: 'ironpulse:class:{$state.booking_id}:t24' }
+      detach: true
+    - do: cancel_scheduled
+      args: { dedupe_key: 'ironpulse:class:{$state.booking_id}:t2' }
+      detach: true
     - render:
         render_intent: detail_card
         header: '{$t("my-schedule.cancel_header")}'
@@ -68,12 +121,33 @@ steps:
         buttons:
           - { title: '{$t("my-schedule.btn_book")}', on_select: { invoke: book-class } }
           - { title: '{$t("my-schedule.btn_mine")}', on_select: { invoke: my-schedule } }
-      memory_note: 'Cancelled booking {$input.booking_id} — the seat is back in the pool.'
+      memory_note: 'Cancelled booking {$state.booking_id} — the seat is back in the pool and both reminders are revoked.'
+    - end: applied
+
+  already_done:
+    - render:
+        render_intent: detail_card
+        header: '{$t("my-schedule.already_header")}'
+        body:   '$lines($compact([
+                   $t("my-schedule.already_body", { status: $enum_label($bk.stage, "status", $bk.stage) }),
+                   $t("my-schedule.detail.class", { class: $coalesce($bk.fields.class_label, "-") }),
+                   $t("my-schedule.detail.slot",  { slot:  $coalesce($bk.fields.slot_label, "-") })
+                 ]), "\n")'
+        buttons:
+          - { title: '{$t("my-schedule.btn_book")}', on_select: { invoke: book-class } }
+          - { title: '{$t("my-schedule.btn_mine")}', on_select: { invoke: my-schedule } }
+      memory_note: 'Booking {$state.booking_id} is already {$bk.stage} — nothing to cancel.'
+    - end: applied
+
+  not_found:
+    - render:
+        render_intent: text_card
+        body: '{$t("my-schedule.not_found")}'
     - end: applied
 
   too_late:
     - answer:
-        instructions: 'That class can no longer be cancelled from chat (it is too close or already done). Say so in one line and suggest speaking to the front desk.'
+        instructions: 'That class can no longer be cancelled from chat (it is too close to starting). Say so in one line and suggest speaking to the front desk. Do NOT claim it was cancelled.'
 
   none:
     - answer:

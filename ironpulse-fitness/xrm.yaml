@@ -16,11 +16,19 @@ entities:
     fields:
       code:        { type: text, required: true, label: { en: 'Code', ar: 'الرمز' } }
       name:        { type: text, required: true, label: { en: 'Name', ar: 'الاسم' } }
-      discipline:  { type: select, options: [spin, hiit, yoga, boxing, strength, pilates], label: { en: 'Discipline', ar: 'النوع' } }
+      # Keep this list in step with `trainer.specialty` — the trainer picker filters
+      # `specialty eq <the class's discipline>`, so a discipline with no coach is a
+      # class no member can book. `pilates` was here with neither class nor coach.
+      discipline:  { type: select, options: [spin, hiit, yoga, boxing, strength], label: { en: 'Discipline', ar: 'النوع' } }
       description: { type: textarea, label: { en: 'Description', ar: 'الوصف' } }
       intensity:   { type: select, options: [beginner, intermediate, advanced], label: { en: 'Intensity', ar: 'المستوى' } }
       duration_min: { type: number, label: { en: 'Duration (min)', ar: 'المدة (دقيقة)' } }
-      seats:       { type: number, label: { en: 'Seats', ar: 'عدد المقاعد' }, default: 12, sortable: true, description: { en: 'Capacity per session. The scheduling engine stops booking once this many seats are taken.', ar: 'سعة الحصة. يتوقف محرك الحجز عند اكتمال هذا العدد.' } }
+      # ADVERTISED room size — what the timetable card prints. The number the engine
+      # actually enforces is the `capacity:` on the matching trainer's availability
+      # rules in scheduling.yaml. Nothing reconciles the two, so they must be kept
+      # equal by hand: change one, change the other, or the card promises seats the
+      # slot ledger will not sell.
+      seats:       { type: number, label: { en: 'Seats', ar: 'عدد المقاعد' }, default: 12, sortable: true, description: { en: 'Advertised capacity per session. Must match the capacity on this discipline''s availability rules in scheduling.yaml — the engine enforces that one.', ar: 'السعة المعلنة للحصة. يجب أن تطابق السعة في قواعد التوفر لهذا التخصص في scheduling.yaml — وهي التي يطبّقها المحرك.' } }
       photo:       { type: image, label: { en: 'Photo', ar: 'الصورة' } }
       popularity:  { type: number, label: { en: 'Popularity', ar: 'الأكثر حضوراً' }, default: 0, description: { en: 'Manual ordering weight for the class list — higher shows earlier.', ar: 'وزن ترتيب يدوي لقائمة الحصص — الأعلى يظهر أولاً.' } }
     list: [discipline, intensity, seats]
@@ -33,7 +41,7 @@ entities:
     description: { en: 'A coach members book sessions with', ar: 'مدرب يحجز معه الأعضاء حصصهم' }
     fields:
       name:       { type: text, required: true, label: { en: 'Name', ar: 'الاسم' } }
-      specialty:  { type: select, options: [spin, hiit, yoga, boxing, strength, pilates], label: { en: 'Specialty', ar: 'التخصص' } }
+      specialty:  { type: select, options: [spin, hiit, yoga, boxing, strength], label: { en: 'Specialty', ar: 'التخصص' } }
       bio:        { type: textarea, label: { en: 'Bio', ar: 'نبذة' } }
       languages:  { type: text, label: { en: 'Languages', ar: 'اللغات' } }
       photo:      { type: image, label: { en: 'Photo', ar: 'الصورة' } }
@@ -135,6 +143,11 @@ demo:
     fields: { name: 'كوتش ياسر', specialty: hiit, bio: 'مدرب لياقة وظيفية وهيت، متخصص في فقدان الوزن.', languages: 'العربية، الإنجليزية', timezone: 'Asia/Dubai', rating: 4.7, photo: 'generate:Professional portrait of an athletic male functional-fitness coach with a stopwatch, gritty industrial gym blurred behind, confident expression.' }
   - entity: trainer
     fields: { name: 'كوتش دانا', specialty: strength, bio: 'مدربة قوة ورفع أثقال، تعمل على تصحيح الأداء.', languages: 'العربية، الإنجليزية', timezone: 'Asia/Dubai', rating: 4.6, photo: 'generate:Professional portrait of a strong female strength coach in gym wear beside a squat rack, modern gym blurred behind, determined expression.' }
+  # Every discipline in the class catalogue needs a coach, or the trainer picker on
+  # that class comes back empty and the class cannot be booked at all. BOX50 shipped
+  # without one.
+  - entity: trainer
+    fields: { name: 'كوتش خالد', specialty: boxing, bio: 'مدرب ملاكمة سابق في المنتخب، يركّز على أساسيات اللكم واللياقة.', languages: 'العربية، الإنجليزية', timezone: 'Asia/Dubai', rating: 4.8, photo: 'generate:Professional portrait of a male boxing coach with hand wraps and focus mitts, heavy bags blurred behind in a warm-lit boxing gym, confident expression.' }
 
   - entity: plan
     fields: { code: 'M1', name: 'شهر واحد', months: 1, price: 450, includes: 'دخول غير محدود للنادي · حصتان جماعيتان أسبوعياً · تقييم لياقة مبدئي.', classes_included: true }

@@ -11,6 +11,9 @@ strings:
   status.checked_in: 'حاضر'
   status.completed:  'تمت'
   status.cancelled:  'ملغى'
+  # The system pipeline has this stage even though no flow moves a booking to it —
+  # without the key an operator-side reschedule renders the raw `rescheduled` token.
+  status.rescheduled: 'أُعيد جدولته'
   status.no_show:    'لم يحضر'
 
   stage.enquiry:        'استفسار'

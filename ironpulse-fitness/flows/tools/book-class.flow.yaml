@@ -22,16 +22,55 @@ input:
     type:     boolean
     optional: true
     describe: 'True when this is a free trial session for a prospective member.'
+  plan_id:
+    type:     string
+    optional: true
+    describe: 'Plan record id from a membership plan row — the plan that prompted this trial. Never a typed name.'
 
 entry:
+  # A class tapped on the timetable arrives with its id, and the trainer picker below
+  # filters `specialty eq <that class's discipline>`. If the club has no coach for that
+  # discipline the picker has nothing to offer and the member is stuck at a field the
+  # agent cannot fill in words (a typed coach name is not an id — platform KB,
+  # craft-flows "Decide what an EMPTY picker means"). Check first, say so plainly.
+  - if:   '$input.class_id != null'
+    goto: check_coach
   - else: true
     goto: collect_fields
 
 steps:
+  check_coach:
+    - do: record_get
+      args: { entity: session_type, record_id: '$state.class_id' }
+      bind: cls0
+      outputs:
+        ok:        []
+        # A dead id — let the class picker re-ask rather than dead-ending here.
+        not_found: [{ goto: collect_fields }]
+        failed:    [{ goto: collect_fields }]
+    - do: record_search
+      args: { entity: trainer, query: '', limit: 1, where: { all: [{ field: specialty, op: eq, value: '$cls0.fields.discipline' }] } }
+      bind: coaches
+      outputs:
+        ok:     [{ goto: collect_fields }]
+        empty:  [{ goto: no_coach }]
+        # Never block a booking on a failed lookup — the picker gets the same chance.
+        failed: [{ goto: collect_fields }]
+
+  no_coach:
+    - render:
+        render_intent: detail_card
+        header: '{$t("book-class.no_coach_header")}'
+        body:   '{$t("book-class.no_coach_body", { class: $coalesce($cls0.fields.name, "-") })}'
+        buttons:
+          - { title: '{$t("book-class.btn_classes")}', on_select: { invoke: classes } }
+      memory_note: 'No coach teaches {$coalesce($cls0.fields.name, "-")} — offered the rest of the timetable.'
+    - end: aborted
+
   collect_fields:
     - collect:
         before_each:
-          - assign: { class_label: null, class_discipline: null, trainer_label: null }
+          - assign: { class_label: null, class_discipline: null, trainer_label: null, plan_label: null }
           - if: '$state.class_id != null'
             then:
               - do: record_get
@@ -59,6 +98,21 @@ steps:
               - if: '$tr.fields != null'
                 then:
                   - assign: { trainer_label: '$tr.fields.name' }
+          # The plan row ships its id only — a tap id carries identifiers, not display
+          # strings (BACKLOG.md, the 200-code-point list-row cap). Re-read the name so
+          # the preview can name the plan and `after_booking` can file it on the lead.
+          - if: '$state.plan_id != null'
+            then:
+              - do: record_get
+                args: { entity: plan, record_id: '$state.plan_id' }
+                bind: pl
+                outputs:
+                  ok:        []
+                  not_found: [{ assign: { state: '$merge($state, { plan_id: null })' } }]
+                  failed:    []
+              - if: '$pl.fields != null'
+                then:
+                  - assign: { plan_label: '$pl.fields.name' }
         progress: '$lines($compact([
                      $t("book-class.progress.header"),
                      $class_label != null ? $t("book-class.progress.class", { class: $class_label }) : null,
@@ -78,7 +132,7 @@ steps:
               map:
                 value:       '$item.id'
                 label:       '$item.fields.name'
-                description: '$item.fields.duration_min'
+                description: '$t("book-class.duration", { mins: $item.fields.duration_min })'
                 selection:   { class_label: '$item.fields.name', class_discipline: '$item.fields.discipline' }
               auto_resolve: true
           # Only trainers who teach this discipline are offered — a yoga instructor
@@ -125,7 +179,8 @@ steps:
                     $t("book-class.preview.trainer", { trainer: $coalesce($trainer_label, "-") }),
                     $t("book-class.preview.slot", { slot: $coalesce($state.slot_label, "-") }),
                     $state.remaining != null ? $t("book-class.preview.remaining", { remaining: $state.remaining }) : null,
-                    $state.is_trial == true ? $t("book-class.preview.trial") : null
+                    $state.is_trial == true ? $t("book-class.preview.trial") : null,
+                    $plan_label != null ? $t("book-class.preview.plan", { plan: $plan_label }) : null
                   ]), "\n")'
         header:        '{$t("book-class.approve_header")}'
         footer:        '{$t("book-class.approve_footer")}'
@@ -133,7 +188,15 @@ steps:
         cancel_title:  '{$t("book-class.cancel_title")}'
         apply:         commit
         abort:         aborted
-        on_other:      collect_fields
+        # Neither approve nor decline (a typed reply, an agent resume, a stale tap)
+        # → re-enter THIS step: re-render the card and pause on a FRESH token.
+        # It used to point at `collect_fields`, which looks like it lets the member
+        # amend a field mid-preview but cannot: every field is guarded
+        # `when: $state.x == null` and by now the bag is full, so collect completes
+        # asking nothing, `goto: confirm` re-renders, and the card the member is
+        # looking at is orphaned. Tap again → "انتهت صلاحيته", forever. Same shape as
+        # `heshamrabea/flows/tools/book.flow.yaml` and `clinic`'s confirm_cancel.
+        on_other:      confirm
         memory_note:   'Seat NOT reserved yet — awaiting the member''s ✅.'
 
   commit:
@@ -166,6 +229,8 @@ steps:
             entity: member_lead
             stage:  trial_booked
             fields:
+              plan:       '$state.plan_id'
+              plan_label: '$plan_label'
               notes: '$t("book-class.trial_note", { class: $coalesce($class_label, "-"), slot: $coalesce($state.slot_label, "-") })'
           bind: lead
           outputs:
@@ -175,14 +240,36 @@ steps:
     - goto: remind
 
   remind:
+    # T-24h and T-2h. The offsets are declared in scheduling.yaml; the absolute
+    # send_at comes back from the reservation, and dedupe_key makes a re-run safe.
+    # Each block is guarded on ITS OWN index — the old single block tested
+    # `> 0` and then read `[1]`, so a one-reminder resource passed the guard and
+    # passed a null send_at, and t24 was never armed at all.
+    #
+    # `my-schedule`'s cancel_done revokes these two keys verbatim — the suffix comes
+    # from the declaration (`t24`, `t2`), so both sides must move together.
     - if: '$length($coalesce($seat.reminders, [])) > 0'
       then:
         - do: schedule_notify
           args:
             to:          { contact_id: '$contact.id' }
+            send_at:     '$seat.reminders[0].send_at'
+            dedupe_key:  'ironpulse:class:{$seat.record_id}:{$seat.reminders[0].key}'
+            memory_note: 'Class reminder ({$seat.reminders[0].key})'
+            intent:
+              render_intent: detail_card
+              body: '{$t("book-class.reminder.body", { class: $coalesce($class_label, ""), slot: $coalesce($state.slot_label, "") })}'
+              buttons:
+                - { title: '{$t("book-class.reminder.mine")}', on_select: { invoke: my-schedule } }
+          detach: true
+    - if: '$length($coalesce($seat.reminders, [])) > 1'
+      then:
+        - do: schedule_notify
+          args:
+            to:          { contact_id: '$contact.id' }
             send_at:     '$seat.reminders[1].send_at'
-            dedupe_key:  'ironpulse:class:{$seat.record_id}:t2'
-            memory_note: 'Class reminder (t2)'
+            dedupe_key:  'ironpulse:class:{$seat.record_id}:{$seat.reminders[1].key}'
+            memory_note: 'Class reminder ({$seat.reminders[1].key})'
             intent:
               render_intent: detail_card
               body: '{$t("book-class.reminder.body", { class: $coalesce($class_label, ""), slot: $coalesce($state.slot_label, "") })}'

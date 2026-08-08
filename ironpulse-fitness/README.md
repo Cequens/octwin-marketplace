@@ -23,9 +23,9 @@ Verify it from the terminal: book a seat, then `octwin scheduling --slots <train
 | Journey | What happens |
 |---|---|
 | 🏋️ **Timetable** | Studio-photo cards, ordered by how well attended each class is, filterable by discipline or intensity. |
-| 📅 **Book a seat** | Class → trainer (**only trainers who teach that discipline are offered**) → a slot with its real remaining seats → preview → ✅. A reminder lands 2 hours before. |
-| 🎫 **Membership** | Goal → experience → the plan list. The enquiry is captured as a tracked lead, and a plan tap books the free trial. |
-| 🗓️ **My classes** | Their bookings and a cancel that returns the seat to the pool. |
+| 📅 **Book a seat** | Class → trainer (**only trainers who teach that discipline are offered**) → a slot with its real remaining seats → preview → ✅. Reminders land 24 hours and 2 hours before. |
+| 🎫 **Membership** | Goal → experience → the plan list. The enquiry is captured as a tracked lead, and a plan tap books the free trial — with the tapped plan filed on the lead. |
+| 🗓️ **My classes** | Their bookings, past ones included, and a cancel behind a confirmation that returns the seat to the pool and revokes both reminders. |
 
 ## What the club gets
 
@@ -41,8 +41,10 @@ Verify it from the terminal: book a seat, then `octwin scheduling --slots <train
 
 Pure YAML — no code, no pack database.
 
-- `scheduling.yaml` — the multi-capacity resource. `default_capacity: 12` plus per-rule
-  `capacity:` is the whole mechanism.
+- `scheduling.yaml` — the multi-capacity resource. A per-rule `capacity:` is the whole mechanism;
+  there is no pack-wide default, so **every rule sets its own**, and it must equal the `seats` on
+  the matching class in `xrm.yaml` — that is the number the timetable card advertises, and nothing
+  reconciles the two automatically.
 - `flows/tools/book-class.flow.yaml` — the trainer picker is filtered by the *class's* discipline
   (carried forward through the picker's `selection:`), the slot label surfaces `$item.remaining`
   from the engine row, and the `full` port renders a real "pick another slot" card rather than an

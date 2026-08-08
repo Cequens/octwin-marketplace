@@ -1,10 +1,14 @@
 # Scheduling declaration — the interesting part of this pack.
 #
-# A class is NOT a one-to-one appointment: it is many seats in one slot. So the
-# each availability rule sets the class's
-# real room capacity. The platform's slot ledger then does the thing a spreadsheet
-# cannot: twenty people can hold the same 07:00 spin slot, the twenty-first gets the
-# `full` port, and two simultaneous taps for the last mat cannot both win.
+# A class is NOT a one-to-one appointment: it is many seats in one slot. So each
+# availability rule below carries a `capacity:` — the class's real room size — instead
+# of leaning on the one-booking-per-slot default. The platform's slot ledger then does
+# the thing a spreadsheet cannot: twenty people can hold the same 07:00 spin slot, the
+# twenty-first gets the `full` port, and two simultaneous taps for the last mat cannot
+# both win.
+#
+# Each rule's `capacity:` must equal the `seats` on the matching class in xrm.yaml —
+# that field is what the timetable card advertises, and nothing reconciles the two.
 
 timezone: Asia/Dubai
 
@@ -39,3 +43,9 @@ demo:
       rules:
         - { dow: 1, start: '17:00', end: '20:00', slot_minutes: 60, capacity: 10 }
         - { dow: 3, start: '07:00', end: '10:00', slot_minutes: 60, capacity: 10 }
+    # BOX50 — 50 minutes, 12 seats (xrm.yaml `seats: 12`).
+    - resource_match: { entity: trainer, field: name, value: 'كوتش خالد' }
+      rules:
+        - { dow: 2, start: '19:00', end: '21:30', slot_minutes: 50, capacity: 12 }
+        - { dow: 4, start: '07:00', end: '09:30', slot_minutes: 50, capacity: 12 }
+        - { dow: 6, start: '17:00', end: '19:30', slot_minutes: 50, capacity: 12 }

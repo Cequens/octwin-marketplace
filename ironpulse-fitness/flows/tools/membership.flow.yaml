@@ -92,8 +92,11 @@ steps:
                           $format_money_field($item.fields.price, "AED"),
                           $item.fields.classes_included == true ? $t("membership.classes_in") : null
                         ]), " · ")'
-          # A plan tap books the free trial — the club's actual conversion step.
-          on_select:   { invoke: book-class, with: { is_trial: true } }
+          # A plan tap books the free trial — the club's actual conversion step. The
+          # plan's id rides along so the trial lands on the lead with the plan the
+          # member was looking at; book-class re-reads the name (a tap id carries
+          # identifiers, not display strings — BACKLOG.md, the 200-code-point cap).
+          on_select:   { invoke: book-class, with: { is_trial: true, plan_id: '$item.id' } }
       memory_note: 'Showed {$page.total} plan(s) and logged enquiry {$lead.record_number} (goal {$state.goal}).'
     - end: applied
 
