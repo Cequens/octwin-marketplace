@@ -58,7 +58,7 @@ steps:
         gap_instructions: 'Ask the applicant for the next detail ({$collect_field_label}), one short question at a time, in friendly Saudi white dialect. Re-call become-captain once they answer.'
         fields:
           # Driving-license PHOTO FIRST — the one document we need anyway. Its
-          # `on_collect` hook OCRs the image the instant it lands (get_media →
+          # `on_collect` hook OCRs the image the instant it lands (media_get →
           # analyze_image) and PREFILLS the whole LICENSE block (fill-if-empty via
           # `??`); the required ones (name, id_number) are then satisfied + skipped
           # this same turn. The engine synthesizes a 📷 gap + folds the ref the
@@ -68,7 +68,7 @@ steps:
             media_kind: image
             label:      '$t("become-captain.label.license_photo")'
             on_collect:
-              - do: get_media
+              - do: media_get
                 args: { media_id: '$state.license_photo' }
                 bind: license_media
                 outputs:
@@ -104,7 +104,7 @@ steps:
                               # Persist the raw OCR onto the media asset so the console
                               # media page shows it (metadata.analysis). Fire-and-forget
                               # in hook mode — both ports are no-ops.
-                              - do: set_media_metadata
+                              - do: media_set_metadata
                                 args:
                                   media_id: '$state.license_photo'
                                   patch: { analysis: { source: driving_license, fields: '$ocr.json' } }
@@ -155,7 +155,7 @@ steps:
             label:      '$t("become-captain.label.vehicle_registration_photo")'
             skip_title: '$t("become-captain.skip_vehicle_registration_photo")'
             on_collect:
-              - do: get_media
+              - do: media_get
                 args: { media_id: '$state.vehicle_registration_photo' }
                 bind: reg_media
                 outputs:
@@ -193,7 +193,7 @@ steps:
                                   state.authorized_driver_id:     '$state.authorized_driver_id ?? $ocr.json.authorized_driver_id'
                                   state.sequence_no:              '$state.sequence_no ?? $ocr.json.sequence_no'
                               # Persist raw OCR onto the registration asset (console media page shows it).
-                              - do: set_media_metadata
+                              - do: media_set_metadata
                                 args:
                                   media_id: '$state.vehicle_registration_photo'
                                   patch: { analysis: { source: vehicle_registration, fields: '$ocr.json' } }
