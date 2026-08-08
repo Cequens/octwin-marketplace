@@ -35,7 +35,10 @@ strings:
   done_note:     '⏰ بنرسل لك تذكيراً قبل الموعد بيوم.'
   btn_mine:      '🗓️ مواعيدي'
   btn_services:  '💅 خدمات أخرى'
-  slot_taken:    '⚠️ هذا الوقت لم يعد متاحاً بالمدة التي تحتاجها الخدمة. اختاري وقتاً آخر ونحجز لك.'
+  # Two failures, two strings — they shared one line until 2026-08-08, which told a
+  # client her time was "taken" when it had simply never been long enough.
+  slot_taken:    '⚠️ للأسف تم حجز هذا الوقت للتو. اختاري وقتاً آخر من المواعيد المتاحة ونثبّته لك.'
+  slot_expired:  '⚠️ هذا الوقت لم يعد صالحاً لهذه الخدمة. اختاري وقتاً آخر من المواعيد المتاحة.'
   aborted:       'تم إلغاء الحجز. تحت أمرك في أي وقت 💐'
   reminder.body: '⏰ تذكير بموعد {treatment} — {slot}. نتشرف بحضورك 💐'
   reminder.mine: '🗓️ مواعيدي'

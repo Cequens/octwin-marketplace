@@ -1,23 +1,23 @@
 # Scheduling declaration — stylists as bookable resources, one client at a time.
 #
-# ── A REAL LIMIT, STATED HONESTLY ────────────────────────────────────────────
-# `booking_reserve` claims a seat on the slot it is given. Passing a longer
-# `slot_minutes` records the true treatment length on the booking, but it does NOT
-# consume the following grid slots — a four-hour treatment booked on a 30-minute grid
-# leaves 15:30, 16:00 … bookable underneath it. (Verified: `octwin scheduling --slots`
-# shows only the start slot at 0/1 after a 240-minute reservation.)
+# ── THE GRID IS BOOKING GRANULARITY, NOT APPOINTMENT LENGTH ──────────────────
+# `booking_reserve` claims EVERY grid slot the booking's `slot_minutes` covers, and
+# refuses a start whose span would run past the closing time on the rule. So the
+# treatment's own duration is what protects the diary, and the grid step only decides
+# how finely a client may choose her arrival time. One uniform 60-minute step therefore
+# fits the whole menu (60 / 180 / 240 / 300; the 75-minute facial rounds up to 90, which
+# is the turnaround anyway) and lets a one-hour cut start at 11:00 instead of waiting
+# for a two-hour boundary.
 #
-# So the grid here is NOT 30 minutes. Each stylist's rules use a `slot_minutes` close to
-# the length of the work she actually does, which makes one claimed slot equal one real
-# appointment:
+# This file used to carry a per-stylist step of 120/90/240 minutes, chosen when a
+# reservation claimed only its arrival slot and the coarse grid was the ONLY thing
+# stopping a double-booking. That stopped being true when span-claiming landed, and the
+# coarse grid then cost real money: a 180-minute colour booked at 16:00 claimed two
+# 120-minute rows and blocked the chair until 20:00.
 #
-#   • ريهام (colour + keratin, 3-4h)  → 120-minute slots
-#   • سُمية (facials, 60-75m)         → 90-minute slots
-#   • لمى   (nails, 90m)              → 90-minute slots
-#   • دانية (bridal + makeup, 5h)     → 240-minute slots
-#
-# A salon whose treatments vary more widely should split the long work onto its own
-# resource rather than relying on duration to reserve consecutive slots.
+# The flow must pass the same duration to `slot_list` as `fits_minutes` — see the header
+# of `flows/tools/book-appointment.flow.yaml` for why omitting it rejects a client after
+# she has already confirmed.
 
 timezone: Asia/Riyadh
 
@@ -33,27 +33,29 @@ booking:
 
 demo:
   availability:
-    # Colour and keratin — long sessions, so long slots.
+    # One hour is the arrival granularity for every chair; the treatment's duration
+    # decides how many of these a booking swallows.
+    # Colour and keratin — 3-4 hour sessions, so 10:00 is the last useful start.
     - resource_match: { entity: stylist, field: name, value: 'ريهام' }
       rules:
-        - { dow: 6, start: '10:00', end: '20:00', slot_minutes: 120, capacity: 1 }
-        - { dow: 0, start: '10:00', end: '20:00', slot_minutes: 120, capacity: 1 }
-        - { dow: 1, start: '10:00', end: '20:00', slot_minutes: 120, capacity: 1 }
-        - { dow: 2, start: '14:00', end: '20:00', slot_minutes: 120, capacity: 1 }
+        - { dow: 6, start: '10:00', end: '20:00', slot_minutes: 60, capacity: 1 }
+        - { dow: 0, start: '10:00', end: '20:00', slot_minutes: 60, capacity: 1 }
+        - { dow: 1, start: '10:00', end: '20:00', slot_minutes: 60, capacity: 1 }
+        - { dow: 2, start: '14:00', end: '20:00', slot_minutes: 60, capacity: 1 }
     # Facials — 60-75 minutes plus turnaround.
     - resource_match: { entity: stylist, field: name, value: 'سُمية' }
       rules:
-        - { dow: 0, start: '11:00', end: '19:00', slot_minutes: 90, capacity: 1 }
-        - { dow: 2, start: '11:00', end: '19:00', slot_minutes: 90, capacity: 1 }
-        - { dow: 4, start: '11:00', end: '17:00', slot_minutes: 90, capacity: 1 }
-    # Nails — 90 minutes.
+        - { dow: 0, start: '11:00', end: '19:00', slot_minutes: 60, capacity: 1 }
+        - { dow: 2, start: '11:00', end: '19:00', slot_minutes: 60, capacity: 1 }
+        - { dow: 4, start: '11:00', end: '17:00', slot_minutes: 60, capacity: 1 }
+    # Nails — 90 minutes, which takes two slots.
     - resource_match: { entity: stylist, field: name, value: 'لمى' }
       rules:
-        - { dow: 6, start: '12:00', end: '21:00', slot_minutes: 90, capacity: 1 }
-        - { dow: 1, start: '12:00', end: '21:00', slot_minutes: 90, capacity: 1 }
-        - { dow: 3, start: '12:00', end: '21:00', slot_minutes: 90, capacity: 1 }
-    # Bridal — a whole half-day per client.
+        - { dow: 6, start: '12:00', end: '21:00', slot_minutes: 60, capacity: 1 }
+        - { dow: 1, start: '12:00', end: '21:00', slot_minutes: 60, capacity: 1 }
+        - { dow: 3, start: '12:00', end: '21:00', slot_minutes: 60, capacity: 1 }
+    # Bridal — a whole half-day per client (300 minutes = five slots).
     - resource_match: { entity: stylist, field: name, value: 'دانية' }
       rules:
-        - { dow: 4, start: '09:00', end: '19:00', slot_minutes: 240, capacity: 1 }
-        - { dow: 5, start: '09:00', end: '19:00', slot_minutes: 240, capacity: 1 }
+        - { dow: 4, start: '09:00', end: '19:00', slot_minutes: 60, capacity: 1 }
+        - { dow: 5, start: '09:00', end: '19:00', slot_minutes: 60, capacity: 1 }

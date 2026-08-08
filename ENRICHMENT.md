@@ -742,6 +742,37 @@ the upgrade lands, and deploy this only to an instance running it.
 
 ---
 
+## §12 · Added 2026-08-08 — `slot_list` takes `fits_minutes`, and every booking pack should pass it
+
+A reservation claims **every grid slot its `slot_minutes` covers** and refuses a start whose span
+runs past the end of the availability window. A picker that doesn't know the appointment's length
+therefore offers starts the reservation will reject — and the rejection lands *after* the customer
+has confirmed, which is the worst possible moment for it.
+
+```yaml
+fetch: { do: slot_list, args: { resource_record_id: '$state.doctor_id',
+                                fits_minutes: '$treat_minutes' }, bind: slots }
+```
+
+`fits_minutes` keeps only starts with enough **consecutive free** slots behind them — it breaks the
+chain across a lunch gap and a day boundary too, so it is not merely arithmetic on the window end.
+Pass it the **same expression** `booking_reserve` gets, and the two agree by construction.
+
+**Counted across this repo: 0 of 9 booking flows passed it.** Only one was actually broken:
+
+| Pack | `slot_minutes` passed to `booking_reserve` | Exposure |
+|---|---|---|
+| `glamour-salon` | the **treatment's** `duration_min` (180–300 min on a 120-min grid) | **Was broken.** Fixed in `1.2.0` — see `BACKLOG.md` 2026-08-08. |
+| `smile-dental` · `motorcare-service` | `$coalesce($state.slot_minutes, $treat_minutes)` | **Latent.** The picker path fills `$state.slot_minutes` from `$item.slot_minutes`, so span = grid and the guard cannot trip. The fallback is a treatment/package duration that can exceed the grid — it fires the moment a start arrives from anywhere but the picker. |
+| `clinic` · `gulf-realty` · `ironpulse-fitness` · `nile-academy` · `redsea-resorts` · `xpeng-egypt` | the picked slot's own `slot_minutes` | **Safe, and also not recording reality** — a 40-minute procedure booked on a 20-minute grid stores 20. Passing the real duration is the correct fix, and requires `fits_minutes` to be safe. |
+
+**The grid step is arrival granularity, not appointment length.** If a pack chose a coarse grid to
+stop double-booking — that was necessary before span-claiming and is now just a cost: a 180-minute
+job on a 120-minute grid blocks 240 minutes of the diary. Set the grid to how finely a customer
+should be allowed to choose (30 or 60 minutes), and let the duration hold the chair.
+
+---
+
 ## Reading further
 
 Everything above is in the pulled KB (`octwin platform-kb pull`, then `.octwin/platform-kb/INDEX.md`).

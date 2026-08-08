@@ -1,10 +1,15 @@
 # book-appointment — treatment → stylist (filtered to that specialty) → slot → ✅.
 #
-# `slot_minutes` is the TREATMENT's own `duration_min`, which is what the booking
-# RECORDS — so the salon sees a four-hour keratin job as four hours. It is NOT what
-# protects the diary: `booking_reserve` claims the slot it is given and does not consume
-# the following grid slots. The protection comes from `scheduling.yaml`, where each
-# stylist's grid step matches the length of the work she does (see the note there).
+# `slot_minutes` is the TREATMENT's own `duration_min`, and it is load-bearing on BOTH
+# sides of the booking — keep them in sync or the client is rejected AFTER she confirms:
+#
+#   • `booking_reserve` claims every grid slot the duration covers, and refuses a start
+#     whose span would run past the stylist's closing time.
+#   • `slot_list` is therefore given the SAME number as `fits_minutes`, so the picker
+#     only offers a start with enough consecutive free slots behind it.
+#
+# Passing the duration to one and not the other is exactly how a 18:00 start was offered
+# for a three-hour colour on a day that closes at 20:00, and then refused on the ✅.
 
 flow_id:     book-appointment
 version:     1
@@ -60,7 +65,13 @@ steps:
               - if: '$st.fields != null'
                 then:
                   - assign: { st_label: '$st.fields.name' }
+        # `retry_note` is set by the recovery steps below and carried here rather than
+        # rendered on its own: the accumulator keeps only the LAST render of a turn, so a
+        # separate warning card followed by this picker would show the picker alone.
+        # Prepending it to the progress card puts the warning and the new times in one
+        # message, which is also the right shape on WhatsApp.
         progress: '$lines($compact([
+                     $state.retry_note,
                      $t("book-appointment.progress.header"),
                      $tr_label != null ? $t("book-appointment.progress.treatment", { treatment: $tr_label }) : null,
                      $st_label != null ? $t("book-appointment.progress.stylist", { stylist: $st_label }) : null,
@@ -103,7 +114,10 @@ steps:
             options:
               header: book-appointment.field_header.slot
               cta:    book-appointment.field_cta.slot
-              fetch:  { do: slot_list, args: { resource_record_id: '$state.stylist_id' }, bind: slots }
+              # `fits_minutes` is the SAME expression `booking_reserve` gets below, so the
+              # picker and the reservation agree by construction: only starts with enough
+              # consecutive free slots to hold the whole treatment are offered.
+              fetch:  { do: slot_list, args: { resource_record_id: '$state.stylist_id', fits_minutes: '$coalesce($tr_minutes, $state.tr_minutes, 90)' }, bind: slots }
               rows:   '$slots'
               map:
                 value: '$item.slot_start'
@@ -114,7 +128,11 @@ steps:
             required: false
             label:    '$t("book-appointment.label.notes")'
             describe: 'Anything the specialist should know (allergies, a reference photo, a preference).'
-        complete: [{ goto: confirm }]
+        # Drop a spent retry warning on the way out, or it reappears on the progress card
+        # if she backs out of the preview (`on_other: collect_fields`).
+        complete:
+          - assign: { state: '$merge($state, { retry_note: null })' }
+          - goto: confirm
 
   confirm:
     - use: approve_apply
@@ -152,10 +170,16 @@ steps:
           slot_label:      '$state.slot_label'
           notes:           '$state.notes'
       bind: appt
+      # Two DIFFERENT failures, so two messages. `full` is a genuine race — another client
+      # took the chair between the picker and the ✅. `invalid_slot` means the start itself
+      # stopped being valid: with `fits_minutes` on the picker the duration case no longer
+      # reaches here, so what lands is a confirm that arrived after the slot had passed.
+      # They shared one string until 2026-08-08, which told a client her time was "taken"
+      # when in truth it had never been bookable for that treatment.
       outputs:
         ok:           [{ goto: remind }]
         full:         [{ goto: slot_taken }]
-        invalid_slot: [{ goto: slot_taken }]
+        invalid_slot: [{ goto: slot_expired }]
         failed:       [{ end: failed }]
 
   remind:
@@ -187,12 +211,21 @@ steps:
       memory_note: 'Booked appointment #{$appt.record_number} for {$tr_minutes} minutes with {$st_label}.'
     - end: applied
 
+  # Both recoveries re-open the picker instead of ending. Telling a client to choose
+  # another time and then closing the flow left her with nothing to choose from.
   slot_taken:
-    - render:
-        render_intent: text_card
-        body: '{$t("book-appointment.slot_taken")}'
-      memory_note: 'The slot was taken (or too short for this treatment) — offered another.'
-    - end: aborted
+    - assign: { state: '$merge($state, { retry_note: $t("book-appointment.slot_taken") })' }
+    - goto: reoffer_slot
+
+  slot_expired:
+    - assign: { state: '$merge($state, { retry_note: $t("book-appointment.slot_expired") })' }
+    - goto: reoffer_slot
+
+  # Clear the chosen time only — treatment and stylist survive, so she re-picks one thing.
+  reoffer_slot:
+    - assign: { state: '$merge($state, { slot_start: null, slot_label: null })' }
+    - note: 'That time did not hold — showing her the available times again. The appointment is NOT booked.'
+    - goto: collect_fields
 
   aborted:
     - end: { status: aborted, body: '{$t("book-appointment.aborted")}' }

@@ -21,20 +21,22 @@ every response for her → the average is written back → the picker's `rank_by
 A second submit for the same visit patches the same response, so stars and comment never
 duplicate.
 
-## An honest limit, and how this pack handles it
+## How the duration actually protects the diary
 
-`booking_reserve` claims **the slot it is given**. Passing a longer `slot_minutes` records the
-true treatment length on the booking, but it does **not** consume the following grid slots — a
-four-hour treatment on a 30-minute grid leaves the next 30 minutes bookable underneath it.
-(Verified: after a 240-minute reservation, `octwin scheduling --slots` shows only the start slot
-at `0/1`.)
+`booking_reserve` claims **every grid slot the treatment covers** and refuses a start whose span
+would run past closing time. So the treatment's own `duration_min` is what holds the chair: a
+three-hour colour at 16:00 takes 16:00, 17:00 and 18:00 off the board, and 18:00 is not offered
+at all on a day that closes at 20:00.
 
-So this pack does not rely on duration to protect the diary. Instead **each specialist's grid
-step matches the length of the work she actually does** — 120-minute slots for colour and
-keratin, 90 for facials and nails, 240 for bridal — which makes one claimed slot equal one real
-appointment. A salon whose treatments vary more widely should split the long work onto its own
-resource. The duration is still recorded and shown, because the salon needs it; it just isn't
-what enforces the diary.
+That makes the grid step nothing more than **arrival granularity**, so every specialist runs on a
+uniform 60-minute step and a one-hour cut can start at 11:00 rather than waiting for a two-hour
+boundary.
+
+Both halves of the booking must be told the duration. The picker passes it to `slot_list` as
+`fits_minutes`, which keeps a start with too little room behind it off the list; `booking_reserve`
+gets the same number and enforces it. Passing it to only one is a live defect — it offers a time
+and then refuses it *after* the client has confirmed. This pack shipped that bug until
+`1.2.0`; it is recorded in the repo [`BACKLOG.md`](../BACKLOG.md).
 
 ## What the salon gets
 
@@ -48,8 +50,8 @@ what enforces the diary.
 
 Pure YAML — no code, no pack database.
 
-- `scheduling.yaml` — read the note at the top; it documents the limit above and why the grid is
-  per-specialist rather than uniform.
+- `scheduling.yaml` — read the note at the top; it documents why the grid is uniform arrival
+  granularity and not appointment length.
 - `flows/tools/book-appointment.flow.yaml` — the specialist picker filters on a `multi_select`
   with the **`has`** op (`eq` would only match a specialist whose entire specialty list is that
   one value).
