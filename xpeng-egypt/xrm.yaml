@@ -168,11 +168,16 @@ demo:
       highlights:
         en: "• Up to 620 km range (CLTC)\n• Sleek aerodynamic coupe silhouette\n• XPENG smart cockpit & driver assistance\n• Fast DC charging"
         ar: "• مدى حتى 620 كم (CLTC)\n• تصميم كوبيه انسيابي أنيق\n• كابينة ذكية وأنظمة مساعدة السائق من XPENG\n• شحن سريع DC"
-      photo:   'generate:Studio product shot of a sleek white XPENG MONA M03 electric sports sedan, three-quarter front view, seamless light-grey background, premium automotive photography, high detail'
+      photo:
+        generate: 'Studio product shot of a sleek white XPENG MONA M03 electric sports sedan, three-quarter front view, seamless light-grey background, premium automotive photography, high detail'
+        caption:  { en: 'The sports sedan, finally within reach', ar: 'السيدان الرياضية أخيرًا في المتناول' }
       gallery:
-        - 'generate:Front three-quarter studio shot of a white XPENG MONA M03 electric sedan, light background'
-        - 'generate:Rear three-quarter studio shot of a white XPENG MONA M03 electric sedan, light background'
-        - 'generate:Modern minimalist interior of an XPENG electric sedan with large central touchscreen'
+        - generate: 'Front three-quarter studio shot of a white XPENG MONA M03 electric sedan, light background'
+          caption:  { en: 'A sharp young face that looks quick standing still', ar: 'وجه شبابي حاد يبدو سريعًا وهو واقف' }
+        - generate: 'Rear three-quarter studio shot of a white XPENG MONA M03 electric sedan, light background'
+          caption:  { en: 'Coupe lines that finish clean at the tail', ar: 'خطوط كوبيه تنتهي بنعومة عند المؤخرة' }
+        - generate: 'Modern minimalist interior of an XPENG electric sedan with large central touchscreen'
+          caption:  { en: 'An uncluttered cabin built around one screen', ar: 'كابينة بسيطة مبنية حول شاشة واحدة' }
 
   - entity: model
     fields:
@@ -189,11 +194,16 @@ demo:
       highlights:
         en: "• Up to 725 km range (NEDC)\n• 0–100 km/h in ~4.3 s (Performance)\n• 200 km/h top speed\n• XPILOT advanced driver assistance"
         ar: "• مدى حتى 725 كم (NEDC)\n• من 0–100 كم/س في ~4.3 ث (النسخة الرياضية)\n• سرعة قصوى 200 كم/س\n• أنظمة XPILOT المتقدمة لمساعدة السائق"
-      photo:   'generate:Studio product shot of a metallic blue XPENG P7 electric sports sedan, three-quarter front view, seamless light background, premium automotive photography, high detail'
+      photo:
+        generate: 'Studio product shot of a metallic blue XPENG P7 electric sports sedan, three-quarter front view, seamless light background, premium automotive photography, high detail'
+        caption:  { en: 'The flagship — presence before a word is said', ar: 'الرائدة — حضور قبل أي كلمة' }
       gallery:
-        - 'generate:Front three-quarter studio shot of a blue XPENG P7 electric sports sedan, light background'
-        - 'generate:Side profile studio shot of a blue XPENG P7 electric sports sedan, light background'
-        - 'generate:Luxury interior of the XPENG P7 with dual curved displays and ambient lighting'
+        - generate: 'Front three-quarter studio shot of a blue XPENG P7 electric sports sedan, light background'
+          caption:  { en: 'A face built to be recognised in the mirror ahead', ar: 'وجه يُعرف من مرآة السيارة اللي قدامك' }
+        - generate: 'Side profile studio shot of a blue XPENG P7 electric sports sedan, light background'
+          caption:  { en: 'One long line from nose to tail', ar: 'خط واحد ممتد من المقدمة للمؤخرة' }
+        - generate: 'Luxury interior of the XPENG P7 with dual curved displays and ambient lighting'
+          caption:  { en: 'Curved screens and light that sets the mood', ar: 'شاشات منحنية وإضاءة تصنع المزاج' }
 
   - entity: model
     fields:
@@ -210,11 +220,16 @@ demo:
       highlights:
         en: "• Spacious AI-defined flagship sedan\n• Long range with rapid DC fast charging\n• Next-gen XPENG smart cockpit\n• Advanced driver assistance"
         ar: "• سيدان رائدة واسعة معرّفة بالذكاء الاصطناعي\n• مدى طويل مع شحن DC سريع\n• كابينة XPENG الذكية من الجيل الجديد\n• أنظمة متقدمة لمساعدة السائق"
-      photo:   'generate:Studio product shot of a black XPENG P7 Plus electric sedan, three-quarter front view, seamless light background, premium automotive photography, high detail'
+      photo:
+        generate: 'Studio product shot of a black XPENG P7 Plus electric sedan, three-quarter front view, seamless light background, premium automotive photography, high detail'
+        caption:  { en: 'Room for everyone, and a brain to match', ar: 'مساحة تكفي الجميع وذكاء يليق بها' }
       gallery:
-        - 'generate:Front three-quarter studio shot of a black XPENG P7 Plus electric sedan, light background'
-        - 'generate:Rear studio shot of a black XPENG P7 Plus electric sedan, light background'
-        - 'generate:Spacious modern interior of a flagship XPENG electric sedan'
+        - generate: 'Front three-quarter studio shot of a black XPENG P7 Plus electric sedan, light background'
+          caption:  { en: 'Quiet confidence in black', ar: 'ثقة هادئة باللون الأسود' }
+        - generate: 'Rear studio shot of a black XPENG P7 Plus electric sedan, light background'
+          caption:  { en: 'A wide stance that reads as stability', ar: 'قاعدة عريضة توحي بالثبات' }
+        - generate: 'Spacious modern interior of a flagship XPENG electric sedan'
+          caption:  { en: 'The back seat is the best seat', ar: 'المقعد الخلفي هو أفضل مقعد' }
 
   - entity: model
     fields:
@@ -231,11 +246,16 @@ demo:
       highlights:
         en: "• Up to 725 km range\n• 800V platform — 10–80% charge in ~20 min\n• Coupe-SUV design\n• XPENG smart cockpit & driver assistance"
         ar: "• مدى حتى 725 كم\n• منصة 800 فولت — شحن 10–80% في ~20 دقيقة\n• تصميم كوبيه SUV\n• كابينة ذكية وأنظمة مساعدة السائق"
-      photo:   'generate:Studio product shot of a silver XPENG G6 electric coupe SUV, three-quarter front view, seamless light background, premium automotive photography, high detail'
+      photo:
+        generate: 'Studio product shot of a silver XPENG G6 electric coupe SUV, three-quarter front view, seamless light background, premium automotive photography, high detail'
+        caption:  { en: 'An SUV that refused to look like one', ar: 'SUV رفضت أن تبدو كواحدة' }
       gallery:
-        - 'generate:Front three-quarter studio shot of a silver XPENG G6 electric coupe SUV, light background'
-        - 'generate:Rear three-quarter studio shot of a silver XPENG G6 electric SUV, light background'
-        - 'generate:Premium interior of the XPENG G6 SUV with panoramic roof and large touchscreen'
+        - generate: 'Front three-quarter studio shot of a silver XPENG G6 electric coupe SUV, light background'
+          caption:  { en: 'A low-drag face that looks fast standing still', ar: 'واجهة انسيابية تبدو سريعة وهي واقفة' }
+        - generate: 'Rear three-quarter studio shot of a silver XPENG G6 electric SUV, light background'
+          caption:  { en: 'Coupe lines that carry all the way to the tail', ar: 'خطوط كوبيه تمتد حتى المؤخرة' }
+        - generate: 'Premium interior of the XPENG G6 SUV with panoramic roof and large touchscreen'
+          caption:  { en: 'Open the roof and the cabin doubles', ar: 'افتح السقف وتتضاعف الكابينة' }
 
   - entity: model
     fields:
@@ -252,11 +272,16 @@ demo:
       highlights:
         en: "• Flagship large SUV\n• 800V ultra-fast charging — 10–80% in ~12 min\n• 0–100 km/h in ~3.9 s (AWD)\n• Premium cabin & advanced ADAS"
         ar: "• SUV كبيرة رائدة\n• شحن فائق السرعة 800 فولت — 10–80% في ~12 دقيقة\n• من 0–100 كم/س في ~3.9 ث (دفع رباعي)\n• كابينة فاخرة وأنظمة قيادة متقدمة"
-      photo:   'generate:Studio product shot of a dark grey XPENG G9 large electric SUV, three-quarter front view, seamless light background, premium automotive photography, high detail'
+      photo:
+        generate: 'Studio product shot of a dark grey XPENG G9 large electric SUV, three-quarter front view, seamless light background, premium automotive photography, high detail'
+        caption:  { en: 'The one you arrive in', ar: 'السيارة التي تصل بها' }
       gallery:
-        - 'generate:Front three-quarter studio shot of a dark grey XPENG G9 large electric SUV, light background'
-        - 'generate:Rear three-quarter studio shot of a dark grey XPENG G9 electric SUV, light background'
-        - 'generate:Luxurious interior of the XPENG G9 flagship SUV with triple screens'
+        - generate: 'Front three-quarter studio shot of a dark grey XPENG G9 large electric SUV, light background'
+          caption:  { en: 'Big without being loud about it', ar: 'كبيرة دون أن تتباهى' }
+        - generate: 'Rear three-quarter studio shot of a dark grey XPENG G9 electric SUV, light background'
+          caption:  { en: 'Planted, wide, and hard to argue with', ar: 'ثابتة وعريضة ويصعب مجادلتها' }
+        - generate: 'Luxurious interior of the XPENG G9 flagship SUV with triple screens'
+          caption:  { en: 'A lounge that happens to drive', ar: 'صالة جلوس تصادف أنها تسير' }
 
   - entity: model
     fields:
@@ -273,11 +298,16 @@ demo:
       highlights:
         en: "• Spacious 7-seat luxury MPV\n• Rear-wheel steering for easy maneuvering\n• Lie-flat rear seats & entertainment\n• 800V fast charging"
         ar: "• عائلية فاخرة 7 مقاعد واسعة\n• توجيه العجلات الخلفية لسهولة المناورة\n• مقاعد خلفية قابلة للاستلقاء ونظام ترفيه\n• شحن سريع 800 فولت"
-      photo:   'generate:Studio product shot of a white XPENG X9 luxury electric MPV minivan, three-quarter front view, seamless light background, premium automotive photography, high detail'
+      photo:
+        generate: 'Studio product shot of a white XPENG X9 luxury electric MPV minivan, three-quarter front view, seamless light background, premium automotive photography, high detail'
+        caption:  { en: 'Seven seats, no compromises asked for', ar: 'سبعة مقاعد بلا أي تنازلات' }
       gallery:
-        - 'generate:Front three-quarter studio shot of a white XPENG X9 luxury electric MPV, light background'
-        - 'generate:Side sliding-door view of a white XPENG X9 electric MPV, light background'
-        - 'generate:Spacious 7-seat lounge interior of the XPENG X9 MPV with captain chairs'
+        - generate: 'Front three-quarter studio shot of a white XPENG X9 luxury electric MPV, light background'
+          caption:  { en: 'A family car that skipped the boring part', ar: 'عائلية تخطّت الجزء الممل' }
+        - generate: 'Side sliding-door view of a white XPENG X9 electric MPV, light background'
+          caption:  { en: 'Doors that open themselves, hands full', ar: 'أبواب تفتح نفسها ويداك مشغولتان' }
+        - generate: 'Spacious 7-seat lounge interior of the XPENG X9 MPV with captain chairs'
+          caption:  { en: 'Captain chairs that recline all the way back', ar: 'مقاعد قبطان تتمدد للخلف بالكامل' }
 
   # ── showrooms ──
   - entity: branch
@@ -289,7 +319,9 @@ demo:
       phone:   '+20 100 000 0001'
       hours:   { en: 'Sat–Thu, 11:00–20:00', ar: 'السبت–الخميس، 11:00–20:00' }
       geo:     { lat: 30.0444, lng: 30.9760 }
-      photo:   'generate:Modern glass XPENG electric-car showroom exterior in a sunny upscale district, cars visible inside, daytime, high detail'
+      photo:
+        generate: 'Modern glass XPENG electric-car showroom exterior in a sunny upscale district, cars visible inside, daytime, high detail'
+        caption:  { en: 'Our Sheikh Zayed showroom', ar: 'معرضنا في الشيخ زايد' }
 
   - entity: branch
     fields:
@@ -300,7 +332,9 @@ demo:
       phone:   '+20 100 000 0002'
       hours:   { en: 'Daily, 12:00–22:00', ar: 'يوميًا، 12:00–22:00' }
       geo:     { lat: 30.0280, lng: 30.9720 }
-      photo:   'generate:Sleek XPENG electric-car display inside a modern shopping mall, bright lighting, cars on display, high detail'
+      photo:
+        generate: 'Sleek XPENG electric-car display inside a modern shopping mall, bright lighting, cars on display, high detail'
+        caption:  { en: 'Find us inside DUNE Mall', ar: 'تلاقينا جوه دُن مول' }
 
   - entity: branch
     fields:
@@ -311,4 +345,6 @@ demo:
       phone:   '+20 100 000 0003'
       hours:   { en: 'Sat–Thu, 11:00–20:00', ar: 'السبت–الخميس، 11:00–20:00' }
       geo:     { lat: 30.0080, lng: 31.4910 }
-      photo:   'generate:Contemporary XPENG electric-car showroom exterior in an upscale New Cairo compound, evening lighting, high detail'
+      photo:
+        generate: 'Contemporary XPENG electric-car showroom exterior in an upscale New Cairo compound, evening lighting, high detail'
+        caption:  { en: 'Our Mivida showroom, New Cairo', ar: 'معرضنا في ميفيدا، القاهرة الجديدة' }

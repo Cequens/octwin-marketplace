@@ -35,37 +35,39 @@ steps:
         # failed → throws → error-net
 
   show:
-    # Hero card: photo + iconed specs + the CTA set (carousel, since detail_card has no image).
+    # ONE swipeable message: the specs in the carousel BODY, the hero + every
+    # gallery shot as cards, each carrying its own marketing line.
+    #
+    # Why the specs live in `body:` and not on the cards — WhatsApp caps a CARD
+    # body at 160 chars but the message body at 1024, so the spec block only fits
+    # above the cards. (This flow used to render `items: '[$m]'` — a ONE-card
+    # carousel, which Meta rejects and the platform degrades to an image+text
+    # bubble; that degrade is the only reason the long text ever fit.)
+    #
+    # `$m.media.*` is the hydrated sidecar — `{ ref, url, caption }` per image,
+    # with `caption` the pack copy declared beside each `generate:` in xrm.yaml.
+    # `$m.fields.*` still holds the bare refs.
+    - assign:
+        shots: '$concat($m.media.photo, $m.media.gallery)'
     - render:
         render_intent: carousel
-        body: '{$t("model-details.intro")}'
-        items: '[$m]'
+        body: "$lines([ $t('model-details.intro'), '', '🚗 ' + $loc($m.fields.name), $loc($m.fields.tagline), '', '⚡ ' + $t('model-details.range') + ': ' + $format_number($m.fields.range_km) + ' ' + $t('model-details.km'), '🔋 ' + $t('model-details.battery') + ': ' + $format_number($m.fields.battery_kwh) + ' kWh', '🐎 ' + $t('model-details.power') + ': ' + $format_number($m.fields.power_hp) + ' hp', '⏱ ' + $t('model-details.accel') + ': ' + $format_number($m.fields.accel_0_100) + ' ' + $t('model-details.sec'), '👥 ' + $t('model-details.seats') + ': ' + $format_number($m.fields.seats), '', '💰 ' + $t('model-details.from') + ': ' + $format_number($m.fields.price_from) + ' ' + $t('model-details.egp'), '', $loc($m.fields.highlights), '', 'ℹ️ ' + $t('xpeng-egypt.price_provisional') ])"
+        items: '$shots'
         item_template:
-          image_url: '$coalesce($item.fields.photo, "")'
-          body: "$lines([ '🚗 ' + $loc($item.fields.name), $loc($item.fields.tagline), '', '⚡ ' + $t('model-details.range') + ': ' + $format_number($item.fields.range_km) + ' ' + $t('model-details.km'), '🔋 ' + $t('model-details.battery') + ': ' + $format_number($item.fields.battery_kwh) + ' kWh', '🐎 ' + $t('model-details.power') + ': ' + $format_number($item.fields.power_hp) + ' hp', '⏱ ' + $t('model-details.accel') + ': ' + $format_number($item.fields.accel_0_100) + ' ' + $t('model-details.sec'), '👥 ' + $t('model-details.seats') + ': ' + $format_number($item.fields.seats), '', '💰 ' + $t('model-details.from') + ': ' + $format_number($item.fields.price_from) + ' ' + $t('model-details.egp'), '', $loc($item.fields.highlights), '', 'ℹ️ ' + $t('xpeng-egypt.price_provisional') ])"
-          # WhatsApp + web cap carousel cards at 2 buttons (carousel.buttonsPerCard).
-          # Keep the two conversion CTAs; branches stay reachable via the home hub
-          # and the test-drive flow's own branch picker.
+          image_url: '$item.ref'
+          # Falls back to the model name for an image seeded before its copy was
+          # written — a caption is optional on the asset.
+          body: '$coalesce($loc($item.caption), $loc($m.fields.name))'
+          # WhatsApp + web cap carousel cards at 2 buttons (carousel.buttonsPerCard),
+          # and Meta REJECTS a card with zero (#131009), so every photo carries the
+          # two conversion CTAs. Branches stay reachable via the home hub and the
+          # test-drive flow's own branch picker.
           buttons:
             - { title: '{$t("xpeng-egypt.cta_quote")}',       on_select: { invoke: capture-lead,    with: { interested_model: '$m.fields.code', interest_type: quote } } }
             - { title: '{$t("xpeng-egypt.cta_test_drive")}',  on_select: { invoke: book-test-drive, with: { model_code: '$m.fields.code' } } }
-      memory_note: 'Showed details for model {$m.fields.code}.'
+      memory_note: 'Showed details for model {$m.fields.code} ({$length($shots)} photos).'
     # Purchase funnel: deep on a specific model — stamp the model for cohort analysis.
     - track: { journey: purchase, event: viewed_model, metadata: { model: '$m.fields.code' } }
-    # Follow-on: swipeable gallery of extra shots (best-effort — never blocks the turn).
-    - if: '$length($m.fields.gallery) > 0'
-      then:
-        - do: send_message
-          detach: true
-          args:
-            to: '$conversation.channel_contact_handle'
-            intent:
-              render_intent: carousel
-              body: '{$t("model-details.gallery")}'
-              items: '$m.fields.gallery'
-              item_template:
-                image_url: '$item'
-                body: '{$loc($m.fields.name)}'
     - end: applied
 
   unknown:
