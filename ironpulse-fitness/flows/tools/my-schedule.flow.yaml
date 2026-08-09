@@ -66,14 +66,16 @@ steps:
       args: { entity: booking, record_id: '$state.booking_id' }
       bind: bk
       outputs:
-        ok:        []
+        # The stage check lives INSIDE the ok port — an empty `ok: []` hands the run
+        # to the canonical handler, which ends it, and nothing after this node runs.
+        ok:
+          - if: '$in($bk.stage, ["cancelled", "completed", "no_show"])'
+            then:
+              - goto: already_done
+            else:
+              - goto: confirm_cancel
         not_found: [{ goto: not_found }]
         failed:    [{ goto: unavailable }]
-    - if: '$in($bk.stage, ["cancelled", "completed", "no_show"])'
-      then:
-        - goto: already_done
-      else:
-        - goto: confirm_cancel
 
   confirm_cancel:
     # Cancelling frees the seat to someone else and cannot be undone from chat, so it
