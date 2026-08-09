@@ -40,24 +40,26 @@ entry:
 
 steps:
   check_coach:
+    # A port body must end in a terminal node (goto/end/answer/pause — a `do:` is not
+    # one, KB craft-flows "Ports"), so the coach lookup is its own step, goto'd from ok.
     - do: record_get
       args: { entity: session_type, record_id: '$state.class_id' }
       bind: cls0
       outputs:
-        # The coach lookup lives INSIDE the ok port — an empty `ok: []` hands the run
-        # to the canonical handler, which ends it, and nothing after this node runs.
-        ok:
-          - do: record_search
-            args: { entity: trainer, query: '', limit: 1, where: { all: [{ field: specialty, op: eq, value: '$cls0.fields.discipline' }] } }
-            bind: coaches
-            outputs:
-              ok:     [{ goto: collect_fields }]
-              empty:  [{ goto: no_coach }]
-              # Never block a booking on a failed lookup — the picker gets the same chance.
-              failed: [{ goto: collect_fields }]
+        ok:        [{ goto: find_coach }]
         # A dead id — let the class picker re-ask rather than dead-ending here.
         not_found: [{ goto: collect_fields }]
         failed:    [{ goto: collect_fields }]
+
+  find_coach:
+    - do: record_search
+      args: { entity: trainer, query: '', limit: 1, where: { all: [{ field: specialty, op: eq, value: '$cls0.fields.discipline' }] } }
+      bind: coaches
+      outputs:
+        ok:     [{ goto: collect_fields }]
+        empty:  [{ goto: no_coach }]
+        # Never block a booking on a failed lookup — the picker gets the same chance.
+        failed: [{ goto: collect_fields }]
 
   no_coach:
     - render:
