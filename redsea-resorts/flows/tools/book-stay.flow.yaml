@@ -216,7 +216,9 @@ steps:
           board:          '$state.board'
           total:          '$total'
           deposit:        '$deposit'
-          currency:       EGP
+          # No `currency:` — `stay` declares no such field and the create
+          # validator is strict, so passing it rejected every booking. The
+          # currency belongs to each money field's DECLARATION in `xrm.yaml`.
       bind: stay
       outputs:
         ok:      [{ goto: held }]

@@ -7,7 +7,7 @@
 # room record, and add-ons are a second, optional pass so a guest is never blocked.
 
 id:          redsea-resorts
-version:     '1.1.2'
+version:     '1.1.3'
 description: 'Red Sea resort reservations — room carousel, real room-inventory availability, board-basis pricing, and stay confirmation on WhatsApp.'
 
 listing:

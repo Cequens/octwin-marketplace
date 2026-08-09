@@ -171,7 +171,9 @@ steps:
           recipient_phone: '$state.recipient_phone'
           window:          '$state.window'
           quoted_price:    '$price'
-          currency:        EGP
+          # No `currency:` — `pickup_request` declares no such field and the
+          # create validator is strict, so passing it rejected every pickup. The
+          # currency belongs to each money field's DECLARATION in `xrm.yaml`.
       bind: req
       outputs:
         ok:      [{ goto: booked }]

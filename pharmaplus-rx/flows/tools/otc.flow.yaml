@@ -291,7 +291,9 @@ steps:
           subtotal:       '$order_subtotal'
           delivery_fee:   '$fee'
           total:          '$order_total'
-          currency:       EGP
+          # No `currency:` — `otc_order` declares no such field and the create
+          # validator is strict, so passing it rejected every order. The currency
+          # belongs to each money field's DECLARATION in `xrm.yaml`.
           patient_name:   '$state.patient_name'
           delivery_area:  '$state.delivery_area'
           address:        '$state.address'

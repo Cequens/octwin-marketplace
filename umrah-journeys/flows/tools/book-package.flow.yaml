@@ -169,7 +169,10 @@ steps:
           travel_month:   '$state.travel_month'
           room_type:      '$state.room_type'
           total_price:    '$total'
-          currency:       '$pkg_currency'
+          # No `currency:` — `trip` declares no such field and the create
+          # validator is strict, so passing it rejected every reservation. The
+          # currency belongs to each money field's DECLARATION in `xrm.yaml`
+          # (`$pkg_currency` still drives the $format_money calls above).
       bind: trip
       outputs:
         ok:      [{ goto: open_visa_case }]

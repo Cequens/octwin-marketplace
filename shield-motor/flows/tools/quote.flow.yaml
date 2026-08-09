@@ -119,7 +119,9 @@ steps:
           driver_band:        '$state.driver_band'
           no_claim_years:     '$state.ncd_years'
           indicative_premium: '$premium'
-          currency:           AED
+          # No `currency:` — `quote_req` declares no such field and the create
+          # validator is strict, so passing it rejected every quote. The currency
+          # belongs to each money field's DECLARATION in `xrm.yaml`.
       bind: q
       outputs:
         ok:      [{ goto: mark }]

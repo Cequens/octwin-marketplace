@@ -251,7 +251,9 @@ steps:
           items_summary:  '$order_summary'
           item_count:     '$order_count'
           total:          '$order_total'
-          currency:       SAR
+          # No `currency:` — `purchase` declares no such field and the create
+          # validator is strict, so passing it rejected every order. The currency
+          # belongs to each money field's DECLARATION in `xrm.yaml`.
           recipient:      '$state.recipient'
           city:           '$state.city'
           address:        '$state.address'
