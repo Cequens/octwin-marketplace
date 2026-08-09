@@ -174,8 +174,9 @@ steps:
 
   raise_order:
     # `work_open` writes the record AND enrols it: the queue comes from `route_by:
-    # emirate`, the SLA from the `urgency` type. `sla_due_at` comes back, so the window
-    # quoted below is the queue's own number.
+    # emirate`, the SLA from the `urgency` type. It publishes only record_id /
+    # record_number / queue_key — the due time stays on the platform side, so the
+    # window quoted below is the urgency's declared hours, not a returned timestamp.
     - do: work_open
       args:
         entity: work_order
@@ -213,7 +214,7 @@ steps:
         buttons:
           - { title: '{$t("request-visit.btn_mine")}',     on_select: { invoke: my-requests } }
           - { title: '{$t("request-visit.btn_services")}', on_select: { invoke: services } }
-      memory_note: 'Raised work_order #{$order.record_number} — urgency {$state.urgency}, queue {$order.queue_key}, SLA due {$order.sla_due_at}. NO repair price was quoted.'
+      memory_note: 'Raised work_order #{$order.record_number} — urgency {$state.urgency}, queue {$order.queue_key}, response window {$window_hours}h. NO repair price was quoted.'
       data: { order_number: '$order.record_number' }
     - end: applied
 
