@@ -45,7 +45,12 @@ steps:
     # buttons, which is exactly why the readable part needs its own message.
     - do: send_message
       args:
-        to: '$contact.id'
+        # The CHANNEL-side handle (the WhatsApp number / web session id), which is
+        # what `channelBridge.renderHint` dispatches to — NOT `$contact.id`, the
+        # platform Contact row's UUID. Meta simply rejects a UUID as a recipient
+        # and the send drops. (`send_message`'s own `example:` shows
+        # `to: '$contact.id'`, which is what sent this the wrong way first time.)
+        to: '$conversation.channel_contact_handle'
         intent:
           render_intent: location
           lat:     '$b.fields.geo.lat'
