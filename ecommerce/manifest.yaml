@@ -77,9 +77,6 @@ agents:
   - id:                shop
     display_name:      'Shop Assistant'
     default_model:     'openrouter/google/gemini-3.1-flash-lite-preview'
-    default_config:
-      temperature: 0.3
-      max_steps:   8
     include_platform_protocol: true
     tools:
       - home
