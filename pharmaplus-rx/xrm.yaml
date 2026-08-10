@@ -38,6 +38,9 @@ entities:
       rx_photo:       { type: image, label: { en: 'Prescription photo', ar: 'صورة الروشتة' } }
       delivery_area:  { type: select, options: [nasr_city, maadi, heliopolis, zamalek, october, giza], label: { en: 'Area', ar: 'المنطقة' } }
       address:        { type: textarea, label: { en: 'Address', ar: 'العنوان' } }
+      # The delivery pin. A courier carrying medicine to a flat is the case where
+      # "street, building and flat" typed at speed costs the most to get wrong.
+      pin:            { type: geo, label: { en: 'Delivery pin', ar: 'موقع التوصيل على الخريطة' } }
       phone:          { type: text, label: { en: 'Phone', ar: 'الهاتف' } }
       insurance:      { type: text, label: { en: 'Insurer', ar: 'التأمين' } }
     list: [patient_name, delivery_area]
@@ -90,6 +93,9 @@ entities:
       patient_name:   { type: text, label: { en: 'Customer', ar: 'العميل' } }
       delivery_area:  { type: select, options: [nasr_city, maadi, heliopolis, zamalek, october, giza], label: { en: 'Area', ar: 'المنطقة' } }
       address:        { type: textarea, label: { en: 'Address', ar: 'العنوان' } }
+      # The delivery pin. A courier carrying medicine to a flat is the case where
+      # "street, building and flat" typed at speed costs the most to get wrong.
+      pin:            { type: geo, label: { en: 'Delivery pin', ar: 'موقع التوصيل على الخريطة' } }
       phone:          { type: text, label: { en: 'Phone', ar: 'الهاتف' } }
       payment_method: { type: select, options: [cash_on_delivery, card_on_delivery], label: { en: 'Payment', ar: 'الدفع' } }
     list: [patient_name, item_count, total, delivery_area]

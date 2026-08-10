@@ -18,7 +18,9 @@ strings:
 
   label.name:     'الاسم'
   label.area:     'المنطقة'
-  label.address:  'العنوان'
+  label.address:  'العنوان — الشارع والعمارة والشقة'
+  label.pin:      'موقع التوصيل على الخريطة'
+  skip_pin:       'أكتفي بالعنوان ⏭️'
   label.payment:  'طريقة الدفع'
 
   field_header.area:    '📍 التوصيل لأي منطقة؟'

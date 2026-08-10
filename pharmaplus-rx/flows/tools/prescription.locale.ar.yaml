@@ -10,7 +10,9 @@ strings:
 
   label.patient:    'اسم المريض'
   label.area:       'منطقة التوصيل'
-  label.address:    'العنوان'
+  label.address:    'العنوان — الشارع والعمارة والشقة'
+  label.pin:        'موقع التوصيل على الخريطة'
+  skip_pin:         'أكتفي بالعنوان ⏭️'
   label.phone:      'رقم الموبايل'
 
   field_header.area: '📍 التوصيل لأي منطقة؟'

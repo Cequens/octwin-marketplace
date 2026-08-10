@@ -1,0 +1,66 @@
+flow_id:     branch-location
+version:     1
+description: |-
+  Send the map pin for one XPeng showroom, so the customer can navigate to it.
+  Call when they ask for directions, a location, or how to get to a showroom —
+  or when they tap "Directions" on a showroom card. Pass branch_code.
+
+input:
+  branch_code:
+    type: enum
+    enum: [zayed, dune, mivida]
+
+entry:
+  - else: true
+    goto: load
+
+steps:
+  load:
+    - do: record_get
+      args:
+        entity: branch
+        match:  { field: code, value: '$input.branch_code' }
+      bind: b
+      outputs:
+        ok:        [{ goto: check_pin }]
+        not_found: [{ goto: unknown }]
+
+  check_pin:
+    # A showroom without coordinates cannot be pinned. Fall back to the address
+    # in words rather than rendering a pin at (0,0) — the Gulf of Guinea.
+    - if: '$b.fields.geo == null'
+      goto: no_pin
+    - goto: send_pin
+
+  send_pin:
+    # `render_intent: location` takes the SAME `lat`/`lng` the `geo` field stores,
+    # so the coordinates copy straight across with no remapping. WhatsApp draws
+    # its native location message; web draws a card with an Open-in-Maps link.
+    #
+    # Meta's location message carries NO body text, so anything the customer must
+    # read goes in the separate card below rather than on the pin.
+    - render:
+        render_intent: location
+        lat:     '$b.fields.geo.lat'
+        lng:     '$b.fields.geo.lng'
+        name:    '$loc($b.fields.name)'
+        address: '$loc($b.fields.address)'
+      memory_note: 'Sent the map pin for {$loc($b.fields.name)}.'
+    - render:
+        render_intent: detail_card
+        body: '$lines($compact([
+                 $t("branch-location.hours", { hours: $loc($b.fields.hours) }),
+                 $t("branch-location.phone", { phone: $b.fields.phone })
+               ]), "\n")'
+        buttons:
+          - { title: '{$t("xpeng-egypt.cta_test_drive")}', on_select: { invoke: book-test-drive, with: { branch_code: '$input.branch_code' } } }
+    - end: applied
+
+  no_pin:
+    - answer:
+        data: { address: '$loc($b.fields.address)', name: '$loc($b.fields.name)', hours: '$loc($b.fields.hours)' }
+        instructions: 'This showroom has no map pin on file. Give the customer its address, area and opening hours in words, and offer to book a test drive. Do NOT invent coordinates or a map link.'
+
+  unknown:
+    - answer:
+        instructions: 'That showroom code is not one of ours. Call list-branches to show the three real showrooms instead.'

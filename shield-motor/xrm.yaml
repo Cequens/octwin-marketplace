@@ -78,6 +78,10 @@ entities:
       incident_when:  { type: text, label: { en: 'When', ar: 'وقت الحادث' } }
       emirate:        { type: select, options: [dubai, sharjah, abu_dhabi, ajman, rak], label: { en: 'Emirate', ar: 'الإمارة' } }
       location:       { type: textarea, label: { en: 'Location', ar: 'مكان الحادث' } }
+      # The accident spot as a map pin. An assessor dispatched to a crash needs
+      # coordinates, not "Sheikh Zayed Road near the exit" — and the customer is
+      # standing there, so one tap is the whole answer.
+      pin:            { type: geo, label: { en: 'Location pin', ar: 'الموقع على الخريطة' } }
       # Stored as the customer described it — never as a fault assessment.
       description:    { type: textarea, label: { en: 'What happened (customer''s words)', ar: 'وصف الحادث بكلمات العميل' } }
       police_report:  { type: text, label: { en: 'Police report number', ar: 'رقم تقرير الشرطة' } }

@@ -18,7 +18,9 @@ strings:
 
   label.recipient: 'اسم المستلم'
   label.city:      'المدينة'
-  label.address:   'العنوان'
+  label.address:   'العنوان — الحي والشارع والمبنى'
+  label.pin:       'موقع التوصيل على الخريطة'
+  skip_pin:        'أكتفي بالعنوان ⏭️'
   label.payment:   'طريقة الدفع'
 
   field_header.city:    '🏙️ لأي مدينة نوصّل الطلب؟'

@@ -1,0 +1,89 @@
+flow_id:     nearest-branch
+version:     1
+description: |-
+  [interactive Tool] Find the XPeng showroom closest to the customer. Asks them to
+  share their location, then lists the showrooms nearest-first with the distance to
+  each, and offers directions or a test-drive booking. Call when the customer asks
+  which showroom is nearest / closest to them, or how far a showroom is.
+
+input: {}
+
+entry:
+  - else: true
+    goto: ask_where
+
+steps:
+  # ── 1) Ask for the pin ──
+  # A `type: geo` field renders the channel's NATIVE share-location affordance
+  # (Meta's "Send location" on WhatsApp, a one-tap button on web) and the engine
+  # folds the shared point into `$state.pin` itself — no coordinate parsing, and
+  # no lat/lng argument the agent could invent.
+  #
+  # `required: false` is deliberate: a geo field can ONLY be answered by sharing,
+  # so a required one strands a web visitor who blocks the browser permission —
+  # they cannot type their way out. Skipping falls back to the plain list, which
+  # is what `list-branches` would have shown anyway.
+  ask_where:
+    - collect:
+        fields:
+          - field: pin
+            type: geo
+            required: false
+            label:      '$t("nearest-branch.label.pin")'
+            skip_title: '$t("nearest-branch.skip")'
+        complete: [{ goto: route }]
+
+  route:
+    - if: '$state.pin == null'
+      goto: no_pin
+    - goto: load_near
+
+  # ── 2) Nearest first ──
+  # `within_km` bounds the search and `near` orders it; both compile the SAME
+  # distance expression, so the radius and the ordering can never disagree. Every
+  # row comes back with `distance_km` — the number the rows were sorted by, which
+  # is why the card labels it rather than recomputing one that could differ.
+  #
+  # 400km covers Egypt end to end, so a customer anywhere in the country still
+  # gets an answer rather than an empty list telling them nothing.
+  load_near:
+    - do: record_list
+      args:
+        entity: branch
+        all:    true
+        where:  { field: geo, op: within_km, value: { lat: '$state.pin.lat', lng: '$state.pin.lng', km: 400 } }
+        sort:   { near: { field: geo, lat: '$state.pin.lat', lng: '$state.pin.lng' } }
+        limit:  10
+      bind: near
+      outputs:
+        ok:    [{ goto: show_near }]
+        empty: [{ goto: too_far }]
+
+  show_near:
+    - if: '$length($near.rows) == 0'    # all:true returns ok+[] for 0 rows, not the empty port
+      goto: too_far
+    - render:
+        render_intent: carousel
+        body: '{$t("nearest-branch.intro")}'
+        items: '$near.rows'
+        item_template:
+          image_url: '$coalesce($item.fields.photo, "")'
+          body: "$lines([ '🏢 ' + $loc($item.fields.name), '📏 ' + $t('nearest-branch.km', { km: $round($item.distance_km, 1) }), '📍 ' + $loc($item.fields.address), '🕒 ' + $loc($item.fields.hours) ])"
+          buttons:
+            # Two buttons is Meta's hard cap per carousel card — directions first,
+            # because someone asking "which is nearest" is usually about to travel.
+            - { title: '{$t("nearest-branch.directions")}', on_select: { invoke: branch-location, with: { branch_code: '$item.fields.code' } } }
+            - { title: '{$t("xpeng-egypt.cta_test_drive")}', on_select: { invoke: book-test-drive, with: { branch_code: '$item.fields.code' } } }
+      memory_note: 'Listed {$length($near.rows)} showrooms nearest-first; closest is {$round($near.rows[0].distance_km, 1)}km away.'
+    - end: applied
+
+  # ── Fallbacks ──
+  # Skipping the share is a normal answer, not a failure: hand off to the plain
+  # showroom list rather than asking again.
+  no_pin:
+    - answer:
+        instructions: "The customer chose not to share their location. Do NOT ask again. Call list-branches to show all showrooms, and mention they can tell you which area they are in if they want the closest one."
+
+  too_far:
+    - answer:
+        instructions: "No XPeng showroom is within reach of the location they shared — all showrooms are in Greater Cairo. Say that plainly, name Sheikh Zayed / DUNE Mall / Mivida as the three locations, and offer capture-lead so sales can follow up."

@@ -4,6 +4,8 @@ strings:
   label.material:      'الصنف المطلوب'
   label.qty:           'الكمية'
   label.site:          'موقع التسليم'
+  label.pin:           'الموقع على الخريطة'
+  skip_pin:            'أكتفي بالاسم ⏭️'
   label.name:          'اسم العميل'
   unit_generic:        'وحدة'
 

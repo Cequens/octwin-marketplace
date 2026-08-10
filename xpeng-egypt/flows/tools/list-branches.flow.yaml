@@ -32,6 +32,10 @@ steps:
           image_url: '$coalesce($item.fields.photo, "")'
           body: "$lines([ '🏢 ' + $loc($item.fields.name), '📍 ' + $loc($item.fields.address), '🕒 ' + $loc($item.fields.hours), '📞 ' + $item.fields.phone ])"
           buttons:
+            # Two is Meta's hard cap per carousel card. Until now this pack showed
+            # an address as text with no way to act on it — the coordinates were
+            # sitting on the same record, unread by anything.
+            - { title: '{$t("list-branches.directions")}', on_select: { invoke: branch-location, with: { branch_code: '$item.fields.code' } } }
             - { title: '{$t("xpeng-egypt.cta_test_drive")}', on_select: { invoke: book-test-drive, with: { branch_code: '$item.fields.code' } } }
       memory_note: 'Showed {$page.total} showrooms.'
     - end: applied

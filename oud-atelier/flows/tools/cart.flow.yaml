@@ -211,7 +211,15 @@ steps:
                 - { value: abha,    label: cart.city.abha }
           - field: address
             label: '$t("cart.label.address")'
-            describe: 'District, street and any landmark for the courier.'
+            describe: 'District, street, building and flat — the part a map pin cannot show.'
+          # OPTIONAL: a geo field can only be answered by SHARING, so requiring it
+          # would strand a web shopper who blocks the browser permission mid-checkout.
+          # The typed address above still completes the order.
+          - field: pin
+            type: geo
+            required: false
+            label:      '$t("cart.label.pin")'
+            skip_title: '$t("cart.skip_pin")'
           - field: payment_method
             label: '$t("cart.label.payment")'
             options:
@@ -257,6 +265,7 @@ steps:
           recipient:      '$state.recipient'
           city:           '$state.city'
           address:        '$state.address'
+          pin:            '$state.pin'
           payment_method: '$state.payment_method'
       bind: order
       outputs:

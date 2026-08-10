@@ -100,7 +100,14 @@ steps:
                 - { value: giza,       label: prescription.area.giza }
           - field: address
             label:    '$t("prescription.label.address")'
-            describe: 'Street, building and flat for the delivery.'
+            describe: 'Street, building and flat — the part a map pin cannot show.'
+          # OPTIONAL, same reason as the OTC basket: sharing is the only way to
+          # answer a geo field, so a required one is a dead end on web.
+          - field: pin
+            type: geo
+            required: false
+            label:      '$t("prescription.label.pin")'
+            skip_title: '$t("prescription.skip_pin")'
           - field: phone
             label:    '$t("prescription.label.phone")'
             describe: 'A mobile number the pharmacist can call.'
@@ -119,6 +126,7 @@ steps:
           rx_photo:       '$state.rx_photo'
           delivery_area:  '$state.delivery_area'
           address:        '$state.address'
+          pin:            '$state.pin'
           phone:          '"" + $state.phone'
       bind: rx
       outputs:

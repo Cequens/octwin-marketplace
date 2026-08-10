@@ -1,0 +1,5 @@
+flow_id: branch-location
+
+strings:
+  hours: '🕒 Open: {hours}'
+  phone: '📞 {phone}'

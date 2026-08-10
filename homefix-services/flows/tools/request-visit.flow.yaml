@@ -98,7 +98,30 @@ steps:
                 - { value: emergency, label: request-visit.urg.emergency }
                 - { value: soon,      label: request-visit.urg.soon }
                 - { value: routine,   label: request-visit.urg.routine }
+          # WHICH property — asked BEFORE the address, because a returning
+          # customer should tap the home we already hold rather than describe it
+          # again. `record_list` here is contact-scoped by default (record_save
+          # auto-links the conversation's contact), so these are only ever THEIR
+          # properties.
+          #
+          # The list carries a synthetic "a different address" row, so choosing to
+          # add one is a tap rather than a dead end. A FIRST-TIME customer has no
+          # properties, leaving that single row — and `auto_resolve: true` then
+          # picks it silently, so they never see a one-option picker.
+          - field: property_id
+            label: '$t("request-visit.label.property")'
+            options:
+              header: request-visit.field_header.property
+              cta:    request-visit.field_cta.property
+              fetch:  { do: record_list, args: { entity: property, limit: 9 }, bind: props }
+              rows:   '$concat($props.rows, [{ id: "__new", fields: { label: $t("request-visit.new_address"), address: "" } }])'
+              map:
+                value:       '$item.id'
+                label:       '$item.fields.label'
+                description: '$coalesce($item.fields.address, "")'
+              auto_resolve: true
           - field: emirate
+            when: '$state.property_id == "__new"'
             label: '$t("request-visit.label.emirate")'
             options:
               header: request-visit.field_header.emirate
@@ -110,8 +133,19 @@ steps:
                 - { value: ajman,     label: request-visit.em.ajman }
                 - { value: rak,       label: request-visit.em.rak }
           - field: address
+            when: '$state.property_id == "__new"'
             label:    '$t("request-visit.label.address")'
-            describe: 'Building, flat/villa number and a landmark the technician can find.'
+            describe: 'Building, flat/villa number and floor — the part of an address a map pin cannot show.'
+          # The map pin. OPTIONAL on purpose, and not because it matters less:
+          # a `type: geo` field can only be answered by SHARING a location, so a
+          # required one is a dead end for a web visitor who blocks the browser
+          # permission — they cannot type their way out of it. Offered with a
+          # Skip, the address above still gets the job dispatched.
+          - field: pin
+            type: geo
+            required: false
+            label:      '$t("request-visit.label.pin")'
+            skip_title: '$t("request-visit.skip_pin")'
           - field: contact_name
             label:    '$t("request-visit.label.contact")'
             describe: 'Who the technician should ask for on arrival.'
@@ -129,22 +163,65 @@ steps:
             describe: "What is wrong, in the customer's own words."
         complete: [{ goto: save_property }]
 
+  # Two ways to arrive here, and only ONE of them creates a property.
+  #
+  # This used to dedupe on `match: { field: label, value: $state.address }` — the
+  # free-text address the customer had just typed. "Villa 12, Street 4, Al Barsha"
+  # and "villa 12 street 4 albarsha" are different keys, so every retype forked the
+  # home into a second record and split its history, notes and pin. A `geo` pin
+  # cannot fix that (a float pair is not an equality key); the fix is to stop
+  # asking the customer to retype at all — the picker above hands back a record ID.
   save_property:
-    # Deduped on the label, so a returning customer's home is updated in place and the
-    # technician's notes stay attached to one property.
+    - if: '$state.property_id != "__new"'
+      goto: use_existing
+    - goto: create_property
+
+  # An existing property carries its OWN address, emirate and pin. Read them back:
+  # the work order below stamps them, and `$state.address` is null on this path
+  # because the collect skipped those fields.
+  use_existing:
+    - do: record_get
+      args: { entity: property, record_id: '$state.property_id' }
+      bind: prop_row
+      outputs:
+        ok:        [{ goto: adopt_existing }]
+        not_found: [{ goto: create_property }]   # deleted between turns → fall back to creating one
+
+  adopt_existing:
+    - assign:
+        prop_id:     '$prop_row.id'
+        eff_address: '$prop_row.fields.address'
+        eff_emirate: '$prop_row.fields.emirate'
+        eff_pin:     '$prop_row.fields.pin'
+    - goto: confirm
+
+  create_property:
     - do: record_save
       args:
         entity: property
-        match:  { field: label, value: '$state.address' }
+        # No `match:` — this branch only runs when the customer chose "a different
+        # address", so a new record is the correct outcome. The entity's own
+        # `dedupe_by: label` still merges a byte-identical retype as a backstop.
         fields:
           label:   '$state.address'
           emirate: '$state.emirate'
           address: '$state.address'
+          # The pin the customer shared, straight into the `geo` field this pack
+          # has always declared for it. Omitted when they skipped.
+          pin:     '$state.pin'
       bind: prop
       outputs:
-        ok:      [{ goto: confirm }]
-        invalid: [{ goto: confirm }]
-        failed:  [{ goto: confirm }]
+        ok:      [{ goto: adopt_new }]
+        invalid: [{ goto: adopt_new }]
+        failed:  [{ goto: adopt_new }]
+
+  adopt_new:
+    - assign:
+        prop_id:     '$prop.record_id'
+        eff_address: '$state.address'
+        eff_emirate: '$state.emirate'
+        eff_pin:     '$state.pin'
+    - goto: confirm
 
   confirm:
     - assign:
@@ -156,8 +233,9 @@ steps:
                     $t("request-visit.preview.header"),
                     $t("request-visit.preview.service", { service: $coalesce($svc_label, $state.svc_label, "-") }),
                     $t("request-visit.preview.urgency", { urgency: $enum_label($state.urgency, "urgency", $state.urgency) }),
-                    $t("request-visit.preview.emirate", { emirate: $enum_label($state.emirate, "emirate", $state.emirate) }),
-                    $t("request-visit.preview.address", { address: $state.address }),
+                    $t("request-visit.preview.emirate", { emirate: $enum_label($eff_emirate, "emirate", $eff_emirate) }),
+                    $t("request-visit.preview.address", { address: $eff_address }),
+                    $eff_pin != null ? $t("request-visit.preview.pin") : null,
                     $t("request-visit.preview.window", { window: $enum_label($state.preferred_window, "window", $state.preferred_window) }),
                     $t("request-visit.preview.callout", { fee: $format_money($callout, "AED") }),
                     $surcharge > 0 ? $t("request-visit.preview.surcharge", { fee: $format_money($surcharge, "AED") }) : null,
@@ -183,12 +261,17 @@ steps:
         stage:  received
         fields:
           urgency:          '$state.urgency'
-          emirate:          '$state.emirate'
+          # `$eff_*` — resolved by save_property, because a returning customer who
+          # picked an existing property never retyped any of these.
+          emirate:          '$eff_emirate'
           trade:            '$coalesce($eff_trade, $state.svc_trade, "other")'
           service:          '$state.service_id'
           service_label:    '$coalesce($svc_label, $state.svc_label)'
-          property:         '$prop.record_id'
-          address:          '$state.address'
+          property:         '$prop_id'
+          address:          '$eff_address'
+          # The technician gets coordinates, not prose — the reason `work_order.pin`
+          # was declared. Absent when the customer skipped the share.
+          pin:              '$eff_pin'
           fault:            '$state.fault'
           fault_photo:      '$state.fault_photo'   # an agent-supplied MEDIA- ref, or absent
           preferred_window: '$state.preferred_window'
@@ -206,7 +289,7 @@ steps:
         header: '{$t("request-visit.done_header")}'
         body: '$lines($compact([
                  $t("request-visit.done_ref", { ref: $order.record_number }),
-                 $t("request-visit.done_crew", { emirate: $enum_label($state.emirate, "emirate", $state.emirate) }),
+                 $t("request-visit.done_crew", { emirate: $enum_label($eff_emirate, "emirate", $eff_emirate) }),
                  $t("request-visit.done_window", { hours: $window_hours }),
                  $t("request-visit.done_next")
                ]), "\n")'

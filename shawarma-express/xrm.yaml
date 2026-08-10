@@ -75,6 +75,9 @@ entities:
       customer_name:  { type: text, label: { en: 'Customer', ar: 'العميل' } }
       area:           { type: select, options: [nasr_city, maadi, zamalek, heliopolis, october, giza], label: { en: 'Area', ar: 'المنطقة' } }
       address:        { type: textarea, label: { en: 'Address', ar: 'العنوان' } }
+      # The delivery pin. Food delivery is the shortest promise in the pack —
+      # a driver hunting for a building spends it.
+      pin:            { type: geo, label: { en: 'Delivery pin', ar: 'موقع التوصيل على الخريطة' } }
       branch:         { type: record, entity: branch, label: { en: 'Branch', ar: 'الفرع' } }
       branch_label:   { type: text, label: { en: 'Branch', ar: 'الفرع' } }
       payment_method: { type: select, options: [cash_on_delivery, card_on_delivery, wallet], label: { en: 'Payment', ar: 'الدفع' } }

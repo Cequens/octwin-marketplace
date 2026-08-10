@@ -25,7 +25,7 @@ steps:
   gather:
     - collect:
         before_each:
-          - assign: { campus_label: null }
+          - assign: { campus_label: null, campus_address: null }
           - if: '$state.campus_id != null'
             then:
               - do: record_get
@@ -37,7 +37,11 @@ steps:
                   failed:    []
               - if: '$cmp.fields != null'
                 then:
-                  - assign: { campus_label: '$cmp.fields.name' }
+                  # The address was declared AND seeded from the start, and no
+                  # flow read it — a family was booked onto a campus visit and
+                  # never told the street. Carried through to the confirmation
+                  # and the T-24h reminder below.
+                  - assign: { campus_label: '$cmp.fields.name', campus_address: '$cmp.fields.address' }
         progress: '$lines($compact([
                      $t("book-tour.progress.header"),
                      $campus_label != null ? $t("book-tour.progress.campus", { campus: $campus_label }) : null,
@@ -57,7 +61,7 @@ steps:
                 value:       '$item.id'
                 label:       '$item.fields.name'
                 description: '$item.fields.area'
-                selection:   { campus_label: '$item.fields.name' }
+                selection:   { campus_label: '$item.fields.name', campus_address: '$item.fields.address' }
               auto_resolve: true
           - field: slot_start
             label: '$t("book-tour.label.slot")'
@@ -174,7 +178,10 @@ steps:
             memory_note: 'Campus tour reminder (t24)'
             intent:
               render_intent: detail_card
-              body: '{$t("book-tour.reminder.body", { campus: $coalesce($campus_label, ""), slot: $coalesce($state.slot_label, "") })}'
+              body: '$lines($compact([
+                       $t("book-tour.reminder.body", { campus: $coalesce($campus_label, ""), slot: $coalesce($state.slot_label, "") }),
+                       $campus_address != null ? $t("book-tour.done_address", { address: $campus_address }) : null
+                     ]), "\n")'
               buttons:
                 - { title: '{$t("book-tour.reminder.progs")}', on_select: { invoke: programmes } }
           detach: true
@@ -183,6 +190,7 @@ steps:
         header: '{$t("book-tour.done_header")}'
         body: '$lines($compact([
                  $t("book-tour.done_body", { campus: $coalesce($campus_label, ""), slot: $coalesce($state.slot_label, "") }),
+                 $campus_address != null ? $t("book-tour.done_address", { address: $campus_address }) : null,
                  $t("book-tour.done_ref", { ref: $tour.record_number }),
                  $t("book-tour.done_bring")
                ]), "\n")'

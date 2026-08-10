@@ -71,6 +71,9 @@ entities:
       recipient:      { type: text, label: { en: 'Recipient', ar: 'المستلم' } }
       city:           { type: select, options: [riyadh, jeddah, dammam, makkah, madinah, abha], label: { en: 'City', ar: 'المدينة' } }
       address:        { type: textarea, label: { en: 'Address', ar: 'العنوان' } }
+      # The delivery pin. One tap beats a district-street-landmark description,
+      # and it cannot be misspelled.
+      pin:            { type: geo, label: { en: 'Delivery pin', ar: 'موقع التوصيل على الخريطة' } }
       payment_method: { type: select, options: [cash_on_delivery, bank_transfer], label: { en: 'Payment', ar: 'الدفع' } }
       gift_wrap:      { type: boolean, label: { en: 'Gift wrap', ar: 'تغليف هدية' } }
     list: [item_count, total, city]

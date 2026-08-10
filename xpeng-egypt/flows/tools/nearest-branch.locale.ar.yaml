@@ -1,0 +1,8 @@
+flow_id: nearest-branch
+
+strings:
+  label.pin:   'موقعك'
+  skip:        'اعرض كل الفروع ⏭️'
+  intro:       'دي أقرب فروع XPENG ليك 👇 مرتّبة من الأقرب للأبعد.'
+  km:          'يبعد {km} كم'
+  directions:  '🗺️ الاتجاهات'

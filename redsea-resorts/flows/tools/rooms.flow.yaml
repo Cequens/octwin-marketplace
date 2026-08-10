@@ -19,12 +19,68 @@ input:
     describe: 'One of: sea, pool, garden, lagoon.'
 
 entry:
+  - if:   '$input.destination != null'
+    goto: resolve_dest
   - if:   '$input.view != null'
     goto: load_view
   - else: true
     goto: load_all
 
 steps:
+  # `destination` lives on the RESORT, not on the room — which is why this input
+  # was declared, documented in the description, and then silently ignored by both
+  # load paths. A guest asking for Dahab was shown every room in the country.
+  # Resolve it to resort ids first, then filter rooms by the ref.
+  resolve_dest:
+    - do: record_list
+      args:
+        entity: resort
+        all:    true
+        limit:  25
+        where:  { all: [{ field: destination, op: eq, value: '$input.destination' }] }
+      bind: dest
+      outputs:
+        ok:    [{ goto: dest_ids }]
+        empty: [{ goto: load_all }]      # unknown destination → show everything, never nothing
+
+  dest_ids:
+    - if: '$length($dest.rows) == 0'     # all:true returns ok+[] for 0 rows, not the empty port
+      goto: load_all
+    - assign:
+        resort_ids: '$map($dest.rows, "id")'
+    - if:   '$input.view != null'
+      goto: load_dest_view
+    - goto: load_dest
+
+  load_dest:
+    - do: record_search
+      args:
+        entity: room_type
+        query:  ''
+        limit:  10
+        where:  { all: [{ field: resort, op: in, value: '$resort_ids' }] }
+      bind: page
+      outputs:
+        ok:     [{ goto: show }]
+        empty:  [{ goto: load_all }]     # nothing in that destination → fall back rather than dead-end
+        failed: [{ goto: unavailable }]
+
+  load_dest_view:
+    - do: record_search
+      args:
+        entity: room_type
+        query:  ''
+        limit:  10
+        where:
+          all:
+            - { field: resort, op: in, value: '$resort_ids' }
+            - { field: view,   op: eq, value: '$input.view' }
+      bind: page
+      outputs:
+        ok:     [{ goto: show }]
+        empty:  [{ goto: load_dest }]    # that view isn't there → drop the view, keep the destination
+        failed: [{ goto: unavailable }]
+
   load_all:
     - do: record_search
       args: { entity: room_type, query: '', limit: 10 }

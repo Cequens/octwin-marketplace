@@ -1,4 +1,5 @@
 flow_id: list-branches
 
 strings:
-  intro: 'Here are the XPENG showrooms in Egypt 👇 Tap "Book a test drive" on the one that suits you.'
+  intro: 'Here are the XPENG showrooms in Egypt 👇 Tap "Directions" to get there, or book a test drive.'
+  directions: '🗺️ Directions'

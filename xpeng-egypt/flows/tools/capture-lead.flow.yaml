@@ -19,6 +19,14 @@ input:
   name:  { type: string, optional: true, describe: 'Customer name, if already given.' }
   phone: { type: string, optional: true, describe: 'Customer phone, if already given.' }
   email: { type: string, optional: true }
+  # `lead.preferred_branch` has been declared since this pack shipped and nothing
+  # ever wrote it, so sales read a blank column. Pass it when the customer named a
+  # showroom or reached you from its card — never guess one.
+  preferred_branch:
+    type: enum
+    enum: [zayed, dune, mivida]
+    optional: true
+    describe: 'The showroom they named or tapped through from. Omit if they have not said.'
 
 entry:
   - else: true
@@ -69,6 +77,7 @@ steps:
           email:            '$state.email'
           interest_type:    '$coalesce($state.interest_type, "info")'
           interested_model: '$state.interested_model'
+          preferred_branch: '$state.preferred_branch'
           expected_value:   '$state.expected_value'
       bind: saved
       outputs:

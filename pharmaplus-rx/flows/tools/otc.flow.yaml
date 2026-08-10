@@ -244,7 +244,14 @@ steps:
                 - { value: giza,       label: otc.area.giza }
           - field: address
             label:    '$t("otc.label.address")'
-            describe: 'Street, building and flat for the courier.'
+            describe: 'Street, building and flat — the part a map pin cannot show.'
+          # OPTIONAL: a geo field is answerable only by SHARING, so requiring it
+          # would strand a web customer who blocks the browser permission.
+          - field: pin
+            type: geo
+            required: false
+            label:      '$t("otc.label.pin")'
+            skip_title: '$t("otc.skip_pin")'
           - field: phone
             label:    '$t("otc.label.phone")'
             describe: 'A mobile number the pharmacy can call.'
@@ -297,6 +304,7 @@ steps:
           patient_name:   '$state.patient_name'
           delivery_area:  '$state.delivery_area'
           address:        '$state.address'
+          pin:            '$state.pin'
           phone:          '"" + $state.phone'
           payment_method: '$state.payment_method'
       bind: order

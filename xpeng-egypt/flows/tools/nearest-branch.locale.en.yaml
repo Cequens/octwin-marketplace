@@ -1,0 +1,8 @@
+flow_id: nearest-branch
+
+strings:
+  label.pin:   'Your location'
+  skip:        'Show all showrooms ⏭️'
+  intro:       'Here are the XPENG showrooms closest to you 👇 nearest first.'
+  km:          '{km} km away'
+  directions:  '🗺️ Directions'

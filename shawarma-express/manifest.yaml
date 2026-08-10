@@ -7,7 +7,7 @@
 # with milestones, and per-branch fulfilment. No pack DB, no code — pure YAML.
 
 id:          shawarma-express
-version:     '1.1.2'
+version:     '1.2.0'
 description: 'Shawarma restaurant delivery — menu carousel, basket, checkout with delivery details, live order tracking, and an automated abandoned-basket nudge.'
 
 listing:

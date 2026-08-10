@@ -107,6 +107,18 @@ steps:
           - field: site_name
             label:    '$t("request-quote.label.site")'
             describe: 'Where to deliver — a project name, a district, or an address.'
+          # A construction site is the hardest thing in this set to describe in
+          # words: half of them have no street address at all, which is why the
+          # field above is deliberately free text. A pin is the one unambiguous
+          # answer a driver with a loaded truck can use.
+          #
+          # OPTIONAL: a geo field is answerable only by SHARING, and the person
+          # raising an RFQ is often in an office rather than on the site.
+          - field: site_pin
+            type: geo
+            required: false
+            label:      '$t("request-quote.label.pin")'
+            skip_title: '$t("request-quote.skip_pin")'
           - field: customer_name
             label:    '$t("request-quote.label.name")'
             describe: 'Who the quote should be addressed to.'
@@ -153,6 +165,7 @@ steps:
           total:         '$line_total'
           customer_name: '$state.customer_name'
           site_name:     '$state.site_name'
+          site_pin:      '$state.site_pin'
       bind: quote
       outputs:
         ok:      [{ goto: append_row }]

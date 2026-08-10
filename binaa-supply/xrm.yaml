@@ -38,6 +38,9 @@ entities:
       site:          { type: record, entity: site, label: { en: 'Site', ar: 'الموقع' } }
       site_name:     { type: text, label: { en: 'Site name', ar: 'اسم الموقع' } }
       site_address:  { type: textarea, label: { en: 'Address', ar: 'العنوان' } }
+      # The delivery pin for this quote's site. Many construction sites have no
+      # street address at all, so this is often the only unambiguous "where".
+      site_pin:      { type: geo, label: { en: 'Site pin', ar: 'موقع الموقع على الخريطة' } }
       notes:         { type: textarea, label: { en: 'Notes', ar: 'ملاحظات' } }
       # Written back FROM the workbook — the append response fills the first two,
       # the inbound webhook refreshes them plus the sync stamps. So the console row

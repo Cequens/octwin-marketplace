@@ -33,6 +33,7 @@ strings:
 
   done_header:    '✅ تم حجز زيارتك'
   done_body:      '🏫 {campus} — 🕐 {slot}'
+  done_address:   '📍 العنوان: {address}'
   done_ref:       '🧾 رقم الحجز: #{ref}'
   done_bring:     '📎 احضر معاك شهادة الميلاد وآخر شهادة درجات لو أمكن.'
   btn_apply:      '📝 قدّم طلب'

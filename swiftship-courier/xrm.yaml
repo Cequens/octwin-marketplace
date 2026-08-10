@@ -84,6 +84,10 @@ entities:
       to_region:    { type: select, options: [cairo, alexandria, delta, upper], label: { en: 'To', ar: 'إلى' } }
       weight_band:  { type: select, options: [under_1, under_5, under_20, over_20], label: { en: 'Weight band', ar: 'وزن الشحنة' }, description: { en: 'Approximate weight the customer selected. The real weight is captured at collection and may reprice the job.', ar: 'الوزن التقريبي الذي اختاره العميل. ويُسجَّل الوزن الفعلي عند الاستلام وقد يعيد تسعير الطلب.' } }
       pickup_address: { type: textarea, label: { en: 'Pickup address', ar: 'عنوان الاستلام' } }
+      # The pin the sender shared. A rider finding a building is the single
+      # biggest cost in a collection, and "wrong address" is already a declared
+      # claim type on this pack (`claim.flow.yaml`).
+      pickup_pin:     { type: geo, label: { en: 'Pickup pin', ar: 'موقع الاستلام على الخريطة' } }
       recipient:    { type: text, label: { en: 'Recipient', ar: 'المستلم' } }
       recipient_phone: { type: text, label: { en: 'Recipient phone', ar: 'هاتف المستلم' } }
       window:       { type: select, options: [morning, afternoon, evening], label: { en: 'Window', ar: 'وقت الاستلام' } }

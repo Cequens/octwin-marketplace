@@ -71,7 +71,16 @@ steps:
                 - { value: over_20,  label: book-pickup.wt.over_20 }
           - field: pickup_address
             label:    '$t("book-pickup.label.address")'
-            describe: 'Where the courier collects from — street, building, floor and a landmark.'
+            describe: 'Street, building and floor — the part of an address a map pin cannot show.'
+          # A dropped pin is strictly better data for a rider than a landmark
+          # described in words. OPTIONAL: a geo field can only be answered by
+          # SHARING, so requiring it would strand a web sender who blocks the
+          # browser permission — the typed address above still gets it collected.
+          - field: pickup_pin
+            type: geo
+            required: false
+            label:      '$t("book-pickup.label.pin")'
+            skip_title: '$t("book-pickup.skip_pin")'
           - field: recipient
             label:    '$t("book-pickup.label.recipient")'
             describe: "The recipient's name."
@@ -167,6 +176,7 @@ steps:
           to_region:       '$state.to_region'
           weight_band:     '$state.weight_band'
           pickup_address:  '$state.pickup_address'
+          pickup_pin:      '$state.pickup_pin'
           recipient:       '$state.recipient'
           recipient_phone: '$state.recipient_phone'
           window:          '$state.window'
