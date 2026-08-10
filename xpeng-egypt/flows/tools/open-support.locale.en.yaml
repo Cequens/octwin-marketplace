@@ -12,4 +12,7 @@ strings:
   gap:       'Politely ask the customer for the issue details in their language.'
   f_details: 'Please describe the problem in detail?'
   f_phone:   'Your phone number? (so after-sales support can reach you)'
+  f_where:   'Where are you now? (road, direction and nearest landmark)'
+  f_pin:     'Share your location on the map so we can reach you faster'
+  skip_pin:  'The description is enough ⏭️'
   confirm:   'Your support ticket has been logged as XP-{ref} 🎫 Our team will contact you within {sla} hours. You can ask me about its status any time.'

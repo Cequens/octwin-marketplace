@@ -2,7 +2,7 @@
 # Strict schema: unknown keys are rejected on deploy. Keep `octwin validate` green.
 
 id:          xpeng-egypt
-version:     '2.3.1'
+version:     '2.4.0'
 description: 'XPeng Egypt assistant — browse models, capture leads, book test drives, activate the XPeng App, and open after-sales support tickets on WhatsApp & web (AR/EN).'
 
 # Storefront face. Without this block the pack still publishes and installs, but

@@ -42,8 +42,61 @@ steps:
         'state.branch_photo': '$b0.fields.photo'
     - goto: pick_model
 
-  # ── 1) Branch picker ──
+  # ── 1) Branch picker — same two ways in as `list-branches` ──
+  # Browsing three showrooms and finding the closest one are different questions,
+  # and only the customer knows which they are asking. The fork is a tap; the
+  # near path then shares ONE card set with the browse path, differing only by a
+  # distance line.
   ask_branch:
+    - render:
+        render_intent: detail_card
+        body: '{$t("book-test-drive.b_mode_body")}'
+        buttons:
+          - { title: '{$t("book-test-drive.b_mode_near")}', on_select: { resume: '$self', with: { branch_mode: near } } }
+          - { title: '{$t("book-test-drive.b_mode_all")}',  on_select: { resume: '$self', with: { branch_mode: all } } }
+      memory_note: 'Asked whether to pick from all showrooms or find the nearest.'
+    - pause:
+        on_resume:
+          - if:   '$state.branch_mode == "near"'
+            goto: ask_branch_where
+          - goto: load_branches_all
+
+  # `type: geo` draws the channel's NATIVE share-location affordance. Optional,
+  # because a geo field can ONLY be answered by sharing — a required one strands a
+  # web visitor who blocks the browser permission. Declining falls through to the
+  # full list, which is what the browse path would have shown anyway.
+  ask_branch_where:
+    - collect:
+        fields:
+          - field: branch_pin
+            type: geo
+            required: false
+            label:      '$t("book-test-drive.b_label_pin")'
+            skip_title: '$t("book-test-drive.b_skip_pin")'
+        complete: [{ goto: route_branch_pin }]
+
+  route_branch_pin:
+    - if: '$state.branch_pin == null'
+      goto: load_branches_all
+    - goto: load_branches_near
+
+  # `within_km` bounds it and `near` orders it — both compile the SAME distance
+  # expression, so the radius and the ordering can never disagree. 400km covers
+  # Egypt end to end, so a customer anywhere still gets an answer.
+  load_branches_near:
+    - do: record_list
+      args:
+        entity: branch
+        all:    true
+        where:  { field: geo, op: within_km, value: { lat: '$state.branch_pin.lat', lng: '$state.branch_pin.lng', km: 400 } }
+        sort:   { near: { field: geo, lat: '$state.branch_pin.lat', lng: '$state.branch_pin.lng' } }
+        limit:  10
+      bind: br
+      outputs:
+        ok:    [{ goto: show_branches }]
+        empty: [{ goto: no_branches }]
+
+  load_branches_all:
     - do: record_list
       args: { entity: branch, all: true }
       bind: br
@@ -56,14 +109,18 @@ steps:
       goto: no_branches
     - render:
         render_intent: carousel        # card shape (buttons[].on_select) — picker item_template.on_select throws on this build
-        body: '{$t("book-test-drive.b_body")}'
+        body: '$state.branch_pin != null ? $t("book-test-drive.b_body_near") : $t("book-test-drive.b_body")'
         items: '$br.rows'
         item_template:
           image_url: '$coalesce($item.fields.photo, "")'
-          body: "$lines([ '🏢 ' + $loc($item.fields.name), '📍 ' + $loc($item.fields.area) ])"
+          # The distance line appears only when the rows were near-sorted, so both
+          # paths share one template. `distance_km` is the number the rows were
+          # ORDERED by — labelling with a recomputed one is how a list ends up
+          # reading "5.1 · 2.4 · 9.6".
+          body: "$lines($compact([ '🏢 ' + $loc($item.fields.name), $item.distance_km != null ? '📏 ' + $t('book-test-drive.b_km', { km: $round($item.distance_km, 1) }) : null, '📍 ' + $loc($item.fields.area) ]))"
           buttons:
             - { title: '{$t("book-test-drive.choose")}', on_select: { resume: '$self', with: { branch_id: '$item.id', branch_name: '$loc($item.fields.name)', branch_photo: '$item.fields.photo' } } }
-      memory_note: 'Asked the customer to pick a showroom.'
+      memory_note: 'Showed {$length($br.rows)} showrooms{$state.branch_pin != null ? " nearest-first" : ""} to pick from.'
     - pause:
         on_resume:
           - goto: pick_model

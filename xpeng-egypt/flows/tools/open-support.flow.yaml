@@ -43,16 +43,40 @@ steps:
             label: '$t("open-support.f_details")'
           - field: phone
             label: '$t("open-support.f_phone")'
+          # ROADSIDE ONLY — a stranded driver's position is the single most
+          # useful thing on the ticket, and the 2h SLA is spent finding them.
+          # Asked in words first, because that is the answer that always exists:
+          # the pin is optional (a geo field can ONLY be answered by sharing, so
+          # a required one traps a web visitor who blocked the permission) and
+          # optional fields are offered LAST, after everything required.
+          - field: where
+            when:  '$state.type == "roadside_assistance"'
+            label: '$t("open-support.f_where")'
+            describe: 'Road, direction of travel and the nearest landmark or exit.'
+          - field: pin
+            when:  '$state.type == "roadside_assistance"'
+            type:  geo
+            required: false
+            label:      '$t("open-support.f_pin")'
+            skip_title: '$t("open-support.skip_pin")'
         complete: [{ goto: open }]
 
   open:
     - do: case_open
       args:
         type: '$state.type'
+        # `fields` rides in the case's free-form `data` bag — no schema to satisfy,
+        # which is why the roadside keys can simply be absent on the other types.
         fields:
           details: '$state.details'
           phone:   '$state.phone'
           model:   '$coalesce($state.model_code, "")'
+          where:   '$coalesce($state.where, "")'
+          pin:     '$state.pin'
+          # A clickable link, not just two floats. Whoever picks up an urgent
+          # roadside ticket needs to START DRIVING, and coordinates in a data bag
+          # are not a destination.
+          pin_url: '$state.pin != null ? "https://www.google.com/maps/search/?api=1&query=" + $state.pin.lat + "," + $state.pin.lng : ""'
       bind: c
       outputs:
         ok: [{ goto: confirm }]

@@ -7,7 +7,14 @@ strings:
   spots_label: 'slot(s) available'
 
   b_header: 'Choose a showroom'
-  b_body:   'Which showroom would you like to test drive at?'
+  b_mode_body: 'How would you like to pick a showroom?'
+  b_mode_near: '📍 Closest to me'
+  b_mode_all:  '🏢 All showrooms'
+  b_label_pin: 'Your location'
+  b_skip_pin:  'Show all showrooms ⏭️'
+  b_km:        '{km} km away'
+  b_body:      'Which showroom would you like to test drive at?'
+  b_body_near: 'Here are the showrooms closest to you 👇 pick one.'
   b_cta:    'Pick a branch'
 
   m_body:   'Great! Now pick the model you would like to test drive 👇'
