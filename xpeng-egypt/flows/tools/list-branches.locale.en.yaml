@@ -1,5 +1,14 @@
 flow_id: list-branches
 
 strings:
-  intro: 'Here are the XPENG showrooms in Egypt 👇 Tap "Directions" to get there, or book a test drive.'
-  directions: '🗺️ Directions'
+  mode_body:   'How would you like to see the XPENG showrooms?'
+  mode_near:   '📍 Closest to me'
+  mode_all:    '🏢 All showrooms'
+
+  label.pin:   'Your location'
+  skip:        'Show all showrooms ⏭️'
+
+  intro:       'Here are the XPENG showrooms in Egypt 👇 Tap "Directions" to get there, or book a test drive.'
+  intro_near:  'Here are the XPENG showrooms closest to you 👇 nearest first.'
+  km:          '{km} km away'
+  directions:  '🗺️ Directions'

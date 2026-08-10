@@ -33,19 +33,34 @@ steps:
     - goto: send_pin
 
   send_pin:
-    # `render_intent: location` takes the SAME `lat`/`lng` the `geo` field stores,
-    # so the coordinates copy straight across with no remapping. WhatsApp draws
-    # its native location message; web draws a card with an Open-in-Maps link.
+    # TWO messages, so the pin goes out via `send_message` and the card via
+    # `render:`. A step emits exactly ONE `render:` — two render nodes in a row
+    # do not produce two messages, the second REPLACES the first. This flow
+    # shipped that way for an hour and the customer got the hours/phone card with
+    # no map at all, which reads as "Directions does nothing".
     #
-    # Meta's location message carries NO body text, so anything the customer must
-    # read goes in the separate card below rather than on the pin.
-    - render:
-        render_intent: location
-        lat:     '$b.fields.geo.lat'
-        lng:     '$b.fields.geo.lng'
-        name:    '$loc($b.fields.name)'
-        address: '$loc($b.fields.address)'
-      memory_note: 'Sent the map pin for {$loc($b.fields.name)}.'
+    # Pin first: it is the thing they asked for. `render_intent: location` takes
+    # the SAME `lat`/`lng` the `geo` field stores, so the coordinates copy across
+    # with no remapping. Meta's location message carries NO body text and no
+    # buttons, which is exactly why the readable part needs its own message.
+    - do: send_message
+      args:
+        to: '$contact.id'
+        intent:
+          render_intent: location
+          lat:     '$b.fields.geo.lat'
+          lng:     '$b.fields.geo.lng'
+          name:    '$loc($b.fields.name)'
+          address: '$loc($b.fields.address)'
+      # Both ports go to the SAME step, and neither is left empty: an empty port
+      # runs the canonical handler, which ENDS the run — the card below would be
+      # unreachable and the customer would get a pin and nothing else. Failure
+      # routes there too, so a dropped pin still leaves them the address in words.
+      outputs:
+        delivered: [{ goto: show_card }]
+        failed:    [{ goto: show_card }]
+
+  show_card:
     - render:
         render_intent: detail_card
         body: '$lines($compact([
@@ -54,6 +69,7 @@ steps:
                ]), "\n")'
         buttons:
           - { title: '{$t("xpeng-egypt.cta_test_drive")}', on_select: { invoke: book-test-drive, with: { branch_code: '$input.branch_code' } } }
+      memory_note: 'Sent the map pin for {$loc($b.fields.name)} plus its hours and phone.'
     - end: applied
 
   no_pin:

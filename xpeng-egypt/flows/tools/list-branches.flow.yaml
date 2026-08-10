@@ -1,18 +1,100 @@
-flow_id:     list-branches
-version:     1
-description: |-
-  Show the XPeng Egypt showrooms (Sheikh Zayed, DUNE Mall, Mivida) with area,
-  address, opening hours and phone. Call when the customer asks where to find us
-  or where they can see/test a car.
+# list-branches — ONE showroom journey with two ways in.
+#
+# This was two tools: `list-branches` (show all three) and `nearest-branch` (ask
+# for a pin, then rank). Splitting them put the choice on the AGENT — it had to
+# guess from the customer's phrasing which one they meant, and when "nearest show
+# room" came in it picked the browse tool. One flow that opens with the choice
+# puts it where it belongs: with the customer, in a tap.
+#
+# The flow id is deliberately unchanged. It is baked into tap ids already rendered
+# into live conversations (`t:invoke:list-branches`) and into the home hub's row,
+# so renaming it would break buttons customers can still see.
 
-input: {}
+flow_id:     list-branches
+version:     2
+description: |-
+  [interactive Tool] The XPeng Egypt showrooms (Sheikh Zayed, DUNE Mall, Mivida).
+  Opens with a choice — browse them all, or find the closest — then shows each with
+  its address, hours, phone, Directions and a test-drive booking. Call when the
+  customer asks where to find you, which showroom is nearest, or where they can see
+  a car. Pass `mode: near` when they explicitly asked for the CLOSEST one and
+  `mode: all` when they asked to see the list; omit it to let them choose.
+
+input:
+  mode:
+    type:     enum
+    enum:     [all, near]
+    optional: true
+    describe: 'Only when the customer already said which they want. Omit if unsure — the flow asks.'
 
 entry:
+  - if:   '$input.mode == "near"'
+    goto: ask_where
+  - if:   '$input.mode == "all"'
+    goto: load_all
   - else: true
-    goto: load
+    goto: ask_mode
 
 steps:
-  load:
+  # ── The fork ──
+  ask_mode:
+    - render:
+        render_intent: detail_card
+        body: '{$t("list-branches.mode_body")}'
+        buttons:
+          - { title: '{$t("list-branches.mode_near")}', on_select: { resume: '$self', with: { mode: near } } }
+          - { title: '{$t("list-branches.mode_all")}',  on_select: { resume: '$self', with: { mode: all } } }
+      memory_note: 'Asked whether to show all showrooms or find the nearest.'
+    - pause:
+        on_resume:
+          - if:   '$state.mode == "near"'
+            goto: ask_where
+          - goto: load_all
+
+  # ── Nearest: ask for the pin ──
+  # `type: geo` renders the channel's NATIVE share-location affordance — Meta's
+  # "Send location" button on WhatsApp, a one-tap button in the web widget — and
+  # the engine folds the shared point into `$state.pin` itself.
+  #
+  # `required: false` is not "less important": a geo field can ONLY be answered by
+  # sharing, so a required one strands a web visitor who blocks the browser
+  # permission. Declining falls through to the full list, which is what they would
+  # have got anyway.
+  ask_where:
+    - collect:
+        fields:
+          - field: pin
+            type: geo
+            required: false
+            label:      '$t("list-branches.label.pin")'
+            skip_title: '$t("list-branches.skip")'
+        complete: [{ goto: route_pin }]
+
+  route_pin:
+    - if: '$state.pin == null'
+      goto: load_all
+    - goto: load_near
+
+  # `within_km` bounds it and `near` orders it; both compile the SAME distance
+  # expression, so the radius and the ordering can never disagree. Every row comes
+  # back with `distance_km` — the number the rows were sorted by, which is why the
+  # card labels it rather than recomputing one that could differ. 400km covers
+  # Egypt end to end, so a customer anywhere still gets an answer.
+  load_near:
+    - do: record_list
+      args:
+        entity: branch
+        all:    true
+        where:  { field: geo, op: within_km, value: { lat: '$state.pin.lat', lng: '$state.pin.lng', km: 400 } }
+        sort:   { near: { field: geo, lat: '$state.pin.lat', lng: '$state.pin.lng' } }
+        limit:  10
+      bind: page
+      outputs:
+        ok:    [{ goto: show }]
+        empty: [{ goto: too_far }]
+        # failed → throws → error-net
+
+  load_all:
     - do: record_list
       args: { entity: branch, all: true }
       bind: page
@@ -21,24 +103,30 @@ steps:
         empty: [{ goto: none }]
         # failed → throws → error-net
 
+  # ── One card set for BOTH modes ──
+  # The distance line is present only when the rows were near-sorted, so the two
+  # paths share a render instead of duplicating a five-line template.
   show:
     - if: '$length($page.rows) == 0'    # all:true returns ok+[] for 0 rows, not the empty port
       goto: none
     - render:
         render_intent: carousel
-        body: '{$t("list-branches.intro")}'
+        body: '$state.pin != null ? $t("list-branches.intro_near") : $t("list-branches.intro")'
         items: '$page.rows'
         item_template:
           image_url: '$coalesce($item.fields.photo, "")'
-          body: "$lines([ '🏢 ' + $loc($item.fields.name), '📍 ' + $loc($item.fields.address), '🕒 ' + $loc($item.fields.hours), '📞 ' + $item.fields.phone ])"
+          body: "$lines($compact([ '🏢 ' + $loc($item.fields.name), $item.distance_km != null ? '📏 ' + $t('list-branches.km', { km: $round($item.distance_km, 1) }) : null, '📍 ' + $loc($item.fields.address), '🕒 ' + $loc($item.fields.hours), '📞 ' + $item.fields.phone ]))"
           buttons:
-            # Two is Meta's hard cap per carousel card. Until now this pack showed
-            # an address as text with no way to act on it — the coordinates were
-            # sitting on the same record, unread by anything.
+            # Two is Meta's hard cap per carousel card. Directions first — someone
+            # who just asked where a showroom is, is usually about to travel.
             - { title: '{$t("list-branches.directions")}', on_select: { invoke: branch-location, with: { branch_code: '$item.fields.code' } } }
             - { title: '{$t("xpeng-egypt.cta_test_drive")}', on_select: { invoke: book-test-drive, with: { branch_code: '$item.fields.code' } } }
-      memory_note: 'Showed {$page.total} showrooms.'
+      memory_note: 'Showed {$length($page.rows)} showrooms{$state.pin != null ? " nearest-first" : ""}.'
     - end: applied
+
+  too_far:
+    - answer:
+        instructions: "No XPeng showroom is within reach of the location they shared — all three are in Greater Cairo. Say that plainly, name Sheikh Zayed / DUNE Mall / Mivida, and offer capture-lead so sales can follow up."
 
   none:
     - answer:
