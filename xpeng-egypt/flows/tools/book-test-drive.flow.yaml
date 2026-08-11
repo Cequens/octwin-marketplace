@@ -184,7 +184,11 @@ steps:
     - collect:
         gap_instructions: '$t("book-test-drive.gap")'
         fields:
+          # CONFIRMS the WhatsApp profile name rather than asking for it — one tap,
+          # with a "different name" way out for anyone whose display name is not what
+          # should appear on a showroom booking.
           - field: name
+            type: name
             label: '$t("book-test-drive.f_name")'
           # ONE TAP on WhatsApp's native "Share Contact Info", normalised to +E164.
           # Also fixes the reminder `dedupe_key` below, which interpolates this value:

@@ -119,7 +119,11 @@ steps:
             required: false
             label:      '$t("request-quote.label.pin")'
             skip_title: '$t("request-quote.skip_pin")'
+          # CONFIRMS the WhatsApp profile name instead of asking for it. On web, where
+          # there is no profile name, it degrades to the typed ask by itself — the same
+          # channel-blindness that fixed the session-id-as-phone bug above.
           - field: customer_name
+            type: name
             label:    '$t("request-quote.label.name")'
             describe: 'Who the quote should be addressed to.'
         complete: [{ goto: confirm }]

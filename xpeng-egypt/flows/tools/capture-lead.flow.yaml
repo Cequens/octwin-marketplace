@@ -37,7 +37,13 @@ steps:
     - collect:
         gap_instructions: '$t("capture-lead.gap")'
         fields:
+          # `type: name` CONFIRMS rather than asks: WhatsApp sends the customer's
+          # profile name on every inbound, so this shows it back with "that's me" /
+          # "a different name" instead of making them type a name we already hold.
+          # Not adopted silently — a profile name is a display name, and sales calling
+          # a lead filed as "🔥 A 🔥" is worse than one tap.
           - field: name
+            type: name
             label: '$t("capture-lead.f_name")'
           # `type: phone` draws WhatsApp's NATIVE "Share Contact Info" button, so the
           # customer answers with ONE TAP and the number arrives Meta-verified and
