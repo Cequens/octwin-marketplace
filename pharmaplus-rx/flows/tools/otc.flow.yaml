@@ -252,7 +252,10 @@ steps:
             required: false
             label:      '$t("otc.label.pin")'
             skip_title: '$t("otc.skip_pin")'
+          # ONE TAP on WhatsApp's native "Share Contact Info", normalised to +E164.
           - field: phone
+            type: phone
+            dial_code: '20'
             label:    '$t("otc.label.phone")'
             describe: 'A mobile number the pharmacy can call.'
           - field: payment_method
@@ -305,7 +308,8 @@ steps:
           delivery_area:  '$state.delivery_area'
           address:        '$state.address'
           pin:            '$state.pin'
-          phone:          '"" + $state.phone'
+          # No `'"" + …'` coercion any more — a `type: phone` field yields a +E164 string.
+          phone:          '$state.phone'
           payment_method: '$state.payment_method'
       bind: order
       outputs:

@@ -54,13 +54,15 @@ steps:
               sections:
                 - { title: support.section.passenger, enum: cases, values: [extra_charge, general_complaint] }
                 - { title: support.section.captain,   enum: cases, values: [vehicle_change, account_block, unpaid_fare] }
-          # Free-text (agent composes the ask via gap_instructions). Light validation.
+          # ONE TAP on WhatsApp's native "Share Contact Info", normalised to +E164 —
+          # so the number a support agent calls back on is the one Meta verified, not
+          # one retyped by a rider mid-shift. The `$length(...) < 8` check is gone: the
+          # engine validates the shape for typed and shared answers alike.
           - field: mobile
+            type: phone
+            dial_code: '966'
             label:    '$t("support.label.mobile")'
-            describe: 'The user''s registered mobile number, as free text.'
-            validate:
-              when:  '$state.mobile != null && $length($state.mobile) < 8'
-              error: '$t("support.invalid_mobile")'
+            describe: 'The user''s registered mobile number.'
           - field: description
             label:    '$t("support.label.description")'
             describe: 'A short description of the issue, in the user''s own words.'

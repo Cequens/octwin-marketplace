@@ -186,7 +186,12 @@ steps:
         fields:
           - field: name
             label: '$t("book-test-drive.f_name")'
+          # ONE TAP on WhatsApp's native "Share Contact Info", normalised to +E164.
+          # Also fixes the reminder `dedupe_key` below, which interpolates this value:
+          # a retyped number produced a second key and a duplicate reminder.
           - field: phone
+            type: phone
+            dial_code: '20'
             label: '$t("book-test-drive.f_phone")'
         complete: [{ goto: reserve }]
 

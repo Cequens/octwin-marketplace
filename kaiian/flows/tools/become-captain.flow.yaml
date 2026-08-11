@@ -114,12 +114,18 @@ steps:
           - field: name
             label:    '$t("become-captain.label.name")'
             describe: 'The applicant''s full name, as free text.'
+          # ONE TAP on WhatsApp's native "Share Contact Info", normalised to +E164.
+          # The hand-rolled `$length(...) < 8` check is gone: the engine validates the
+          # shape itself, and it does it for the typed answer AND the shared card. That
+          # also fixes the real defect here — this value is `captain_application`'s
+          # dedupe key (`match:` at save, `dedupe_by: mobile` in xrm.yaml), and a typed
+          # number reached it in several spellings, forking a returning applicant into
+          # a second record.
           - field: mobile
+            type: phone
+            dial_code: '966'
             label:    '$t("become-captain.label.mobile")'
-            describe: 'The applicant''s mobile number, as free text.'
-            validate:
-              when:  '$state.mobile != null && $length($state.mobile) < 8'
-              error: '$t("become-captain.invalid_mobile")'
+            describe: 'The applicant''s mobile number.'
           - field: region
             label: '$t("become-captain.label.region")'
             options:

@@ -108,7 +108,12 @@ steps:
             required: false
             label:      '$t("prescription.label.pin")'
             skip_title: '$t("prescription.skip_pin")'
+          # ONE TAP on WhatsApp's native "Share Contact Info", normalised to +E164 —
+          # so the number the pharmacist dials is Meta-verified rather than typed by
+          # someone reading it off a prescription.
           - field: phone
+            type: phone
+            dial_code: '20'
             label:    '$t("prescription.label.phone")'
             describe: 'A mobile number the pharmacist can call.'
         complete: [{ goto: save_request }]
@@ -127,7 +132,9 @@ steps:
           delivery_area:  '$state.delivery_area'
           address:        '$state.address'
           pin:            '$state.pin'
-          phone:          '"" + $state.phone'
+          # No `'"" + …'` coercion any more: a `type: phone` field hands over a +E164
+          # STRING, so there is no leading zero left for YAML to eat.
+          phone:          '$state.phone'
       bind: rx
       outputs:
         ok:      [{ goto: open_review }]

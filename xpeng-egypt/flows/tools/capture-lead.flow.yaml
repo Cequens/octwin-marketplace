@@ -39,9 +39,23 @@ steps:
         fields:
           - field: name
             label: '$t("capture-lead.f_name")'
+          # `type: phone` draws WhatsApp's NATIVE "Share Contact Info" button, so the
+          # customer answers with ONE TAP and the number arrives Meta-verified and
+          # normalised to +E164. That matters here beyond convenience: this value is
+          # the `lead` dedupe key (`match:` in `save` below, `dedupe_by: phone` in
+          # xrm.yaml), and a typed number reached it in three spellings —
+          # `01001234567`, `+201001234567`, `0100 123 4567` — so a returning customer
+          # forked into a second lead and split their history. `dial_code` lets someone
+          # who types it locally still be understood.
           - field: phone
+            type: phone
+            dial_code: '20'
             label: '$t("capture-lead.f_phone")'
+          # The email now comes back from the SAME tap when the customer shares it —
+          # WhatsApp's picker covers phone, email and address, and the platform reads
+          # the card's vCard. Still optional, still typeable.
           - field: email
+            type: email
             required: false
             label: '$t("capture-lead.f_email")'
         complete: [{ goto: resolve_value }]

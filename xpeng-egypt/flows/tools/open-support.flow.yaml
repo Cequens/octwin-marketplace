@@ -41,7 +41,11 @@ steps:
                     - { value: other,               label: open-support.opt_other }
           - field: details
             label: '$t("open-support.f_details")'
+          # ONE TAP, and the number a technician will actually dial arrives verified
+          # rather than typed by someone whose car has broken down.
           - field: phone
+            type: phone
+            dial_code: '20'
             label: '$t("open-support.f_phone")'
           # ROADSIDE ONLY — a stranded driver's position is the single most
           # useful thing on the ticket, and the 2h SLA is spent finding them.

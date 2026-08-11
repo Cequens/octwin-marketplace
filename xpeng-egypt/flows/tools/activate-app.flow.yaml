@@ -25,7 +25,11 @@ steps:
     - collect:
         gap_instructions: '$t("activate-app.gap")'
         fields:
+          # The app account is keyed on this number, so a typo is a failed activation
+          # the customer cannot diagnose. ONE TAP, verified, +E164.
           - field: phone
+            type: phone
+            dial_code: '20'
             label: '$t("activate-app.f_phone")'
           - field: car_registration          # 📷 upload — folds a MEDIA- ref into $state.car_registration
             type: media

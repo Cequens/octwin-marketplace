@@ -183,7 +183,12 @@ steps:
         input:
           ref:        '$quote.record_number'
           customer:   '$state.customer_name'
-          phone:      '$contact.channel_contact_handle'
+          # `$channel_phone`, NOT `$contact.channel_contact_handle`. The handle is
+          # whatever address the channel uses: on WhatsApp that IS the number, but on
+          # web it is a browser session id — which this row was writing into a sales
+          # spreadsheet's "phone" column for every web enquiry. `$channel_phone` is the
+          # channel-blind read and is simply empty when no number is known.
+          phone:      '$channel_phone'
           sku:        '$state.sku'
           material:   '$state.material'
           qty:        '$state.qty'
