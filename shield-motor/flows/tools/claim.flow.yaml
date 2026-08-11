@@ -117,6 +117,13 @@ steps:
             required: false
             label:      '$t("claim.label.pin")'
             skip_title: '$t("claim.skip_pin")'
+          # An assessor has to ring back — and this is a customer who has just had a
+          # crash, so a typed number is the worst moment to ask for one. One tap.
+          - field: contact_phone
+            type: phone
+            dial_code: '971'
+            label:    '$t("claim.label.phone")'
+            describe: 'The number the assessor calls back on.'
           - field: description
             label:    '$t("claim.label.description")'
             describe: "What happened, in the CUSTOMER'S OWN WORDS. Record it, do not summarise it into a fault assessment."
@@ -140,6 +147,7 @@ steps:
           # Both halves of "where": the words, and the pin when they shared one.
           # `location` was declared from the start and never written until now.
           location:      '$state.location'
+          contact_phone: '$state.contact_phone'
           pin:           '$state.pin'
           description:   '$state.description'
           police_report: '$state.police_report'

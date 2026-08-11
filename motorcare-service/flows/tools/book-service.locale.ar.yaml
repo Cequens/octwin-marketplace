@@ -11,6 +11,7 @@ strings:
   label.bay:        'المنصة'
   label.slot:       'الموعد'
   label.complaint:  'ملاحظات للورشة'
+  label.phone: 'رقم للتواصل عند جاهزية السيارة'
 
   field_header.package: '🔧 أي باقة صيانة؟'
   field_cta.package:    'الباقات'

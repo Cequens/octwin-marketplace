@@ -73,6 +73,7 @@ entities:
       delivery_fee:   { type: money, label: { en: 'Delivery', ar: 'التوصيل' }, currency: EGP }
       total:          { type: money, label: { en: 'Total', ar: 'الإجمالي' }, sortable: true, currency: EGP }
       customer_name:  { type: text, label: { en: 'Customer', ar: 'العميل' } }
+      customer_phone: { type: text, label: { en: 'Customer phone', ar: 'هاتف العميل' } }
       area:           { type: select, options: [nasr_city, maadi, zamalek, heliopolis, october, giza], label: { en: 'Area', ar: 'المنطقة' } }
       address:        { type: textarea, label: { en: 'Address', ar: 'العنوان' } }
       # The delivery pin. Food delivery is the shortest promise in the pack —

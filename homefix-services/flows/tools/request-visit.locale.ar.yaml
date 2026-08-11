@@ -16,6 +16,7 @@ strings:
   label.address:  'العنوان — رقم المبنى والشقة والدور'
   label.pin:      'موقعك على الخريطة'
   label.contact:  'اسم المتواصل'
+  label.phone:    'رقم للتواصل وقت الوصول'
   label.window:   'الوقت المفضل'
   label.fault:    'وصف المشكلة'
   label.photo:    'صورة للمشكلة (اختياري)'

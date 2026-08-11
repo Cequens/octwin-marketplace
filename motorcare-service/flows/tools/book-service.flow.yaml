@@ -76,6 +76,14 @@ steps:
           - field: plate
             label:    '$t("book-service.label.plate")'
             describe: 'The licence plate, as printed.'
+          # A workshop rings the customer twice — when the car is ready, and the
+          # moment the job turns out bigger than the quote. Neither call was
+          # possible: the booking carried a plate and a slot and no number.
+          - field: contact_phone
+            type: phone
+            dial_code: '971'
+            label:    '$t("book-service.label.phone")'
+            describe: 'The number the workshop rings when the car is ready.'
           - field: package_id
             when: '$state.package_id == null'
             label: '$t("book-service.label.package")'
@@ -156,6 +164,7 @@ steps:
           package_label: '$pkg_label'
           plate:         '$state.plate'
           slot_label:    '$state.slot_label'
+          contact_phone: '$state.contact_phone'
       bind: slot
       outputs:
         ok:           [{ goto: save_car }]

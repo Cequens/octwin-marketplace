@@ -792,3 +792,60 @@ The relevant docs:
 
 **Bump the pack version on every change**, and validate before claiming anything works —
 `octwin validate --require-kb` offline, `octwin validate --remote` for the `$bind.<path>` checks.
+---
+
+## §13 · Added 2026-08-11 — contact details are a TAP now, not a keyboard
+
+WhatsApp has always had a native "Share Contact Info" button. **No pack in this repo ever called it**,
+and 5 packs made the customer type their number instead. The platform now exposes it as four `collect:`
+field kinds, and the ones you already have have been converted.
+
+| kind | what it draws | notes |
+|---|---|---|
+| `type: phone` | Meta's native share, or a **confirm card** when the channel already knows the number | `dial_code:` required to read a locally-written `01…` |
+| `type: email` | the same one tap | the value arrives inside the card's vCard; the platform parses it |
+| `type: address` | the same one tap | structured postal address, same source |
+| `type: name` | a **confirm card** quoting the WhatsApp profile name | no native affordance exists for a name |
+
+**One tap can return all of phone + email + address** — Meta gives no field selector, so the customer
+picks and the engine validates that what you asked for actually arrived, falling back to a typed ask
+when it did not.
+
+### What was wrong, and is now fixed
+
+- **A typed number was a record identity key** in `xpeng-egypt` (`lead.dedupe_by: phone`) and `kaiian`
+  (`captain_application.dedupe_by: mobile`). `01001234567` / `+201001234567` / `0100 123 4567` are
+  three keys, so a returning customer forked into a second record. Now normalised `+E164` by
+  construction. Details in [`BACKLOG.md`](BACKLOG.md).
+- **`binaa-supply` wrote a web session id into a sales spreadsheet's phone column** — it read
+  `$contact.channel_contact_handle`, which is the number on WhatsApp and a browser session id on web.
+  Use **`$channel_phone`**, the channel-blind read.
+- **Six packs collected no callable number at all** where a human has to reach the customer:
+  `homefix-services` (a technician dispatch with a name, an address and a map pin — and no phone),
+  `shawarma-express` + `oud-atelier` (delivery), `swiftship-courier` (the SENDER's number; the
+  recipient's was collected but the rider at pickup had nobody to call), `shield-motor` (an assessor
+  ringing back after a crash), `motorcare-service` (the car-is-ready call). All six now collect one.
+
+### For the packs not yet touched
+
+```yaml
+- { field: phone, type: phone, dial_code: '20', label: '$t("x.phone")' }   # '966' KSA, '971' UAE
+- { field: full_name, type: name, label: '$t("x.name")' }
+```
+
+Three rules worth internalising:
+
+1. **Check before you ask.** `$channel_phone` holds the number the channel already knows. Asking a
+   customer for the number you are messaging them on reads as a broken bot. (Meta's and the BSP's
+   *contact book* mean it is usually populated — so `email` and `address` are the fields that earn
+   their keep most.)
+2. **`own: false` for somebody ELSE's detail** — a recipient's, a guardian's. Meta's card returns only
+   the *sender's* own card, so a third-party field must draw no native ask. `nile-academy`'s
+   `guardian_phone` and `swiftship-courier`'s `recipient_phone` are the two in this repo.
+3. **Do not use `type: name` where the name must match a document.** `kaiian` OCRs the applicant's name
+   off their driving licence, so offering a WhatsApp *display* name as the default there would be the
+   wrong default for a value that gets verified. It stays a typed ask — deliberately.
+
+You no longer need to set `skip_title:`/`other_title:` just to avoid an English button: the platform's
+own button copy is now Arabic or English by the **conversation's** language, and `/lang` moves it per
+contact. Override them only when your wording is better.

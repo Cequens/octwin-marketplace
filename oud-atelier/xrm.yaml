@@ -69,6 +69,7 @@ entities:
       item_count:     { type: number, label: { en: 'Items', ar: 'عدد المنتجات' }, sortable: true }
       total:          { type: money, label: { en: 'Total', ar: 'الإجمالي' }, sortable: true, currency: SAR }
       recipient:      { type: text, label: { en: 'Recipient', ar: 'المستلم' } }
+      contact_phone:  { type: text, label: { en: 'Contact phone', ar: 'هاتف التواصل' } }
       city:           { type: select, options: [riyadh, jeddah, dammam, makkah, madinah, abha], label: { en: 'City', ar: 'المدينة' } }
       address:        { type: textarea, label: { en: 'Address', ar: 'العنوان' } }
       # The delivery pin. One tap beats a district-street-landmark description,

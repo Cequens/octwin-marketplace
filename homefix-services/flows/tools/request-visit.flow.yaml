@@ -146,9 +146,19 @@ steps:
             required: false
             label:      '$t("request-visit.label.pin")'
             skip_title: '$t("request-visit.skip_pin")'
+          # CONFIRMS the WhatsApp profile name rather than asking — one tap.
           - field: contact_name
+            type: name
             label:    '$t("request-visit.label.contact")'
             describe: 'Who the technician should ask for on arrival.'
+          # A dispatch had a name, an address and a map pin — and no way to CALL
+          # anyone. A technician who cannot find the flat, or is running late, had
+          # nothing to do about it. One tap on WhatsApp's native share, verified.
+          - field: contact_phone
+            type: phone
+            dial_code: '971'
+            label:    '$t("request-visit.label.phone")'
+            describe: 'The number the technician rings on arrival or if they are delayed.'
           - field: preferred_window
             label: '$t("request-visit.label.window")'
             options:
@@ -276,6 +286,7 @@ steps:
           fault_photo:      '$state.fault_photo'   # an agent-supplied MEDIA- ref, or absent
           preferred_window: '$state.preferred_window'
           contact_name:     '$state.contact_name'
+          contact_phone:    '$state.contact_phone'
       bind: order
       outputs:
         ok:     [{ goto: dispatched }]

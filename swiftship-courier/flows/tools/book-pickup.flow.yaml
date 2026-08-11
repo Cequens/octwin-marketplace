@@ -84,9 +84,22 @@ steps:
           - field: recipient
             label:    '$t("book-pickup.label.recipient")'
             describe: "The recipient's name."
+          # `own: false` — this is the RECIPIENT'S number. Meta's card can only ever
+          # return the sender's own card, so it must draw no native ask; it still
+          # gets the platform's normalisation and validation.
           - field: recipient_phone
+            type: phone
+            own: false
+            dial_code: '20'
             label:    '$t("book-pickup.label.phone")'
             describe: "The recipient's mobile number."
+          # The SENDER's number was never collected — so a rider who could not find
+          # the pickup had only the recipient to call, who is not there. One tap.
+          - field: sender_phone
+            type: phone
+            dial_code: '20'
+            label:    '$t("book-pickup.label.sender_phone")'
+            describe: "The sender's own number, for the rider at pickup."
           - field: window
             label: '$t("book-pickup.label.window")'
             options:
@@ -179,6 +192,7 @@ steps:
           pickup_pin:      '$state.pickup_pin'
           recipient:       '$state.recipient'
           recipient_phone: '$state.recipient_phone'
+          sender_phone:    '$state.sender_phone'
           window:          '$state.window'
           quoted_price:    '$price'
           # No `currency:` — `pickup_request` declares no such field and the

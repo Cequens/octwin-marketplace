@@ -125,6 +125,7 @@ entities:
       package_label: { type: text, label: { en: 'Package', ar: 'الباقة' } }
       plate:         { type: text, label: { en: 'Plate', ar: 'رقم اللوحة' } }
       slot_label:    { type: text, label: { en: 'Slot', ar: 'الموعد' } }
+      contact_phone: { type: text, label: { en: 'Contact phone', ar: 'هاتف التواصل' } }
 
 segments:
   open_jobs:

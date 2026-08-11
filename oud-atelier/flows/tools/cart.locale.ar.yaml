@@ -22,6 +22,7 @@ strings:
   label.pin:       'موقع التوصيل على الخريطة'
   skip_pin:        'أكتفي بالعنوان ⏭️'
   label.payment:   'طريقة الدفع'
+  label.phone: 'رقم للتواصل بخصوص الطلب'
 
   field_header.city:    '🏙️ لأي مدينة نوصّل الطلب؟'
   field_cta.city:       'المدن'

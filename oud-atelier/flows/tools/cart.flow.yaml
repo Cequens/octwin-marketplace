@@ -197,6 +197,15 @@ steps:
           - field: recipient
             label: '$t("cart.label.recipient")'
             describe: "The recipient's full name for the delivery."
+          # A number the shop can call about the order — a substitution, a delivery
+          # window, a building nobody can find. Deliberately the SHOPPER'S own (the
+          # native ask returns the sender's card), not the recipient's: a gift order
+          # would otherwise file the wrong person's number under a native tap.
+          - field: contact_phone
+            type: phone
+            dial_code: '966'
+            label: '$t("cart.label.phone")'
+            describe: "The shopper's own number, for anything about this order."
           - field: city
             label: '$t("cart.label.city")'
             options:
@@ -263,6 +272,7 @@ steps:
           # validator is strict, so passing it rejected every order. The currency
           # belongs to each money field's DECLARATION in `xrm.yaml`.
           recipient:      '$state.recipient'
+          contact_phone:  '$state.contact_phone'
           city:           '$state.city'
           address:        '$state.address'
           pin:            '$state.pin'

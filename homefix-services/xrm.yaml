@@ -60,6 +60,7 @@ entities:
       fault_photo:  { type: image, label: { en: 'Photo', ar: 'صورة المشكلة' } }
       preferred_window: { type: select, options: [morning, afternoon, evening], label: { en: 'Preferred window', ar: 'الوقت المفضل' }, description: { en: 'The time band the customer asked for. A preference, not a guarantee — dispatch may not match it.', ar: 'الفترة التي طلبها العميل. تفضيل لا ضمان — وقد لا يطابقه جدول الإرسال.' } }
       contact_name: { type: text, label: { en: 'Contact', ar: 'اسم المتواصل' } }
+      contact_phone: { type: text, label: { en: 'Contact phone', ar: 'هاتف المتواصل' } }
       quoted_amount: { type: money, label: { en: 'Quote', ar: 'عرض السعر' }, currency: AED }
     list: [urgency, trade, emirate]
     pipeline:

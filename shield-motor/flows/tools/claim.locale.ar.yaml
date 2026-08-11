@@ -17,6 +17,7 @@ strings:
   skip_pin:          'أكتفي بالوصف ⏭️'
   label.description: 'وصف ما حدث'
   label.police:      'رقم تقرير الشرطة'
+  label.phone: 'رقم للتواصل من مسؤول المعاينة'
 
   field_header.type:    '🚨 نوع الحادث؟'
   field_cta.type:       'اختر'

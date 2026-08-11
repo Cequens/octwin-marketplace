@@ -90,6 +90,7 @@ entities:
       pickup_pin:     { type: geo, label: { en: 'Pickup pin', ar: 'موقع الاستلام على الخريطة' } }
       recipient:    { type: text, label: { en: 'Recipient', ar: 'المستلم' } }
       recipient_phone: { type: text, label: { en: 'Recipient phone', ar: 'هاتف المستلم' } }
+      sender_phone:    { type: text, label: { en: 'Sender phone', ar: 'هاتف المرسل' } }
       window:       { type: select, options: [morning, afternoon, evening], label: { en: 'Window', ar: 'وقت الاستلام' } }
       quoted_price: { type: money, label: { en: 'Quoted price', ar: 'السعر' }, sortable: true, currency: EGP }
       cod_amount:   { type: money, label: { en: 'COD amount', ar: 'التحصيل عند التسليم' }, currency: EGP, description: { en: 'Cash to collect from the recipient on delivery. Leave empty for a prepaid parcel.', ar: 'المبلغ المطلوب تحصيله من المستلم عند التسليم. اتركه فارغاً للشحنة المدفوعة مسبقاً.' } }

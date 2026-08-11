@@ -11,6 +11,7 @@ strings:
   label.recipient:  'اسم المستلم'
   label.phone:      'موبايل المستلم'
   label.window:     'وقت الاستلام'
+  label.sender_phone: 'رقم المرسل للتواصل وقت الاستلام'
 
   field_header.service: '🚚 أي خدمة؟'
   field_cta.service:    'الخدمات'

@@ -199,9 +199,18 @@ steps:
                    ]), "\n")'
         gap_instructions: 'Ask the customer for the next delivery detail ({$collect_field}) in one short line, in Egyptian Arabic. Re-call basket with action=checkout once they answer.'
         fields:
+          # CONFIRMS the WhatsApp profile name — one tap instead of typing.
           - field: customer_name
+            type: name
             label:    '$t("basket.label.name")'
             describe: "The customer's name for the delivery."
+          # The order had a name, an area, an address and a pin — and no way for
+          # the DRIVER to call when he cannot find the building. One tap, verified.
+          - field: customer_phone
+            type: phone
+            dial_code: '20'
+            label:    '$t("basket.label.phone")'
+            describe: 'The number the driver rings on arrival.'
           - field: area
             label: '$t("basket.label.area")'
             options:
@@ -292,6 +301,7 @@ steps:
           # create validator is strict, so passing it rejected EVERY order. The
           # currency belongs to each money field's DECLARATION in `xrm.yaml`.
           customer_name:  '$state.customer_name'
+          customer_phone: '$state.customer_phone'
           area:           '$state.area'
           address:        '$state.address'
           pin:            '$state.pin'

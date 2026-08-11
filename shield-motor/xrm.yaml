@@ -78,6 +78,7 @@ entities:
       incident_when:  { type: text, label: { en: 'When', ar: 'وقت الحادث' } }
       emirate:        { type: select, options: [dubai, sharjah, abu_dhabi, ajman, rak], label: { en: 'Emirate', ar: 'الإمارة' } }
       location:       { type: textarea, label: { en: 'Location', ar: 'مكان الحادث' } }
+      contact_phone:  { type: text, label: { en: 'Contact phone', ar: 'هاتف التواصل' } }
       # The accident spot as a map pin. An assessor dispatched to a crash needs
       # coordinates, not "Sheikh Zayed Road near the exit" — and the customer is
       # standing there, so one tap is the whole answer.

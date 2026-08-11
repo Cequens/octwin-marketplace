@@ -17,6 +17,7 @@ strings:
   progress.area:     '✅ المنطقة'
 
   label.name:     'الاسم'
+  label.phone:    'رقم موبايل للتواصل وقت التوصيل'
   label.area:     'المنطقة'
   label.address:  'العنوان — الشارع والعمارة والشقة'
   label.pin:      'موقع التوصيل على الخريطة'
