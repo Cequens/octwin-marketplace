@@ -8,7 +8,7 @@
 # rates are real, with no reporting code. Campus tours ride the scheduling engine.
 
 id:          nile-academy
-version:     '1.3.0'
+version:     '1.4.0'
 description: 'Private academy admissions — programmes and fees, campus-tour booking, and an application funnel with real milestones from enquiry to enrolment.'
 
 listing:

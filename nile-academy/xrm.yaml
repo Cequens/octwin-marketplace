@@ -59,6 +59,7 @@ entities:
       stages:   [enquiry, tour_booked, application_started, documents_complete, assessment_scheduled, offer_made, enrolled, declined]
       initial:  enquiry
       terminal: [enrolled, declined]
+      outcomes: { enrolled: won, declined: lost }
     # What each stage MEANS — rendered above the console pipeline control and on
     # each move button. Kept in step with the `stage_hint.*` locale keys the flows
     # resolve through `$enum_label(stage, "stage_hint")`.

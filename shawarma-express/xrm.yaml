@@ -88,6 +88,7 @@ entities:
       stages:   [placed, preparing, out_for_delivery, delivered, cancelled]
       initial:  placed
       terminal: [delivered, cancelled]
+      outcomes: { delivered: won, cancelled: lost }
       # The automation `stale_records` job reads THIS, so the rule lives with the
       # data: an order nobody moved out of `placed` within a day is not live.
       auto_transition: { from: placed, to: cancelled, after_idle_hours: 24 }

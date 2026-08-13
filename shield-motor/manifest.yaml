@@ -8,7 +8,7 @@
 # liability or states a settlement.
 
 id:          shield-motor
-version:     '1.4.0'
+version:     '1.5.0'
 description: 'Motor insurance — indicative premium from published rating factors, policy enquiry intake, and first-notification-of-loss claims a real assessor handles.'
 
 listing:

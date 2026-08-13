@@ -98,6 +98,7 @@ entities:
       stages:   [new, contacted, qualified, won, lost]
       initial:  new
       terminal: [won, lost]
+      outcomes: { won: won, lost: lost }
     # What each stage MEANS — rendered above the console pipeline control and on
     # each move button. Kept in step with the `stage_hint.*` locale keys the flows
     # resolve through `$enum_label(stage, "stage_hint")`.

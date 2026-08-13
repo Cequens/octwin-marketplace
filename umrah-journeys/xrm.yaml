@@ -64,6 +64,7 @@ entities:
       stages:   [enquiry, reserved, docs_pending, visa_issued, ticketed, travelled, cancelled]
       initial:  enquiry
       terminal: [travelled, cancelled]
+      outcomes: { travelled: won, cancelled: lost }
     # What each stage MEANS — rendered above the console pipeline control and on
     # each move button. Kept in step with the `stage_hint.*` locale keys the flows
     # resolve through `$enum_label(stage, "stage_hint")`.

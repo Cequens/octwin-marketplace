@@ -17,7 +17,7 @@
 # No pack DB, no code — pure YAML.
 
 id:          binaa-supply
-version:     '1.5.0'
+version:     '1.6.0'
 description: 'Building-materials wholesaler — live prices from the company spreadsheet, RFQs written back into it, Slack alerts to the sales desk, and shipment updates pushed to the customer on WhatsApp.'
 
 listing:

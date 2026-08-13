@@ -67,6 +67,7 @@ entities:
       stages:   [received, dispatched, on_site, awaiting_parts, completed, cancelled]
       initial:  received
       terminal: [completed, cancelled]
+      outcomes: { completed: won, cancelled: lost }
     # What each stage MEANS — rendered above the console pipeline control and on
     # each move button. Kept in step with the `stage_hint.*` locale keys the flows
     # resolve through `$enum_label(stage, "stage_hint")`.
@@ -118,6 +119,7 @@ entities:
       stages:   [proposed, active, expired, cancelled]
       initial:  proposed
       terminal: [expired, cancelled]
+      outcomes: { expired: won, cancelled: lost }
 
     # What each stage MEANS — rendered above the console pipeline control and on
     # each move button. Kept in step with the `stage_hint.*` locale keys the flows

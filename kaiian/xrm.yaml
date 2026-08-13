@@ -68,6 +68,7 @@ entities:
     pipeline:
       stages:   [applied, docs_check, vehicle_check, training, active, rejected]
       terminal: [active, rejected]
+      outcomes: { active: won, rejected: lost }
       # Strict — onboarding is a gated funnel; skipping a gate is rejected
       # (record_stage answers `not_allowed` with the legal next steps).
       transitions:

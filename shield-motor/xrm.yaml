@@ -43,6 +43,7 @@ entities:
       stages:   [enquiry, quoted, submitted, issued, lapsed]
       initial:  enquiry
       terminal: [issued, lapsed]
+      outcomes: { issued: won, lapsed: lost }
     # What each stage MEANS — rendered above the console pipeline control and on
     # each move button. Kept in step with the `stage_hint.*` locale keys the flows
     # resolve through `$enum_label(stage, "stage_hint")`.

@@ -64,6 +64,7 @@ entities:
       stages:   [held, confirmed, checked_in, completed, cancelled, no_show]
       initial:  held
       terminal: [completed, cancelled, no_show]
+      outcomes: { completed: won, cancelled: lost, no_show: lost }
     # What each stage MEANS — rendered above the console pipeline control and on
     # each move button. Kept in step with the `stage_hint.*` locale keys the flows
     # resolve through `$enum_label(stage, "stage_hint")`.

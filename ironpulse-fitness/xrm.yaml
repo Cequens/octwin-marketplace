@@ -81,6 +81,7 @@ entities:
       stages:   [enquiry, trial_booked, trial_attended, member, lapsed]
       initial:  enquiry
       terminal: [member, lapsed]
+      outcomes: { member: won, lapsed: lost }
     # What each stage MEANS — rendered above the console pipeline control and on
     # each move button. Kept in step with the `stage_hint.*` locale keys the flows
     # resolve through `$enum_label(stage, "stage_hint")`.
