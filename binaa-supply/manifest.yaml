@@ -17,7 +17,7 @@
 # No pack DB, no code — pure YAML.
 
 id:          binaa-supply
-version:     '1.4.0'
+version:     '1.5.0'
 description: 'Building-materials wholesaler — live prices from the company spreadsheet, RFQs written back into it, Slack alerts to the sales desk, and shipment updates pushed to the customer on WhatsApp.'
 
 listing:
@@ -27,6 +27,15 @@ listing:
   icon:     listing/icon.png
   author:   { name: 'Octwin', url: 'https://octwin.ai' }
   public:   true
+
+# The pack's CHAT FACE — what a customer sees in the web widget, which is a different
+# audience from `listing:` above (that one is read by a business deciding to install us).
+# `about` is deliberately not the tagline: a tagline argues with a buyer.
+widget:
+  name:   'Binaa Building Supplies'
+  avatar: widget/avatar.png
+  accent: '#6d28d9'   # matches the avatar's gradient
+  about:  'Check prices, request a quote, and track your order.'
 
 supported_channels: [whatsapp, web]
 required_adapters:  [messaging]

@@ -7,7 +7,7 @@
 # No pack DB, no code — pure YAML.
 
 id:          smile-dental
-version:     '1.1.2'
+version:     '1.2.0'
 description: 'Dental clinic booking — treatment menu, dentist availability, appointment reminders and a post-visit rating that ranks the dentists.'
 
 listing:
@@ -17,6 +17,15 @@ listing:
   icon:     listing/icon.png
   author:   { name: 'Octwin', url: 'https://octwin.ai' }
   public:   true
+
+# The pack's CHAT FACE — what a customer sees in the web widget, which is a different
+# audience from `listing:` above (that one is read by a business deciding to install us).
+# `about` is deliberately not the tagline: a tagline argues with a buyer.
+widget:
+  name:   'Smile Dental'
+  avatar: widget/avatar.png
+  accent: '#0369a1'   # matches the avatar's gradient
+  about:  'Book a check-up, see real availability, and get a reminder before your visit.'
 
 supported_channels: [whatsapp, web]
 # `vision` reads insurance cards and X-ray referrals. No data-store: dentists and

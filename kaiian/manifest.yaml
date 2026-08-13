@@ -10,7 +10,7 @@
 # projects (Kaiian + Waslini) with per-project branding; the logic is identical.
 
 id:          kaiian
-version:     '1.5.0'
+version:     '1.6.0'
 description: 'Kaiian/Waslini ride-hailing customer support — role-aware AI intake + mediated human casework.'
 
 # Marketplace presentation — how this pack appears in the console catalog a
@@ -22,6 +22,15 @@ listing:
   category: logistics
   icon:     listing/icon.png
   author:   { name: 'Octwin', url: 'https://octwin.ai' }
+
+# The pack's CHAT FACE — what a customer sees in the web widget, which is a different
+# audience from `listing:` above (that one is read by a business deciding to install us).
+# `about` is deliberately not the tagline: a tagline argues with a buyer.
+widget:
+  name:   'Kaiian'
+  avatar: widget/avatar.png
+  accent: '#0e7490'   # matches the avatar's gradient
+  about:  'Get help with a ride, a payment or your driver account.'
 
 supported_channels: [whatsapp, web]
 # case_* are platform builtins (no adapter needed); messaging delivers replies.

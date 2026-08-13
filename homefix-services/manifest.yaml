@@ -7,7 +7,7 @@
 # recurring-maintenance contract pipeline. No pack DB, no code — pure YAML.
 
 id:          homefix-services
-version:     '1.6.0'
+version:     '1.7.0'
 description: 'Home maintenance & handyman dispatch — describe the fault, send a photo and a location pin, and get a routed work order with a real response window.'
 
 listing:
@@ -17,6 +17,15 @@ listing:
   icon:     listing/icon.png
   author:   { name: 'Octwin', url: 'https://octwin.ai' }
   public:   true
+
+# The pack's CHAT FACE — what a customer sees in the web widget, which is a different
+# audience from `listing:` above (that one is read by a business deciding to install us).
+# `about` is deliberately not the tagline: a tagline argues with a buyer.
+widget:
+  name:   'HomeFix Services'
+  avatar: widget/avatar.png
+  accent: '#b45309'   # matches the avatar's gradient
+  about:  'Report a fault and we will send a technician to you.'
 
 supported_channels: [whatsapp, web]
 required_adapters:  [messaging, vision, storage]

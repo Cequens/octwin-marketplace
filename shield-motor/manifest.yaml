@@ -8,7 +8,7 @@
 # liability or states a settlement.
 
 id:          shield-motor
-version:     '1.3.0'
+version:     '1.4.0'
 description: 'Motor insurance — indicative premium from published rating factors, policy enquiry intake, and first-notification-of-loss claims a real assessor handles.'
 
 listing:
@@ -18,6 +18,15 @@ listing:
   icon:     listing/icon.png
   author:   { name: 'Octwin', url: 'https://octwin.ai' }
   public:   true
+
+# The pack's CHAT FACE — what a customer sees in the web widget, which is a different
+# audience from `listing:` above (that one is read by a business deciding to install us).
+# `about` is deliberately not the tagline: a tagline argues with a buyer.
+widget:
+  name:   'Shield Motor'
+  avatar: widget/avatar.png
+  accent: '#047857'   # matches the avatar's gradient
+  about:  'Get a quote, add cover, and open a claim.'
 
 supported_channels: [whatsapp, web]
 required_adapters:  [messaging, vision, storage]

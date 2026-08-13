@@ -7,7 +7,7 @@
 # never advises, substitutes, doses, or dispenses a prescription-only medicine on its own.
 
 id:          pharmaplus-rx
-version:     '1.5.0'
+version:     '1.6.0'
 description: 'Community pharmacy — send a prescription photo for pharmacist review, reorder a repeat, and shop over-the-counter items, with every clinical question routed to a human.'
 
 listing:
@@ -17,6 +17,15 @@ listing:
   icon:     listing/icon.png
   author:   { name: 'Octwin', url: 'https://octwin.ai' }
   public:   true
+
+# The pack's CHAT FACE — what a customer sees in the web widget, which is a different
+# audience from `listing:` above (that one is read by a business deciding to install us).
+# `about` is deliberately not the tagline: a tagline argues with a buyer.
+widget:
+  name:   'PharmaPlus Rx'
+  avatar: widget/avatar.png
+  accent: '#0369a1'   # matches the avatar's gradient
+  about:  'Send your prescription, order a refill, and ask a pharmacist.'
 
 supported_channels: [whatsapp, web]
 required_adapters:  [messaging, vision, storage]

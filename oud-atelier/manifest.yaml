@@ -10,7 +10,7 @@
 # No pack DB, no code — pure YAML.
 
 id:          oud-atelier
-version:     '1.4.0'
+version:     '1.5.0'
 description: 'Luxury oud & perfume boutique — fragrance quiz, product carousel, cart and checkout on WhatsApp, Arabic-first for the Gulf.'
 
 listing:
@@ -20,6 +20,15 @@ listing:
   icon:     listing/icon.png
   author:   { name: 'Octwin', url: 'https://octwin.ai' }
   public:   true
+
+# The pack's CHAT FACE — what a customer sees in the web widget, which is a different
+# audience from `listing:` above (that one is read by a business deciding to install us).
+# `about` is deliberately not the tagline: a tagline argues with a buyer.
+widget:
+  name:   'Oud Atelier'
+  avatar: widget/avatar.png
+  accent: '#6d28d9'   # matches the avatar's gradient
+  about:  'Find your scent, browse the collection, and order here.'
 
 supported_channels: [whatsapp, web]
 # `embedding` — product_search embeds the shopper's free text. `storage` — the

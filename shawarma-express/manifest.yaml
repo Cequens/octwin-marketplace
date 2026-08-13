@@ -7,7 +7,7 @@
 # with milestones, and per-branch fulfilment. No pack DB, no code — pure YAML.
 
 id:          shawarma-express
-version:     '1.3.0'
+version:     '1.4.0'
 description: 'Shawarma restaurant delivery — menu carousel, basket, checkout with delivery details, live order tracking, and an automated abandoned-basket nudge.'
 
 listing:
@@ -17,6 +17,15 @@ listing:
   icon:     listing/icon.png
   author:   { name: 'Octwin', url: 'https://octwin.ai' }
   public:   true
+
+# The pack's CHAT FACE — what a customer sees in the web widget, which is a different
+# audience from `listing:` above (that one is read by a business deciding to install us).
+# `about` is deliberately not the tagline: a tagline argues with a buyer.
+widget:
+  name:   'Shawarma Express'
+  avatar: widget/avatar.png
+  accent: '#9d174d'   # matches the avatar's gradient
+  about:  'Order from the menu and follow your delivery.'
 
 supported_channels: [whatsapp, web]
 required_adapters:  [messaging]

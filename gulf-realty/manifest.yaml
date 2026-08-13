@@ -7,7 +7,7 @@
 # `approve_apply` confirm-before-commit. No pack DB, no code — pure YAML.
 
 id:          gulf-realty
-version:     '1.2.0'
+version:     '1.3.0'
 description: 'Off-plan & ready property brokerage for the Gulf — project carousels, mortgage estimates, and site-viewing bookings on WhatsApp.'
 
 listing:
@@ -17,6 +17,15 @@ listing:
   icon:     listing/icon.png
   author:   { name: 'Octwin', url: 'https://octwin.ai' }
   public:   true
+
+# The pack's CHAT FACE — what a customer sees in the web widget, which is a different
+# audience from `listing:` above (that one is read by a business deciding to install us).
+# `about` is deliberately not the tagline: a tagline argues with a buyer.
+widget:
+  name:   'Gulf Realty'
+  avatar: widget/avatar.png
+  accent: '#334155'   # matches the avatar's gradient
+  about:  'Browse properties, see payment plans, and book a viewing.'
 
 supported_channels: [whatsapp, web]
 # No data-store: developments/units/leads are XRM records, viewings are the

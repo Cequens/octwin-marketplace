@@ -1,5 +1,24 @@
 /**
- * Generate `listing/icon.png` for every marketplace pack.
+ * Generate `listing/icon.png` (marketplace tile) and `widget/avatar.png` (chat avatar) for
+ * every marketplace pack.
+ *
+ * TWO shapes from ONE visual system, because they have two audiences. The tile is what a BUYER
+ * sees in a catalog grid; the avatar is what that buyer's CUSTOMER sees in a chat header, which
+ * is why the manifest separates `listing.icon` from `widget.avatar`.
+ *
+ * ## What actually differs, and what does not
+ *
+ * Honest about the size of the win: these tiles are FULL-BLEED gradients with a centred glyph and
+ * no wordmark, and the widget already clips with `rounded-full` — so reusing the tile as an avatar
+ * would look nearly identical. The wordmark-cropped-into-a-circle disaster this normally guards
+ * against does not apply to art like this.
+ *
+ * Two real differences remain, and they are why the avatar is worth generating:
+ *   • TRANSPARENT CORNERS. The avatar is a circle in the PNG, not a square relying on CSS to clip
+ *     it. Any surface that renders it un-clipped — an email, a future WhatsApp profile photo, a
+ *     bare `<img>` — then still shows a circle rather than a square with stray gradient corners.
+ *   • The glyph is scaled up slightly. A circle loses the tile's corners, so the same glyph reads
+ *     as smaller inside one; nudging it up keeps the optical weight matched across the pair.
  *
  * One visual system: a rounded-square tile carrying a vertical gradient keyed to the pack's
  * LISTING CATEGORY (so a category reads as a colour family at a glance in a grouped catalog),
@@ -11,6 +30,7 @@
  * artifact's TEXT half, and `/api/packs/:id/:ver/asset/*` reads only blobs, so it would 404.
  *
  * Usage:  node make-icons.mjs <marketplace-repo-root>
+ *         Writes BOTH assets for every pack; idempotent, so re-running is safe.
  * Needs:  sharp  (run it from a checkout that has it, e.g. the platform repo)
  */
 import { mkdirSync, writeFileSync } from 'node:fs'
@@ -33,6 +53,9 @@ const CATEGORY_COLOR = {
   automotive:    ['#fb7185', '#be123c'],
   education:     ['#818cf8', '#3730a3'],
   hospitality:   ['#f472b6', '#9d174d'],
+  // `nakhla-giving` is the only member. Absent until 2026-08-13, so it silently took the slate
+  // fallback in `render` — a giving pack rendered the same grey as an uncategorised one.
+  nonprofit:     ['#4ade80', '#15803d'],
 }
 
 // Glyphs draw on a 100x100 canvas. `S` = the shared stroke preset; keep every glyph inside
@@ -103,29 +126,70 @@ const PACKS = {
   // Served plate + steam. The vertical spit it replaced read as a lollipop.
   'shawarma-express':  { category: 'hospitality', glyph:
     `<path ${S} d="M28 62a22 22 0 0 1 44 0z"/><path ${S} d="M22 70h56"/><path ${S} d="M42 30v8M50 26v12M58 30v8"/>` },
+  // ── added 2026-08-13: three packs shipped icons before they had entries here ──────
+  // A BARBER'S POLE, not scissors: `glamour-salon` owns the shears, and a pole is the one sign
+  // a barbershop is read by anywhere in the world.
+  'heshamrabea':       { category: 'services', glyph:
+    `<rect x="40" y="22" width="20" height="56" rx="10" ${S}/><path ${S} d="M40 36l20-10M40 50l20-10M40 64l20-10M40 78l20-10"/><path ${S} d="M34 22h32M34 78h32"/>` },
+  // A STAMPED DOCUMENT — the government e-service in one mark. Deliberately not a building
+  // (that reads as a bank) and not a flag.
+  'misr-digital':      { category: 'services', glyph:
+    `<path ${S} d="M30 22h28l12 12v44H30z"/><path ${S} d="M58 22v12h12"/><circle cx="50" cy="58" r="10" ${S}/><path ${S} d="M45 58l4 4 7-7"/>` },
+  // A DATE PALM — `nakhla` IS the palm, so the literal mark is the strongest one, and nothing
+  // else in this set is a tree. The first attempt drew open hands cradling fruit and rendered as
+  // a smiling face with a sprout on its head; a glyph that has to be explained is the wrong
+  // glyph. Dates sit under the crown as two filled dots, which survive at 28px where a stroked
+  // cluster would fill in.
+  'nakhla-giving':     { category: 'nonprofit', glyph:
+    `<path ${S} d="M47 79c0-18 1-30 4-40"/><path ${S} d="M51 39c-8 1-17 7-22 16"/><path ${S} d="M51 39c8 1 17 7 22 16"/><path ${S} d="M51 39c-7-3-15-3-21 2"/><path ${S} d="M51 39c7-3 15-3 21 2"/><path ${S} d="M51 39c-1-7 0-12 2-16"/><circle cx="57" cy="45" r="2.4" ${F}/><circle cx="62" cy="49" r="2.4" ${F}/>` },
   'umrah-journeys':    { category: 'hospitality', glyph:
     `<path ${S} d="M62 28a24 24 0 1 0 0 44 20 20 0 0 1 0-44z"/><path ${F} d="m72 40 3 7 8 1-6 5 2 8-7-4-7 4 2-8-6-5 8-1z"/>` },
 }
 
-function tile(category, glyph) {
+/**
+ * `shape: 'tile'` → the marketplace icon (rounded square, `rx=22`).
+ * `shape: 'circle'` → the chat avatar (full-bleed circle, transparent corners, glyph +12%).
+ *
+ * `r="50"` exactly, not inset: an inset circle leaves a transparent ring that reads as a gap
+ * against the widget's own border. The glyphs live in roughly 24..76 of the 100 canvas, whose far
+ * corner sits ~37 units from centre — comfortably inside r=50 even after the 1.12 scale — so
+ * nothing clips.
+ */
+function render(category, glyph, shape) {
   const [from, to] = CATEGORY_COLOR[category] ?? ['#64748b', '#1e293b']
+  const ground = shape === 'circle'
+    ? `<circle cx="50" cy="50" r="50" fill="url(#g)"/>`
+    : `<rect width="100" height="100" rx="22" fill="url(#g)"/>`
+  const art = shape === 'circle'
+    ? `<g transform="translate(50 50) scale(1.12) translate(-50 -50)">${glyph}</g>`
+    : glyph
   return `<svg xmlns="http://www.w3.org/2000/svg" width="${SIZE}" height="${SIZE}" viewBox="0 0 100 100">
   <defs><linearGradient id="g" x1="0" y1="0" x2="0" y2="1">
     <stop offset="0" stop-color="${from}"/><stop offset="1" stop-color="${to}"/>
   </linearGradient></defs>
-  <rect width="100" height="100" rx="22" fill="url(#g)"/>
-  ${glyph}
+  ${ground}
+  ${art}
 </svg>`
 }
+
+const OUTPUTS = [
+  { shape: 'tile',   dir: 'listing', file: 'icon.png' },
+  { shape: 'circle', dir: 'widget',  file: 'avatar.png' },
+]
 
 const entries = Object.entries(PACKS)
 let total = 0
 for (const [packId, { category, glyph }] of entries) {
-  const dir = join(ROOT, packId, 'listing')
-  mkdirSync(dir, { recursive: true })
-  const png = await sharp(Buffer.from(tile(category, glyph))).png({ compressionLevel: 9 }).toBuffer()
-  writeFileSync(join(dir, 'icon.png'), png)
-  total += png.length
-  console.log(`  ✓ ${packId}/listing/icon.png  ${String(png.length).padStart(6)} B  (${category})`)
+  for (const { shape, dir, file } of OUTPUTS) {
+    const out = join(ROOT, packId, dir)
+    mkdirSync(out, { recursive: true })
+    const png = await sharp(Buffer.from(render(category, glyph, shape)))
+      .png({ compressionLevel: 9 }).toBuffer()
+    writeFileSync(join(out, file), png)
+    total += png.length
+    console.log(`  ✓ ${packId}/${dir}/${file}  ${String(png.length).padStart(6)} B  (${category})`)
+  }
 }
-console.log(`\n${entries.length} icons, ${(total / 1024).toFixed(1)} KB total`)
+console.log(`
+${entries.length} packs × ${OUTPUTS.length} assets, ${(total / 1024).toFixed(1)} KB total`)
+console.log('Declare them as `listing.icon: listing/icon.png` and `widget.avatar: widget/avatar.png`.')

@@ -25,7 +25,7 @@
 # No pack DB, no code — pure YAML.
 
 id:          nakhla-giving
-version:     '0.4.0'
+version:     '0.5.0'
 description: 'Charity donations over WhatsApp — browse campaigns, get a Moyasar checkout link on the turn, and receive a receipt the moment the payment clears.'
 
 listing:
@@ -35,6 +35,15 @@ listing:
   icon:     listing/icon.png
   author:   { name: 'Octwin', url: 'https://octwin.ai' }
   public:   false
+
+# The pack's CHAT FACE — what a customer sees in the web widget, which is a different
+# audience from `listing:` above (that one is read by a business deciding to install us).
+# `about` is deliberately not the tagline: a tagline argues with a buyer.
+widget:
+  name:   'Nakhla Giving'
+  avatar: widget/avatar.png
+  accent: '#15803d'   # matches the avatar's gradient
+  about:  'Give in a few taps, choose your cause, and get a receipt.'
 
 supported_channels: [whatsapp, web]
 required_adapters:  [messaging]

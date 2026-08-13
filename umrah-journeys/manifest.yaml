@@ -8,7 +8,7 @@
 # No pack DB, no code — pure YAML.
 
 id:          umrah-journeys
-version:     '1.1.3'
+version:     '1.2.0'
 description: 'Hajj & Umrah package agency — browse packages, book a group, and get a visa file opened and tracked by a real ops team.'
 
 listing:
@@ -18,6 +18,15 @@ listing:
   icon:     listing/icon.png
   author:   { name: 'Octwin', url: 'https://octwin.ai' }
   public:   true
+
+# The pack's CHAT FACE — what a customer sees in the web widget, which is a different
+# audience from `listing:` above (that one is read by a business deciding to install us).
+# `about` is deliberately not the tagline: a tagline argues with a buyer.
+widget:
+  name:   'Umrah Journeys'
+  avatar: widget/avatar.png
+  accent: '#9d174d'   # matches the avatar's gradient
+  about:  'Browse packages, book for your group, and follow your visa file.'
 
 supported_channels: [whatsapp, web]
 # `vision` reads passports and payment receipts; `storage` holds the uploads.

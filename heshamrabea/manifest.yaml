@@ -1,6 +1,6 @@
 # manifest.yaml — Hesham Rabea barbershop bot (info + appointment booking).
 id:          heshamrabea
-version:     '2.0.0'
+version:     '2.1.0'
 description: 'Hesham Rabea barbershops: services & prices, branches, and appointment booking with a chosen barber per branch.'
 
 listing:
@@ -12,6 +12,15 @@ listing:
   # Left unlisted deliberately: this pack carries a real trading name, so
   # publishing it to the catalog is the owner's call, not a default.
   public:   false
+
+# The pack's CHAT FACE — what a customer sees in the web widget, which is a different
+# audience from `listing:` above (that one is read by a business deciding to install us).
+# `about` is deliberately not the tagline: a tagline argues with a buyer.
+widget:
+  name:   'Hesham Rabea'
+  avatar: widget/avatar.png
+  accent: '#b45309'   # matches the avatar's gradient
+  about:  'Book your barber — pick the branch, the chair and the time.'
 
 supported_channels: [whatsapp, web]
 required_adapters:  [messaging]

@@ -2,7 +2,7 @@
 # Strict schema: unknown keys are rejected on deploy. Keep `octwin validate` green.
 
 id:          xpeng-egypt
-version:     '2.6.0'
+version:     '2.7.0'
 description: 'XPeng Egypt assistant — browse models, capture leads, book test drives, activate the XPeng App, and open after-sales support tickets on WhatsApp & web (AR/EN).'
 
 # Storefront face. Without this block the pack still publishes and installs, but
@@ -16,6 +16,15 @@ listing:
   icon:     listing/icon.png
   author:   { name: 'Octwin', url: 'https://octwin.ai' }
   public:   true
+
+# The pack's CHAT FACE — what a customer sees in the web widget, which is a different
+# audience from `listing:` above (that one is read by a business deciding to install us).
+# `about` is deliberately not the tagline: a tagline argues with a buyer.
+widget:
+  name:   'XPeng Egypt'
+  avatar: widget/avatar.png
+  accent: '#be123c'   # matches the avatar's gradient
+  about:  'Browse the models, book a test drive, and open a service ticket.'
 
 # Channels + platform capabilities. `messaging` is the conversational adapter;
 # records / scheduling / casework are unlocked by the sibling declaration files

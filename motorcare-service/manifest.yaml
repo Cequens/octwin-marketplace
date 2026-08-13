@@ -9,7 +9,7 @@
 # the customer never has to re-enter. No pack DB, no code — pure YAML.
 
 id:          motorcare-service
-version:     '1.4.0'
+version:     '1.5.0'
 description: 'Car service centre — service packages, AI damage triage from a photo, bay booking, and a workshop queue a foreman really works.'
 
 listing:
@@ -19,6 +19,15 @@ listing:
   icon:     listing/icon.png
   author:   { name: 'Octwin', url: 'https://octwin.ai' }
   public:   true
+
+# The pack's CHAT FACE — what a customer sees in the web widget, which is a different
+# audience from `listing:` above (that one is read by a business deciding to install us).
+# `about` is deliberately not the tagline: a tagline argues with a buyer.
+widget:
+  name:   'MotorCare Service'
+  avatar: widget/avatar.png
+  accent: '#be123c'   # matches the avatar's gradient
+  about:  'Send a photo of the problem, book a bay, and follow the repair.'
 
 supported_channels: [whatsapp, web]
 # `vision` is load-bearing here — the damage triage is an image analysis.
