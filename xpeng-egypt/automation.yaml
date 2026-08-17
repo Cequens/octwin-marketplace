@@ -1,0 +1,46 @@
+# Standing automation jobs for XPeng Egypt.
+#
+# The alarm on the SLA promises in `worklist.yaml`. Until this file existed the pack
+# declared four resolve clocks — roadside 2h, charging 8h, activation 24h, other 48h —
+# and NOTHING ever looked at them: `sla_due_at` was stamped when the case enrolled and
+# then never read again. A breach was visible to whoever happened to be looking at the
+# work inbox, and was announced to nobody. A stranded driver's two-hour promise paged no
+# one at all.
+#
+# ONE job covers BOTH clocks and all four case types. The sweep runs the first-response
+# pass first (it is the tighter deadline), then the resolve pass. Each acts once per
+# breach — deduped on `first_response_notified_at` / `sla_notified_at` — skips cases
+# already resolved or closed, alerts the responsible operator through the ops inbox,
+# relays its `message` to the customer, and mints the record event the `on:` hooks read.
+#
+# `interval_seconds: 300` bounds the detection lag at five minutes. That is deliberately
+# tighter than a typical sweep: the shortest promise here is half an hour, so a
+# quarter-hour tick would spend a third of the budget just noticing.
+#
+# `escalate_to` ROUTES a breached case to the `escalations` queue rather than assigning a
+# person, because a `user:`/`team:` ref names an id only the INSTALLING tenant knows and a
+# published pack cannot write one. Know the limit that comes with that: routing to a queue
+# notifies nobody new. The case leaves its own queue and surfaces in the escalations
+# inbox, and the ops-inbox alert still goes to the PREVIOUS assignee — so a breach on an
+# unassigned case escalates silently. The customer reassurance below is unaffected.
+#
+# The two messages say different things on purpose. A first-response breach means nobody
+# has replied yet, so it apologises for the silence. A resolve breach means someone is
+# already talking to the customer, but it is taking too long.
+#
+# Deliberately NOT declared — a `task_overdue` job. `task_open` (which `capture-lead`
+# uses for its 24-hour lead follow-up) cannot set a task assignee, and the overdue sweep
+# only looks at tasks that have one, so the job could never fire for anything this pack
+# creates. Declaring it would be one more promise nothing keeps.
+
+jobs:
+  - key:              case_sla
+    kind:             sla_sweep
+    entity:           case
+    interval_seconds: 300
+    config:
+      escalate_to: queue:escalations
+      message: 'نعتذر عن التأخير 🙏 حالتك أخدت وقت أطول من المتوقع وتم تحويلها للإدارة — إحنا شغالين عليها وهنرجع لك في أقرب وقت.'
+      first_response:
+        escalate_to: queue:escalations
+        message: 'آسفين إننا ما رددنا عليك لحد الآن 🙏 طلبك وصلنا فعلاً وتم تنبيه الفريق — حد من فريقنا هيتواصل معاك حالاً.'

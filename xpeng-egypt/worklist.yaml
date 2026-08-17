@@ -17,6 +17,10 @@
 queues:
   - { key: technical_service, name: 'Technical Service' }   # car faults, charging, roadside
   - { key: customer_care,     name: 'Customer Care' }        # owner activation, general issues
+  # Where a BREACHED case goes — see automation.yaml. Not a routing destination: no
+  # case type opens here. It exists so an escalation has somewhere to go that a
+  # supervisor watches; escalating into the case's own queue would move nothing.
+  - { key: escalations,       name: 'Escalations' }          # breached SLA, either clock
 
 work:
   case:
@@ -35,12 +39,21 @@ work:
         params:
           - { name: eta, label: 'ETA', type: text }
 
+    # TWO CLOCKS per type, both counted in hours from the moment the case opens.
+    # `resolve_within_hours` is time to a resolution. `first_response_within_hours` is
+    # time to the first HUMAN reply and stops on an operator's relay to the customer —
+    # so it measures "did somebody actually answer this person", which is the promise a
+    # stranded driver cares about first. Breaching either one escalates (automation.yaml).
+    #
+    # No `first_response_pause_stages` here on purpose: a case only reaches
+    # `awaiting_customer` AFTER a human has replied, so by then the first-response clock
+    # has already stopped. Declaring a pause on that stage would suppress nothing.
     types:
       # 📱 App owner activation — verify car registration + owner ID, activate the app account.
-      app_owner_activation: { queue: customer_care,    priority: normal, sla: { resolve_within_hours: 24 }, actions: [activate_account] }
-      # 🚨 Roadside / breakdown — most urgent.
-      roadside_assistance:  { queue: technical_service, priority: urgent, sla: { resolve_within_hours: 2  }, actions: [dispatch_roadside] }
+      app_owner_activation: { queue: customer_care,    priority: normal, sla: { resolve_within_hours: 24, first_response_within_hours: 4   }, actions: [activate_account] }
+      # 🚨 Roadside / breakdown — most urgent. Half an hour to tell them a human has it.
+      roadside_assistance:  { queue: technical_service, priority: urgent, sla: { resolve_within_hours: 2,  first_response_within_hours: 0.5 }, actions: [dispatch_roadside] }
       # 🔌 Charging problem — home/public charging or hardware.
-      charging_issue:       { queue: technical_service, priority: high,   sla: { resolve_within_hours: 8  } }
+      charging_issue:       { queue: technical_service, priority: high,   sla: { resolve_within_hours: 8,  first_response_within_hours: 2   } }
       # 🗂️ Anything else after-sales (catch-all).
-      other:                { queue: customer_care,     priority: normal, sla: { resolve_within_hours: 48 } }
+      other:                { queue: customer_care,     priority: normal, sla: { resolve_within_hours: 48, first_response_within_hours: 8   } }

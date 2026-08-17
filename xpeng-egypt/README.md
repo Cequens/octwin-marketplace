@@ -50,22 +50,31 @@ Sales gets drop-off per stage, conversion %, time-to-convert, CPA, and pipeline-
 Support is casework (`worklist.yaml`) with a fixed lifecycle
 (`open → in_progress → awaiting_customer → resolved → closed`, `+ reopened`) and per-type SLAs:
 
-| Ticket type | Team | Priority | Resolve within |
-|---|---|---|---|
-| 🚨 Roadside / breakdown | Technical Service | urgent | 2 h |
-| 🔌 Charging problem | Technical Service | high | 8 h |
-| 📱 App owner activation | Customer Care | normal | 24 h |
-| 🗂️ Other after-sales | Customer Care | normal | 48 h |
+| Ticket type | Team | Priority | First reply within | Resolve within |
+|---|---|---|---|---|
+| 🚨 Roadside / breakdown | Technical Service | urgent | 30 min | 2 h |
+| 🔌 Charging problem | Technical Service | high | 2 h | 8 h |
+| 📱 App owner activation | Customer Care | normal | 4 h | 24 h |
+| 🗂️ Other after-sales | Customer Care | normal | 8 h | 48 h |
+
+**Two clocks, not one.** *First reply* is time until a human actually answers the
+customer — it stops when an operator relays a message, so it measures whether anybody
+picked the ticket up. *Resolve* is time to a finished outcome. Breaching either one routes
+the ticket to the **Escalations** queue and sends the customer a different apology, since
+"nobody has replied to you yet" and "this is taking longer than we said" are not the same
+failure. The alarm is `automation.yaml`, which sweeps every 5 minutes — without it the
+targets above are stamped and never read, which is how this pack shipped until v2.9.0.
 
 ## Layout
 
 ```
-manifest.yaml                 # the pack: id, agent, flows, channels (v1.4.0)
+manifest.yaml                 # the pack: id, agent, flows, channels (and its version)
 prompts/identity.md           # the assistant's system prompt (bilingual behaviour)
 flows/tools/*.flow.yaml        # the 10 capabilities (+ .locale.ar/.en.yaml strings)
 xrm.yaml                       # records: model · branch · lead · booking (+ demo seed data)
 scheduling.yaml                # bookable test-drive slots
-worklist.yaml                  # after-sales casework (queues, types, SLAs)
+worklist.yaml                  # after-sales casework (queues, types, both SLA clocks)
+automation.yaml                # the SLA alarm: sweeps both clocks, escalates a breach
 journeys/purchase.journey.yaml # the sales funnel (stages · goals · events)
 commands.yaml · messages.*     # slash commands + platform messages
 ```
