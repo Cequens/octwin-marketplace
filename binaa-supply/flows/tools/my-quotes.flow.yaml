@@ -49,7 +49,7 @@ steps:
           description: '$lines($compact([
                           $item.stage,
                           $item.qty != null ? $t("my-quotes.row_qty", { qty: $item.qty, unit: $item.unit }) : null,
-                          $item.total != null ? $format_money($item.total, $item.currency) : null
+                          $item.total != null ? $format_money_field($item.total, $item.currency) : null
                         ]), " · ")'
           on_select:   { invoke: price-list }
       memory_note: 'Listed {$length($rows)} quote(s) for this contractor.'
