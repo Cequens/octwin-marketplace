@@ -18,12 +18,31 @@ strings:
   task_title: 'Follow up new lead: {name}'
   task_body:  'Call the customer on {phone} within 24 hours.'
 
-  # The repeat-enquiry pair. Leads dedupe on phone, so this is the SAME record —
-  # the title has to say so or it reads as a second lead in the task list.
-  task_title_again: 'Enquired again: {name}'
-  task_body_again:  'This customer already has a lead on file and has just enquired again. Call them on {phone} within 24 hours — check the record for what was discussed last time.'
+  # The model picker. `m_unsure` is the appended sentinel row — the one option the
+  # lineup cannot supply, and the reason this step is a list and not a carousel.
+  m_header:       'Which model?'
+  m_body:         'Pick the model you would like a quote on — our sales team will price it for you.'
+  m_cta:          'Choose a model'
+  m_from:         'From {price} EGP'
+  m_unsure:       "I'm not sure yet"
+  m_unsure_desc:  'Let sales help me choose'
 
-  reopen_note: 'Reopened — the customer enquired again through the assistant after this lead was closed.'
+  # The confirm shown when a model arrived on the input instead of from a tap.
+  m_confirm:     'Just to be sure — you are asking about the **{model}**?'
+  m_confirm_yes: "Yes, that's the one"
+  m_confirm_no:  'No, show me the range'
+
+  # The repeat-enquiry pair. Leads dedupe on phone + model, so this is the SAME
+  # record — the title has to say so or it reads as a second lead in the task list.
+  task_title_again: 'Enquired again: {name}'
+  task_body_again:  'This customer already has a lead on file for this model and has just enquired again. Call them on {phone} within 24 hours — check the record for what was discussed last time.'
+
+  # The won path: the lead is left at `won` on purpose, so the task carries the
+  # context a rep needs rather than a stage change doing it.
+  task_title_won:  'Existing customer, new enquiry: {name}'
+  task_body_won:   'This customer already bought this model — the lead is closed as won and has been left that way. They have just enquired again. Call them on {phone} within 24 hours; if this is a second car, open a fresh lead for the model they want.'
+
+  reopen_note: 'Reopened — the customer enquired again through the assistant after this lead was closed as lost.'
 
   confirm: "Thanks {name} ✅ We've saved your details and our sales team will reach out shortly. Would you like to see the models or book a test drive?"
   confirm_again: "Thanks {name} ✅ You're already on file with us — we've updated your details and flagged this for the sales team to call you. Would you like to see the models or book a test drive?"

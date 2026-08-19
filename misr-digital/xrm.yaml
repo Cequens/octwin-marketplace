@@ -49,7 +49,6 @@ entities:
     # looked like a brand-new record and collided on the unique `code` of the row it
     # was meant to update. `code` is the stable identity here — it is what
     # `service_detail` is invoked with and what `record_list` filters on.
-    dedupe_by: code
     search:
       # `text:` alone is pg_trgm — it matches LETTERS. A citizen typing the
       # colloquial «ضاع مني الكارنيه» shares no trigrams with «بطاقة الرقم

@@ -11,7 +11,8 @@
 # and silently skipped this same turn. Everything else the docs DON'T carry (mobile,
 # region, vehicle_type) is asked one-at-a-time. Reviews the application (approve_apply)
 # before saving, then `record_save` with `match:` on the mobile — a returning applicant
-# UPDATES their record (dedupe_by), never duplicates. A fresh app opens a 48h ops task.
+# UPDATES their record (the unique `mobile` IS the identity), never duplicates. A fresh
+# app opens a 48h ops task.
 #
 # OCR is fill-if-empty (`??`) so a value the agent already stated is never clobbered.
 # Extracted fields are persisted as XRM `text` (see xrm.yaml) — the vision prompt asks
@@ -118,7 +119,7 @@ steps:
           # The hand-rolled `$length(...) < 8` check is gone: the engine validates the
           # shape itself, and it does it for the typed answer AND the shared card. That
           # also fixes the real defect here — this value is `captain_application`'s
-          # dedupe key (`match:` at save, `dedupe_by: mobile` in xrm.yaml), and a typed
+          # identity (`unique: true` on `mobile` in xrm.yaml), and a typed
           # number reached it in several spellings, forking a returning applicant into
           # a second record.
           - field: mobile
@@ -238,12 +239,12 @@ steps:
         on_other:      collect_fields
 
   save_application:
-    # Dedupe upsert on the mobile (the entity's dedupe_by): a returning
-    # applicant updates their record; a new mobile creates APP-<n>.
+    # `mobile` is the entity's unique constraint, so it IS the identity: a returning
+    # applicant updates their record; a new mobile creates APP-<n>. Nothing here says
+    # so — that is the declaration's job.
     - do: record_save
       args:
         entity: captain_application
-        match:  { value: '$state.mobile' }
         fields:
           # Application (asked in chat)
           name:          '$state.name'

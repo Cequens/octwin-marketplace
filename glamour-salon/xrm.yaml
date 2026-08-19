@@ -13,7 +13,7 @@ entities:
     icon:        '💅'
     description: { en: 'A service on the price list, with its duration', ar: 'خدمة ضمن قائمة الأسعار ومدتها' }
     fields:
-      code:         { type: text, required: true, label: { en: 'Code', ar: 'الرمز' } }
+      code:         { type: text, required: true, unique: true, label: { en: 'Code', ar: 'الرمز' } }
       name:         { type: text, required: true, label: { en: 'Name', ar: 'الاسم' } }
       category:     { type: select, options: [hair, colour, nails, skincare, spa, makeup, bridal], label: { en: 'Category', ar: 'القسم' } }
       description:  { type: textarea, label: { en: 'Description', ar: 'الوصف' } }
@@ -24,14 +24,13 @@ entities:
       popularity:   { type: number, label: { en: 'Popularity', ar: 'الأكثر طلباً' }, default: 0, description: { en: 'Manual ordering weight for the services carousel — higher shows earlier. Not a sales figure.', ar: 'وزن ترتيب يدوي لعرض الخدمات — الأعلى يظهر أولاً. ليس رقم مبيعات.' } }
     list: [category, duration_min, price]
     search: { text: [name, description], semantic: [name, description], rank_by: popularity }
-    dedupe_by: code
 
   stylist:
     label: { en: 'Stylist', ar: 'أخصائية' }
     icon:        '👩‍🎨'
     description: { en: 'A specialist clients book with, ranked by their ratings', ar: 'أخصائية تحجز معها العميلات ومرتبة بتقييماتهن' }
     fields:
-      name:         { type: text, required: true, label: { en: 'Name', ar: 'الاسم' } }
+      name:         { type: text, required: true, unique: true, label: { en: 'Name', ar: 'الاسم' } }
       title:        { type: text, label: { en: 'Title', ar: 'المسمى' } }
       specialties:  { type: multi_select, options: [hair, colour, nails, skincare, spa, makeup, bridal], label: { en: 'Specialties', ar: 'التخصصات' } }
       languages:    { type: text, label: { en: 'Languages', ar: 'اللغات' } }
@@ -43,7 +42,6 @@ entities:
       rating_count: { type: number, label: { en: 'Ratings', ar: 'عدد التقييمات' }, default: 0, description: { en: 'How many responses the rating averages.', ar: 'عدد التقييمات التي بُني عليها المتوسط.' } }
     list: [title, languages, rating]
     search: { text: [name, languages], rank_by: rating }
-    dedupe_by: name
 
   booking:
     extends: system

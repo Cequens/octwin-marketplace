@@ -15,7 +15,7 @@ entities:
     icon:        '🕋'
     description: { en: 'An Umrah package, its nights and price per person', ar: 'باقة عمرة وعدد لياليها وسعر الفرد' }
     fields:
-      code:          { type: text, required: true, label: { en: 'Code', ar: 'الرمز' } }
+      code:          { type: text, required: true, unique: true, label: { en: 'Code', ar: 'الرمز' } }
       name:          { type: text, required: true, label: { en: 'Name', ar: 'الاسم' } }
       kind:          { type: select, options: [umrah, hajj, ramadan_umrah, ziyarah], label: { en: 'Kind', ar: 'النوع' } }
       nights:        { type: number, label: { en: 'Nights', ar: 'عدد الليالي' }, sortable: true }
@@ -29,7 +29,6 @@ entities:
       rating:        { type: number, label: { en: 'Popularity', ar: 'الأكثر طلباً' }, default: 0, description: { en: 'Manual ordering weight for the package list — higher shows earlier.', ar: 'وزن ترتيب يدوي لقائمة الباقات — الأعلى يظهر أولاً.' } }
     list: [kind, nights, price_pp]
     search: { text: [name, makkah_hotel, madinah_hotel], semantic: [name, includes], rank_by: rating }
-    dedupe_by: code
 
   pilgrim:
     label: { en: 'Pilgrim', ar: 'معتمر' }
@@ -42,7 +41,12 @@ entities:
       relation:        { type: text, label: { en: 'Relation', ar: 'صلة القرابة' } }
       passport_scan:   { type: image, label: { en: 'Passport scan', ar: 'صورة الجواز' } }
     list: [passport_number, nationality]
-    dedupe_by: full_name
+    # Identity is the PAIR (booking customer, traveller name). A name alone matched
+    # project-wide, so two families each travelling with a «محمد» were ONE pilgrim
+    # row — the second visa filing overwrote the first family's passport scan.
+    constraints:
+      unique:
+        - fields: [contact_id, full_name]
 
   trip:
     label: { en: 'Trip', ar: 'رحلة' }

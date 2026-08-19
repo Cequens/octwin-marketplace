@@ -65,7 +65,7 @@ steps:
   load_pros:
     # `book.pro_body` is the one picker body that interpolates a label, so the branch name is
     # read here from its code rather than ferried through the tap. `code` is unique: true in
-    # xrm.yaml, hence the entity's dedupe_by — record_get's `match` reaches any declared field.
+    # xrm.yaml, hence the entity's unique constraint — record_get's `match` reaches any declared field.
     - do: record_get
       args: { entity: branch, match: { field: code, value: '$input.branch_code' } }
       bind: branch

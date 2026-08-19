@@ -14,7 +14,7 @@ entities:
     icon:        '🦷'
     description: { en: 'A dental treatment, its duration and starting price', ar: 'علاج أسنان ومدته وسعره المبدئي' }
     fields:
-      code:        { type: text, required: true, label: { en: 'Code', ar: 'الرمز' } }
+      code:        { type: text, required: true, unique: true, label: { en: 'Code', ar: 'الرمز' } }
       name:        { type: text, required: true, label: { en: 'Name', ar: 'الاسم' } }
       category:    { type: select, options: [preventive, restorative, cosmetic, orthodontic, surgical], label: { en: 'Category', ar: 'التصنيف' } }
       description: { type: textarea, label: { en: 'Description', ar: 'الوصف' } }
@@ -23,14 +23,13 @@ entities:
       insured:     { type: boolean, label: { en: 'Usually covered', ar: 'يغطيه التأمين عادةً' } }
     list: [category, duration_min, price_from]
     search: { text: [name, description], semantic: [name, description] }
-    dedupe_by: code
 
   dentist:
     label: { en: 'Dentist', ar: 'طبيب أسنان' }
     icon:        '👨‍⚕️'
     description: { en: 'A dentist patients book with, ranked by rating', ar: 'طبيب أسنان يحجز معه المرضى ومرتب بتقييمه' }
     fields:
-      name:         { type: text, required: true, label: { en: 'Name', ar: 'الاسم' } }
+      name:         { type: text, required: true, unique: true, label: { en: 'Name', ar: 'الاسم' } }
       title:        { type: text, label: { en: 'Title', ar: 'اللقب' } }
       specialty:    { type: select, options: [general, orthodontics, periodontics, endodontics, pediatric, cosmetic], label: { en: 'Specialty', ar: 'التخصص' } }
       languages:    { type: text, label: { en: 'Languages', ar: 'اللغات' } }
@@ -42,7 +41,6 @@ entities:
       rating_count: { type: number, label: { en: 'Ratings', ar: 'عدد التقييمات' }, default: 0, description: { en: 'How many responses the rating averages.', ar: 'عدد التقييمات التي بُني عليها المتوسط.' } }
     list: [title, specialty, rating]
     search: { text: [name, languages], rank_by: rating }
-    dedupe_by: name
 
   booking:
     extends: system

@@ -11,7 +11,7 @@ entities:
     icon:        '🏖️'
     description: { en: 'A resort in the portfolio and its rating', ar: 'منتجع ضمن المجموعة وتصنيفه' }
     fields:
-      name:        { type: text, required: true, label: { en: 'Name', ar: 'الاسم' } }
+      name:        { type: text, required: true, unique: true, label: { en: 'Name', ar: 'الاسم' } }
       destination: { type: select, options: [hurghada, el_gouna, marsa_alam, sharm, dahab], label: { en: 'Destination', ar: 'الوجهة' } }
       stars:       { type: number, label: { en: 'Stars', ar: 'التصنيف' }, sortable: true }
       description: { type: textarea, label: { en: 'Description', ar: 'الوصف' } }
@@ -20,14 +20,13 @@ entities:
       timezone:    { type: text, label: { en: 'Timezone', ar: 'المنطقة الزمنية' }, default: 'Africa/Cairo' }
     list: [destination, stars]
     search: { text: [name, facilities], semantic: [name, description] }
-    dedupe_by: name
 
   room_type:
     label: { en: 'Room type', ar: 'نوع الغرفة' }
     icon:        '🛏️'
     description: { en: 'A room category and its nightly boards', ar: 'فئة غرفة وأسعار الليلة حسب نظام الإقامة' }
     fields:
-      name:          { type: text, required: true, label: { en: 'Name', ar: 'الاسم' } }
+      name:          { type: text, required: true, unique: true, label: { en: 'Name', ar: 'الاسم' } }
       resort:        { type: record, entity: resort, label: { en: 'Resort', ar: 'المنتجع' } }
       resort_label:  { type: text, label: { en: 'Resort', ar: 'المنتجع' } }
       view:          { type: select, options: [sea, pool, garden, lagoon], label: { en: 'View', ar: 'الإطلالة' } }
@@ -41,7 +40,6 @@ entities:
       popularity:    { type: number, label: { en: 'Popularity', ar: 'الأكثر طلباً' }, default: 0 }
     list: [resort_label, view, room_count, nightly_bb]
     search: { text: [name, resort_label], semantic: [name], rank_by: popularity }
-    dedupe_by: name
 
   stay:
     label: { en: 'Stay', ar: 'إقامة' }

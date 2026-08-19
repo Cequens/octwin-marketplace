@@ -20,7 +20,7 @@ entities:
     icon:        '🌸'
     description: { en: 'A perfume on the shelf, its price and stock', ar: 'عطر على الرف وسعره ومخزونه' }
     fields:
-      sku:         { type: text, required: true, label: { en: 'SKU', ar: 'الرمز' } }
+      sku:         { type: text, required: true, unique: true, label: { en: 'SKU', ar: 'الرمز' } }
       name:        { type: text, required: true, label: { en: 'Name', ar: 'الاسم' } }
       description: { type: textarea, label: { en: 'Description', ar: 'الوصف' } }
       price:       { type: money, label: { en: 'Price', ar: 'السعر' }, sortable: true, currency: SAR }
@@ -34,7 +34,6 @@ entities:
     # `semantic:` is what makes the fragrance quiz work — the quiz composes a
     # sentence and this entity is searched by MEANING, not keywords.
     search: { text: [name, scent_notes], semantic: [name, description], rank_by: rating }
-    dedupe_by: sku
 
   # ── The shopping cart: one record per line, scoped to the shopper's contact ─
   cart_line:
@@ -42,13 +41,6 @@ entities:
     icon:        '🛒'
     description: { en: 'One line in a shopper cart before checkout', ar: 'سطر في سلة المتسوق قبل إتمام الطلب' }
     fields:
-      # A per-contact UNIQUENESS key: `<contact-id>:<item>`. `dedupe_by` resolves through
-      # `findRecord`, which scopes to project + entity + field value and NOT to the
-      # contact — so dedupe_by on a bare item code made one shopper's `record_save match:`
-      # update ANOTHER shopper's line (their basket silently changed; this one looked
-      # empty, because the row belonged to someone else). Folding the contact into the key
-      # restores per-customer isolation.
-      line_key:   { type: text, label: { en: 'Line key', ar: 'مفتاح السطر' } }
       fragrance:  { type: record, entity: fragrance, label: { en: 'Item', ar: 'المنتج' } }
       sku:        { type: text, label: { en: 'SKU', ar: 'الرمز' } }
       title:      { type: text, label: { en: 'Item', ar: 'المنتج' } }
@@ -56,8 +48,14 @@ entities:
       unit_price: { type: money, label: { en: 'Unit price', ar: 'سعر الوحدة' }, currency: SAR }
       line_total: { type: money, label: { en: 'Line total', ar: 'إجمالي السطر' }, sortable: true, currency: SAR }
     list: [title, qty, line_total]
-    # One line per SKU per SHOPPER — see the `line_key` note above.
-    dedupe_by: line_key
+    # Identity is the PAIR (shopper, item). This was a synthesized `line_key` text
+    # field holding `<contact-id>:<sku>`, because a single-field key resolved
+    # project-wide and one shopper's save updated another shopper's line. A composite
+    # constraint states the same rule truthfully, and `contact_id` is a real column —
+    # so no flow has to build the value, and none can build it differently.
+    constraints:
+      unique:
+        - fields: [contact_id, sku]
 
   # ── The order: a pipeline, so the console charts the fulfilment funnel ─────
   purchase:

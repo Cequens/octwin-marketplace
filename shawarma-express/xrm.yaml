@@ -13,7 +13,7 @@ entities:
     icon:        '🥙'
     description: { en: 'A menu item and whether the kitchen has it', ar: 'صنف في المنيو وتوافره في المطبخ' }
     fields:
-      code:        { type: text, required: true, label: { en: 'Code', ar: 'الرمز' } }
+      code:        { type: text, required: true, unique: true, label: { en: 'Code', ar: 'الرمز' } }
       name:        { type: text, required: true, label: { en: 'Name', ar: 'الاسم' } }
       category:    { type: select, options: [shawarma, grills, sandwiches, sides, drinks, desserts], label: { en: 'Category', ar: 'القسم' } }
       description: { type: textarea, label: { en: 'Description', ar: 'الوصف' } }
@@ -24,34 +24,25 @@ entities:
       popularity:  { type: number, label: { en: 'Popularity', ar: 'الأكثر طلباً' }, default: 0 }
     list: [category, price, available]
     search: { text: [name, description], semantic: [name, description], rank_by: popularity }
-    dedupe_by: code
 
   branch:
     label: { en: 'Branch', ar: 'فرع' }
     icon:        '📍'
     description: { en: 'A branch that prepares and delivers orders', ar: 'فرع يجهّز الطلبات ويوصّلها' }
     fields:
-      name:        { type: text, required: true, label: { en: 'Name', ar: 'الاسم' } }
+      name:        { type: text, required: true, unique: true, label: { en: 'Name', ar: 'الاسم' } }
       area:        { type: select, options: [nasr_city, maadi, zamalek, heliopolis, october, giza], label: { en: 'Area', ar: 'المنطقة' } }
       phone:       { type: text, label: { en: 'Phone', ar: 'الهاتف' } }
       delivers_to: { type: text, label: { en: 'Delivers to', ar: 'يوصّل إلى' } }
       open_hours:  { type: text, label: { en: 'Open hours', ar: 'مواعيد العمل' } }
     list: [area, phone]
     search: { text: [name, delivers_to] }
-    dedupe_by: name
 
   basket_line:
     label: { en: 'Basket line', ar: 'سطر السلة' }
     icon:        '🛒'
     description: { en: 'One line in a customer basket before ordering', ar: 'سطر في سلة العميل قبل تأكيد الطلب' }
     fields:
-      # A per-contact UNIQUENESS key: `<contact-id>:<item>`. `dedupe_by` resolves through
-      # `findRecord`, which scopes to project + entity + field value and NOT to the
-      # contact — so dedupe_by on a bare item code made one shopper's `record_save match:`
-      # update ANOTHER shopper's line (their basket silently changed; this one looked
-      # empty, because the row belonged to someone else). Folding the contact into the key
-      # restores per-customer isolation.
-      line_key:   { type: text, label: { en: 'Line key', ar: 'مفتاح السطر' } }
       dish:       { type: record, entity: dish, label: { en: 'Dish', ar: 'الطبق' } }
       code:       { type: text, label: { en: 'Code', ar: 'الرمز' } }
       title:      { type: text, label: { en: 'Dish', ar: 'الطبق' } }
@@ -60,7 +51,14 @@ entities:
       line_total: { type: money, label: { en: 'Line total', ar: 'إجمالي السطر' }, sortable: true, currency: EGP }
       note:       { type: text, label: { en: 'Note', ar: 'ملاحظة' } }
     list: [title, qty, line_total]
-    dedupe_by: line_key
+    # Identity is the PAIR (shopper, item). This was a synthesized `line_key` text
+    # field holding `<contact-id>:<code>`, because a single-field key resolved
+    # project-wide and one shopper's save updated another shopper's line. A composite
+    # constraint states the same rule truthfully, and `contact_id` is a real column —
+    # so no flow has to build the value, and none can build it differently.
+    constraints:
+      unique:
+        - fields: [contact_id, code]
 
   food_order:
     label: { en: 'Order', ar: 'أوردر' }

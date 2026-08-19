@@ -3,7 +3,7 @@
 #  • `rate` — the live rate card (reference). Pickup pricing reads it rather than
 #             hardcoding a number, so a price change is a record edit.
 #  • `shipment` — the parcel. Its PIPELINE is the tracking status the customer sees, and
-#             `dedupe_by: tracking_number` is what makes a lookup by waybill work.
+#             `unique: true` on `tracking_number` is what makes a lookup by waybill work.
 #  • `pickup_request` — a booked collection, its own small pipeline.
 
 entities:
@@ -12,7 +12,7 @@ entities:
     icon:        '💰'
     description: { en: 'A published price for a lane, service and weight', ar: 'سعر منشور لخط سير وخدمة ووزن' }
     fields:
-      code:        { type: text, required: true, label: { en: 'Code', ar: 'الرمز' } }
+      code:        { type: text, required: true, unique: true, label: { en: 'Code', ar: 'الرمز' } }
       service:     { type: select, options: [same_day, next_day, standard, bulky], label: { en: 'Service', ar: 'الخدمة' } }
       from_region: { type: select, options: [cairo, alexandria, delta, upper], label: { en: 'From', ar: 'من' } }
       to_region:   { type: select, options: [cairo, alexandria, delta, upper], label: { en: 'To', ar: 'إلى' } }
@@ -20,7 +20,6 @@ entities:
       price:       { type: money, label: { en: 'Price', ar: 'السعر' }, sortable: true, currency: EGP }
       eta_hours:   { type: number, label: { en: 'ETA (hours)', ar: 'مدة التوصيل (ساعة)' }, description: { en: 'Promised transit time in hours for this lane — quoted to the customer, so it is a commitment.', ar: 'مدة النقل الموعودة بالساعات لهذا الخط — تُبلَّغ للعميل فهي التزام.' } }
     list: [service, from_region, to_region, price]
-    dedupe_by: code
 
   shipment:
     label: { en: 'Shipment', ar: 'شحنة' }
@@ -39,7 +38,6 @@ entities:
     list: [tracking_number, region, service]
     search: { text: [tracking_number, recipient] }
     # The lookup key — `record_get match: { field: tracking_number }` resolves on it.
-    dedupe_by: tracking_number
     pipeline:
       stages:   [created, picked_up, in_transit, at_hub, out_for_delivery, delivered, failed_attempt, returned]
       initial:  created

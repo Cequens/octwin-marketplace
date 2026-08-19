@@ -1,16 +1,23 @@
 flow_id:     capture-lead
 version:     1
 description: |-
-  [interactive Tool] Capture a sales lead — name, phone, and what they want — so
-  the XPeng sales team can follow up. Call whenever the customer wants a quote,
-  more info, or a call back. Pass interested_model / interest_type if already known
-  (interest_type: quote | info | test_drive | callback).
+  [interactive Tool] Capture a sales lead — which model they want, their name and
+  phone — so the XPeng sales team can follow up. Call whenever the customer wants a
+  quote, more info, or a call back. The flow ASKS which model they are interested in;
+  only pass interested_model when they have actually named one.
 
 input:
+  # The flow shows a real model picker when this is absent, so omitting it is the
+  # normal case, not a degraded one. It arrives filled from `model-details`' "request
+  # a quote" button, where the customer demonstrably WAS looking at that model.
   interested_model:
     type: enum
     enum: [m03, p7, p7_plus, g6, g9, x9]
     optional: true
+    describe: >-
+      The model the customer NAMED, or whose card they tapped through from. Omit it
+      if they have not said — passing a guess skips the picker and files the lead
+      against a car they never asked about.
   interest_type:
     type: enum
     enum: [info, quote, test_drive, callback]
@@ -19,20 +26,126 @@ input:
   name:  { type: string, optional: true, describe: 'Customer name, if already given.' }
   phone: { type: string, optional: true, describe: 'Customer phone, if already given.' }
   email: { type: string, optional: true }
-  # `lead.preferred_branch` has been declared since this pack shipped and nothing
-  # ever wrote it, so sales read a blank column. Pass it when the customer named a
-  # showroom or reached you from its card — never guess one.
-  preferred_branch:
-    type: enum
-    enum: [zayed, dune, mivida]
-    optional: true
-    describe: 'The showroom they named or tapped through from. Omit if they have not said.'
+  # Answer to the "is it the <model>?" confirm below. Only a tap sets it.
+  model_confirmed: { type: boolean, optional: true }
+  #
+  # `preferred_branch` USED to be declared here so sales would stop reading a blank
+  # column. It is gone, and the column is blank again on purpose. Nothing in this
+  # pack ever passed it — `home` invokes with no args and `model-details` passes only
+  # the model — so its one and only writer was the agent, guessing. It guessed
+  # `zayed` (the first enum value) on every run, including for a customer who never
+  # mentioned a showroom, and the describe telling it not to made no difference.
+  # A blank column is honest; a fabricated one sends a rep to the wrong branch.
+  # Wire it to a real showroom tap before declaring it again.
 
 entry:
   - else: true
-    goto: gather
+    goto: route_model
 
 steps:
+  # ── 1) Which car? ──
+  # Asked FIRST, and asked out loud. It used to be inferred: the tool schema let the
+  # agent fill `interested_model` from thin air, and it did — two leads filed against
+  # the M03 by a customer who never named a model. It is also half the entity's
+  # IDENTITY (`unique: [phone, interested_model]`), so a guess here does not just
+  # mis-file one lead, it decides which lead the next enquiry merges into.
+  route_model:
+    - if: '$state.interested_model != null'
+      goto: confirm_model
+    - goto: load_models
+
+  # A model on the input is a CLAIM, not a fact. `input:` IS the agent's tool schema
+  # — the platform builds one from the other, and there is no tap-only input — so the
+  # field carrying model-details' "request a quote" button is the same field the agent
+  # can invent, and it does: `m03` for a customer who said only "I want a price
+  # quote". So confirm it the way this flow already confirms the WhatsApp profile
+  # name: one tap when it is right, an escape when it is not.
+  confirm_model:
+    - do: record_get
+      args:
+        entity: model
+        match: { field: code, value: '$state.interested_model' }
+      bind: cm
+      outputs:
+        ok:        [{ goto: ask_confirm_model }]
+        not_found: [{ goto: clear_model }]   # a code no model answers to → treat as unset
+        failed:    [{ goto: clear_model }]
+
+  ask_confirm_model:
+    - render:
+        render_intent: detail_card
+        body: '$t("capture-lead.m_confirm", { model: $loc($cm.fields.name) })'
+        buttons:
+          - { title: '{$t("capture-lead.m_confirm_yes")}', on_select: { resume: '$self', with: { model_confirmed: true } } }
+          - { title: '{$t("capture-lead.m_confirm_no")}',  on_select: { resume: '$self', with: { model_confirmed: false } } }
+      memory_note: 'Confirming the customer means the {$loc($cm.fields.name)} before filing the lead against it.'
+    - pause:
+        on_resume:
+          - if: '$state.model_confirmed'
+            goto: accept_model
+          - goto: clear_model
+
+  # THE SETTLED FACT, and why it is not `interested_model`.
+  # `$state` is re-merged from `$input` at the top of EVERY turn, and the agent
+  # re-calls this flow (with `workflow_run_id`) on every free-text turn inside the
+  # collect — re-sending its whole argument set each time. So a non-null value the
+  # agent invented for an `input:` key is re-applied over `$state` after the customer
+  # has already answered: tap G9, type your email, and the save writes `m03`. It did
+  # exactly that. `chosen_model` is NOT an `input:` key, so nothing re-merges onto it
+  # — the customer's tap is the only thing that ever writes it, and every step below
+  # reads it rather than the claim it came from.
+  accept_model:
+    # The sentinel row sends no code, and "not sure yet" is a real answer — so it
+    # resolves to the declared `unsure` option rather than staying null. Identity is
+    # (phone, interested_model) and a composite constraint stops deduping the moment a
+    # member is absent, so a null here would spawn a fresh lead on every visit by a
+    # customer who has not decided. Coalesced ONCE, at the only step the tap reaches.
+    - assign:
+        'state.chosen_model': '$coalesce($state.interested_model, "unsure")'
+    - goto: gather
+
+  clear_model:
+    - assign:
+        'state.interested_model': null
+    - goto: load_models
+
+  load_models:
+    - do: record_list
+      args:
+        entity: model
+        all:    true                     # shared lineup, NOT contact-scoped
+        sort_by: { field: price_from, dir: asc }
+      bind: mr
+      outputs:
+        ok:     [{ goto: pick_model }]
+        empty:  [{ goto: gather }]       # no lineup loaded is no reason to lose the lead
+        failed: [{ goto: gather }]
+
+  # `list_picker`, not the `carousel` the rest of the pack shows models with, for one
+  # reason: a carousel card carries no row the lineup did not produce, and this step
+  # needs one — "not sure yet". A customer asking for a quote must be able to say they
+  # have not decided; forcing a pick would put a fabricated model on the lead, which
+  # is the exact defect this step exists to fix. `$concat` appends that sentinel row
+  # (the documented idiom), and the template tells it apart by its null `code`.
+  pick_model:
+    - if: '$length($mr.rows) == 0'       # all:true returns ok+[] for 0 rows, not the empty port
+      goto: gather
+    - render:
+        render_intent: list_picker
+        header: '{$t("capture-lead.m_header")}'
+        body:   '{$t("capture-lead.m_body")}'
+        cta:    '{$t("capture-lead.m_cta")}'
+        items:  '$concat($mr.rows, [{}])'
+        item_template:
+          title: '$item.fields.code != null ? $loc($item.fields.name) : $t("capture-lead.m_unsure")'
+          description: '$item.fields.code != null ? $t("capture-lead.m_from", { price: $format_number($item.fields.price_from) }) : $t("capture-lead.m_unsure_desc")'
+          on_select: { resume: '$self', with: { interested_model: '$item.fields.code' } }
+      memory_note: 'Asked which model the customer is interested in ({$length($mr.rows)} in the lineup, plus a "not sure yet" row).'
+    - pause:
+        on_resume:
+          - goto: accept_model      # the sentinel row sends no model → chosen_model stays null
+
+  # ── 2) Who are they? ──
   gather:
     - collect:
         gap_instructions: '$t("capture-lead.gap")'
@@ -48,11 +161,10 @@ steps:
           # `type: phone` draws WhatsApp's NATIVE "Share Contact Info" button, so the
           # customer answers with ONE TAP and the number arrives Meta-verified and
           # normalised to +E164. That matters here beyond convenience: this value is
-          # the `lead` dedupe key (`match:` in `save` below, `dedupe_by: phone` in
-          # xrm.yaml), and a typed number reached it in three spellings —
-          # `01001234567`, `+201001234567`, `0100 123 4567` — so a returning customer
-          # forked into a second lead and split their history. `dial_code` lets someone
-          # who types it locally still be understood.
+          # half the `lead` identity constraint, and a typed number reached
+          # it in three spellings — `01001234567`, `+201001234567`, `0100 123 4567` —
+          # so a returning customer forked into a second lead and split their history.
+          # `dial_code` lets someone who types it locally still be understood.
           - field: phone
             type: phone
             dial_code: '20'
@@ -69,12 +181,12 @@ steps:
   # Seed the lead's expected_value from the interested model's price so the
   # purchase-journey deal_won conversion has a real EGP value when sales wins it.
   resolve_value:
-    - if: '$state.interested_model == null'
+    - if: '$state.chosen_model == "unsure"'
       goto: save
     - do: record_get
       args:
         entity: model
-        match: { field: code, value: '$state.interested_model' }
+        match: { field: code, value: '$state.chosen_model' }
       bind: mp
       outputs:
         ok:        [{ goto: set_value }]
@@ -86,18 +198,23 @@ steps:
         'state.expected_value': '$mp.fields.price_from'
     - goto: save
 
+  # ── 3) Save ──
+  # Nothing here says how a lead is identified, and that is the point: the entity
+  # declares `unique: [phone, interested_model] where stage_in [live]`, so this save
+  # updates the customer's own live enquiry for this model and inserts otherwise. The
+  # flow used to compose a `<phone>|<model>` key by hand and pass it as `match:`,
+  # which meant every writer had to agree on the spelling, the order, and what to put
+  # where the model was missing.
   save:
     - do: record_save
       args:
         entity: lead
-        match: { value: '$state.phone' }
         fields:
           name:             '$state.name'
           phone:            '$state.phone'
           email:            '$state.email'
           interest_type:    '$coalesce($state.interest_type, "info")'
-          interested_model: '$state.interested_model'
-          preferred_branch: '$state.preferred_branch'
+          interested_model: '$state.chosen_model'
           expected_value:   '$state.expected_value'
       bind: saved
       outputs:
@@ -105,22 +222,26 @@ steps:
         invalid: []          # agent-correctable → reason handed back to the agent
         # failed → throws → error-net
 
-  # `lead` declares `dedupe_by: phone`, so a customer who enquires a SECOND time
-  # updates the lead they already have — deliberate, and the reason `phone` is
-  # collected with the native share-contact tap. What was not deliberate is that
-  # both outcomes then ran the same three steps: a repeat enquiry opened a second
-  # identical 24h task, told the customer "we've saved your details" as if they
-  # were new, and — when sales had already closed the lead won/lost — landed on a
-  # terminal record that every pipeline view filters out. `$saved.created` is the
-  # platform saying which of the two it did; branch on it.
+  # A save is an INSERT or an UPDATE and the two deserve different words, different
+  # tasks, and sometimes a stage move. The flow used to run one path for both: a
+  # repeat enquiry opened a second task titled "follow up NEW lead", told the customer
+  # "we've saved your details" as if they were new, and wrote "Lead #1 saved" to the
+  # timeline twice — which reads as two writes landing on one record rather than as
+  # the dedupe working. `$saved.created` is the platform saying which it did.
   route:
     - if: '$saved.created'
       goto: task
-    # A returning customer whose lead is CLOSED needs it back in the pipeline, or
-    # the enquiry is stored and invisible. `lead` declares no `transitions:`, so
-    # the hop is legal; `not_allowed` is still routed rather than left to throw.
-    - if: '$saved.stage == "won" || $saved.stage == "lost"'
+    # LOST means sales closed it without a sale. A customer coming back is the whole
+    # reason that stage is not final, and a terminal record is filtered out of every
+    # pipeline view — so the enquiry would be stored and invisible. Reopen it.
+    - if: '$saved.stage == "lost"'
       goto: reopen
+    # WON is left alone deliberately. It records a car this customer actually bought,
+    # the purchase journey has already banked `deal_won` against it, and moving it
+    # back to `new` would erase a real sale to chase an enquiry. Sales gets a task
+    # that says who they are talking to instead.
+    - if: '$saved.stage == "won"'
+      goto: task_won
     - goto: task_again
 
   reopen:
@@ -147,8 +268,8 @@ steps:
         ok:     [{ goto: confirm }]
         failed: [{ goto: confirm }]    # lead is already saved; task is best-effort
 
-  # Same record, so a second "Follow up new lead: {name}" would sit next to the
-  # first with nothing to tell them apart. Title it for what it is.
+  # Same record, so a second "Follow up new lead: {name}" would sit next to the first
+  # with nothing to tell them apart. Title it for what it is.
   task_again:
     - do: task_open
       args:
@@ -161,24 +282,36 @@ steps:
         ok:     [{ goto: confirm_again }]
         failed: [{ goto: confirm_again }]
 
+  task_won:
+    - do: task_open
+      args:
+        title:     '{$t("capture-lead.task_title_won", { name: $state.name })}'
+        body:      '{$t("capture-lead.task_body_won", { phone: $state.phone })}'
+        record_id: '$saved.record_id'
+        due_in_hours: 24
+      bind: t
+      outputs:
+        ok:     [{ goto: confirm_again }]
+        failed: [{ goto: confirm_again }]
+
   confirm:
     - render:
         render_intent: text_card
         body: '{$t("capture-lead.confirm", { name: $state.name })}'
-      memory_note: 'Lead #{$saved.record_number} CREATED for {$state.name} ({$state.phone}) (record_id {$saved.record_id}).'
+      memory_note: 'Lead #{$saved.record_number} CREATED for {$state.name} ({$state.phone}), model {$state.chosen_model} (record_id {$saved.record_id}).'
     # Purchase funnel: reached buying intent + completed the lead_captured goal.
-    - track: { journey: purchase, event: submitted_lead, metadata: { model: '$state.interested_model', interest: '$coalesce($state.interest_type, "info")' } }
+    - track: { journey: purchase, event: submitted_lead, metadata: { model: '$state.chosen_model', interest: '$coalesce($state.interest_type, "info")' } }
     - end: applied
 
-  # The note says UPDATED and names the record, so the next session's agent — and
-  # anyone reading the operator timeline — can see the two enquiries are one lead
-  # rather than reading "Lead #1 saved" twice and calling it a duplicate write.
+  # The note says UPDATED and names the key, so the next session's agent — and anyone
+  # reading the operator timeline — can see the two enquiries are one lead rather than
+  # reading "Lead #1 saved" twice and calling it a duplicate write.
   confirm_again:
     - render:
         render_intent: text_card
         body: '{$t("capture-lead.confirm_again", { name: $state.name })}'
-      memory_note: 'Lead #{$saved.record_number} UPDATED — existing lead for {$state.name} ({$state.phone}), matched on phone (record_id {$saved.record_id}).'
-    # Same event: the journey is monotonic and `lead_captured` is a deduped
-    # milestone, so a repeat enquiry re-affirms `intent` without double-counting.
-    - track: { journey: purchase, event: submitted_lead, metadata: { model: '$state.interested_model', interest: '$coalesce($state.interest_type, "info")' } }
+      memory_note: 'Lead #{$saved.record_number} UPDATED — existing {$saved.stage} lead for {$state.name}, identified by phone {$state.phone} + model {$state.chosen_model} (record_id {$saved.record_id}).'
+    # Same event: the journey is monotonic and `lead_captured` is a deduped milestone,
+    # so a repeat enquiry re-affirms `intent` without double-counting.
+    - track: { journey: purchase, event: submitted_lead, metadata: { model: '$state.chosen_model', interest: '$coalesce($state.interest_type, "info")' } }
     - end: applied

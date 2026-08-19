@@ -14,7 +14,7 @@ entities:
     icon:        '🏋️'
     description: { en: 'A class on the timetable and its capacity', ar: 'حصة ضمن الجدول وسعتها' }
     fields:
-      code:        { type: text, required: true, label: { en: 'Code', ar: 'الرمز' } }
+      code:        { type: text, required: true, unique: true, label: { en: 'Code', ar: 'الرمز' } }
       name:        { type: text, required: true, label: { en: 'Name', ar: 'الاسم' } }
       # Keep this list in step with `trainer.specialty` — the trainer picker filters
       # `specialty eq <the class's discipline>`, so a discipline with no coach is a
@@ -33,14 +33,13 @@ entities:
       popularity:  { type: number, label: { en: 'Popularity', ar: 'الأكثر حضوراً' }, default: 0, description: { en: 'Manual ordering weight for the class list — higher shows earlier.', ar: 'وزن ترتيب يدوي لقائمة الحصص — الأعلى يظهر أولاً.' } }
     list: [discipline, intensity, seats]
     search: { text: [name, description], semantic: [name, description], rank_by: popularity }
-    dedupe_by: code
 
   trainer:
     label: { en: 'Trainer', ar: 'مدرب' }
     icon:        '💪'
     description: { en: 'A coach members book sessions with', ar: 'مدرب يحجز معه الأعضاء حصصهم' }
     fields:
-      name:       { type: text, required: true, label: { en: 'Name', ar: 'الاسم' } }
+      name:       { type: text, required: true, unique: true, label: { en: 'Name', ar: 'الاسم' } }
       specialty:  { type: select, options: [spin, hiit, yoga, boxing, strength], label: { en: 'Specialty', ar: 'التخصص' } }
       bio:        { type: textarea, label: { en: 'Bio', ar: 'نبذة' } }
       languages:  { type: text, label: { en: 'Languages', ar: 'اللغات' } }
@@ -49,21 +48,19 @@ entities:
       rating:     { type: number, label: { en: 'Rating', ar: 'التقييم' }, default: 0, sortable: true }
     list: [specialty, languages, rating]
     search: { text: [name, languages], rank_by: rating }
-    dedupe_by: name
 
   plan:
     label: { en: 'Membership plan', ar: 'باقة عضوية' }
     icon:        '🎟️'
     description: { en: 'A membership term and what it includes', ar: 'مدة العضوية وما تشمله' }
     fields:
-      code:      { type: text, required: true, label: { en: 'Code', ar: 'الرمز' } }
+      code:      { type: text, required: true, unique: true, label: { en: 'Code', ar: 'الرمز' } }
       name:      { type: text, required: true, label: { en: 'Name', ar: 'الاسم' } }
       months:    { type: number, label: { en: 'Months', ar: 'عدد الأشهر' }, sortable: true }
       price:     { type: money, label: { en: 'Price', ar: 'السعر' }, sortable: true, currency: AED }
       includes:  { type: textarea, label: { en: 'Includes', ar: 'يشمل' } }
       classes_included: { type: boolean, label: { en: 'Classes included', ar: 'يشمل الحصص' }, description: { en: 'Whether the membership price covers classes, or they are paid per session on top.', ar: 'هل يشمل سعر العضوية الحصص أم تُدفع لكل حصة على حدة.' } }
     list: [months, price, classes_included]
-    dedupe_by: code
 
   member_lead:
     label: { en: 'Membership enquiry', ar: 'استفسار عضوية' }

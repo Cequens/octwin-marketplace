@@ -1,5 +1,5 @@
 # product — the detail drill-down. Loads the record by `retailer_id` (the product
-# entity's `dedupe_by`, so `match:` resolves it) and offers the add-to-cart action
+# entity's unique `sku`, so `match:` resolves it) and offers the add-to-cart action
 # against the real commerce cart.
 
 flow_id:     product

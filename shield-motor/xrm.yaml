@@ -12,7 +12,7 @@ entities:
     icon:        '🛡️'
     description: { en: 'A motor cover level and how its premium is rated', ar: 'مستوى تغطية تأمين المركبة وطريقة تسعير قسطه' }
     fields:
-      code:              { type: text, required: true, label: { en: 'Code', ar: 'الرمز' } }
+      code:              { type: text, required: true, unique: true, label: { en: 'Code', ar: 'الرمز' } }
       name:              { type: text, required: true, label: { en: 'Name', ar: 'الاسم' } }
       cover:             { type: select, options: [third_party, comprehensive, comprehensive_plus], label: { en: 'Cover', ar: 'نوع التغطية' } }
       description:       { type: textarea, label: { en: 'Description', ar: 'الوصف' } }
@@ -25,7 +25,6 @@ entities:
       benefits:          { type: text, label: { en: 'Benefits', ar: 'المزايا' } }
     list: [cover, base_rate_pct, agency_repair]
     search: { text: [name, benefits], semantic: [name, description] }
-    dedupe_by: code
 
   quote_req:
     label: { en: 'Quote enquiry', ar: 'طلب تسعير' }

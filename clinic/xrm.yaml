@@ -60,7 +60,13 @@ entities:
       gender:   { type: select, options: [male, female], label: { en: 'Gender', ar: 'النوع' } }
       relation: { type: text, label: { en: 'Relation', ar: 'صلة القرابة' } }
     list: [relation]
-    dedupe_by: name
+    # Identity is the PAIR (patient, name). Two parents may each have a "Nour", and
+    # a name alone matched across the whole project — so one family's second booking
+    # could land on another family's child. `contact_id` is a real column the
+    # platform sets, so nothing has to build or fill it.
+    constraints:
+      unique:
+        - fields: [contact_id, name]
 
   medical_document:
     label: { en: 'Medical document', ar: 'مستند طبي' }

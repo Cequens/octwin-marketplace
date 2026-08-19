@@ -15,13 +15,12 @@ entities:
     icon:        '🏗️'
     description: { en: 'A customer construction site materials are quoted and delivered to', ar: 'موقع إنشائي للعميل تُسعّر وتُسلَّم إليه المواد' }
     fields:
-      name:          { type: text, required: true, label: { en: 'Site', ar: 'الموقع' } }
+      name:          { type: text, required: true, unique: true, label: { en: 'Site', ar: 'الموقع' } }
       city:          { type: select, options: [riyadh, kharj, diriyah, qassim, dammam], label: { en: 'City', ar: 'المدينة' } }
       address:       { type: textarea, label: { en: 'Address', ar: 'العنوان' } }
       contact_phone: { type: text, label: { en: 'Site phone', ar: 'جوال الموقع' } }
     list: [city, contact_phone]
     search: { text: [name, address] }
-    dedupe_by: name
 
   quote:
     label: { en: 'Quote / RFQ', ar: 'طلب عرض سعر' }

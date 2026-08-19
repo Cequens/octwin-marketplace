@@ -12,7 +12,7 @@ entities:
     icon:        '🤲'
     description: { en: 'A fundraising campaign and its target', ar: 'حملة تبرع وهدفها' }
     # `title_field` is what makes `--seed` IDEMPOTENT. The seeder looks for an
-    # existing row by `dedupe_by`, else by the title field's value; declaring
+    # existing row by its derived natural key, else by the title field's value; declaring
     # NEITHER means it never finds one and inserts a fresh set on every seed —
     # deploy twice and the charity has ten campaigns instead of five.
     title_field: title_ar

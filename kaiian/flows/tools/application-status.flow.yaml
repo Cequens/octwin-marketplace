@@ -3,7 +3,7 @@
 # current contact, INCLUDING terminal stages — an approved/rejected applicant
 # asking "what happened?" must still see the outcome):
 #   • 0 records → `answer:` (the agent warmly offers become-captain)
-#   • 1 record  → a detail card directly (dedupe_by keeps it to one in practice)
+#   • 1 record  → a detail card directly (the unique `mobile` keeps it to one)
 #   • tapped    → the tapped record's detail (rows re-invoke $self with record_id)
 #   • ≥2        → a `list_picker` fallback
 # Stage labels + per-stage explainers resolve via `$enum_label`

@@ -7,7 +7,7 @@
 # recurring-maintenance contract pipeline. No pack DB, no code — pure YAML.
 
 id:          homefix-services
-version:     '1.8.0'
+version:     '2.0.0'
 description: 'Home maintenance & handyman dispatch — describe the fault, send a photo and a location pin, and get a routed work order with a real response window.'
 
 listing:

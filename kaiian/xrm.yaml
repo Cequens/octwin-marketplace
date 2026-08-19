@@ -26,7 +26,7 @@ entities:
     fields:
       # ── Application (asked in chat) ──────────────────────────────────────────
       name:         { type: text,   required: true, group: application, label: { en: 'Name',         ar: 'الاسم' } }   # title_field defaults to `name`
-      mobile:       { type: text,   required: true, group: application, label: { en: 'Mobile',       ar: 'الجوال' } }
+      mobile:       { type: text,   required: true, unique: true, group: application, label: { en: 'Mobile',       ar: 'الجوال' } }
       region:       { type: select, required: true, group: application, label: { en: 'Region',       ar: 'المنطقة' }, options: [central, western, eastern, northern, southern] }
       vehicle_type: { type: select, required: true, group: application, label: { en: 'Vehicle type', ar: 'نوع المركبة' }, options: [sedan, suv, motorbike] }
       notes:        { type: textarea,               group: application, label: { en: 'Notes',        ar: 'ملاحظات' } }
@@ -101,7 +101,6 @@ entities:
     list: [region, vehicle_type]
     # A returning applicant UPDATES their application (record_save `match:`),
     # never duplicates it.
-    dedupe_by: mobile
 
   # The worked entity. `case` is a RESERVED system entity (extend-only) — the
   # pack never declares its fields, stages or labels, and `worklist.yaml` already

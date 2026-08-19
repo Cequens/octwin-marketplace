@@ -116,7 +116,11 @@ steps:
     - do: record_save
       args:
         entity: pilgrim
-        match:  { field: full_name, value: '$state.traveller_name' }
+        # Identity is (contact_id, full_name) — the booking customer plus the traveller
+        # name. `contact_id` defaults to the conversation's contact, so this updates
+        # THIS family's traveller. It used to match on the name alone, which reached
+        # every project: two families travelling with a «محمد» shared one row, and the
+        # second visa filing overwrote the first family's passport scan.
         fields:
           full_name:     '$state.traveller_name'
           passport_scan: '$state.passport_scan'

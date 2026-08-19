@@ -57,13 +57,11 @@ steps:
     - do: record_save
       args:
         entity: cart_line
-        # `dedupe_by: line_key` — a second add of the same SKU by the SAME shopper updates
-        # their line rather than stacking a duplicate. The contact is folded into the key
-        # because `findRecord` is not contact-scoped: keying on the bare SKU let one
-        # shopper's upsert land on another shopper's row.
-        match:  { field: line_key, value: '$contact.id + ":" + $input.product_id' }
+        # Identity is (contact_id, sku) — declared on the entity — so a second add of the
+        # same SKU by the SAME shopper updates their line rather than stacking a
+        # duplicate, and can never reach another shopper's row. The contact used to be
+        # folded into a `line_key` value this step built by hand.
         fields:
-          line_key:   '$contact.id + ":" + $input.product_id'
           fragrance:  '$prod.id'
           sku:        '$input.product_id'
           title:      '$prod.fields.name'
@@ -78,26 +76,37 @@ steps:
 
   # ── remove / clear ───────────────────────────────────────────────────────
   remove_line:
-    - do: record_get
-      args: { entity: cart_line, match: { field: line_key, value: '$contact.id + ":" + $input.product_id' } }
+    # `record_list`, not `record_get`: the WRITE side identifies a line by
+    # (contact_id, sku), and the read side has no contact scope — a bare `sku` match
+    # would reach another shopper's line. `record_list` is contact-scoped by default.
+    - do: record_list
+      args:
+        entity: cart_line
+        where:  { field: sku, value: '$input.product_id' }
+        limit:  5
       bind: gone
       outputs:
-        ok:        [{ goto: zero_line }]
-        not_found: [{ goto: load_lines }]
-        failed:    [{ goto: unavailable }]
+        ok:     [{ goto: zero_line }]
+        empty:  [{ goto: load_lines }]
+        failed: [{ goto: unavailable }]
 
   # A pack cannot delete a record from a flow, so a removed line is zeroed and
   # filtered out of every read below. (Logged in FEEDBACK.md as a gap.)
   zero_line:
-    - do: record_save
-      args:
-        entity:    cart_line
-        record_id: '$gone.id'
-        fields:    { qty: 0, line_total: 0 }
-      outputs:
-        ok:      [{ goto: load_lines }]
-        invalid: [{ goto: load_lines }]
-        failed:  [{ goto: unavailable }]
+    # `gone` is a page envelope now (the read above lists rather than gets), so this
+    # zeroes every matching row by id. There is at most one — (contact_id, sku) is
+    # unique — but iterating means a pre-constraint duplicate is cleared too, rather
+    # than one of the pair being left behind in the shopper's basket.
+    - foreach:
+        in: '$gone.rows'
+        as: row
+        body:
+          - do: record_save
+            args:
+              entity:    cart_line
+              record_id: '$row.id'
+              fields:    { qty: 0, line_total: 0 }
+    - goto: load_lines
 
   clear_lines:
     - do: record_list
@@ -298,7 +307,7 @@ steps:
         in: '$live'
         as: row
         body:
-          # Resolve by SKU (the entity's `dedupe_by`) rather than by the line's
+          # Resolve by SKU (the entity's unique constraint) rather than by the line's
           # `fragrance` record ref — a ref is not a plain record_id, and passing one
           # made record_get return its `failed` port mid-loop.
           - do: record_get
@@ -308,9 +317,8 @@ steps:
             then:
               - do: record_save
                 args:
-                  entity: fragrance
-                  match:  { field: sku, value: '$row.fields.sku' }
-                  fields: { stock: '$coalesce($f.fields.stock, 0) - $row.fields.qty' }
+                  entity: fragrance     # identity = the unique `sku`
+                  fields: { sku: '$row.fields.sku', stock: '$coalesce($f.fields.stock, 0) - $row.fields.qty' }
           - do: record_save
             args:
               entity:    cart_line

@@ -211,7 +211,7 @@ steps:
         entity: property
         # No `match:` — this branch only runs when the customer chose "a different
         # address", so a new record is the correct outcome. The entity's own
-        # `dedupe_by: label` still merges a byte-identical retype as a backstop.
+        # the (contact_id, label) constraint still merges a byte-identical retype as a backstop.
         fields:
           label:   '$state.address'
           emirate: '$state.emirate'

@@ -51,11 +51,10 @@ steps:
     - do: record_save
       args:
         entity: basket_line
-        # Deduped per SHOPPER, not per dish: `findRecord` is not contact-scoped, so a bare
-        # dish code let one customer's upsert land on another customer's line.
-        match:  { field: line_key, value: '$contact.id + ":" + $input.dish_code' }
+        # Identity is (contact_id, code) — declared on the entity — so this is deduped per
+        # SHOPPER and can never reach another customer's line. The contact used to be
+        # folded into a `line_key` value this step built by hand.
         fields:
-          line_key:   '$contact.id + ":" + $input.dish_code'
           dish:       '$dish.id'
           code:       '$input.dish_code'
           title:      '$dish.fields.name'
@@ -68,23 +67,33 @@ steps:
         failed:  [{ goto: unavailable }]
 
   remove_line:
-    - do: record_get
-      args: { entity: basket_line, match: { field: line_key, value: '$contact.id + ":" + $input.dish_code' } }
+    # `record_list`, not `record_get`: the WRITE side identifies a line by
+    # (contact_id, code), and the read side has no contact scope — a bare `code` match
+    # would reach another customer's line. `record_list` is contact-scoped by default.
+    - do: record_list
+      args:
+        entity: basket_line
+        where:  { field: code, value: '$input.dish_code' }
+        limit:  5
       bind: gone
       outputs:
-        ok:        [{ goto: zero_line }]
-        not_found: [{ goto: load_lines }]
-        failed:    [{ goto: unavailable }]
+        ok:     [{ goto: zero_line }]
+        empty:  [{ goto: load_lines }]
+        failed: [{ goto: unavailable }]
 
   # A flow cannot delete a record, so a removed line is zeroed and filtered out of
   # every read below (`$filter_gte` on the quantity).
   zero_line:
-    - do: record_save
-      args: { entity: basket_line, record_id: '$gone.id', fields: { qty: 0, line_total: 0 } }
-      outputs:
-        ok:      [{ goto: load_lines }]
-        invalid: [{ goto: load_lines }]
-        failed:  [{ goto: unavailable }]
+    # `gone` is a page envelope now (the read above lists rather than gets), so zero
+    # every matching row by id. At most one exists — (contact_id, code) is unique — but
+    # iterating also clears a pre-constraint duplicate instead of leaving half of it.
+    - foreach:
+        in: '$gone.rows'
+        as: row
+        body:
+          - do: record_save
+            args: { entity: basket_line, record_id: '$row.id', fields: { qty: 0, line_total: 0 } }
+    - goto: load_lines
 
   clear_lines:
     - do: record_list

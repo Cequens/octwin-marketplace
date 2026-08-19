@@ -133,11 +133,10 @@ steps:
     - do: record_save
       args:
         entity: basket_line
-        # Deduped per PATIENT, not per item: `findRecord` is not contact-scoped, so a bare
-        # item code let one patient's upsert land on another patient's basket line.
-        match:  { field: line_key, value: '$contact.id + ":" + $input.item_code' }
+        # Identity is (contact_id, code) — declared on the entity — so this is deduped per
+        # PATIENT and can never reach another patient's basket line. The contact used to
+        # be folded into a `line_key` value this step built by hand.
         fields:
-          line_key:   '$contact.id + ":" + $input.item_code'
           item:       '$item.id'
           code:       '$input.item_code'
           title:      '$item.fields.name'

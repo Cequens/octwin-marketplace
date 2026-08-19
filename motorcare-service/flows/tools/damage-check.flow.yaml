@@ -82,11 +82,11 @@ steps:
         complete: [{ goto: save_vehicle }]
 
   save_vehicle:
-    # Deduped on plate, so a returning customer's car is updated, never duplicated.
+    # `plate` is the entity's unique constraint, so a returning customer's car is
+    # updated, never duplicated.
     - do: record_save
       args:
         entity: vehicle
-        match:  { field: plate, value: '$state.plate' }
         fields:
           plate:      '$state.plate'
           make_model: '$state.make_model'

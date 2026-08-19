@@ -2,7 +2,7 @@
 #
 #   model   : reference catalog (no pipeline → always listed). The lineup.
 #   branch  : reference catalog of showrooms (also the bookable resource).
-#   lead    : sales pipeline (new → … → won/lost), deduped by phone.
+#   lead    : sales pipeline (new → … → won/lost), one LIVE row per (phone, model).
 #   booking : the platform `booking` system entity, EXTENDED with pack fields.
 #
 # Localized text fields hold a { en, ar } bag; render them in flows via $loc(value).
@@ -37,7 +37,6 @@ entities:
       gallery:     { type: image_list }
     title_field: name
     list: [body_type, range_km]
-    dedupe_by: code
 
   # ─────────────────────────────────────── the showrooms ──
   branch:
@@ -55,7 +54,6 @@ entities:
       photo:   { type: image }
     title_field: name
     list: [area]
-    dedupe_by: code
 
   # ─────────────────────────────────────────── sales leads ──
   lead:
@@ -75,6 +73,11 @@ entities:
           - { value: g6,      label: { en: 'G6',       ar: 'G6' } }
           - { value: g9,      label: { en: 'G9',       ar: 'G9' } }
           - { value: x9,      label: { en: 'X9',       ar: 'X9' } }
+          # A real value, not an absence. The picker has always offered "not sure
+          # yet"; the field now says so too, which is what lets identity be the
+          # (phone, model) PAIR with no member ever missing — an absent member makes
+          # a composite constraint stop deduping entirely (NULLS DISTINCT).
+          - { value: unsure,  label: { en: 'Not sure yet', ar: 'لسّه مش محدد' } }
       interest_type:
         type: select
         options:
@@ -93,7 +96,23 @@ entities:
       # capture time; the purchase-journey conversion value pulls from this.
       expected_value: { type: number }
     list: [interest_type, phone]
-    dedupe_by: phone
+    # Identity is the PAIR, and only among LIVE enquiries.
+    #
+    # Phone ALONE meant a customer who asked about the M03 and later the G9 overwrote
+    # their own first enquiry — one row, one model, the earlier interest gone. The
+    # pair fixes that. It used to be folded by hand into a `dedupe_key` text column
+    # because the old single-field declaration could not express two fields; the
+    # constraint says it directly, so there is no key for a flow to build, mis-order,
+    # or spell differently from the one that reads it.
+    #
+    # `where:` is the other half, and it is what makes a RETURNING customer work: a
+    # lead sales already closed (won/lost) is invisible to identity, so a fresh
+    # enquiry about the same model starts a NEW lead instead of quietly reopening a
+    # closed row that every pipeline view filters out.
+    constraints:
+      unique:
+        - fields: [phone, interested_model]
+          where:  { stage_in: [new, contacted, qualified] }
     pipeline:
       stages:   [new, contacted, qualified, won, lost]
       initial:  new

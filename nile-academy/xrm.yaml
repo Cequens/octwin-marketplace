@@ -14,7 +14,7 @@ entities:
     icon:        '🎓'
     description: { en: 'A school programme, its curriculum and annual fee', ar: 'برنامج دراسي ومنهجه ورسومه السنوية' }
     fields:
-      code:         { type: text, required: true, label: { en: 'Code', ar: 'الرمز' } }
+      code:         { type: text, required: true, unique: true, label: { en: 'Code', ar: 'الرمز' } }
       name:         { type: text, required: true, label: { en: 'Name', ar: 'الاسم' } }
       stage_level:  { type: select, options: [kg, primary, preparatory, secondary], label: { en: 'Stage', ar: 'المرحلة' } }
       curriculum:   { type: select, options: [national, british, american, ib], label: { en: 'Curriculum', ar: 'المنهج' } }
@@ -24,20 +24,18 @@ entities:
       photo:        { type: image, label: { en: 'Photo', ar: 'الصورة' } }
     list: [stage_level, curriculum, annual_fee, seats_left]
     search: { text: [name, description], semantic: [name, description] }
-    dedupe_by: code
 
   campus:
     label: { en: 'Campus', ar: 'مقر' }
     icon:        '🏫'
     description: { en: 'A campus families can tour and enrol at', ar: 'حرم مدرسي يمكن للأسر زيارته والالتحاق به' }
     fields:
-      name:     { type: text, required: true, label: { en: 'Name', ar: 'الاسم' } }
+      name:     { type: text, required: true, unique: true, label: { en: 'Name', ar: 'الاسم' } }
       area:     { type: text, label: { en: 'Area', ar: 'المنطقة' } }
       address:  { type: textarea, label: { en: 'Address', ar: 'العنوان' } }
       timezone: { type: text, label: { en: 'Timezone', ar: 'المنطقة الزمنية' }, default: 'Africa/Cairo' }
     list: [area]
     search: { text: [name, area] }
-    dedupe_by: name
 
   application:
     label: { en: 'Application', ar: 'طلب التحاق' }

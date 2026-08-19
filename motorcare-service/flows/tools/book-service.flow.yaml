@@ -175,8 +175,7 @@ steps:
   save_car:
     - do: record_save
       args:
-        entity: vehicle
-        match:  { field: plate, value: '$state.plate' }
+        entity: vehicle          # identity = the unique `plate`
         fields: { plate: '$state.plate' }
       bind: car
       outputs:

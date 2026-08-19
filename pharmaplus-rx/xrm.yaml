@@ -13,7 +13,7 @@ entities:
     icon:        '💊'
     description: { en: 'A shelf item sold without a prescription', ar: 'صنف يُباع دون وصفة طبية' }
     fields:
-      code:        { type: text, required: true, label: { en: 'Code', ar: 'الرمز' } }
+      code:        { type: text, required: true, unique: true, label: { en: 'Code', ar: 'الرمز' } }
       name:        { type: text, required: true, label: { en: 'Name', ar: 'الاسم' } }
       category:    { type: select, options: [pain_relief, cold_flu, vitamins, baby, skincare, first_aid, devices], label: { en: 'Category', ar: 'القسم' } }
       description: { type: textarea, label: { en: 'Description', ar: 'الوصف' } }
@@ -24,7 +24,6 @@ entities:
       photo:       { type: image, label: { en: 'Photo', ar: 'الصورة' } }
     list: [category, price, in_stock]
     search: { text: [name, description], semantic: [name, description] }
-    dedupe_by: code
 
   rx_request:
     label: { en: 'Prescription request', ar: 'طلب صرف روشتة' }
@@ -134,13 +133,6 @@ entities:
     icon:        '🛒'
     description: { en: 'One line in a patient basket before checkout', ar: 'سطر في سلة المريض قبل إتمام الطلب' }
     fields:
-      # A per-contact UNIQUENESS key: `<contact-id>:<item>`. `dedupe_by` resolves through
-      # `findRecord`, which scopes to project + entity + field value and NOT to the
-      # contact — so dedupe_by on a bare item code made one shopper's `record_save match:`
-      # update ANOTHER shopper's line (their basket silently changed; this one looked
-      # empty, because the row belonged to someone else). Folding the contact into the key
-      # restores per-customer isolation.
-      line_key:   { type: text, label: { en: 'Line key', ar: 'مفتاح السطر' } }
       item:       { type: record, entity: otc_item, label: { en: 'Item', ar: 'المنتج' } }
       code:       { type: text, label: { en: 'Code', ar: 'الرمز' } }
       title:      { type: text, label: { en: 'Item', ar: 'المنتج' } }
@@ -148,7 +140,14 @@ entities:
       unit_price: { type: money, label: { en: 'Unit price', ar: 'سعر الوحدة' }, currency: EGP }
       line_total: { type: money, label: { en: 'Line total', ar: 'إجمالي السطر' }, sortable: true, currency: EGP }
     list: [title, qty, line_total]
-    dedupe_by: line_key
+    # Identity is the PAIR (shopper, item). This was a synthesized `line_key` text
+    # field holding `<contact-id>:<code>`, because a single-field key resolved
+    # project-wide and one shopper's save updated another shopper's line. A composite
+    # constraint states the same rule truthfully, and `contact_id` is a real column —
+    # so no flow has to build the value, and none can build it differently.
+    constraints:
+      unique:
+        - fields: [contact_id, code]
 
   # The worked entity — the pharmacist review desk. `case` is a RESERVED system
   # entity (extend-only): the pack declares none of its shape, and

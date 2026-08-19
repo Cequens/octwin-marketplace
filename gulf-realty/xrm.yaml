@@ -13,7 +13,7 @@ entities:
     icon:        '🏘️'
     description: { en: 'A project being sold, its developer and starting price', ar: 'مشروع معروض للبيع ومطوّره وسعر البداية' }
     fields:
-      name:          { type: text, required: true, label: { en: 'Name', ar: 'الاسم' } }
+      name:          { type: text, required: true, unique: true, label: { en: 'Name', ar: 'الاسم' } }
       developer:     { type: text, label: { en: 'Developer', ar: 'المطوّر' } }
       city:          { type: select, options: [dubai, abu_dhabi, riyadh, jeddah, sharjah, cairo], label: { en: 'City', ar: 'المدينة' } }
       area:          { type: text, label: { en: 'Area', ar: 'المنطقة' } }
@@ -25,14 +25,13 @@ entities:
       rating:        { type: number, label: { en: 'Demand score', ar: 'مؤشر الطلب' }, default: 0, description: { en: 'Internal demand score used to order the project list. Not a customer-visible rating.', ar: 'مؤشر طلب داخلي يُرتَّب به عرض المشاريع. ليس تقييماً يراه العميل.' } }
     list: [developer, city, from_price]
     search: { text: [name, area, developer], rank_by: rating }
-    dedupe_by: name
 
   unit_type:
     label: { en: 'Unit type', ar: 'نوع الوحدة' }
     icon:        '🏠'
     description: { en: 'A floor plan within a development, priced per unit', ar: 'نموذج وحدة داخل المشروع بسعره' }
     fields:
-      name:        { type: text, required: true, label: { en: 'Name', ar: 'الاسم' } }
+      name:        { type: text, required: true, unique: true, label: { en: 'Name', ar: 'الاسم' } }
       development: { type: record, entity: development, label: { en: 'Development', ar: 'المشروع' } }
       bedrooms:    { type: number, label: { en: 'Bedrooms', ar: 'غرف النوم' }, sortable: true }
       area_sqft:   { type: number, label: { en: 'Area (sqft)', ar: 'المساحة (قدم²)' } }
@@ -41,14 +40,13 @@ entities:
       photo:       { type: image, label: { en: 'Photo', ar: 'الصورة' } }
     list: [development, bedrooms, price]
     search: { text: [name, view] }
-    dedupe_by: name
 
   advisor:
     label: { en: 'Advisor', ar: 'مستشار عقاري' }
     icon:        '🤝'
     description: { en: 'A sales advisor assigned to buyers', ar: 'مستشار مبيعات مسند إلى المشترين' }
     fields:
-      name:      { type: text, required: true, label: { en: 'Name', ar: 'الاسم' } }
+      name:      { type: text, required: true, unique: true, label: { en: 'Name', ar: 'الاسم' } }
       title:     { type: text, label: { en: 'Title', ar: 'المسمى' } }
       languages: { type: text, label: { en: 'Languages', ar: 'اللغات' } }
       city:      { type: select, options: [dubai, abu_dhabi, riyadh, jeddah, sharjah, cairo], label: { en: 'City', ar: 'المدينة' } }
@@ -57,7 +55,6 @@ entities:
       rating:    { type: number, label: { en: 'Rating', ar: 'التقييم' }, default: 0 }
     list: [title, city, languages]
     search: { text: [name, languages], rank_by: rating }
-    dedupe_by: name
 
   # The commercial funnel. `record_milestone` marks the money moments; the
   # console + `octwin analytics buyer_lead` chart conversion between stages.

@@ -13,7 +13,7 @@ entities:
     icon:        '📋'
     description: { en: 'Published finance products and their rates', ar: 'منتجات التمويل المنشورة وأسعارها' }
     fields:
-      code:            { type: text, required: true, label: { en: 'Code', ar: 'الرمز' } }
+      code:            { type: text, required: true, unique: true, label: { en: 'Code', ar: 'الرمز' } }
       name:            { type: text, required: true, label: { en: 'Name', ar: 'الاسم' } }
       structure:       { type: select, options: [murabaha, ijara, musharaka], label: { en: 'Structure', ar: 'الصيغة' } }
       description:     { type: textarea, label: { en: 'Description', ar: 'الوصف' } }
@@ -25,7 +25,6 @@ entities:
       supports_rege:   { type: boolean, label: { en: 'REDF supported', ar: 'مدعوم من صندوق التنمية العقارية' }, description: { en: 'Whether the Real Estate Development Fund (REDF) subsidy can be applied to this product.', ar: 'هل يمكن تطبيق دعم صندوق التنمية العقارية على هذا المنتج.' } }
     list: [structure, profit_rate_pct, max_years]
     search: { text: [name, description], semantic: [name, description] }
-    dedupe_by: code
 
   applicant:
     label: { en: 'Application', ar: 'طلب تمويل' }

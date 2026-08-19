@@ -15,7 +15,7 @@ entities:
     icon:        '🔩'
     description: { en: 'A published service package and its price', ar: 'باقة صيانة منشورة وسعرها' }
     fields:
-      code:         { type: text, required: true, label: { en: 'Code', ar: 'الرمز' } }
+      code:         { type: text, required: true, unique: true, label: { en: 'Code', ar: 'الرمز' } }
       name:         { type: text, required: true, label: { en: 'Name', ar: 'الاسم' } }
       description:  { type: textarea, label: { en: 'Description', ar: 'الوصف' } }
       work_area:    { type: select, options: [mechanical, body, diagnostics], label: { en: 'Work area', ar: 'قسم العمل' } }
@@ -24,33 +24,30 @@ entities:
       photo:        { type: image, label: { en: 'Photo', ar: 'الصورة' } }
     list: [work_area, duration_min, price_from]
     search: { text: [name, description], semantic: [name, description] }
-    dedupe_by: code
 
   bay:
     label: { en: 'Service bay', ar: 'منصة صيانة' }
     icon:        '🅿️'
     description: { en: 'A workshop bay a job is assigned to', ar: 'خانة ورشة يُسند إليها العمل' }
     fields:
-      name:      { type: text, required: true, label: { en: 'Name', ar: 'الاسم' } }
+      name:      { type: text, required: true, unique: true, label: { en: 'Name', ar: 'الاسم' } }
       work_area: { type: select, options: [mechanical, body, diagnostics], label: { en: 'Work area', ar: 'قسم العمل' }, description: { en: 'What this bay is equipped for. Must match a job''s work area for the job to be assignable here.', ar: 'ما هذه الخانة مجهزة له. يجب أن يطابق مجال عمل البطاقة حتى يمكن إسنادها هنا.' } }
       branch:    { type: text, label: { en: 'Branch', ar: 'الفرع' } }
       timezone:  { type: text, label: { en: 'Timezone', ar: 'المنطقة الزمنية' }, default: 'Asia/Dubai' }
     list: [work_area, branch]
     search: { text: [name, branch] }
-    dedupe_by: name
 
   vehicle:
     label: { en: 'Vehicle', ar: 'مركبة' }
     icon:        '🚙'
     description: { en: 'A customer vehicle and its service history', ar: 'مركبة العميل وسجل صيانتها' }
     fields:
-      plate:        { type: text, required: true, label: { en: 'Plate', ar: 'رقم اللوحة' } }
+      plate:        { type: text, required: true, unique: true, label: { en: 'Plate', ar: 'رقم اللوحة' } }
       make_model:   { type: text, label: { en: 'Make & model', ar: 'الماركة والطراز' } }
       year:         { type: number, label: { en: 'Year', ar: 'سنة الصنع' }, sortable: true }
       odometer_km:  { type: number, label: { en: 'Odometer (km)', ar: 'العداد (كم)' }, sortable: true, description: { en: 'Reading at the last visit. Service intervals are judged from it, so a stale value mis-times the next service.', ar: 'القراءة عند آخر زيارة. وتُقدَّر مواعيد الصيانة منها، فالقيمة القديمة تُخطئ توقيت الصيانة القادمة.' } }
       last_service: { type: date, label: { en: 'Last service', ar: 'آخر صيانة' } }
     list: [make_model, year, odometer_km]
-    dedupe_by: plate
 
   repair_job:
     label: { en: 'Job card', ar: 'بطاقة عمل' }
