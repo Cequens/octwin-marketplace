@@ -101,9 +101,39 @@ steps:
           expected_value:   '$state.expected_value'
       bind: saved
       outputs:
-        ok:      [{ goto: task }]
+        ok:      [{ goto: route }]
         invalid: []          # agent-correctable → reason handed back to the agent
         # failed → throws → error-net
+
+  # `lead` declares `dedupe_by: phone`, so a customer who enquires a SECOND time
+  # updates the lead they already have — deliberate, and the reason `phone` is
+  # collected with the native share-contact tap. What was not deliberate is that
+  # both outcomes then ran the same three steps: a repeat enquiry opened a second
+  # identical 24h task, told the customer "we've saved your details" as if they
+  # were new, and — when sales had already closed the lead won/lost — landed on a
+  # terminal record that every pipeline view filters out. `$saved.created` is the
+  # platform saying which of the two it did; branch on it.
+  route:
+    - if: '$saved.created'
+      goto: task
+    # A returning customer whose lead is CLOSED needs it back in the pipeline, or
+    # the enquiry is stored and invisible. `lead` declares no `transitions:`, so
+    # the hop is legal; `not_allowed` is still routed rather than left to throw.
+    - if: '$saved.stage == "won" || $saved.stage == "lost"'
+      goto: reopen
+    - goto: task_again
+
+  reopen:
+    - do: record_stage
+      args:
+        record_id: '$saved.record_id'
+        to:        new
+        note:      '{$t("capture-lead.reopen_note")}'
+      outputs:
+        ok:          [{ goto: task_again }]
+        not_allowed: [{ goto: task_again }]   # lead is saved either way; the task still pages sales
+        not_found:   [{ goto: task_again }]
+        failed:      [{ goto: task_again }]
 
   task:
     - do: task_open
@@ -117,11 +147,38 @@ steps:
         ok:     [{ goto: confirm }]
         failed: [{ goto: confirm }]    # lead is already saved; task is best-effort
 
+  # Same record, so a second "Follow up new lead: {name}" would sit next to the
+  # first with nothing to tell them apart. Title it for what it is.
+  task_again:
+    - do: task_open
+      args:
+        title:     '{$t("capture-lead.task_title_again", { name: $state.name })}'
+        body:      '{$t("capture-lead.task_body_again", { phone: $state.phone })}'
+        record_id: '$saved.record_id'
+        due_in_hours: 24
+      bind: t
+      outputs:
+        ok:     [{ goto: confirm_again }]
+        failed: [{ goto: confirm_again }]
+
   confirm:
     - render:
         render_intent: text_card
         body: '{$t("capture-lead.confirm", { name: $state.name })}'
-      memory_note: 'Lead #{$saved.record_number} saved for {$state.name} ({$state.phone}) (record_id {$saved.record_id}).'
+      memory_note: 'Lead #{$saved.record_number} CREATED for {$state.name} ({$state.phone}) (record_id {$saved.record_id}).'
     # Purchase funnel: reached buying intent + completed the lead_captured goal.
+    - track: { journey: purchase, event: submitted_lead, metadata: { model: '$state.interested_model', interest: '$coalesce($state.interest_type, "info")' } }
+    - end: applied
+
+  # The note says UPDATED and names the record, so the next session's agent — and
+  # anyone reading the operator timeline — can see the two enquiries are one lead
+  # rather than reading "Lead #1 saved" twice and calling it a duplicate write.
+  confirm_again:
+    - render:
+        render_intent: text_card
+        body: '{$t("capture-lead.confirm_again", { name: $state.name })}'
+      memory_note: 'Lead #{$saved.record_number} UPDATED — existing lead for {$state.name} ({$state.phone}), matched on phone (record_id {$saved.record_id}).'
+    # Same event: the journey is monotonic and `lead_captured` is a deduped
+    # milestone, so a repeat enquiry re-affirms `intent` without double-counting.
     - track: { journey: purchase, event: submitted_lead, metadata: { model: '$state.interested_model', interest: '$coalesce($state.interest_type, "info")' } }
     - end: applied

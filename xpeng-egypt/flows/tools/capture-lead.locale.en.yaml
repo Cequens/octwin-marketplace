@@ -18,4 +18,12 @@ strings:
   task_title: 'Follow up new lead: {name}'
   task_body:  'Call the customer on {phone} within 24 hours.'
 
+  # The repeat-enquiry pair. Leads dedupe on phone, so this is the SAME record —
+  # the title has to say so or it reads as a second lead in the task list.
+  task_title_again: 'Enquired again: {name}'
+  task_body_again:  'This customer already has a lead on file and has just enquired again. Call them on {phone} within 24 hours — check the record for what was discussed last time.'
+
+  reopen_note: 'Reopened — the customer enquired again through the assistant after this lead was closed.'
+
   confirm: "Thanks {name} ✅ We've saved your details and our sales team will reach out shortly. Would you like to see the models or book a test drive?"
+  confirm_again: "Thanks {name} ✅ You're already on file with us — we've updated your details and flagged this for the sales team to call you. Would you like to see the models or book a test drive?"
