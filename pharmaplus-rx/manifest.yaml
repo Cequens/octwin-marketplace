@@ -7,7 +7,7 @@
 # never advises, substitutes, doses, or dispenses a prescription-only medicine on its own.
 
 id:          pharmaplus-rx
-version:     '2.0.0'
+version:     '2.1.0'
 description: 'Community pharmacy — send a prescription photo for pharmacist review, reorder a repeat, and shop over-the-counter items, with every clinical question routed to a human.'
 
 listing:
@@ -47,40 +47,22 @@ flows:
   - prescription
   - my-orders
 
-# The vision prompt is written defensively: it TRANSCRIBES a prescription and refuses to
-# interpret it. That constraint lives in the prompt itself, not only in the agent's
-# instructions, because this is the one place a hallucinated dose could do real harm.
+# NO `inbound_preprocessing.image`, deliberately.
+#
+# The defensive vision prompt that used to live here — TRANSCRIBE the prescription, refuse to
+# interpret it — moved to `prescription.vision_prompt` in the flow's locale file. It is still
+# written that way, and for the same reason: this is the one place a hallucinated dose could do
+# real harm, so the constraint belongs in the prompt rather than only in the agent's instructions.
+#
+# It read the prescription and handed the result to the AGENT, which then copied it into tool
+# arguments — a language model in the middle of a drug list. `prescription`'s `read_rx` step reads
+# the page itself now, so the transcription never passes through the model at all.
+#
+# It also only ever fired on an inbound MESSAGE, so a photo sent inside a native WhatsApp form was
+# never read. One reading, in the flow, is safer AND works everywhere.
+#
+# The voicenote half stays: a patient may dictate, and the agent genuinely cannot hear.
 inbound_preprocessing:
-  image:
-    enabled: true
-    ack: '📄 وصلت الروشتة، جاري قراءتها...'
-    prompt: |-
-      You are a prescription INTAKE assistant for a pharmacy. Your only job is to TRANSCRIBE what is written. You must NOT interpret, validate, correct, substitute, or comment on any medicine, dose, interaction or diagnosis. If a field is unclear, return null — never guess a drug name or a dose.
-
-      Respond with JSON only (no markdown) — an object with an `images` array holding EXACTLY ONE entry per input image, IN ORDER:
-      {
-        "images": [
-          {
-            "media_ref": "<copy the MEDIA- ref for this image, in order>",
-            "doc_type": "prescription" | "medicine_box" | "lab_result" | "insurance_card" | "other",
-            "prescriber": "<prescribing doctor name if legible, else null>",
-            "issued_date": "<YYYY-MM-DD if legible, else null>",
-            "patient_name": "<patient name if legible, else null>",
-            "items_verbatim": "<every medicine line EXACTLY as written, one per line, or null if not legible>",
-            "legible": true,
-            "summary_ar": "<one short Arabic line saying WHAT the document is — never what it means>"
-          }
-        ]
-      }
-      Set "legible": false when the image is too unclear to transcribe reliably. Return entries in the SAME ORDER as provided.
-    note_template: |-
-      $lines($compact([
-        "📄 مستند ({$media_ref}) — النوع: {$doc_type ?? 'غير محدد'}",
-        $patient_name != null   ? "المريض: {$patient_name}" : null,
-        $prescriber != null     ? "الطبيب: {$prescriber}" : null,
-        $items_verbatim != null ? "المكتوب في الروشتة (نصاً): {$items_verbatim}" : null,
-        $legible == false       ? "⚠️ الصورة غير واضحة بما يكفي للقراءة" : null
-      ]))
   voicenote:
     mode: transcribe
     ack: '🎤 وصلت الرسالة الصوتية، جاري تفريغها...'

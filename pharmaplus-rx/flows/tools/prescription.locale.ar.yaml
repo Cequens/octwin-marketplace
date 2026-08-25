@@ -1,6 +1,16 @@
 flow_id: prescription
 
 strings:
+  # The flow's OWN vision prompt. Narrower than a pack-wide one could be, because this one knows
+  # it is looking at a prescription — and English, because it instructs the model rather than
+  # speaking to the patient.
+  vision_prompt: >-
+    A photograph of a medical prescription. Transcribe it EXACTLY. Reply as JSON:
+    {"items_verbatim":"every prescribed line exactly as written, one per line, original script and
+    spelling, no corrections, no expansions of abbreviations, no translation",
+    "patient_name":"as printed, else null","prescriber":"prescribing doctor as printed, else null",
+    "legible":true|false}. If any line is unclear, still copy what is visible and set legible=false.
+    Never substitute a medicine you think was intended.
   status_header:    '🧾 روشتاتك'
   status_note:      'ℹ️ قرار الصيدلي بيوصلك هنا في المحادثة أول ما يخلص المراجعة.'
   btn_new:          '📄 ابعت روشتة'
