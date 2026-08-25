@@ -41,7 +41,9 @@ octwin status                 # confirm ✓ live and current
 octwin chat "أهلا" --as me    # drive a conversation headlessly; taps print with ids
 ```
 
-Deploy target is in `pack.json` (tenant `ammar`, project `hisham-rabea`).
+Deploy target comes from your saved `octwin login` (tenant `ammar`, project `hisham-rabea`).
+The per-pack `pack.json` this line used to name was retired 2026-07-29 — it was a second home
+for a fact `login` already holds, and a committed copy shipped one developer's pins to everyone.
 
 > Note: `required_adapters` is `[messaging]` only — XRM uses the platform's bundled data store.
 > Adding `data-store` makes an explicitly-provisioned store a hard deploy requirement (see FEEDBACK.md).

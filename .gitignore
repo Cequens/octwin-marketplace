@@ -14,18 +14,19 @@ node_modules/
 # publish under the company org on a public repo. Delete this line to include it.
 FEEDBACK.md
 
-# Per-developer CLI deploy config, NOT part of a pack.
+# Internal notes ABOUT the packs — the two counterparts to FEEDBACK.md above, and ignored for
+# the same reason it is: this repo is public under the company org.
 #
-# `pack.json` supplies `platform_url` (+ optional tenant/project pins) to `octwin deploy`, and it
-# is excluded from the uploaded bundle by the CLI and from the artifact by the platform's own
-# `classifyPackPath` — so the platform has never seen it. What a committed copy DID do was ship our
-# dev machine's pins to everyone: every pack in this repo carried
-# `http://localhost:3000` + workspace `test`, so a cloner running `octwin deploy` in a pack
-# directory silently targeted a machine and a workspace that were not theirs.
+#   BACKLOG.md    — "you shipped this wrong", per pack, with file:line evidence and corrected YAML.
+#   ENRICHMENT.md — what the platform grew and which packs should adopt it.
 #
-# Keep yours locally; `octwin init` writes one, and `--url` / `PACK_PLATFORM_URL` cover the case
-# where you have none.
-pack.json
+# Both are candid about our own packs, so they stay local. Delete a line to include it.
+#
+# They have their OWN reason here on purpose. They used to sit under a comment explaining
+# `pack.json` (a per-developer deploy config, retired 2026-07-29), which left the only visible
+# justification one that plainly did not apply to them — and a correct decision filed under the
+# wrong reason reads as an accident. It was misread exactly that way on 2026-08-25, and nearly
+# published a defect list for eleven packs.
 ENRICHMENT.md
 BACKLOG.md
 

@@ -55,6 +55,13 @@ pulled". The default is still warn-and-exit-0 — use `--require-kb` when a skip
 
 Check all three before starting work, and add to the right one rather than widening a change.
 
+**All three are gitignored, and a fresh clone therefore has none of them.** That is deliberate, not
+an oversight: this repo is public under the company org, and all three are candid about our own
+packs or our own platform. They carry state between *sessions on a machine*, not between people —
+so "check all three" means the copies you have, and finding none on a new clone is the normal
+starting state rather than a sign something was lost. Start one when you have something to put in
+it; the shape each takes is the row above.
+
 ## The traps that have actually bitten this repo
 
 These are recorded in [`BACKLOG.md`](BACKLOG.md) with evidence; the short forms:
