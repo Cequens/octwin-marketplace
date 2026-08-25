@@ -49,6 +49,7 @@ entities:
       programme_label: { type: text, label: { en: 'Programme', ar: 'البرنامج' } }
       entry_year:      { type: select, options: [kg1, kg2, y1, y2, y3, y4, y5, y6, y7, y8, y9], label: { en: 'Entry year', ar: 'الصف المطلوب' }, description: { en: 'Academic year the family is applying for — not the year the application was made.', ar: 'العام الدراسي المتقدَّم إليه — وليس عام تقديم الطلب.' } }
       previous_school: { type: text, label: { en: 'Previous school', ar: 'المدرسة السابقة' } }
+      school_year:     { type: text, label: { en: 'School year', ar: 'الصف الدراسي' } }
       birth_certificate: { type: image, label: { en: 'Birth certificate', ar: 'شهادة الميلاد' } }
       report_card:     { type: image, label: { en: 'Report card', ar: 'شهادة الدرجات' } }
       notes:           { type: textarea, label: { en: 'Notes', ar: 'ملاحظات' } }

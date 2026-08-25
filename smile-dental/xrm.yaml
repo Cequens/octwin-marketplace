@@ -56,6 +56,8 @@ entities:
       complaint:       { type: textarea, label: { en: 'Complaint', ar: 'الشكوى' } }
       insurer:         { type: text, label: { en: 'Insurer', ar: 'شركة التأمين' } }
       member_id:       { type: text, label: { en: 'Member id', ar: 'رقم العضوية' } }
+      # An expired card is the common billing failure, and it is printed on the card.
+      valid_until:     { type: date, label: { en: 'Insurance valid until', ar: 'التأمين سارٍ حتى' } }
 
   # The rated dentist cannot be derived from a response alone (the subject is the
   # BOOKING), so my-visits stamps it right after submitting. That single field is

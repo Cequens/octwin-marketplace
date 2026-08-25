@@ -71,6 +71,7 @@ steps:
     # `visible_issue` is read but NOT stored: `job` declares no such field, and adding a column to
     # a shipped pack's data model is a redesign rather than this migration. Reported instead.
     - assign:
+        state.visible_issue: '$shot.json.visible_issue'
         state.trade:   '$coalesce($state.trade,   $shot.json.trade)'
         state.urgency: '$coalesce($state.urgency, $shot.json.urgency)'
         state.fault:   '$coalesce($state.fault,   $shot.json.visible_issue)'
@@ -316,6 +317,7 @@ steps:
           # was declared. Absent when the customer skipped the share.
           pin:              '$eff_pin'
           fault:            '$state.fault'
+          visible_issue:    '$state.visible_issue'
           fault_photo:      '$state.fault_photo'   # an agent-supplied MEDIA- ref, or absent
           preferred_window: '$state.preferred_window'
           contact_name:     '$state.contact_name'

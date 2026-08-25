@@ -60,6 +60,8 @@ entities:
       address:      { type: textarea, label: { en: 'Address', ar: 'العنوان' } }
       pin:          { type: geo, label: { en: 'Location pin', ar: 'الموقع' } }
       fault:        { type: textarea, label: { en: 'Fault', ar: 'وصف المشكلة' } }
+      # What the PHOTO shows, kept apart from `fault` — the customer's own words.
+      visible_issue: { type: textarea, label: { en: 'Visible issue (from the photo)', ar: 'المشكلة الظاهرة في الصورة' } }
       fault_photo:  { type: image, label: { en: 'Photo', ar: 'صورة المشكلة' } }
       preferred_window: { type: select, options: [morning, afternoon, evening], label: { en: 'Preferred window', ar: 'الوقت المفضل' }, description: { en: 'The time band the customer asked for. A preference, not a guarantee — dispatch may not match it.', ar: 'الفترة التي طلبها العميل. تفضيل لا ضمان — وقد لا يطابقه جدول الإرسال.' } }
       contact_name: { type: text, label: { en: 'Contact', ar: 'اسم المتواصل' } }

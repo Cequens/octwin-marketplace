@@ -36,6 +36,7 @@ entities:
       product_label:   { type: text, label: { en: 'Product', ar: 'المنتج' } }
       employment:      { type: select, options: [government, private, self_employed, retired], label: { en: 'Employment', ar: 'جهة العمل' } }
       monthly_income:  { type: number, label: { en: 'Monthly income', ar: 'الدخل الشهري' }, description: { en: 'Gross monthly income before deductions.', ar: 'الدخل الشهري الإجمالي قبل الخصومات.' } }
+      employer:        { type: text, label: { en: 'Employer', ar: 'جهة العمل' } }
       existing_obligations: { type: number, label: { en: 'Existing obligations', ar: 'الالتزامات الحالية' }, description: { en: 'Total monthly repayments the applicant already carries. Subtracted from income when affordability is assessed.', ar: 'إجمالي الالتزامات الشهرية القائمة على المتقدم. تُخصم من الدخل عند تقدير القدرة على السداد.' } }
       property_price:  { type: money, label: { en: 'Property price', ar: 'سعر العقار' }, sortable: true, currency: SAR }
       down_payment:    { type: money, label: { en: 'Down payment', ar: 'الدفعة المقدمة' }, currency: SAR }

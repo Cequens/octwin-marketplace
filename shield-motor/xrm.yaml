@@ -85,6 +85,10 @@ entities:
       pin:            { type: geo, label: { en: 'Location pin', ar: 'الموقع على الخريطة' } }
       # Stored as the customer described it — never as a fault assessment.
       description:    { type: textarea, label: { en: 'What happened (customer''s words)', ar: 'وصف الحادث بكلمات العميل' } }
+      # What the PHOTO shows, kept apart from `description` — which is what the customer said
+      # happened. An assessor needs both, and conflating them loses which is which.
+      visible_damage:    { type: textarea, label: { en: 'Visible damage (from the photo)', ar: 'الأضرار الظاهرة في الصورة' } }
+      make_model:        { type: text, label: { en: 'Make and model', ar: 'الماركة والموديل' } }
       police_report:  { type: text, label: { en: 'Police report number', ar: 'رقم تقرير الشرطة' } }
       damage_photo:   { type: image, label: { en: 'Damage photo', ar: 'صورة الأضرار' } }
       injuries:       { type: boolean, label: { en: 'Injuries reported', ar: 'يوجد مصابون' }, description: { en: 'Whether anyone was hurt. True escalates the claim out of the standard assessor queue.', ar: 'هل وقعت إصابات. القيمة true تُصعّد المطالبة خارج مسار المُقيِّم المعتاد.' } }

@@ -28,8 +28,8 @@ input:
     type:     string
     optional: true
     describe: 'The MEDIA- ref of the prescription photo the patient sent. Never invent one.'
-  # NOTE these three are no longer how the prescription is READ — `read_rx` below does that,
-  # straight from the photo. They remain because the patient may SAY any of them ("it's for my
+  # NOTE these three are no longer how the prescription is READ — the `rx_photo` field's
+  # `on_collect` below does that, straight from the photo. They remain because the patient may SAY any of them ("it's for my
   # mother, Dr Samy wrote it"), and a spoken value is something the agent genuinely knows and
   # the picture may not show.
   items_verbatim:
@@ -49,7 +49,7 @@ entry:
   - if:   '$coalesce($input.mode, "submit") == "status"'
     goto: load_cases
   - else: true
-    goto: read_rx
+    goto: gather
 
 steps:
   load_cases:
@@ -83,52 +83,61 @@ steps:
     - answer:
         instructions: 'This patient has no prescription under review. Say so in one line and offer to take a photo of one.'
 
-  # THE PRESCRIPTION IS READ HERE, from the photo, before anything is asked.
-  #
-  # It used to be read by the platform's manifest-level vision pass, which handed the result to
-  # the AGENT as a briefing for the agent to copy into these arguments. That is why the input
-  # descriptions above used to beg it not to "correct, complete, normalise or translate" the
-  # lines — a guard that is only needed because the lines pass THROUGH a language model. For a
-  # prescription that is not a nicety: a model that helpfully tidies a drug name has changed a
-  # medicine.
-  #
-  # Now the flow reads the page itself and the model is out of the data path entirely. It also
-  # works everywhere: the manifest pass only fires on an inbound MESSAGE, so it never ran for a
-  # photo uploaded inside a native WhatsApp form.
-  read_rx:
-    - if: '$state.rx_photo == null'
-      then: [{ goto: gather }]
-    - do: analyze_image
-      args:
-        images: '$state.rx_photo'
-        json:   true
-        prompt: '$t("prescription.vision_prompt")'
-      bind: rx_read
-      outputs:
-        ok:     [{ goto: apply_rx_read }]
-        failed: [{ goto: gather }]      # an unreadable page is still a request — the pharmacist opens the photo
-
-  apply_rx_read:
-    # The PATIENT's own words win. They know who the prescription is for; the page may show a
-    # clinic's letterhead name or nothing at all. The reading is the floor, not an override.
-    - assign:
-        state.patient_name:   '$coalesce($state.patient_name,   $rx_read.json.patient_name)'
-        state.prescriber:     '$coalesce($state.prescriber,     $rx_read.json.prescriber)'
-        state.items_verbatim: '$coalesce($state.items_verbatim, $rx_read.json.items_verbatim)'
-    # `legible` is READ but not stored: `rx_request` declares no such field, and adding a column
-    # to a shipped pack's data model is a redesign rather than this migration. It is worth having
-    # — a pharmacist seeing `false` would know to open the photo rather than trust the card — so
-    # it is reported to the pack's author instead of smuggled in.
-    - goto: gather
-
   gather:
     - collect:
-        # NOTE there is no `rx_photo` FIELD, so the engine never prompts for the page — the photo
-        # only arrives if the patient sends one and the agent relays the ref. That gap predates
-        # this change and is left alone deliberately (adding a `type: media` field would change
-        # the journey); it is reported to the pack's author instead.
-        gap_instructions: 'Ask the patient for the next item ({$collect_field}) in one short line, in Egyptian Arabic. If no prescription photo has been sent yet, ask for a clear photo of the whole page and re-call prescription once they send it. NEVER read the prescription aloud, name a medicine, or say whether it can be filled.'
+        gap_instructions: 'Ask the patient for the next item ({$collect_field}) in one short line, in Egyptian Arabic. The photo of the page is a field like any other — the engine asks for it in turn, so do not chase it separately. NEVER read the prescription aloud, name a medicine, or say whether it can be filled.'
         fields:
+          # THE PAGE ITSELF, asked for first — everything after it can be read off it.
+          #
+          # This field did not exist until 2026-08-25, and `gap_instructions` had promised it all
+          # along ("ask for a clear photo of the whole page"). Nothing prompted for it, so a
+          # prescription reached the pharmacist only when the patient happened to send a photo
+          # unprompted AND the agent relayed the ref. Now the engine asks, and adopts the next
+          # inbound image into the field itself.
+          - field: rx_photo
+            type:       media
+            media_kind: image
+            label:      '$t("prescription.label.photo")'
+            # THE PRESCRIPTION IS READ HERE, the moment the page arrives, so nothing printed on it
+            # is asked for afterwards.
+            #
+            # It used to be read by the platform's manifest-level vision pass, which handed the
+            # result to the AGENT as a briefing for the agent to copy into this flow's arguments.
+            # That is why those input descriptions used to beg it not to "correct, complete,
+            # normalise or translate" the lines — a guard only needed because the lines pass THROUGH
+            # a language model. For a prescription that is not a nicety: a model that helpfully
+            # tidies a drug name has changed a medicine. Now the flow reads the page itself and the
+            # model is out of the data path entirely.
+            #
+            # `on_collect` fires once, the first time the field fills — by the engine's own media
+            # adopt (the patient answers the ask) OR by the agent relaying a ref for a photo sent
+            # before the flow started. One hook covers both routes, which a step before the collect
+            # node could not: the page is now collected DURING it. It also works everywhere the
+            # manifest pass did not — that only ever fired on an inbound MESSAGE, so it never ran
+            # for a photo uploaded inside a native WhatsApp form.
+            #
+            # A vision call costs ~4s, which is a turn the patient is not waiting on a screen for:
+            # this node is asked field-by-field, not as a native form.
+            on_collect:
+              - do: analyze_image
+                args:
+                  images: '$state.rx_photo'
+                  json:   true
+                  prompt: '$t("prescription.vision_prompt")'
+                bind: rx_read
+                outputs:
+                  # The PATIENT's own words win. They know who the prescription is for; the page may
+                  # show a clinic's letterhead name or nothing at all. The reading is the floor.
+                  #
+                  # `legible` reaches the record as `rx_legible`: a pharmacist seeing `false` opens
+                  # the photo rather than trusting the text beside it.
+                  ok:
+                    - assign:
+                        state.rx_legible:     '$rx_read.json.legible'
+                        state.patient_name:   '$coalesce($state.patient_name,   $rx_read.json.patient_name)'
+                        state.prescriber:     '$coalesce($state.prescriber,     $rx_read.json.prescriber)'
+                        state.items_verbatim: '$coalesce($state.items_verbatim, $rx_read.json.items_verbatim)'
+                  failed: []   # an unreadable page is still a request — the pharmacist opens the photo
           - field: patient_name
             label:    '$t("prescription.label.patient")'
             describe: "The patient's name."
@@ -175,6 +184,7 @@ steps:
           # Verbatim — the pharmacist reads the paper, not our paraphrase.
           items_verbatim: '$state.items_verbatim'
           rx_photo:       '$state.rx_photo'
+          rx_legible:     '$state.rx_legible'
           delivery_area:  '$state.delivery_area'
           address:        '$state.address'
           pin:            '$state.pin'

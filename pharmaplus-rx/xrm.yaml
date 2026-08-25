@@ -34,6 +34,9 @@ entities:
       prescriber:     { type: text, label: { en: 'Prescriber', ar: 'الطبيب' } }
       # Stored VERBATIM — what the paper says, never a normalised or corrected reading.
       items_verbatim: { type: textarea, label: { en: 'Prescription text (verbatim)', ar: 'نص الروشتة كما هو' } }
+      # From the flow's OWN reading of the page, not a judgement anyone typed. A pharmacist
+      # seeing `false` opens the photo instead of trusting the text beside it.
+      rx_legible:     { type: boolean, label: { en: 'Prescription legible', ar: 'الروشتة واضحة' } }
       rx_photo:       { type: image, label: { en: 'Prescription photo', ar: 'صورة الروشتة' } }
       delivery_area:  { type: select, options: [nasr_city, maadi, heliopolis, zamalek, october, giza], label: { en: 'Area', ar: 'المنطقة' } }
       address:        { type: textarea, label: { en: 'Address', ar: 'العنوان' } }

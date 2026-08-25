@@ -96,6 +96,8 @@ steps:
     # can show someone else's car. The reading is the floor, and it is what stops the question
     # being asked at all when they have not.
     - assign:
+        state.visible_damage: '$shot.json.visible_damage'
+        state.make_model: '$shot.json.make_model'
         state.plate:          '$coalesce($state.plate, $shot.json.plate)'
     # `make_model` and `visible_damage` are read but NOT stored: the `fnol` entity declares
     # neither, and adding columns to a shipped pack's data model is a redesign rather than this
@@ -183,6 +185,8 @@ steps:
           contact_phone: '$state.contact_phone'
           pin:           '$state.pin'
           description:   '$state.description'
+          visible_damage: '$state.visible_damage'
+          make_model:     '$state.make_model'
           police_report: '$state.police_report'
           damage_photo:  '$state.damage_photo'
           injuries:      '$state.incident_type == "injury"'

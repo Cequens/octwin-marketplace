@@ -18,6 +18,7 @@ strings:
   btn_status:       '🧾 حالة روشتتي'
   btn_otc:          '🛒 منتجات بدون روشتة'
 
+  label.photo:      'صورة الروشتة كاملة وواضحة'
   label.patient:    'اسم المريض'
   label.area:       'منطقة التوصيل'
   label.address:    'العنوان — الشارع والعمارة والشقة'

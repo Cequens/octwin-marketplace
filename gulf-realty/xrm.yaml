@@ -71,6 +71,8 @@ entities:
       finance:        { type: select, options: [cash, mortgage], label: { en: 'Finance', ar: 'التمويل' }, description: { en: 'How the buyer intends to pay. Cash buyers are routed to a different advisor track than mortgage buyers.', ar: 'طريقة الشراء المزمعة. ويُوجَّه المشتري نقداً إلى مسار مستشار مختلف عن مشتري التمويل.' } }
       development:    { type: record, entity: development, label: { en: 'Interested in', ar: 'المشروع' } }
       monthly_income: { type: number, label: { en: 'Monthly income', ar: 'الدخل الشهري' }, description: { en: 'Used only for the indicative mortgage estimate — not an eligibility decision.', ar: 'يُستخدم فقط لتقدير التمويل الاسترشادي — وليس قراراً بالأهلية.' } }
+      employer:       { type: text, label: { en: 'Employer', ar: 'جهة العمل' } }
+      nationality:    { type: text, label: { en: 'Nationality', ar: 'الجنسية' } }
       notes:          { type: textarea, label: { en: 'Notes', ar: 'ملاحظات' } }
     list: [full_name, city, budget, finance]
     pipeline:

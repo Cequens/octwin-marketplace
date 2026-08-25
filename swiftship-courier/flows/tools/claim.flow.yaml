@@ -105,6 +105,7 @@ steps:
     # Adding a column to a shipped pack's data model is a redesign rather than this migration, so
     # it is reported to the pack's author instead.
     - assign:
+        state.visible_damage: '$doc.json.visible_damage'
         state.tracking_number: '$coalesce($state.tracking_number, $doc.json.tracking_number)'
     - goto: gather
 
@@ -159,6 +160,7 @@ steps:
           case_type:       '$state.case_type'
           subject:         '$t("claim.subject", { tn: $state.tracking_number })'
           tracking_number: '$state.tracking_number'
+          visible_damage:  '$state.visible_damage'
           region:          '$region'
           shipment_stage:  '$ship_stage'
           details:         '$state.details'

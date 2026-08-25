@@ -67,6 +67,7 @@ steps:
     # Adding a column to a shipped pack's data model is a redesign rather than this migration, so
     # it is reported to the pack's author instead.
     - assign:
+        state.employer: '$doc.json.employer'
         state.monthly_income: '$coalesce($state.monthly_income, $doc.json.monthly_income)'
         state.full_name: '$coalesce($state.full_name, $doc.json.full_name)'
     - goto: gather
@@ -175,6 +176,7 @@ steps:
           employment:           '$state.employment'
           city:                 '$state.city'
           monthly_income:       '$state.monthly_income'
+          employer:             '$state.employer'
           existing_obligations: '$state.existing_obligations'
       bind: app
       outputs:

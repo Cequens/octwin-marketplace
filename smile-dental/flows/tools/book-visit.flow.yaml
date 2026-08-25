@@ -62,6 +62,7 @@ steps:
     # Adding a column to a shipped pack's data model is a redesign rather than this migration, so
     # it is reported to the pack's author instead.
     - assign:
+        state.valid_until: '$doc.json.valid_until'
         state.insurer: '$coalesce($state.insurer, $doc.json.insurer)'
         state.member_id: '$coalesce($state.member_id, $doc.json.member_id)'
     - goto: collect_fields
@@ -198,6 +199,7 @@ steps:
           complaint:       '$state.complaint'
           insurer:         '$state.insurer'
           member_id:       '$state.member_id'
+          valid_until:     '$state.valid_until'
       bind: visit
       outputs:
         ok:           [{ goto: remind }]

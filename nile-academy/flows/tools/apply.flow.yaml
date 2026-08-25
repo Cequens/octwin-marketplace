@@ -68,6 +68,7 @@ steps:
     # Adding a column to a shipped pack's data model is a redesign rather than this migration, so
     # it is reported to the pack's author instead.
     - assign:
+        state.school_year: '$doc.json.school_year'
         state.student_name: '$coalesce($state.student_name, $doc.json.student_name)'
         state.previous_school: '$coalesce($state.previous_school, $doc.json.previous_school)'
     - goto: gather
@@ -157,6 +158,7 @@ steps:
           programme_label: '$coalesce($prog_label, $state.prog_label)'
           entry_year:      '$state.entry_year'
           previous_school: '$state.previous_school'
+          school_year:     '$state.school_year'
       bind: app
       outputs:
         ok:      [{ goto: mark_applied }]

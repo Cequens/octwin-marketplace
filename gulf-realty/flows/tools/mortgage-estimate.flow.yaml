@@ -61,6 +61,8 @@ steps:
     # Adding a column to a shipped pack's data model is a redesign rather than this migration, so
     # it is reported to the pack's author instead.
     - assign:
+        state.employer: '$doc.json.employer'
+        state.nationality: '$doc.json.nationality'
         state.monthly_income: '$coalesce($state.monthly_income, $doc.json.monthly_income)'
     - goto: collect_inputs
 
@@ -177,6 +179,8 @@ steps:
           finance:        mortgage
           development:    '$state.development_id'
           monthly_income: '$state.monthly_income'
+          employer:       '$state.employer'
+          nationality:    '$state.nationality'
           notes:          '$t("mortgage-estimate.lead_note", { pct: $round($state.down_pct * 100, 0), years: $state.years_n, monthly: $format_number($monthly) })'
       bind: lead
       outputs:
