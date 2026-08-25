@@ -7,7 +7,7 @@
 # No pack DB, no code — pure YAML.
 
 id:          smile-dental
-version:     '1.3.0'
+version:     '1.4.0'
 description: 'Dental clinic booking — treatment menu, dentist availability, appointment reminders and a post-visit rating that ranks the dentists.'
 
 listing:
@@ -47,35 +47,15 @@ flows:
   - my-visits
 
 # A patient photographs their insurance card instead of typing a member number.
+# NO `inbound_preprocessing.image`, deliberately.
+#
+# It read this pack's document fields and handed them to the AGENT to relay into tool arguments.
+# When the relay did not happen the customer was asked to type what the picture already showed —
+# and the values reached a record only as well as a language model retyped them.
+#
+# `book-visit`'s `read_doc` step reads the document itself, before the collect node runs. It also only
+# ever fired on an inbound MESSAGE, so a document sent inside a native WhatsApp form was never read.
 inbound_preprocessing:
-  image:
-    enabled: true
-    ack: '📄 وصلت الصورة، جاري قراءتها...'
-    prompt: |-
-      You are an intake assistant for a dental clinic. Classify each image and extract structured fields. Do NOT diagnose, interpret an X-ray, or give any clinical advice — classify and transcribe ONLY.
-
-      Respond with JSON only (no markdown) — an object with an `images` array holding EXACTLY ONE entry per input image, IN ORDER:
-      {
-        "images": [
-          {
-            "media_ref": "<copy the MEDIA- ref for this image, in order>",
-            "doc_type": "insurance_card" | "referral" | "xray" | "prescription" | "other",
-            "insurer": "<insurance company name if an insurance card, else null>",
-            "member_id": "<member/policy number, or null>",
-            "valid_until": "<YYYY-MM-DD if shown, else null>",
-            "summary_ar": "<one short Arabic line describing the document>"
-          }
-        ]
-      }
-      Return entries in the SAME ORDER as provided; copy each entry's media_ref from the list.
-    note_template: |-
-      $lines($compact([
-        "📄 مستند ({$media_ref}) — النوع: {$doc_type ?? 'غير محدد'}",
-        $insurer != null     ? "التأمين: {$insurer}" : null,
-        $member_id != null   ? "رقم العضوية: {$member_id}" : null,
-        $valid_until != null ? "سارٍ حتى: {$valid_until}" : null,
-        $summary_ar != null  ? "ملخص: {$summary_ar}" : null
-      ]))
   voicenote:
     mode: transcribe
     ack: '🎤 وصلت الرسالة الصوتية، جاري تفريغها...'

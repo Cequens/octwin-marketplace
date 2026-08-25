@@ -8,7 +8,7 @@
 # rates are real, with no reporting code. Campus tours ride the scheduling engine.
 
 id:          nile-academy
-version:     '1.5.0'
+version:     '1.6.0'
 description: 'Private academy admissions — programmes and fees, campus-tour booking, and an application funnel with real milestones from enquiry to enrolment.'
 
 listing:
@@ -43,38 +43,15 @@ flows:
   - book-tour
   - apply
 
+# NO `inbound_preprocessing.image`, deliberately.
+#
+# It read this pack's document fields and handed them to the AGENT to relay into tool arguments.
+# When the relay did not happen the customer was asked to type what the picture already showed —
+# and the values reached a record only as well as a language model retyped them.
+#
+# `apply`'s `read_doc` step reads the document itself, before the collect node runs. It also only
+# ever fired on an inbound MESSAGE, so a document sent inside a native WhatsApp form was never read.
 inbound_preprocessing:
-  image:
-    enabled: true
-    ack: '📄 وصل المستند، جاري قراءته...'
-    prompt: |-
-      You are an admissions document-intake assistant for a private school. Classify each image and extract structured fields. Do NOT assess the student, do NOT comment on whether they will be accepted, and do NOT interpret grades.
-
-      Respond with JSON only (no markdown) — an object with an `images` array holding EXACTLY ONE entry per input image, IN ORDER:
-      {
-        "images": [
-          {
-            "media_ref": "<copy the MEDIA- ref for this image, in order>",
-            "doc_type": "birth_certificate" | "report_card" | "national_id" | "vaccination" | "transfer_certificate" | "other",
-            "student_name": "<student name as printed, else null>",
-            "school_year": "<the year or grade shown, else null>",
-            "previous_school": "<previous school name if shown, else null>",
-            "summary_ar": "<one short Arabic line describing the document>"
-          }
-        ]
-      }
-      Return entries in the SAME ORDER as provided; copy each entry's media_ref from the list.
-    note_template: |-
-      $lines($compact([
-        "📄 مستند ({$media_ref}) — النوع: {$doc_type ?? 'غير محدد'}",
-        $student_name != null    ? "الطالب: {$student_name}" : null,
-        $school_year != null     ? "الصف: {$school_year}" : null,
-        $previous_school != null ? "المدرسة السابقة: {$previous_school}" : null,
-        $summary_ar != null      ? "ملخص: {$summary_ar}" : null
-      ]))
-  # Voice notes → speech-to-text, then the normal agent turn with the transcript
-  # in the pre-turn briefing. Without this the platform defaults to `passthrough`
-  # and the agent has to tell the parent it cannot hear them.
   voicenote:
     mode: transcribe
     ack: '🎤 وصلت الرسالة الصوتية، جاري تفريغها...'

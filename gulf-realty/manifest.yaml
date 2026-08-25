@@ -7,7 +7,7 @@
 # `approve_apply` confirm-before-commit. No pack DB, no code — pure YAML.
 
 id:          gulf-realty
-version:     '1.6.1'
+version:     '1.7.0'
 description: 'Off-plan & ready property brokerage for the Gulf — project carousels, mortgage estimates, and site-viewing bookings on WhatsApp.'
 
 listing:
@@ -56,36 +56,15 @@ flows:
 
 # Inbound photo intake — a buyer sends an Emirates ID / salary certificate and the
 # agent pre-fills the finance qualification instead of re-asking. Logistics only.
+# NO `inbound_preprocessing.image`, deliberately.
+#
+# It read this pack's document fields and handed them to the AGENT to relay into tool arguments.
+# When the relay did not happen the customer was asked to type what the picture already showed —
+# and the values reached a record only as well as a language model retyped them.
+#
+# `mortgage-estimate`'s `read_doc` step reads the document itself, before the collect node runs. It also only
+# ever fired on an inbound MESSAGE, so a document sent inside a native WhatsApp form was never read.
 inbound_preprocessing:
-  image:
-    enabled: true
-    ack: '📄 وصل المستند، جاري قراءته...'
-    prompt: |-
-      You are a document-intake assistant for a Gulf real-estate brokerage. Classify each image and extract structured fields. Do NOT give financial or legal advice.
-
-      Respond with JSON only (no markdown) — an object with an `images` array holding EXACTLY ONE entry per input image, IN ORDER:
-      {
-        "images": [
-          {
-            "media_ref": "<copy the MEDIA- ref for this image, in order>",
-            "doc_type": "emirates_id" | "passport" | "salary_certificate" | "bank_statement" | "trade_license" | "floor_plan" | "other",
-            "full_name": "<name as printed, else null>",
-            "nationality": "<nationality if shown, else null>",
-            "monthly_income": "<numeric monthly income if a salary certificate, else null>",
-            "employer": "<employer name if shown, else null>",
-            "summary_ar": "<one short Arabic line describing the document>"
-          }
-        ]
-      }
-      Return entries in the SAME ORDER as provided; copy each entry's media_ref from the list.
-    note_template: |-
-      $lines($compact([
-        "📄 مستند ({$media_ref}) — النوع: {$doc_type ?? 'غير محدد'}",
-        $full_name != null      ? "الاسم: {$full_name}" : null,
-        $monthly_income != null ? "الدخل الشهري: {$monthly_income}" : null,
-        $employer != null       ? "جهة العمل: {$employer}" : null,
-        $summary_ar != null     ? "ملخص: {$summary_ar}" : null
-      ]))
   voicenote:
     mode: transcribe
     ack: '🎤 وصلت الرسالة الصوتية، جاري تفريغها...'

@@ -8,7 +8,7 @@
 # liability or states a settlement.
 
 id:          shield-motor
-version:     '1.6.0'
+version:     '1.7.0'
 description: 'Motor insurance — indicative premium from published rating factors, policy enquiry intake, and first-notification-of-loss claims a real assessor handles.'
 
 listing:
@@ -43,35 +43,17 @@ flows:
   - quote
   - claim
 
+# NO `inbound_preprocessing.image`, deliberately.
+#
+# It read the plate off a damage photo and handed it to the AGENT — which had no argument to
+# carry it, so the customer was asked to type a number visible in the picture they had just sent.
+# `claim`'s `read_damage` step reads it before the collect node runs, so the field is pre-filled
+# instead of asked.
+#
+# It also only ever fired on an inbound MESSAGE, so a photo sent inside a native WhatsApp form was
+# never read. An image in a motor-insurance pack means a claim; the agent does not need a vision
+# call to work that out.
 inbound_preprocessing:
-  image:
-    enabled: true
-    ack: '📸 وصلت الصورة، جاري فحصها...'
-    prompt: |-
-      You are an intake assistant for a motor insurer. Classify each image and extract structured fields. Describe only what is VISIBLE. You must NOT assign fault, estimate a repair cost, or say whether anything is covered.
-
-      Respond with JSON only (no markdown) — an object with an `images` array holding EXACTLY ONE entry per input image, IN ORDER:
-      {
-        "images": [
-          {
-            "media_ref": "<copy the MEDIA- ref for this image, in order>",
-            "doc_type": "vehicle_damage" | "mulkiya" | "driving_licence" | "police_report" | "emirates_id" | "other",
-            "plate": "<licence plate if legible, else null>",
-            "make_model": "<make and model if identifiable, else null>",
-            "visible_damage": "<short factual description of visible damage, or null>",
-            "summary_ar": "<one short Arabic line describing the image>"
-          }
-        ]
-      }
-      Return entries in the SAME ORDER as provided; copy each entry's media_ref from the list.
-    note_template: |-
-      $lines($compact([
-        "📸 صورة ({$media_ref}) — النوع: {$doc_type ?? 'غير محدد'}",
-        $plate != null          ? "اللوحة: {$plate}" : null,
-        $make_model != null     ? "المركبة: {$make_model}" : null,
-        $visible_damage != null ? "الأضرار الظاهرة: {$visible_damage}" : null,
-        $summary_ar != null     ? "ملخص: {$summary_ar}" : null
-      ]))
   voicenote:
     mode: transcribe
     ack: '🎤 وصلت الرسالة الصوتية، جاري تفريغها...'

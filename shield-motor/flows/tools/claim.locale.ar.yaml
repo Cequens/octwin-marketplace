@@ -1,6 +1,13 @@
 flow_id: claim
 
 strings:
+  # The flow's OWN prompt. English — it instructs the model, it does not speak to the customer.
+  vision_prompt: >-
+    A photograph of a damaged vehicle. Reply as JSON:
+    {"plate":"licence plate exactly as printed, else null",
+    "make_model":"make and model if identifiable, else null",
+    "visible_damage":"one or two short lines in Egyptian Arabic describing ONLY what is visible"}.
+    Never estimate a repair cost and never state whether the car is safe to drive.
   status_header:  '🧾 مطالباتك'
   status_note:    'ℹ️ قرار المُقيِّم بيوصلك هنا في المحادثة — إحنا بنعرض المسجَّل فقط.'
   btn_new:        '🚨 إبلاغ عن حادث'

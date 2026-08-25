@@ -40,9 +40,42 @@ input:
 
 entry:
   - else: true
-    goto: collect_fields
+    goto: read_fault
 
 steps:
+  # READ THE FAULT PHOTO FIRST, so `trade` and `urgency` are not asked for.
+  #
+  # Both are collect fields, and the manifest's vision pass already read them off the photo — then
+  # handed them to the AGENT to relay. When it did not, the customer picked a trade from a list
+  # while looking at a picture of the burst pipe they had just sent.
+  #
+  # Running before the collect node is what turns that into a pre-fill. It also works for a photo
+  # sent inside a native WhatsApp form, which the manifest pass never saw.
+  read_fault:
+    - if: '$state.fault_photo == null'
+      then: [{ goto: collect_fields }]
+    - do: analyze_image
+      args:
+        images: '$state.fault_photo'
+        json:   true
+        prompt: '$t("request-visit.vision_prompt")'
+      bind: shot
+      outputs:
+        ok:     [{ goto: apply_fault }]
+        failed: [{ goto: collect_fields }]   # unreadable is not a blocker — a technician still goes
+
+  apply_fault:
+    # The CUSTOMER's own answer wins wherever they gave one — they know whether this is urgent,
+    # and a photo cannot show that a tenant has no water at all. The reading is the floor.
+    #
+    # `visible_issue` is read but NOT stored: `job` declares no such field, and adding a column to
+    # a shipped pack's data model is a redesign rather than this migration. Reported instead.
+    - assign:
+        state.trade:   '$coalesce($state.trade,   $shot.json.trade)'
+        state.urgency: '$coalesce($state.urgency, $shot.json.urgency)'
+        state.fault:   '$coalesce($state.fault,   $shot.json.visible_issue)'
+    - goto: collect_fields
+
   collect_fields:
     - collect:
         before_each:

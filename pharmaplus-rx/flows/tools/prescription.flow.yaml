@@ -115,7 +115,10 @@ steps:
         state.patient_name:   '$coalesce($state.patient_name,   $rx_read.json.patient_name)'
         state.prescriber:     '$coalesce($state.prescriber,     $rx_read.json.prescriber)'
         state.items_verbatim: '$coalesce($state.items_verbatim, $rx_read.json.items_verbatim)'
-        state.rx_legible:     '$rx_read.json.legible'
+    # `legible` is READ but not stored: `rx_request` declares no such field, and adding a column
+    # to a shipped pack's data model is a redesign rather than this migration. It is worth having
+    # — a pharmacist seeing `false` would know to open the photo rather than trust the card — so
+    # it is reported to the pack's author instead of smuggled in.
     - goto: gather
 
   gather:
@@ -172,9 +175,6 @@ steps:
           # Verbatim — the pharmacist reads the paper, not our paraphrase.
           items_verbatim: '$state.items_verbatim'
           rx_photo:       '$state.rx_photo'
-          # From the flow's OWN reading. A pharmacist seeing `false` knows to open the photo
-          # first rather than trusting any transcription on the card.
-          rx_legible:     '$state.rx_legible'
           delivery_area:  '$state.delivery_area'
           address:        '$state.address'
           pin:            '$state.pin'

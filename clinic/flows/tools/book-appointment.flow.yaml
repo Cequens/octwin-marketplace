@@ -138,9 +138,40 @@ steps:
         footer:        '{$t("book-appointment.approve_footer")}'
         confirm_title: 'تأكيد الحجز ✅'
         cancel_title:  'إلغاء ❌'
-        apply:         commit_booking
+        apply:         read_card
         abort:         aborted
         on_other:      collect_fields
+
+  # READ THE INSURANCE CARD, if the patient sent one.
+  #
+  # `insurance_policy` has declared `member_id` and `valid_until` since it was written, and this
+  # flow only ever wrote `tpa` — so a policy was captured without the number the billing desk
+  # actually needs. The manifest's vision pass DID read all three off the card; it then handed
+  # them to the AGENT, which has one argument (`insurance_tpa`) to put them in. Two of the three
+  # had nowhere to go.
+  #
+  # `media_refs` is already an array, which is exactly what a batch analysis takes: ONE call, with
+  # the model seeing front and back together.
+  #
+  # Its OWN step because `outputs:` ends its sequence — a port body that merely assigns and falls
+  # through is the "port has no terminal goto" trap, and the flow lint refuses it.
+  read_card:
+    - assign: { card: null }
+    - if: '$state.media_refs == null || $length($state.media_refs) == 0'
+      then: [{ goto: commit_booking }]
+    - do: analyze_image
+      args:
+        images: '$state.media_refs'
+        json:   true
+        prompt: '$t("book-appointment.vision_prompt")'
+      bind: card_read
+      outputs:
+        ok:     [{ goto: apply_card }]
+        failed: [{ goto: commit_booking }]   # not a card, or unreadable — the booking still stands
+
+  apply_card:
+    - assign: { card: '$card_read.json' }
+    - goto: commit_booking
 
   commit_booking:
     # New dependent (dependent path) → an XRM record linked to the contact.
@@ -152,10 +183,18 @@ steps:
           bind: dep
         - assign: { dependent_id: '$dep.record_id' }
     # Capture-only insurance policy (contact-scoped record).
-    - if: '$state.insurance_tpa != null'
+    # The PATIENT's own answer wins on the insurer: they may have named it in words, and a card
+    # photographed in a wallet can belong to a family member. The reading is the floor under that,
+    # and the only source for the other two.
+    - if: '$state.insurance_tpa != null || $card.tpa != null'
       then:
         - do: record_save
-          args: { entity: insurance_policy, fields: { tpa: '$state.insurance_tpa' } }
+          args:
+            entity: insurance_policy
+            fields:
+              tpa:         '$coalesce($state.insurance_tpa, $card.tpa)'
+              member_id:   '$card.member_id'
+              valid_until: '$card.valid_until'
           detach: true
     # Reserve the slot + write the booking record (capacity-checked, race-free).
     - do: booking_reserve

@@ -1,6 +1,14 @@
 flow_id: book-appointment
 
 strings:
+  # The flow's OWN prompt — it knows it is looking at an insurance card, where a pack-wide image
+  # prompt also has to serve referral letters and lab results.
+  vision_prompt: >-
+    Photographs of a health-insurance card, possibly front and back. Reply as JSON:
+    {"tpa":"insurer or third-party administrator name as printed, else null",
+    "member_id":"member or policy number exactly as printed, no spaces added, else null",
+    "valid_until":"expiry as YYYY-MM-DD if shown, else null}.
+    Copy characters exactly. If the images are not an insurance card, reply with all nulls.
   # Progress card (prepended to every prompt)
   progress.header:    '📋 ملخص الحجز'
   progress.doctor:    'الطبيب: {doctor}'

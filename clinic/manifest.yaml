@@ -10,7 +10,7 @@
 # keys are rejected. Required: id, version (string), description.
 
 id:          clinic
-version:     '2.0.0'
+version:     '2.1.0'
 description: 'Outpatient appointment reservation for clinics & hospital outpatient clinics — Arabic-first, WhatsApp + web.'
 
 # Marketplace presentation — how this pack appears in the console catalog a
@@ -62,47 +62,15 @@ flows:
 # combined pre_turn_briefing and pre-fills book-appointment (reason / insurance_tpa
 # / media_refs). Logistics only — the vision prompt classifies + transcribes, it
 # does NOT diagnose.
-inbound_preprocessing:
-  image:
-    enabled: true
-    ack: '📄 وصلت الصورة، جاري قراءتها...'
-    prompt: |-
-      You are a medical-records intake assistant for a clinic booking bot. Classify each image and extract structured fields. Do NOT diagnose, interpret results, or give medical advice — transcribe and classify ONLY.
-
-      Respond with JSON only (no markdown) — an object with an `images` array holding EXACTLY ONE entry per input image, IN ORDER:
-      {
-        "images": [
-          {
-            "media_ref": "<copy the MEDIA- ref for this image, in order>",
-            "doc_type": "insurance_card" | "lab_requisition" | "report" | "prescription" | "other",
-            "tpa": "<insurance company / TPA name if an insurance card (e.g. GlobeMed, Bupa, MetLife, NextCare), else null>",
-            "member_id": "<insurance member/policy number, or null>",
-            "valid_until": "<YYYY-MM-DD if shown, else null>",
-            "referring_doctor": "<for a lab requisition/referral, the referring doctor, else null>",
-            "summary_ar": "<one short Arabic line describing the document, for the doctor>",
-            "extracted_text": "<all visible text verbatim, original language, or null>"
-          }
-        ]
-      }
-      Return entries in the SAME ORDER as provided; copy each entry's media_ref from the list.
-    note_template: |-
-      $lines($compact([
-        "📄 مستند ({$media_ref}) — النوع: {$doc_type ?? 'غير محدد'}",
-        $tpa != null         ? "شركة التأمين: {$tpa}" : null,
-        $member_id != null   ? "رقم العضوية: {$member_id}" : null,
-        $valid_until != null ? "سارٍ حتى: {$valid_until}" : null,
-        $referring_doctor != null ? "محوّل من: {$referring_doctor}" : null,
-        $summary_ar != null  ? "ملخص: {$summary_ar}" : null
-      ]))
-  voicenote:
-    mode: transcribe
-    ack: '🎤 وصلت الرسالة الصوتية، جاري تفريغها...'
-    prompt: 'Egyptian Arabic medical appointment voice note.'
-    note_template: |-
-      $transcript != null ? "🎤 رسالة صوتية ({$media_ref}): {$transcript}" : "🎤 رسالة صوتية ({$media_ref}) — تعذّر التفريغ"
-
-# One agent. The platform's universal agent protocol is auto-appended by
-# `createPackAgents` — `instructions:` carries only pack-supplied parts.
+# NO `inbound_preprocessing.image`, deliberately.
+#
+# It read the insurance card and handed the result to the AGENT, which had one argument
+# (`insurance_tpa`) to carry three values — so `member_id` and `valid_until` were extracted and
+# then dropped, on a record that declares both. `book-appointment` reads the card itself now and
+# writes all three.
+#
+# It also only ever fired on an inbound MESSAGE, so a card photographed inside a native WhatsApp
+# form was never read at all.
 agents:
   - id:                reception
     display_name:      'Clinic Reception'

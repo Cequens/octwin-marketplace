@@ -1,6 +1,14 @@
 flow_id: request-visit
 
 strings:
+  # The flow's OWN prompt. English — it instructs the model rather than speaking to the customer.
+  vision_prompt: >-
+    A photograph of a household fault a technician has been asked to fix. Reply as JSON:
+    {"trade":"plumbing|electrical|ac|carpentry|painting|appliance|other",
+    "urgency":"routine|soon|emergency",
+    "visible_issue":"one or two short lines in Egyptian Arabic describing ONLY what is visible"}.
+    Judge urgency from visible harm — water actively escaping or exposed live wiring is emergency.
+    Never quote a price and never say whether something is safe to use.
   progress.header:   '🛠️ طلب زيارة فني'
   progress.service:  '🔧 الخدمة: {service}'
   progress.urgency:  '✅ درجة الاستعجال'

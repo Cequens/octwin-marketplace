@@ -8,7 +8,7 @@
 # record; nothing is inferred.
 
 id:          barakah-finance
-version:     '1.7.0'
+version:     '1.8.0'
 description: 'Islamic home finance — indicative murabaha instalment from published rates, a complete application intake, and a credit review a real underwriter decides.'
 
 listing:
@@ -43,38 +43,15 @@ flows:
   - estimate
   - apply
 
+# NO `inbound_preprocessing.image`, deliberately.
+#
+# It read this pack's document fields and handed them to the AGENT to relay into tool arguments.
+# When the relay did not happen the customer was asked to type what the picture already showed —
+# and the values reached a record only as well as a language model retyped them.
+#
+# `apply`'s `read_doc` step reads the document itself, before the collect node runs. It also only
+# ever fired on an inbound MESSAGE, so a document sent inside a native WhatsApp form was never read.
 inbound_preprocessing:
-  image:
-    enabled: true
-    ack: '📄 وصل المستند، جاري قراءته...'
-    prompt: |-
-      You are a document-intake assistant for a home-finance provider. Classify each image and extract structured fields. Do NOT assess eligibility, do NOT comment on creditworthiness, and do NOT give financial advice.
-
-      Respond with JSON only (no markdown) — an object with an `images` array holding EXACTLY ONE entry per input image, IN ORDER:
-      {
-        "images": [
-          {
-            "media_ref": "<copy the MEDIA- ref for this image, in order>",
-            "doc_type": "national_id" | "salary_certificate" | "bank_statement" | "title_deed" | "sanad_report" | "other",
-            "full_name": "<name as printed, else null>",
-            "monthly_income": "<numeric monthly income if a salary certificate, else null>",
-            "employer": "<employer name if shown, else null>",
-            "summary_ar": "<one short Arabic line describing the document>"
-          }
-        ]
-      }
-      Return entries in the SAME ORDER as provided; copy each entry's media_ref from the list.
-    note_template: |-
-      $lines($compact([
-        "📄 مستند ({$media_ref}) — النوع: {$doc_type ?? 'غير محدد'}",
-        $full_name != null      ? "الاسم: {$full_name}" : null,
-        $monthly_income != null ? "الدخل الشهري: {$monthly_income}" : null,
-        $employer != null       ? "جهة العمل: {$employer}" : null,
-        $summary_ar != null     ? "ملخص: {$summary_ar}" : null
-      ]))
-  # Voice notes → speech-to-text, then the normal agent turn with the transcript
-  # in the pre-turn briefing. Without this the platform defaults to `passthrough`
-  # and the agent has to tell the customer it cannot hear them.
   voicenote:
     mode: transcribe
     ack: '🎤 وصلت الرسالة الصوتية، جاري تفريغها...'

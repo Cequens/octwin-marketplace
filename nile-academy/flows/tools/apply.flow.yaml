@@ -16,6 +16,12 @@ description: |-
   `student_name` / `previous_school` from a document the platform already read.
 
 input:
+  # A ref the agent relays, never a value it read. A `MEDIA-` ref is safe to pass through
+  # a model precisely because it is opaque: it either resolves to an asset or it does not.
+  doc_photo:
+    type:     string
+    optional: true
+    describe: 'The MEDIA- ref of a school document a guardian sent — a birth certificate, a report card or a transfer letter, if the customer already sent one. NEVER invent a ref, and never send what you read in the image — the flow reads it itself.'
   programme_id:
     type:     string
     optional: true
@@ -31,9 +37,41 @@ input:
 
 entry:
   - else: true
-    goto: gather
+    goto: read_doc
 
 steps:
+  # READ THE DOCUMENT FIRST, so nothing printed on it is asked for.
+  #
+  # These values used to be read by the platform's manifest-level vision pass, which handed them to
+  # the AGENT as a briefing for it to relay. When the relay did not happen, the customer was asked
+  # to type what is legible in the picture they had just sent. Reading here turns that into a
+  # pre-fill, and it also works for a document sent inside a native WhatsApp form — which the
+  # manifest pass never saw, because it only ever fired on an inbound MESSAGE.
+  read_doc:
+    - if: '$state.doc_photo == null'
+      then: [{ goto: gather }]
+    - do: analyze_image
+      args:
+        images: '$state.doc_photo'
+        json:   true
+        prompt: '$t("apply.vision_prompt")'
+      bind: doc
+      outputs:
+        ok:     [{ goto: apply_doc }]
+        failed: [{ goto: gather }]   # unreadable is not a blocker — the request still stands
+
+  apply_doc:
+    # The CUSTOMER's own answer always wins: they know their own details, and a document can be
+    # someone else's or out of date. The reading is the floor under what they said.
+    #
+    # `school_year` is read but not stored: `application` declares no such field.
+    # Adding a column to a shipped pack's data model is a redesign rather than this migration, so
+    # it is reported to the pack's author instead.
+    - assign:
+        state.student_name: '$coalesce($state.student_name, $doc.json.student_name)'
+        state.previous_school: '$coalesce($state.previous_school, $doc.json.previous_school)'
+    - goto: gather
+
   gather:
     - collect:
         before_each:

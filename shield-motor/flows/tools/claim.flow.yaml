@@ -36,7 +36,7 @@ entry:
   - if:   '$coalesce($input.mode, "notify") == "status"'
     goto: load_cases
   - else: true
-    goto: gather
+    goto: read_damage
 
 steps:
   load_cases:
@@ -69,6 +69,39 @@ steps:
   no_cases:
     - answer:
         instructions: 'This customer has no claim on file. Say so in one line and offer to file one if they need to.'
+
+  # READ THE DAMAGE PHOTO FIRST, so the plate is not asked for.
+  #
+  # `plate` is a collect field, and the manifest's vision pass already read it off the photo —
+  # then handed it to the AGENT, which had no argument to put it in. So a customer who had just
+  # photographed their own car was asked to type the number visible in it, every time.
+  #
+  # Running before `gather` is what turns that into a pre-fill. It also works for a photo sent
+  # inside a native WhatsApp form, which the manifest pass never saw.
+  read_damage:
+    - if: '$state.damage_photo == null'
+      then: [{ goto: gather }]
+    - do: analyze_image
+      args:
+        images: '$state.damage_photo'
+        json:   true
+        prompt: '$t("claim.vision_prompt")'
+      bind: shot
+      outputs:
+        ok:     [{ goto: apply_damage }]
+        failed: [{ goto: gather }]     # unreadable is not a blocker — the assessor opens the photo
+
+  apply_damage:
+    # The CUSTOMER's own answer wins wherever they gave one: they know their plate, and a photo
+    # can show someone else's car. The reading is the floor, and it is what stops the question
+    # being asked at all when they have not.
+    - assign:
+        state.plate:          '$coalesce($state.plate, $shot.json.plate)'
+    # `make_model` and `visible_damage` are read but NOT stored: the `fnol` entity declares
+    # neither, and adding columns to a shipped pack's data model is a redesign rather than this
+    # migration. Reported to the pack's author — an assessor would plainly want "what the photo
+    # shows" beside `description`, which holds the customer's words.
+    - goto: gather
 
   gather:
     - collect:

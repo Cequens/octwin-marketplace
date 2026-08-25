@@ -1,6 +1,13 @@
 flow_id: apply
 
 strings:
+  # The flow's OWN vision prompt — it knows which document it is looking at, where a pack-wide
+  # image prompt has to serve every picture a customer might send. English, because it instructs
+  # the model rather than speaking to the customer.
+  vision_prompt: >-
+    A photograph of a school document a guardian sent — a birth certificate, a report card or a transfer letter. Reply as JSON: {"student_name":"as printed, else null","previous_school":"school name as printed, else null"}.
+    Copy characters exactly — never correct, complete or reformat a value, and never infer one
+    that is not visible.
   progress.header:     '📝 طلب التحاق'
   progress.programme:  '📚 البرنامج: {programme}'
   progress.student:    '🧒 الطالب: {student}'

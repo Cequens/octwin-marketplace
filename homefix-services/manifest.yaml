@@ -7,7 +7,7 @@
 # recurring-maintenance contract pipeline. No pack DB, no code — pure YAML.
 
 id:          homefix-services
-version:     '2.0.0'
+version:     '2.1.0'
 description: 'Home maintenance & handyman dispatch — describe the fault, send a photo and a location pin, and get a routed work order with a real response window.'
 
 listing:
@@ -50,33 +50,16 @@ flows:
   - request-visit
   - my-requests
 
+# NO `inbound_preprocessing.image`, deliberately.
+#
+# It read the trade and urgency off a fault photo and handed them to the AGENT to relay. When the
+# relay did not happen, the customer picked a trade from a list while looking at a picture of the
+# problem they had just sent. `request-visit`'s `read_fault` step reads it before the collect node
+# runs, so those fields are pre-filled rather than asked.
+#
+# It also only ever fired on an inbound MESSAGE, so a photo sent inside a native WhatsApp form was
+# never read. An image in a home-repair pack means a fault; that needs no vision call to work out.
 inbound_preprocessing:
-  image:
-    enabled: true
-    ack: '📸 وصلت الصورة، جاري فحصها...'
-    prompt: |-
-      You are an intake assistant for a home-maintenance company. Classify each image and extract structured fields. Describe only what is VISIBLE. Never state a repair cost, and never say whether something is safe.
-
-      Respond with JSON only (no markdown) — an object with an `images` array holding EXACTLY ONE entry per input image, IN ORDER:
-      {
-        "images": [
-          {
-            "media_ref": "<copy the MEDIA- ref for this image, in order>",
-            "trade": "plumbing" | "electrical" | "ac" | "carpentry" | "painting" | "appliance" | "other",
-            "urgency": "routine" | "soon" | "emergency",
-            "visible_issue": "<short factual description of what is visible>",
-            "summary_ar": "<one short Arabic line describing the image>"
-          }
-        ]
-      }
-      Return entries in the SAME ORDER as provided; copy each entry's media_ref from the list.
-    note_template: |-
-      $lines($compact([
-        "📸 صورة ({$media_ref}) — التخصص المرجّح: {$trade ?? 'غير محدد'}",
-        $urgency != null      ? "درجة الاستعجال: {$urgency}" : null,
-        $visible_issue != null ? "المشكلة الظاهرة: {$visible_issue}" : null,
-        $summary_ar != null   ? "ملخص: {$summary_ar}" : null
-      ]))
   voicenote:
     mode: transcribe
     ack: '🎤 وصلت الرسالة الصوتية، جاري تفريغها...'

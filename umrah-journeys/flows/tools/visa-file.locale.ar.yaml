@@ -1,6 +1,15 @@
 flow_id: visa-file
 
 strings:
+  # The flow's OWN prompt — it knows it is looking at a passport data page, where a pack-wide
+  # image prompt has to serve receipts and vaccination cards too. English, because it instructs
+  # the model rather than speaking to the pilgrim.
+  vision_prompt: >-
+    The data page of a passport. Reply as JSON:
+    {"passport_number":"exactly as printed, no spaces added or removed, else null",
+    "nationality":"country as printed, else null",
+    "full_name":"name in Latin characters as printed, else null"}.
+    Copy characters exactly. Never infer a nationality from a name or a number format.
   status_header:     '📂 ملفاتك لدينا'
   status_note:       'ℹ️ الحالة تُحدَّث من فريق التأشيرات، وبنبلّغك فوراً بأي قرار.'
   btn_upload:        '📎 ارفع مستنداً'

@@ -8,7 +8,7 @@
 # No pack DB, no code — pure YAML.
 
 id:          umrah-journeys
-version:     '2.0.0'
+version:     '2.1.0'
 description: 'Hajj & Umrah package agency — browse packages, book a group, and get a visa file opened and tracked by a real ops team.'
 
 listing:
@@ -48,6 +48,16 @@ flows:
 
 # A pilgrim photographs their passport instead of typing a number. The platform
 # reads it before the agent's turn, so the booking flow is pre-filled.
+# `inbound_preprocessing.image` is KEPT here, unlike most packs — but only as a CLASSIFIER.
+#
+# A pilgrim sends passports, national IDs, personal photos, vaccination cards and payment
+# receipts, and the agent has to know WHICH before it can pick a tool; it cannot see the image.
+# That is the one job this pass still has.
+#
+# What it no longer does is EXTRACT. `passport_number` / `nationality` used to be read here and
+# handed to the agent as a briefing — with no argument to carry them, so they reached nothing.
+# `visa-file`'s `read_passport` step reads the data page itself and writes them to the record,
+# which is also the only way it works for a scan uploaded inside a native WhatsApp form.
 inbound_preprocessing:
   image:
     enabled: true
@@ -61,11 +71,7 @@ inbound_preprocessing:
           {
             "media_ref": "<copy the MEDIA- ref for this image, in order>",
             "doc_type": "passport" | "national_id" | "photo" | "vaccination" | "payment_receipt" | "other",
-            "full_name": "<name as printed in Latin characters, else null>",
-            "passport_number": "<passport number if visible, else null>",
-            "nationality": "<nationality if shown, else null>",
-            "expiry_date": "<YYYY-MM-DD if shown, else null>",
-            "summary_ar": "<one short Arabic line describing the document>"
+                        "summary_ar": "<one short Arabic line describing the document>"
           }
         ]
       }

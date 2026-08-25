@@ -108,7 +108,36 @@ steps:
             skip_title: '$t("visa-file.skip")'
             label:      '$t("visa-file.label.photo")'
         gap_instructions: 'Ask the pilgrim for the next item ({$collect_field}) in one short line. For a passport, ask for a clear photo of the data page. Re-call visa-file with intent=upload once they send it.'
-        complete: [{ goto: save_docs }]
+        complete: [{ goto: read_passport }]
+
+  # READ THE PASSPORT. `pilgrim` has declared `passport_number` and `nationality` since it was
+  # written — and nothing ever wrote them. The manifest's vision pass extracted both, handed them
+  # to the AGENT as a briefing, and the agent had no argument to put them in, so a visa file was
+  # opened with the two fields the officer most needs left empty.
+  #
+  # Reading the data page here fills them from the scan the pilgrim already sent. No new question:
+  # the passport is collected either way.
+  read_passport:
+    - if: '$state.passport_scan == null'
+      then: [{ goto: save_docs }]
+    - do: analyze_image
+      args:
+        images: '$state.passport_scan'
+        json:   true
+        prompt: '$t("visa-file.vision_prompt")'
+      bind: doc
+      outputs:
+        ok:     [{ goto: apply_passport }]
+        failed: [{ goto: save_docs }]   # an unreadable scan still files — the officer opens the image
+
+  apply_passport:
+    # Nothing to coalesce against: no argument ever carried these, which is the defect. The
+    # traveller's TYPED name still wins over the printed one below — they know which family
+    # member this is, and a data page can carry a transliteration they would not recognise.
+    - assign:
+        state.passport_number: '$doc.json.passport_number'
+        state.nationality:     '$doc.json.nationality'
+    - goto: save_docs
 
   save_docs:
     # Keep the traveller as a record (so the family's details persist for the next
@@ -124,6 +153,9 @@ steps:
         fields:
           full_name:     '$state.traveller_name'
           passport_scan: '$state.passport_scan'
+          # From the scan itself — the two fields this entity has always declared and never held.
+          passport_number: '$state.passport_number'
+          nationality:     '$state.nationality'
       bind: person
       outputs:
         ok:      [{ goto: attach }]
