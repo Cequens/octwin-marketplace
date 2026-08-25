@@ -63,7 +63,10 @@ entities:
       # What the vision pass actually saw — kept verbatim so the foreman can judge
       # the photo rather than trusting a summary.
       triage_notes:    { type: textarea, label: { en: 'Triage notes', ar: 'ملاحظات الفحص المبدئي' } }
-      damage_photo:    { type: image, label: { en: 'Damage photo', ar: 'صورة الضرر' } }
+      # `image_list`, not `image` — the collect field is `multiple`, so this holds every
+      # angle the customer sent, in the order they sent them. The console renders a
+      # thumbnail grid; each ref is existence- and kind-checked on save.
+      damage_photo:    { type: image_list, label: { en: 'Damage photos', ar: 'صور الضرر' } }
       package:         { type: record, entity: service_package, label: { en: 'Package', ar: 'الباقة' } }
       package_label:   { type: text, label: { en: 'Package', ar: 'الباقة' } }
       slot_label:      { type: text, label: { en: 'Slot', ar: 'الموعد' } }

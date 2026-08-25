@@ -3,7 +3,7 @@ flow_id: damage-check
 strings:
   label.plate:      'رقم اللوحة'
   label.complaint:  'وصف المشكلة'
-  label.photo:      'صورة للضرر أو للوحة العدادات'
+  label.photo:      'صور للضرر أو للوحة العدادات'
 
   header:           '🔎 نتيجة الفحص المبدئي'
   job_ref:          '🧾 رقم بطاقة العمل: #{ref}'

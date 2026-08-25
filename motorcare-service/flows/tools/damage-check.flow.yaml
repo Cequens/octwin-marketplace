@@ -1,8 +1,8 @@
 # damage-check — the pack's signature journey: a photo becomes a triaged JOB CARD
 # sitting in the right workshop queue with an SLA running.
 #
-# The chain: a `type: media` upload field takes the photo (the engine adopts the next
-# inbound image itself, so the fold never depends on the agent naming the ref) → the
+# The chain: a `type: media` upload field takes the photos (the engine adopts inbound
+# images itself, in order, so the fold never depends on the agent naming a ref) → the
 # platform's OWN vision pass has already read it (`inbound_preprocessing.image` in
 # manifest.yaml, whose prompt returns the work area, job type and severity) and
 # delivered that as a pre-turn briefing → the agent passes those fields in → the flow
@@ -81,10 +81,15 @@ steps:
           - field: complaint
             label:    '$t("damage-check.label.complaint")'
             describe: "What is wrong, in the customer's own words."
-          # An UPLOAD field — the engine adopts the next inbound image of this kind.
+          # An UPLOAD field — the engine adopts inbound images of this kind, in order.
+          # `multiple` because one angle rarely shows a dent: the customer sends the panel,
+          # a close-up and the dashboard light in one go rather than three trips through
+          # the flow. Stored as an `image_list` on the job card, which the console renders
+          # as a thumbnail grid the foreman can open.
           - field: damage_photo
             type:       media
             media_kind: image
+            multiple:   true
             label:      '$t("damage-check.label.photo")'
         complete: [{ goto: save_vehicle }]
 
