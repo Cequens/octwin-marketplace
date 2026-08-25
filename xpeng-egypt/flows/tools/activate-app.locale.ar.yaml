@@ -2,6 +2,20 @@ flow_id: activate-app
 
 strings:
   gap:             'اطلب من العميل بلطف وبلغته الحاجة الناقصة لتفعيل تطبيق إكس بينج.'
+  # The flow's OWN vision prompts — English, because they instruct the model rather than speaking
+  # to the customer, and identical in every locale for the same reason. A registration card and a
+  # national ID are different documents, so they get different prompts rather than one that has to
+  # cover both.
+  vision_registration: >-
+    A photograph of an Egyptian vehicle registration document (رخصة السيارة). Reply as JSON:
+    {"plate":"the plate exactly as printed, else null","vin":"chassis/VIN exactly as printed, else
+    null","model":"make and model as printed, else null"}. Copy characters exactly — never correct,
+    complete or reformat a value, and never infer one that is not visible.
+  vision_id: >-
+    A photograph of an Egyptian national ID card (بطاقة الرقم القومي). Reply as JSON:
+    {"full_name":"the holder's full name in Arabic exactly as printed, else null",
+    "national_id":"the 14-digit national number, digits only, else null"}. Copy characters exactly —
+    never correct, complete or reformat a value, and never infer one that is not visible.
   f_phone:         'رقم تليفونك؟ (عشان نقدر نتحقق ونتواصل معاك)'
   f_registration:  '📷 من فضلك ابعتلي صورة واضحة من رخصة السيارة.'
   f_id:            '📷 دلوقتي ابعتلي صورة من بطاقة الرقم القومي لمالك السيارة.'

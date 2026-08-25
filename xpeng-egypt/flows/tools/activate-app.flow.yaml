@@ -35,19 +35,62 @@ steps:
             type: media
             media_kind: image
             label: '$t("activate-app.f_registration")'
+            # READ THE LICENCE, so the verification ticket carries the car typed out rather than
+            # only as a picture for someone to squint at. Runs on the turn the photo lands, which
+            # is not the closing turn — the owner-ID ask follows it, so the wait is hidden.
+            on_collect:
+              - do: analyze_image
+                args:
+                  images: '$state.car_registration'
+                  json:   true
+                  prompt: '$t("activate-app.vision_registration")'
+                bind: reg
+                outputs:
+                  ok:
+                    - assign:
+                        state.plate: '$reg.json.plate'
+                        state.vin:   '$reg.json.vin'
+                        state.model: '$reg.json.model'
+                  failed: []   # unreadable is not a blocker — a human opens the photo either way
           - field: owner_id                   # 📷 upload — owner national ID photo
             type: media
             media_kind: image
             label: '$t("activate-app.f_id")'
+            # READ THE ID for the owner's name. `full_name` is an optional INPUT with no collect
+            # field, so it only ever arrived if the agent happened to relay it — and when it did
+            # not, `case_open` below wrote an EMPTY name onto an ownership-verification ticket.
+            # The name is printed on the document the customer just uploaded.
+            on_collect:
+              - do: analyze_image
+                args:
+                  images: '$state.owner_id'
+                  json:   true
+                  prompt: '$t("activate-app.vision_id")'
+                bind: idc
+                outputs:
+                  ok:
+                    # The CUSTOMER's own answer wins: an ID photographed at home can be a family
+                    # member's, and they know whose account this is. The reading is the floor.
+                    - assign:
+                        state.full_name:   '$coalesce($state.full_name, $idc.json.full_name)'
+                        state.national_id: '$idc.json.national_id'
+                  failed: []
         complete: [{ goto: open }]
 
   open:
     - do: case_open
       args:
         type: app_owner_activation
+        # Read off the two documents above, so the team verifying ownership sees the car and the
+        # owner as TEXT beside the photos. `case_open` fields are free-form case metadata — the
+        # worklist declares no field schema for this type — so these need no declaration.
         fields:
-          full_name: '$coalesce($state.full_name, "")'
-          phone:     '$state.phone'
+          full_name:   '$coalesce($state.full_name, "")'
+          phone:       '$state.phone'
+          national_id: '$coalesce($state.national_id, "")'
+          plate:       '$coalesce($state.plate, "")'
+          vin:         '$coalesce($state.vin, "")'
+          model:       '$coalesce($state.model, "")'
       bind: c
       outputs:
         ok: [{ goto: attach_registration }]
