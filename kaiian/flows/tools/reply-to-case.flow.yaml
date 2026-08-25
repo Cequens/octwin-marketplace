@@ -44,6 +44,11 @@ steps:
   # falls straight through to `record`.
   collect_reply:
     - collect:
+        # A REQUEST, not a guarantee. Asked as ONE native form where that is possible, and
+        # field-by-field everywhere else — on web (no form client) and on any business Meta
+        # has not verified, which is most of them. Both paths collect the same `$state`, so
+        # nothing else in this node changes.
+        form_flow: true
         gap_instructions: 'Ask the customer to type the exact info the team needs, one short question in friendly Saudi white dialect. Re-call reply-to-case with their message.'
         fields:
           - field: message

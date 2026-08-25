@@ -95,6 +95,11 @@ steps:
   # ── 📎 Add a document to an existing ticket (case_attach) ──
   gather_doc:
     - collect:
+        # A REQUEST, not a guarantee. Asked as ONE native form where that is possible, and
+        # field-by-field everywhere else — on web (no form client) and on any business Meta
+        # has not verified, which is most of them. Both paths collect the same `$state`, so
+        # nothing else in this node changes.
+        form_flow: true
         gap_instructions: '$t("ticket-status.docs_gap")'
         fields:
           - field: doc                        # 📷 upload — folds a MEDIA- ref into $state.doc
@@ -123,6 +128,11 @@ steps:
   # ── 💬 Reply / send info (case_reply — appends to timeline, awaiting_customer → in_progress) ──
   gather_msg:
     - collect:
+        # A REQUEST, not a guarantee. Asked as ONE native form where that is possible, and
+        # field-by-field everywhere else — on web (no form client) and on any business Meta
+        # has not verified, which is most of them. Both paths collect the same `$state`, so
+        # nothing else in this node changes.
+        form_flow: true
         gap_instructions: '$t("ticket-status.msg_gap")'
         fields:
           - field: message

@@ -25,6 +25,11 @@ entry:
 steps:
   gather:
     - collect:
+        # A REQUEST, not a guarantee. Asked as ONE native form where that is possible, and
+        # field-by-field everywhere else — on web (no form client) and on any business Meta
+        # has not verified, which is most of them. Both paths collect the same `$state`, so
+        # nothing else in this node changes.
+        form_flow: true
         derive:
           value_amt: '$enum_lookup($state.value_band, { v50: 50000, v100: 100000, v200: 200000, v400: 400000, v800: 800000 }, 100000)'
           ncd_years: '$enum_lookup($state.ncd_band, { n0: 0, n1: 1, n3: 3, n5: 5 }, 0)'

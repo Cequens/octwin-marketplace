@@ -7,7 +7,7 @@
 # No pack DB, no code — pure YAML.
 
 id:          glamour-salon
-version:     '1.4.0'
+version: 1.5.0
 description: 'Beauty salon & spa — service menu, stylist booking that respects real treatment lengths, reminders, and a rating that ranks the team.'
 
 listing:

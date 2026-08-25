@@ -27,6 +27,11 @@ entry:
 steps:
   gather:
     - collect:
+        # A REQUEST, not a guarantee. Asked as ONE native form where that is possible, and
+        # field-by-field everywhere else — on web (no form client) and on any business Meta
+        # has not verified, which is most of them. Both paths collect the same `$state`, so
+        # nothing else in this node changes.
+        form_flow: true
         derive:
           nights_n:   '$enum_lookup($state.nights_band, { n3: 3, n5: 5, n7: 7, n10: 10, n14: 14 }, 5)'
           adults_n:   '$enum_lookup($state.party_band, { a1: 1, a2: 2, a3: 3, a4: 4 }, 2)'

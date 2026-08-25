@@ -87,6 +87,11 @@ steps:
 
   collect_docs:
     - collect:
+        # A REQUEST, not a guarantee. Asked as ONE native form where that is possible, and
+        # field-by-field everywhere else — on web (no form client) and on any business Meta
+        # has not verified, which is most of them. Both paths collect the same `$state`, so
+        # nothing else in this node changes.
+        form_flow: true
         fields:
           - field: traveller_name
             label:    '$t("visa-file.label.name")'

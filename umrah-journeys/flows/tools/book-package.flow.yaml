@@ -28,6 +28,11 @@ entry:
 steps:
   collect_party:
     - collect:
+        # A REQUEST, not a guarantee. Asked as ONE native form where that is possible, and
+        # field-by-field everywhere else — on web (no form client) and on any business Meta
+        # has not verified, which is most of them. Both paths collect the same `$state`, so
+        # nothing else in this node changes.
+        form_flow: true
         derive:
           # The pickers carry real numbers, so the pricing arithmetic never touches
           # free text. Room type is a multiplier the desk actually uses.
