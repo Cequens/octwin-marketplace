@@ -108,6 +108,7 @@ steps:
                 - { value: y25, label: mortgage-estimate.tenor.y25 }
           # Enrichment — never blocks the quote, folded into the lead if present.
           - field: full_name
+            type:     name          # the platform already knows it — confirm, don't re-ask
             required: false
             label:    '$t("mortgage-estimate.label.name")'
             describe: "The buyer's full name."
