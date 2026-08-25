@@ -9,7 +9,7 @@
 # the customer never has to re-enter. No pack DB, no code — pure YAML.
 
 id:          motorcare-service
-version:     '1.8.0'
+version:     '2.0.0'
 description: 'Car service centre — service packages, AI damage triage from a photo, bay booking, and a workshop queue a foreman really works.'
 
 listing:
@@ -48,45 +48,18 @@ flows:
 
 # A customer sends a photo of the damage or the dashboard. The platform reads it
 # before the agent's turn so the triage flow starts already informed.
-inbound_preprocessing:
-  image:
-    enabled: true
-    ack: '📸 وصلت الصورة، جاري فحصها...'
-    prompt: |-
-      You are an intake assistant for a car service centre. Classify each image and extract structured fields. Describe only what is VISIBLE — never state a repair cost, and never claim a car is safe or unsafe to drive.
-
-      Respond with JSON only (no markdown) — an object with an `images` array holding EXACTLY ONE entry per input image, IN ORDER:
-      {
-        "images": [
-          {
-            "media_ref": "<copy the MEDIA- ref for this image, in order>",
-            "image_kind": "exterior_damage" | "dashboard_warning" | "tyre" | "fluid_leak" | "registration_card" | "odometer" | "other",
-            "plate": "<licence plate if legible, else null>",
-            "make_model": "<make and model if identifiable, else null>",
-            "visible_damage": "<short factual description of what is visible, or null>",
-            "warning_lights": "<dashboard lights visible, comma separated, or null>",
-            "odometer_km": "<numeric odometer reading if visible, else null>",
-            "summary_ar": "<one short Arabic line describing the image>"
-          }
-        ]
-      }
-      Return entries in the SAME ORDER as provided; copy each entry's media_ref from the list.
-    note_template: |-
-      $lines($compact([
-        "📸 صورة ({$media_ref}) — النوع: {$image_kind ?? 'غير محدد'}",
-        $plate != null           ? "اللوحة: {$plate}" : null,
-        $make_model != null      ? "المركبة: {$make_model}" : null,
-        $visible_damage != null  ? "الأضرار الظاهرة: {$visible_damage}" : null,
-        $warning_lights != null  ? "لمبات التحذير: {$warning_lights}" : null,
-        $odometer_km != null     ? "العداد: {$odometer_km} كم" : null,
-        $summary_ar != null      ? "ملخص: {$summary_ar}" : null
-      ]))
-  voicenote:
-    mode: transcribe
-    ack: '🎤 وصلت الرسالة الصوتية، جاري تفريغها...'
-    prompt: 'Arabic car-trouble voice note — the noise, when it happens, the car model.'
-    note_template: |-
-      $transcript != null ? "🎤 رسالة صوتية ({$media_ref}): {$transcript}" : "🎤 رسالة صوتية ({$media_ref}) — تعذّر التفريغ"
+# NO `inbound_preprocessing.image`, deliberately.
+#
+# It exists for a photo that arrives with NO flow running — the agent cannot see images, so
+# without it a cold photo is an opaque ref and the agent cannot tell which tool to call. That
+# matters for a pack where the CONTENT decides the tool (a claim vs an ID vs a receipt). Here it
+# does not: an image in a car-service pack means `damage-check`, and the photo the customer
+# already sent is adopted by the collect field automatically.
+#
+# Enabling it as well would mean TWO vision calls for one photo — the manifest's, then the flow's
+# in `damage-check` — with different prompts, so nothing dedupes them. And the two paths would
+# diverge: chat would route on the agent's copy of a briefing while the native form routed on the
+# flow's own reading. One analysis, in the flow, is cheaper AND the same everywhere.
 
 agents:
   - id:                serviceadvisor

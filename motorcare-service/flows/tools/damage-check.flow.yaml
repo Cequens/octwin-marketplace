@@ -3,18 +3,27 @@
 #
 # The chain: a `type: media` upload field takes the photos (the engine adopts inbound
 # images itself, in order, so the fold never depends on the agent naming a ref) → the
-# platform's OWN vision pass has already read it (`inbound_preprocessing.image` in
-# manifest.yaml, whose prompt returns the work area, job type and severity) and
-# delivered that as a pre-turn briefing → the agent passes those fields in → the flow
-# routes on them via `work_open`, which resolves the queue from
-# worklist.yaml's `route_by: work_area` and stamps the SLA.
+# flow reads them ITSELF in `analyze_photos`, one vision call for every angle → it routes
+# on that via `work_open`, which resolves the queue from worklist.yaml's
+# `route_by: work_area` and stamps the SLA.
 #
-# WHY NOT call `analyze_image` here as a second pass: `analyze_image` takes a URL or
-# data URL, and the media URL a self-hosted platform serves is not reachable from a
-# remote inference provider — so the analysis silently comes back empty. The manifest
-# pre-processing hands the model the BYTES, which is both the working path and one
-# vision call instead of two. The flow still defaults safely when the agent supplies
-# nothing: `diagnostics` means "a human decides", which is the honest fallback.
+# The agent still contributes what it is better at: the customer's WORDS. It may pass
+# `work_area` / `job_type` from what they typed, and that wins over the photo reading —
+# "my brakes squeal" is better evidence than a picture of a wheel. The photo is the floor
+# beneath it, and `diagnostics` is the floor beneath both.
+#
+# Reading the photos in the FLOW is what makes this work everywhere rather than only in
+# chat: the manifest's vision pass fires on an inbound MESSAGE, so a photo uploaded inside
+# the native form never reached it and every such job routed to `diagnostics`.
+#
+# (This header used to say `analyze_image` could not be used, because it took a URL and
+# a self-hosted media URL is unreachable from a remote provider. That was true and was
+# fixed — the primitive resolves a `MEDIA-` ref to BYTES itself. The comment outlived
+# the problem and cost this pack its headline journey on the form path.)
+#
+# This pack no longer declares `inbound_preprocessing.image` at all — see manifest.yaml
+# for why. The flow still defaults safely when neither the agent nor the photo supplies
+# anything: `diagnostics` means "a human decides", which is the honest fallback.
 #
 # Nothing here ever states a price. The real number is the foreman's `quote_ready`
 # disposition, which relays to the customer on its own.
@@ -91,7 +100,30 @@ steps:
             media_kind: image
             multiple:   true
             label:      '$t("damage-check.label.photo")'
-        complete: [{ goto: save_vehicle }]
+        complete: [{ goto: analyze_photos }]
+
+  analyze_photos:
+    # ONE vision call for every angle, and the model sees them together — three shots of one
+    # dent judged as a set beats three separate verdicts. `$state.damage_photo` is already a
+    # list of `MEDIA-` refs, so it goes straight in.
+    #
+    # HERE, and not in the field's `on_collect`, on purpose: a vision call costs ~4s, and in a
+    # native form `on_collect` runs while the customer is still on a screen the endpoint is
+    # timed on. `complete:` runs after the form closes, on an ordinary turn. Use `on_collect`
+    # only when a LATER field in the same node needs the answer — nothing here does.
+    #
+    # Its OWN step because `outputs:` is unavoidable: a bare `bind:` THROWS on a failure port,
+    # and a vision call that fails must not kill the job card. A `do:` carrying `outputs:` ends
+    # its sequence, so both ports `goto` the shared continuation rather than duplicating it.
+    - do: analyze_image
+      args:
+        images: '$state.damage_photo'
+        json:   true
+        prompt: '$t("damage-check.vision_prompt")'
+      bind: shot
+      outputs:
+        ok:     [{ goto: save_vehicle }]
+        failed: [{ goto: save_vehicle }]   # never block the job on a failed read
 
   save_vehicle:
     # `plate` is the entity's unique constraint, so a returning customer's car is
@@ -111,10 +143,14 @@ steps:
   open_job:
     # Defaults matter more than the happy path here: an unset area routes to
     # diagnostics, which means "a human looks at it" — never a guess at a repair.
+    # The AGENT's value wins where it has one — it heard the customer's words as well as
+    # seeing whatever the platform showed it. The flow's own reading is the FLOOR beneath
+    # that, and `diagnostics` is the floor beneath both.
     - assign:
-        area:     '$coalesce($state.work_area, "diagnostics")'
-        jtype:    '$coalesce($state.job_type, "diagnostic_check")'
-        findings: '$coalesce($state.findings, $t("damage-check.no_findings"))'
+        area:     '$coalesce($state.work_area, $shot.json.work_area, "diagnostics")'
+        jtype:    '$coalesce($state.job_type,  $shot.json.job_type,  "diagnostic_check")'
+        findings: '$coalesce($state.findings,  $shot.json.findings_ar, $t("damage-check.no_findings"))'
+        severity: '$coalesce($state.severity,  $shot.json.severity)'
     # `work_open` writes the record AND enrols it in the worklist: the queue comes
     # from `route_by: work_area`, the SLA from the type. The ports are the whole
     # contract — there is no status string to inspect.
@@ -144,7 +180,7 @@ steps:
                  $t("damage-check.plate", { plate: $state.plate }),
                  $findings,
                  $t("damage-check.area", { area: $enum_lookup($area, { mechanical: $t("damage-check.ar.mechanical"), body: $t("damage-check.ar.body"), diagnostics: $t("damage-check.ar.diagnostics") }, $area) }),
-                 $t("damage-check.severity", { severity: $enum_lookup($state.severity, { minor: $t("damage-check.sev.minor"), moderate: $t("damage-check.sev.moderate"), major: $t("damage-check.sev.major") }, $t("damage-check.sev.unknown")) }),
+                 $t("damage-check.severity", { severity: $enum_lookup($severity, { minor: $t("damage-check.sev.minor"), moderate: $t("damage-check.sev.moderate"), major: $t("damage-check.sev.major") }, $t("damage-check.sev.unknown")) }),
                  $t("damage-check.no_quote")
                ]), "\n")'
         footer: '{$t("damage-check.footer")}'

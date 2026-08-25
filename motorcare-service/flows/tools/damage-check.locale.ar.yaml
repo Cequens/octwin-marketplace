@@ -4,6 +4,13 @@ strings:
   label.plate:      'رقم اللوحة'
   label.complaint:  'وصف المشكلة'
   label.photo:      'صور للضرر أو للوحة العدادات'
+  # The flow's OWN vision prompt — narrower than the manifest's, because this one knows it is
+  # looking at a damage report and not at any photo a customer might send.
+  vision_prompt: >-
+    Photos of ONE vehicle from several angles, or its dashboard. Reply as JSON:
+    {"work_area":"mechanical|body|diagnostics","job_type":"periodic_service|body_repair|diagnostic_check|breakdown",
+    "severity":"minor|moderate|major","findings_ar":"two or three short lines in Egyptian Arabic
+    describing ONLY what is visible — never a diagnosis, never a price"}.
 
   header:           '🔎 نتيجة الفحص المبدئي'
   job_ref:          '🧾 رقم بطاقة العمل: #{ref}'
