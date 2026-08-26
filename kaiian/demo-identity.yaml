@@ -4,13 +4,27 @@
 # see it under "My cases" (scoped to their team's queue), and get the header-bell
 # notification when its SLA breaches.
 #
-# Agents here are real users with a membership and a team seat, so they work as
-# assignment and queue targets the moment the pack installs. They carry NO
-# credential — a pack is public content and the platform's user lookup is global,
-# so a committed password would be a shared account across every tenant that
-# seeds this pack. `validatePackBundle` rejects `password:` for that reason. To
-# sign in as an agent, invite them from Workspace → Team; they set their own
-# password on accept.
+# Agents here are SEATS, not people. Each is a real user with a membership and a
+# team seat, so it works as an assignment and queue target the moment the pack
+# seeds — but it carries no credential and nobody can ever sign in as one.
+#
+# `handle:` is a BARE NAME, never an address. The platform derives the real
+# address per pack + tenant, under a permanently-reserved domain. Both `email:`
+# and `password:` are rejected at publish by `validatePackBundle`, and the reason
+# is the same for each: a pack is public content, so anything it names is
+# something everybody has. A committed password is a public password — and an
+# authored address was worse, because the seeder's user lookup is global and
+# ADOPTED whatever account it matched. A pack naming a real address therefore had
+# that account joined to every workspace that seeded the pack, and two tenants
+# seeding this file shared one user row. Deriving the address leaves a pack
+# nothing to name.
+#
+# To evaluate the signed-in experience, do NOT try to sign in as a seat — its
+# address is undeliverable by construction. Invite YOURSELF from Workspace → Team
+# and join the team below. The queue-scoped "My cases" view follows team
+# membership, not identity, so you get exactly the same view: you do not need to
+# be Sara, you need to be in Sara's team.
+#
 # Queues below are the casework queues declared in cases.yaml.
 
 teams:
@@ -18,17 +32,17 @@ teams:
     name: Customer Ops
     queues: [customer_ops]
     agents:
-      - { email: sara.ops@demo.kaiian.test,   name: "Sara — Customer Ops", team_role: lead }
-      - { email: omar.ops@demo.kaiian.test,    name: "Omar — Customer Ops" }
+      - { handle: sara.ops,       name: "Sara — Customer Ops", team_role: lead }
+      - { handle: omar.ops,       name: "Omar — Customer Ops" }
 
   - slug: western-region
     name: Western Region
     queues: [ops_western]
     agents:
-      - { email: layla.west@demo.kaiian.test,  name: "Layla — Western Region", team_role: lead }
+      - { handle: layla.west,     name: "Layla — Western Region", team_role: lead }
 
   - slug: central-region
     name: Central Region
     queues: [ops_central]
     agents:
-      - { email: hassan.central@demo.kaiian.test, name: "Hassan — Central Region" }
+      - { handle: hassan.central, name: "Hassan — Central Region" }

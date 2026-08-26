@@ -10,7 +10,7 @@
 # projects (Kaiian + Waslini) with per-project branding; the logic is identical.
 
 id:          kaiian
-version: 1.10.0
+version: '1.11.0'
 description: 'Kaiian/Waslini ride-hailing customer support — role-aware AI intake + mediated human casework.'
 
 # Marketplace presentation — how this pack appears in the console catalog a
