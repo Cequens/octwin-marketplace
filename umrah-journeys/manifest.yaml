@@ -8,7 +8,7 @@
 # No pack DB, no code — pure YAML.
 
 id:          umrah-journeys
-version: 2.3.0
+version: '2.5.0'
 description: 'Hajj & Umrah package agency — browse packages, book a group, and get a visa file opened and tracked by a real ops team.'
 
 listing:
@@ -35,8 +35,11 @@ required_adapters:  [messaging, vision, storage]
 default_settings:
   locale: ar
 
-default_conversation_context:
-  lang: { type: enum, enum: [ar, en, bilingual], default: ar, describe: 'Reply language.' }
+# No `default_conversation_context.lang:` here, unlike most packs in this repo. That knob is
+# copy-pasted boilerplate: nothing in this pack reads `$context.lang`, and its `en` /
+# `bilingual` options offered an operator a switch that changed nothing, because the pack ships
+# Arabic copy only (`locale.ar.yaml` + six flow siblings, no `.en.` twin). The agent is pinned to
+# Arabic in `prompts/identity.md` instead. Re-declare it the day an English locale exists.
 
 flows:
   - home

@@ -61,7 +61,7 @@ steps:
                                 $state.travel_month != null ? $t("book-package.progress.month") : null
                               ]), "\n")'
         progress: '$progress_card'
-        gap_instructions: 'Ask the pilgrim for the next missing detail ({$collect_field}), one at a time, in their language. Re-call book-package once they answer. Never promise a visa outcome.'
+        gap_instructions: 'Ask the pilgrim for the next missing detail ({$collect_field}), one at a time, in Arabic. Re-call book-package once they answer. Never promise a visa outcome.'
         fields:
           - field: package_id
             when: '$state.package_id == null'
@@ -234,8 +234,19 @@ steps:
       memory_note: 'Reserved trip #{$trip.record_number} but the visa case did NOT open — the desk must open it manually.'
     - end: applied
 
+  # A bare `end: { status: aborted, body }` is the house shape, and it is what sent a
+  # pilgrim scrolling back up to re-tap the ✅ of the run he had just cancelled — the
+  # platform refused it as a stale run, correctly, but the only live buttons on his
+  # screen were dead ones. Cancelling is not leaving.
   aborted:
-    - end: { status: aborted, body: '{$t("book-package.aborted")}' }
+    - render:
+        render_intent: detail_card
+        body: '{$t("book-package.aborted")}'
+        buttons:
+          - { title: '{$t("book-package.btn_packages")}', on_select: { invoke: packages } }
+          - { title: '{$t("book-package.btn_home")}',     on_select: { invoke: home } }
+      memory_note: 'The pilgrim cancelled at the confirm step — nothing was reserved.'
+    - end: aborted
 
   reserve_failed:
     - answer:

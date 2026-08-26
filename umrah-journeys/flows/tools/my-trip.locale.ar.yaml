@@ -6,3 +6,8 @@ strings:
   btn_visa:      '📂 حالة التأشيرة'
   btn_upload:    '📎 ارفع مستنداً'
   btn_packages:  '🕋 الباقات'
+
+  # The zero branch — no booking yet.
+  none_header:   '🧾 لا يوجد حجز بعد'
+  none_body:     'ما سجّلنا لك حجزاً حتى الآن. تحب تشوف الباقات المتاحة ونثبّت لك واحدة؟'
+  btn_book:      '📝 احجز باقة'

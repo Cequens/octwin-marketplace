@@ -52,8 +52,15 @@ steps:
     - end: applied
 
   none:
-    - answer:
-        instructions: 'This pilgrim has no booking yet. Say so warmly in one line and offer to show the packages.'
+    - render:
+        render_intent: detail_card
+        header: '{$t("my-trip.none_header")}'
+        body: '{$t("my-trip.none_body")}'
+        buttons:
+          - { title: '{$t("my-trip.btn_packages")}', on_select: { invoke: packages } }
+          - { title: '{$t("my-trip.btn_book")}',     on_select: { invoke: book-package } }
+      memory_note: 'This pilgrim has no booking yet — offered the packages.'
+    - end: applied
 
   unavailable:
     - answer:

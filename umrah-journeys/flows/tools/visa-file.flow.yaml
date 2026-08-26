@@ -70,9 +70,21 @@ steps:
       memory_note: 'Reported {$length($cases)} open case(s) to the pilgrim.'
     - end: applied
 
+  # The most-tapped branch of the whole pack: the menu row exists before any file does.
+  # It used to be an `answer:` — no render, so the words were the AGENT's, and a pilgrim
+  # who had typed one English "Hi" got an English sentence with nothing to tap in a
+  # conversation whose every other surface was an Arabic button. Zero is a surface
+  # (craft-result-states §2): say what is missing, and offer the next move.
   no_cases:
-    - answer:
-        instructions: 'This pilgrim has no open file yet. Say so in one line and explain that a visa file opens automatically when they reserve a package — offer to show the packages.'
+    - render:
+        render_intent: detail_card
+        header: '{$t("visa-file.none_header")}'
+        body: '{$t("visa-file.none_body")}'
+        buttons:
+          - { title: '{$t("visa-file.btn_packages")}', on_select: { invoke: packages } }
+          - { title: '{$t("visa-file.btn_trip")}',     on_select: { invoke: my-trip } }
+      memory_note: 'No visa file exists yet for this pilgrim — one opens when they reserve a package.'
+    - end: applied
 
   # ── upload ───────────────────────────────────────────────────────────────
   gather_docs:
@@ -153,6 +165,8 @@ steps:
         fields:
           full_name:     '$state.traveller_name'
           passport_scan: '$state.passport_scan'
+          # Optional — a null here leaves the stored value alone rather than clearing it.
+          personal_photo: '$state.personal_photo'
           # From the scan itself — the two fields this entity has always declared and never held.
           passport_number: '$state.passport_number'
           nationality:     '$state.nationality'
@@ -172,8 +186,23 @@ steps:
         media_id: '$state.passport_scan'
         caption:  '{$t("visa-file.caption", { name: $state.traveller_name })}'
       outputs:
-        ok:     [{ goto: attached }]
+        ok:     [{ goto: attach_photo }]
         failed: [{ goto: attach_failed }]
+
+  # The personal photo is a SECOND attachment, not a field on the passport's. It is
+  # optional, so most runs skip straight through — and when one fails, the passport is
+  # already filed, so the turn must not fail with it.
+  attach_photo:
+    - if: '$state.personal_photo == null'
+      then: [{ goto: attached }]
+    - do: case_attach
+      args:
+        case_id:  '$first_case.id'
+        media_id: '$state.personal_photo'
+        caption:  '{$t("visa-file.caption_photo", { name: $state.traveller_name })}'
+      outputs:
+        ok:     [{ goto: attached }]
+        failed: [{ goto: attached }]
 
   attached:
     - do: case_reply
@@ -186,6 +215,7 @@ steps:
         header: '{$t("visa-file.uploaded_header")}'
         body: '$lines($compact([
                  $t("visa-file.uploaded_body", { name: $state.traveller_name, ref: $first_case.case_number }),
+                 $state.personal_photo != null ? $t("visa-file.uploaded_photo") : null,
                  $t("visa-file.uploaded_next")
                ]), "\n")'
         buttons:

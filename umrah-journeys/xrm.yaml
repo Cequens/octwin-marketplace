@@ -40,6 +40,9 @@ entities:
       nationality:     { type: text, label: { en: 'Nationality', ar: 'الجنسية' } }
       relation:        { type: text, label: { en: 'Relation', ar: 'صلة القرابة' } }
       passport_scan:   { type: image, label: { en: 'Passport scan', ar: 'صورة الجواز' } }
+      # The collect has asked for a personal photo since it was written, and until now the
+      # entity had nowhere to put it: the pilgrim sent a document the officer never saw.
+      personal_photo:  { type: image, label: { en: 'Personal photo', ar: 'الصورة الشخصية' } }
     list: [passport_number, nationality]
     # Identity is the PAIR (booking customer, traveller name). A name alone matched
     # project-wide, so two families each travelling with a «محمد» were ONE pilgrim
