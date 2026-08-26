@@ -75,13 +75,6 @@ entry:
 steps:
   gather:
     - collect:
-        # Ask these as ONE native WhatsApp form when the channel can draw one, instead of three
-        # separate turns. The photo is asked in-form too — the customer taps a picker on the third
-        # screen rather than leaving the form to attach an image.
-        #
-        # Nothing below changes. `form_flow` is a rendering choice: on web, or on an account that
-        # cannot send a form, the identical fields are asked one per turn.
-        form_flow: true
         gap_instructions: 'Ask the customer for the next item ({$collect_field}) in one short line. For the photo, ask for a clear shot of the damaged area or the dashboard. Re-call damage-check once they send it. NEVER estimate a cost yourself.'
         fields:
           - field: plate

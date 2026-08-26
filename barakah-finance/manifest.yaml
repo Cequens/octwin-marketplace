@@ -8,7 +8,7 @@
 # record; nothing is inferred.
 
 id:          barakah-finance
-version: 1.10.0
+version: 1.11.0
 description: 'Islamic home finance — indicative murabaha instalment from published rates, a complete application intake, and a credit review a real underwriter decides.'
 
 listing:

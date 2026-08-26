@@ -7,7 +7,7 @@
 # priced from a live rate card. No pack DB, no code — pure YAML.
 
 id:          swiftship-courier
-version: 1.9.0
+version: 1.10.0
 description: 'Courier & last-mile — track a shipment, book a pickup priced from the live rate card, and raise a claim that a real claims officer decides.'
 
 listing:

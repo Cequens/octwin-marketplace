@@ -23,11 +23,6 @@ entry:
 steps:
   quiz:
     - collect:
-        # A REQUEST, not a guarantee. Asked as ONE native form where that is possible, and
-        # field-by-field everywhere else — on web (no form client) and on any business Meta
-        # has not verified, which is most of them. Both paths collect the same `$state`, so
-        # nothing else in this node changes.
-        form_flow: true
         derive:
           # The quiz answers become one natural-language brief; the semantic
           # search embeds it, so the match improves as the catalog copy improves.

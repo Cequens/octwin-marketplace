@@ -7,7 +7,7 @@
 # No pack DB, no code — pure YAML.
 
 id:          ironpulse-fitness
-version: 1.6.0
+version: 1.7.0
 description: 'Fitness club — class timetable with real seat capacity, personal-trainer sessions, membership enquiries and reminders.'
 
 listing:

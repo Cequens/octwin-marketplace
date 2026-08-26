@@ -68,16 +68,6 @@ steps:
 
   collect_inputs:
     - collect:
-        # Ask all five in ONE WhatsApp form (a formFlow) instead of five turns. A
-        # financing enquiry is exactly the shape that suits it: every field is either a
-        # picker or plain text, so nothing here needs a native affordance a form cannot
-        # draw — no map pin, no contact-share, no upload.
-        #
-        # A REQUEST, not a guarantee. It falls back to asking field by field whenever a
-        # form cannot be sent, which includes web (no form client) and any business that
-        # has not passed Meta verification. Both paths collect the same `$state`, so
-        # `derive:`, `before_each:` and `compute` below are untouched either way.
-        form_flow: true
         derive:
           # Resolved from the pickers' numeric selections — never from typed text.
           down_pct:  '$enum_lookup($state.down_payment, { p10: 0.1, p20: 0.2, p30: 0.3, p50: 0.5 }, 0.2)'

@@ -73,11 +73,6 @@ steps:
 
   collect_fields:
     - collect:
-        # A REQUEST, not a guarantee. Asked as ONE native form where that is possible, and
-        # field-by-field everywhere else — on web (no form client) and on any business Meta
-        # has not verified, which is most of them. Both paths collect the same `$state`, so
-        # nothing else in this node changes.
-        form_flow: true
         before_each:
           - assign: { class_label: null, class_discipline: null, trainer_label: null, plan_label: null }
           - if: '$state.class_id != null'

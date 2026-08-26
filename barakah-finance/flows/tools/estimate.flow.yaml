@@ -33,11 +33,6 @@ entry:
 steps:
   gather:
     - collect:
-        # A REQUEST, not a guarantee. Asked as ONE native form where that is possible, and
-        # field-by-field everywhere else — on web (no form client) and on any business Meta
-        # has not verified, which is most of them. Both paths collect the same `$state`, so
-        # nothing else in this node changes.
-        form_flow: true
         derive:
           # Real numbers from the pickers — never parsed text.
           down_pct: '$enum_lookup($state.down_band, { d10: 10, d15: 15, d20: 20, d30: 30, d50: 50 }, 20)'
