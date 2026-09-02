@@ -49,20 +49,31 @@ steps:
     - if: '$length($cases) == 0'      # defensive: treat an empty ok-payload like the empty port
       goto: none
     - render:
-        # carousel so each ticket carries its own action buttons. Each button is a direct-tap
-        # `invoke: ticket-status` → a FRESH run (NOT resume:$self), so the buttons never go stale
-        # after one action ends the run. (list_picker item_template.on_select throws on this build.)
-        render_intent: carousel
-        body: '{$t("ticket-status.intro")}'
-        items: '$cases'
+        # A LIST, one row per ticket, and the row OPENS that ticket's actions.
+        #
+        # This was a carousel with three buttons per card. Two problems, both invisible from
+        # here: the cards carry no image, and Meta requires a header image on every carousel
+        # card — it accepted the send, returned a wamid and DROPPED the message, so this list
+        # reached no WhatsApp customer at all. And a carousel card takes 2 buttons, not 3.
+        #
+        # A list row carries exactly one action, which is why the third button moved to the
+        # detail card rather than being squeezed in here: 10 rows beat 3 buttons for the
+        # LISTING, and the per-ticket actions belong on the ticket you opened.
+        #
+        # `on_select` is a direct-tap `invoke:` → a FRESH run (NOT resume:$self), so a row
+        # never points at a spent run. (The note that `list_picker item_template.on_select`
+        # throws was true on an older build and is not any more.)
+        render_intent: list_picker
+        header: '{$t("ticket-status.intro_header")}'
+        body:   '{$t("ticket-status.intro")}'
+        cta:    '{$t("ticket-status.cta")}'
+        items:  '$cases'
         item_template:
-          body: "$lines([ '🎫 XP-' + $item.case_number, '📂 ' + $enum_label($item.type, 'cases', ''), '📌 ' + $enum_label($item.status, 'status', $item.status) ])"
-          buttons:
-            - { title: '{$t("ticket-status.btn_details")}', on_select: { invoke: ticket-status, with: { action: details, case_id: '$item.id' } } }
-            - { title: '{$t("ticket-status.btn_docs")}',    on_select: { invoke: ticket-status, with: { action: docs,  case_id: '$item.id', case_number: '$item.case_number' } } }
-            - { title: '{$t("ticket-status.btn_reply")}',   on_select: { invoke: ticket-status, with: { action: reply, case_id: '$item.id', case_number: '$item.case_number' } } }
+          title:       "'XP-' + $item.case_number"
+          description: "$enum_label($item.type, 'cases', '') + ' · ' + $enum_label($item.status, 'status', $item.status)"
+          on_select:   { invoke: ticket-status, with: { action: details, case_id: '$item.id' } }
       memory_note: 'Listed {$length($cases)} after-sales ticket(s).'
-    - end: applied                    # listing is terminal; each button starts its OWN fresh run
+    - end: applied                    # listing is terminal; each row starts its OWN fresh run
 
   # ── 🔎 Latest status + the team's last relayed outcome ──
   # Re-read rather than render a snapshot the button carried: "latest status" has to mean
@@ -87,8 +98,14 @@ steps:
         # decision.* strings ARE the customer-facing relay copy (see locale.<lang>.yaml); null-safe.
         update_line: '$coalesce($c.decision_action, "") != "" ? "📣 " + $enum_label($c.decision_action, "decision", $c.decision_action) : null'
     - render:
+        # The two remaining actions live HERE, on the ticket the customer opened, rather than
+        # on every row of the listing. `detail_card` takes buttons, so this is one message:
+        # the latest status plus what you can do about it.
         render_intent: detail_card
         body: "$lines([ '🎫 XP-' + $c.case_number, '📂 ' + $enum_label($c.type, 'cases', ''), '📌 ' + $enum_label($c.status, 'status', $c.status), $update_line ])"
+        buttons:
+          - { title: '{$t("ticket-status.btn_docs")}',  on_select: { invoke: ticket-status, with: { action: docs,  case_id: '$c.id', case_number: '$c.case_number' } } }
+          - { title: '{$t("ticket-status.btn_reply")}', on_select: { invoke: ticket-status, with: { action: reply, case_id: '$c.id', case_number: '$c.case_number' } } }
       memory_note: 'Showed XP-{$c.case_number} detail (status {$c.status}).'
     - end: applied
 

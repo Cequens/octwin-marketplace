@@ -21,6 +21,8 @@ strings:
 
   s_header: 'Choose a time'
   s_body:   'Available slots at {branch} 👇'
+  s_header: 'Available slots'
+  s_cta:    'Choose a time'   # the list's own CTA button (list_picker requires one)
   s_cta:    'Pick a time'
 
   f_name:  'Your name?'

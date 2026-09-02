@@ -167,13 +167,22 @@ steps:
     - if: "$length($coalesce($sl.slots, $sl.rows, $sl)) == 0"
       goto: no_slots
     - render:
-        render_intent: carousel        # card shape — see show_branches note
-        body: '$t("book-test-drive.s_body", { branch: $state.branch_name })'
-        items: '$coalesce($sl.slots, $sl.rows, $sl)'
+        # A LIST, not a carousel. A time slot has no picture, and Meta requires a header image
+        # on EVERY carousel card — it accepted this send, returned a wamid and dropped the
+        # message, so no WhatsApp customer ever saw the slots. A list is also the honest shape
+        # for "pick one of these times": 10 rows against a carousel's 10 cards, one tap each,
+        # and the branch name belongs in the body rather than repeated on every card.
+        render_intent: list_picker
+        header: '$t("book-test-drive.s_header")'
+        body:   '$t("book-test-drive.s_body", { branch: $state.branch_name })'
+        cta:    '$t("book-test-drive.s_cta")'
+        items:  '$coalesce($sl.slots, $sl.rows, $sl)'
         item_template:
-          body: '$lines(["🗓️ " + $enum_label($item.dow, "dow") + " " + $item.local_date + " — " + $item.local_time, "⏱️ " + $format_number($item.slot_minutes) + " " + $t("book-test-drive.min_label"), "✅ " + $format_number($item.remaining) + " " + $t("book-test-drive.spots_label"), "🏢 " + $state.branch_name])'
-          buttons:
-            - { title: '{$t("book-test-drive.choose")}', on_select: { resume: '$self', with: { slot_start: '$item.slot_start', slot_minutes: '$item.slot_minutes', slot_label: '{$item.local_date} — {$item.local_time}' } } }
+          # Title is the WHEN — the one thing a chooser scans. Detail goes to the description,
+          # which has 72 characters against a row title's 24.
+          title:       '$enum_label($item.dow, "dow") + " " + $item.local_date + " — " + $item.local_time'
+          description: '$format_number($item.slot_minutes) + " " + $t("book-test-drive.min_label") + " · " + $format_number($item.remaining) + " " + $t("book-test-drive.spots_label")'
+          on_select:   { resume: '$self', with: { slot_start: '$item.slot_start', slot_minutes: '$item.slot_minutes', slot_label: '{$item.local_date} — {$item.local_time}' } }
       memory_note: 'Showed open test-drive slots for {$state.branch_name}.'
     - pause:
         on_resume:

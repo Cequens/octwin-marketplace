@@ -1,10 +1,12 @@
 flow_id: ticket-status
 
 strings:
-  intro: 'دي تذاكر ما بعد البيع بتاعتك. اضغط على أي إجراء تحت أي تذكرة. 👇'
+  intro: 'هذه تذاكر ما بعد البيع الخاصة بك. اضغط على أي تذكرة لعرض آخر تحديث وما يمكنك فعله. 👇'
+  intro_header: 'تذاكرك'
+  # The list's own CTA button — required by list_picker (it opens the list).
+  cta: 'عرض التذاكر'
 
   # أزرار الإجراءات على الكارت.
-  btn_details: '🔎 آخر تحديث'
   btn_docs:    '📎 إرسال مستند'
   btn_reply:   '💬 رد / إرسال معلومة'
 

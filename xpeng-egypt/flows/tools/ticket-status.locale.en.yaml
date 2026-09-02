@@ -1,10 +1,12 @@
 flow_id: ticket-status
 
 strings:
-  intro: 'Here are your after-sales tickets. Tap an action under any ticket. 👇'
+  intro: 'Here are your after-sales tickets. Tap one to see its latest update and what you can do. 👇'
+  intro_header: 'Your tickets'
+  # The list's own CTA button — required by list_picker (it opens the list).
+  cta: 'View tickets'
 
-  # Card action buttons.
-  btn_details: '🔎 Latest update'
+  # Actions on ONE opened ticket (the detail card). Listing rows carry no buttons.
   btn_docs:    '📎 Send a document'
   btn_reply:   '💬 Reply / send info'
 
