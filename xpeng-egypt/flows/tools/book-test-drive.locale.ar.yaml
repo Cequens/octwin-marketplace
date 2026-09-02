@@ -21,8 +21,6 @@ strings:
 
   s_header: 'اختار الموعد'
   s_body:   'المواعيد المتاحة في فرع {branch} 👇'
-  s_header: 'المواعيد المتاحة'
-  s_cta:    'اختر موعداً'   # the list's own CTA button (list_picker requires one)
   s_cta:    'اختار الموعد'
 
   f_name:  'اسمك الكريم؟'
