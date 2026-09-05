@@ -1,0 +1,6 @@
+flow_id: my-bookings
+
+strings:
+  header:      '🧾 Your bookings'
+  btn_rooms:   '🛏️ Rooms'
+  btn_book:    '📅 New booking'

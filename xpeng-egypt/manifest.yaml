@@ -2,7 +2,7 @@
 # Strict schema: unknown keys are rejected on deploy. Keep `octwin validate` green.
 
 id:          xpeng-egypt
-version: 4.4.0
+version: 4.5.0
 description: 'XPeng Egypt assistant — browse models, capture leads, book test drives, activate the XPeng App, and open after-sales support tickets on WhatsApp & web (AR/EN).'
 
 # Storefront face. Without this block the pack still publishes and installs, but
@@ -30,6 +30,7 @@ widget:
 # records / scheduling / casework are unlocked by the sibling declaration files
 # (xrm.yaml / scheduling.yaml / worklist.yaml), not by an adapter.
 supported_channels: [whatsapp, web]
+supported_languages: [ar, en]
 required_adapters:  [messaging]
 
 # Default language for platform-emitted copy + `$t()` lookups. The agent still

@@ -1,0 +1,16 @@
+flow_id: home
+
+strings:
+  header:          '🌯 Shawarma Express'
+  greeting:        'Hello! 🌯 Order now and we will deliver to your door.'
+  in_basket:       '🛒 You have {count} item(s) in your basket.'
+  live_order:      '🛵 You have {count} order(s) on the way.'
+  cta:             'Pick'
+  row_menu:        '🌯 Menu'
+  row_menu_d:      'Shawarma · grills · sides · drinks'
+  row_best:        '🔥 Most ordered'
+  row_best_d:      'Our most popular items'
+  row_basket:      '🛒 My basket'
+  row_basket_d:    'Check your basket and complete the order'
+  row_track:       '🛵 Track my order'
+  row_track_d:     'Your orders and where they are'

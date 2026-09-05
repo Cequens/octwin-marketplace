@@ -1,0 +1,22 @@
+flow_id: my-donations
+
+strings:
+  header: '🧾 My donations'
+  intro:  'You have {count} recorded donation(s).'
+  cta:    'Choose a donation'
+
+  # Single-donation card
+  d_header:       '🧾 Donation details'
+  d_appeal:       '🌱 Campaign: {appeal}'
+  d_amount:       '💰 Amount: {amount}'
+  d_stage:        '📌 Status: {stage}'
+  d_ref:          '🔖 Transaction number: {ref}'
+  d_pending_note: 'The link comes from the payment gateway itself'
+  d_paid_note:    'May God reward you 🌿'
+  btn_pay:        '🔒 Complete the payment'
+  btn_receipt:    '🧾 Receipt'
+
+  stage_pending:  '⏳ Awaiting payment'
+  stage_paid:     '✅ Received'
+  stage_failed:   '❌ The payment did not go through'
+  stage_refunded: '↩️ Refunded'

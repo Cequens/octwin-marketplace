@@ -1,0 +1,9 @@
+flow_id: classes
+
+strings:
+  intro:             '🏋️ Our classes — swipe to browse:'
+  seats:             '🎟️ {seats} places in the class'
+  int.beginner:      '🟢 Beginner'
+  int.intermediate:  '🟡 Intermediate'
+  int.advanced:      '🔴 Advanced'
+  btn_book:          '📅 Book'

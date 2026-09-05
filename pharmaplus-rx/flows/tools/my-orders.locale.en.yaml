@@ -1,0 +1,6 @@
+flow_id: my-orders
+
+strings:
+  header:   '📦 Your orders'
+  btn_rx:   '📄 Send a prescription'
+  btn_otc:  '🛒 Products without a prescription'

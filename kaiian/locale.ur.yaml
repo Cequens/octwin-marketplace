@@ -1,0 +1,68 @@
+# kaiian — pack-wide Urdu strings (shared across flows). Case-type + region
+# labels follow the `$enum_label` convention `<pack>.<category>.<value>` —
+# `kaiian.cases.<type>` (issue-type labels) and `kaiian.region.<value>` (captain
+# operating regions). Both the collect pickers (`values: + enum:`) and the
+# progress/preview echoes (`$enum_label`) resolve through these single-source keys.
+#
+# `cases.*` / `status.*` / `decision.*` are the boot-enforced CASEWORK LOCALE CONTRACT,
+# checked PER LANGUAGE — this file must carry the complete set or the pack is refused at
+# load. The key after the dot is a declared id, not prose: byte-identical to
+# `locale.ar.yaml`; only the value is translated.
+#
+# NOTE: this root file is what registers `ur` for the pack. With `ar` and `ur` both being
+# Arabic-SCRIPT languages, the detector's free script pass can no longer choose between them
+# and hands the message to the model — by design, and measured at zero ur→ar errors.
+pack_id: kaiian
+strings:
+  field_picker_footer:     'فہرست میں سے منتخب کریں 👆'
+
+  # Case-type labels (category `cases`)
+  cases.extra_charge:      'زائد کٹوتی کی شکایت'
+  cases.general_complaint: 'ڈرائیور کے خلاف عام شکایت'
+  cases.unpaid_fare:       'غیر ادا شدہ کرایہ'
+  cases.account_block:     'اکاؤنٹ بند'
+  cases.vehicle_change:    'گاڑی کی تبدیلی'
+
+  # Captain operating regions (category `region`) — the routing key
+  region.central:          'وسطی علاقہ'
+  region.western:          'مغربی علاقہ'
+  region.eastern:          'مشرقی علاقہ'
+  region.northern:         'شمالی علاقہ'
+  region.southern:         'جنوبی علاقہ'
+
+  # Case status labels (category `status`) — the casework workflow states
+  status.open:             'زیرِ جائزہ'
+  status.in_progress:      'زیرِ کار'
+  status.awaiting_customer: 'آپ کے جواب کا انتظار'
+  status.resolved:          'حل ہو گیا'
+  status.closed:            'بند'
+  status.reopened:          'دوبارہ کھولا گیا'
+
+  # Decision/outcome labels (category `decision`) — shown in ticket status
+  decision.approve_refund:    'رقم کی واپسی منظور ہو گئی'
+  decision.unblock:           'اکاؤنٹ کی پابندی ہٹا دی گئی'
+  decision.resolve:           'حل ہو گیا'
+  decision.reject:            'درخواست مسترد ہو گئی'
+  decision.request_more_info: 'آپ سے اضافی معلومات درکار ہیں'
+  decision.escalate:          'درخواست اوپر بھیج دی گئی'
+
+  # Vehicle types (category `vehicle`) — captain-application intake
+  vehicle.sedan:     'سیڈان'
+  vehicle.suv:       'فور بائی فور'
+  vehicle.motorbike: 'موٹر سائیکل'
+
+  # Captain-application pipeline stages (category `stage`, xrm.yaml pipeline)
+  stage.applied:       'درخواست موصول ہو گئی'
+  stage.docs_check:    'دستاویزات کا جائزہ'
+  stage.vehicle_check: 'گاڑی کا معائنہ'
+  stage.training:      'تربیت'
+  stage.active:        'فعال کیپٹن'
+  stage.rejected:      'منظور نہیں ہوئی'
+
+  # Per-stage explainer shown under the status (category `stage_hint`)
+  stage_hint.applied:       'ہمیں آپ کی درخواست مل گئی ہے اور وہ جائزے کی فہرست میں ہے۔'
+  stage_hint.docs_check:    'ہماری ٹیم آپ کی دستاویزات دیکھ رہی ہے — کچھ کمی ہوئی تو ہم رابطہ کریں گے۔'
+  stage_hint.vehicle_check: 'اگلا مرحلہ: آپ کے علاقے کے مرکز میں گاڑی کا معائنہ۔'
+  stage_hint.training:      'آپ کو تعارفی تربیت میں شامل کر دیا گیا — شیڈول جلد بھیجیں گے۔'
+  stage_hint.active:        'آپ کا کیپٹن اکاؤنٹ فعال ہے — ہمارے ساتھ خوش آمدید!'
+  stage_hint.rejected:      'افسوس، اس بار درخواست منظور نہیں ہو سکی۔'

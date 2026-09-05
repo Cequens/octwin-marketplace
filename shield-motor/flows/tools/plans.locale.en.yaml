@@ -1,0 +1,10 @@
+flow_id: plans
+
+strings:
+  header:     '📋 Insurance plans'
+  intro:      'Pick a plan to work out an estimated premium:'
+  footer:     'The full cover and terms are in the policy document.'
+  cta:        'Plans'
+  agency:     'Agency repair'
+  workshop:   'Approved workshops'
+  excess:     'Excess {excess}'

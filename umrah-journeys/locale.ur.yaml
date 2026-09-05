@@ -1,0 +1,70 @@
+# umrah-journeys — pack-wide Urdu strings.
+#
+# The `cases.*` / `status.*` / `decision.*` blocks are the CASEWORK LOCALE
+# CONTRACT: a pack that works the `case` entity must cover, PER LANGUAGE, one
+# label per declared `work.case.types` id, all six `case` pipeline stages, and
+# every decision (the standard preset ∪ this pack's customs). Coverage is checked
+# at boot in BOTH directions — a missing key and an orphan key naming an
+# undeclared value both fail — so this file is load-bearing, not decoration.
+#
+# `stage.*` / `stage_hint.*` are the pack's own `trip` pipeline, resolved through
+# `$enum_label` so the flows never hardcode a stage word.
+#
+# The key after the dot is a declared id — byte-identical to `locale.ar.yaml`;
+# only the value is translated.
+#
+# NOTE: this root file is what registers `ur` for the pack. With `ar` and `ur` both being
+# Arabic-SCRIPT languages, the detector's free script pass can no longer choose between them
+# and hands the message to the model — by design, and measured at zero ur→ar errors. This
+# pack is the reason Urdu was picked: Pakistani pilgrims are a top-three Umrah nationality.
+
+pack_id: umrah-journeys
+strings:
+  field_picker_footer: 'فہرست میں سے منتخب کریں 👆'
+
+  # Case types (category `cases`) — one per worklist.yaml work.case.types id
+  cases.visa_file:      'ویزا فائل'
+  cases.booking_change: 'بکنگ میں تبدیلی'
+  cases.payment_proof:  'ادائیگی کا ثبوت'
+  cases.general_query:  'عام سوال'
+
+  # Case pipeline stages (category `status`) — all six, none optional
+  status.open:              'زیرِ جائزہ'
+  status.in_progress:       'زیرِ کار'
+  status.awaiting_customer: 'آپ کے جواب کا انتظار'
+  status.resolved:          'مکمل'
+  status.closed:            'بند'
+  status.reopened:          'دوبارہ کھولا گیا'
+
+  # Priority (category `priority`)
+  priority.low:    'کم'
+  priority.normal: 'عام'
+  priority.high:   'زیادہ'
+  priority.urgent: 'فوری'
+
+  # Decisions (category `decision`) — the standard preset + this pack's customs
+  decision.resolve:           'مکمل'
+  decision.reject:            'مسترد'
+  decision.request_more_info: 'آپ سے مزید دستاویزات درکار ہیں'
+  decision.escalate:          'اوپر بھیج دیا گیا'
+  decision.visa_approved:     'ویزا منظور ہو گیا 🎉'
+  decision.docs_incomplete:   'دستاویزات نامکمل ہیں'
+  decision.payment_confirmed: 'ادائیگی کی تصدیق ہو گئی'
+
+  # Trip pipeline (category `stage`) — the pack's own xrm.yaml pipeline
+  stage.enquiry:      'استفسار'
+  stage.reserved:     'بکنگ محفوظ'
+  stage.docs_pending: 'دستاویزات کا انتظار'
+  stage.visa_issued:  'ویزا جاری ہو گیا'
+  stage.ticketed:     'ٹکٹ جاری ہو گئے'
+  stage.travelled:    'سفر مکمل'
+  stage.cancelled:    'منسوخ'
+
+  # Per-stage explainer (category `stage_hint`) — what the pilgrim should do next
+  stage_hint.enquiry:      'ℹ️ ابھی بکنگ محفوظ نہیں ہوئی — پیکج بتائیں، میں آگے بڑھاتا ہوں۔'
+  stage_hint.reserved:     'ℹ️ بکنگ محفوظ ہو گئی۔ اگلا مرحلہ: پاسپورٹ کی تصاویر اپ لوڈ کریں۔'
+  stage_hint.docs_pending: 'ℹ️ دستاویزات نامکمل ہیں — پاسپورٹ اپ لوڈ کریں تاکہ ویزا کی کارروائی شروع ہو۔'
+  stage_hint.visa_issued:  'ℹ️ ویزا جاری ہو گیا 🎉 ہم ٹکٹ تیار کر رہے ہیں اور تفصیلات بھیجیں گے۔'
+  stage_hint.ticketed:     'ℹ️ ٹکٹ جاری ہو گئے — ہم سفر کا شیڈول اور روانگی کی تفصیلات بھیجیں گے۔'
+  stage_hint.travelled:    'ℹ️ اللہ آپ کی عبادت قبول فرمائے 🌙'
+  stage_hint.cancelled:    'ℹ️ یہ بکنگ منسوخ ہے۔ نئی بکنگ چاہیں تو ہم حاضر ہیں۔'

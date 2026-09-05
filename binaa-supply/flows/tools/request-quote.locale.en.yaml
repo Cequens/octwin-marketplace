@@ -1,0 +1,36 @@
+flow_id: request-quote
+
+strings:
+  label.material:      'Item needed'
+  label.qty:           'Quantity'
+  label.site:          'Delivery site'
+  label.pin:           'Location on the map'
+  skip_pin:            'The name is enough ⏭️'
+  label.name:          'Customer name'
+  unit_generic:        'unit'
+
+  field_header.site:   '📍 Delivery site'
+  field_body.site:     'Where would you like us to deliver?'
+  field_cta.site:      'Pick the location'
+
+  confirm_header:      '📝 Review your request'
+  confirm_footer:      'Confirm and we will file the request with sales.'
+  preview.material:    '🧱 Item: {material}'
+  preview.sku:         '🏷️ Code: {sku}'
+  preview.qty:         '🔢 Quantity: {qty} {unit}'
+  preview.total:       '💰 Estimated total: {total}'
+  preview.no_price:    '💰 Sales will approve the price and send it to you.'
+  preview.site:        '📍 Delivery: {site}'
+  preview.name:        '👤 In the name of: {name}'
+  btn_confirm:         '✅ Confirm the request'
+  btn_cancel:          '❌ Cancel'
+
+  filed_header:        '✅ Your request is filed'
+  filed_ref:           '🧾 Request number: {ref}'
+  filed_line:          '🧱 {material} — {qty} {unit}'
+  filed_total:         '💰 Estimated total: {total}'
+  filed_next:          'Sales will review the request and come back with an approved quote.'
+  offline_note:        'ℹ️ We saved your request on our side and told sales. The sales system may take a little while to update.'
+  btn_my_quotes:       '📄 My requests'
+  btn_more:            '🧱 Other items'
+  aborted:             'No problem, the request is cancelled. We are here whenever you need us.'

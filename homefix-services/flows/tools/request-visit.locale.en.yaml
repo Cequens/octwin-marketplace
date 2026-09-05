@@ -1,0 +1,83 @@
+flow_id: request-visit
+
+strings:
+  # The flow's OWN prompt. English — it instructs the model rather than speaking to the customer,
+  # so it is byte-identical to the Arabic file rather than translated. `visible_issue` stays in
+  # Egyptian Arabic ON PURPOSE even for an English conversation: it is written into the work order
+  # that a dispatcher reads, so the stored value must not change language with the customer.
+  vision_prompt: >-
+    A photograph of a household fault a technician has been asked to fix. Reply as JSON:
+    {"trade":"plumbing|electrical|ac|carpentry|painting|appliance|other",
+    "urgency":"routine|soon|emergency",
+    "visible_issue":"one or two short lines in Egyptian Arabic describing ONLY what is visible"}.
+    Judge urgency from visible harm — water actively escaping or exposed live wiring is emergency.
+    Never quote a price and never say whether something is safe to use.
+  progress.header:   '🛠️ Technician visit request'
+  progress.service:  '🔧 Service: {service}'
+  progress.urgency:  '✅ How urgent'
+  progress.emirate:  '✅ Emirate'
+
+  label.service:  'Service needed'
+  label.urgency:  'How urgent'
+  label.emirate:  'Emirate'
+  label.property: 'Address'
+  new_address:    '➕ New address'
+  field_header.property: '🏠 Which address is the visit for?'
+  field_cta.property:    'My addresses'
+  label.address:  'Address — building, flat and floor number'
+  label.pin:      'Your location on the map'
+  label.contact:  'Contact name'
+  label.phone:    'A number to call on arrival'
+  label.window:   'Preferred time'
+  label.fault:    'Describe the problem'
+  label.photo:    'A photo of the problem (optional)'
+  skip:           'Skip ⏭️'
+  skip_pin:       'The address is enough ⏭️'
+
+  field_header.service: '🔧 Which service do you need?'
+  field_cta.service:    'Services'
+  field_header.urgency: '⏱️ How urgent is it?'
+  field_cta.urgency:    'Pick'
+  field_header.emirate: '📍 Which emirate?'
+  field_cta.emirate:    'Emirates'
+  field_header.window:  '🕐 Which time suits you?'
+  field_cta.window:     'Pick'
+
+  urg.emergency:  '🚨 Emergency — within 4 hours'
+  urg.soon:       '⚡ Urgent — within 12 hours'
+  urg.routine:    '🗓️ Routine — within 48 hours'
+
+  em.dubai:      'Dubai'
+  em.sharjah:    'Sharjah'
+  em.abu_dhabi:  'Abu Dhabi'
+  em.ajman:      'Ajman'
+  em.rak:        'Ras Al Khaimah'
+
+  win.morning:    '🌅 Morning (8 — 12)'
+  win.afternoon:  '☀️ Afternoon (12 — 5)'
+  win.evening:    '🌙 Evening (5 — 9)'
+
+  preview.header:    '📋 Confirm the visit request'
+  preview.service:   '🔧 Service: {service}'
+  preview.urgency:   '⏱️ Urgency: {urgency}'
+  preview.emirate:   '📍 Emirate: {emirate}'
+  preview.address:   '🏠 Address: {address}'
+  preview.pin:       '📍 Location on the map: sent'
+  preview.window:    '🕐 Preferred time: {window}'
+  preview.callout:   '💰 Call-out fee: {fee}'
+  preview.surcharge: '🚨 Emergency call-out surcharge: {fee}'
+  preview.note:      'ℹ️ This is the call-out fee only — the cost of the repair is set after the technician inspects it, and reaches you as a quote.'
+  approve_header:    '🛠️ Review the request'
+  approve_footer:    'Tap confirm to send the request to your area team.'
+  confirm_title:     'Confirm the request ✅'
+  cancel_title:      'Cancel ❌'
+
+  done_header:  '✅ Your request has been sent'
+  done_ref:     '🧾 Work order number: #{ref}'
+  done_crew:    '👷 Assigned to the {emirate} team'
+  done_window:  '⏱️ We will be in touch within {hours} hours at the latest'
+  done_next:    '📞 The technician will call you before arriving to confirm the time.'
+  done_footer:  'You can track the request from "My requests" at any time.'
+  btn_mine:     '📋 My requests'
+  btn_services: '🔧 Services'
+  aborted:      'The request is cancelled. We are here whenever you need us 🛠️'

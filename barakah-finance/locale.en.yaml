@@ -1,0 +1,60 @@
+# barakah-finance — pack-wide English strings.
+#
+# `cases.*` / `status.*` / `decision.*` are the boot-enforced CASEWORK LOCALE CONTRACT: every
+# language this pack ships must carry the complete set, or `validateCaseworkLocaleCoverage`
+# REFUSES the pack at load. The key after the dot is a declared id from `worklist.yaml`, so it
+# stays byte-identical to `locale.ar.yaml` — only the value is translated.
+#
+# Note the decision wording: `pre_approved` says "preliminary approval", because that is what an
+# underwriter's pre-approval actually is, and `declined` is worded so it can be relayed to a
+# customer without a reason the desk did not give.
+pack_id: barakah-finance
+strings:
+  field_picker_footer: 'Pick from the list 👆'
+
+  cases.finance_application: 'Finance application'
+  cases.document_review:     'Document review'
+  cases.sharia_question:     'Sharia question'
+  cases.general_query:       'General query'
+
+  status.open:              'Received'
+  status.in_progress:       'Under study'
+  status.awaiting_customer: 'Waiting for your documents'
+  status.resolved:          'Decision issued'
+  status.closed:            'Closed'
+  status.reopened:          'Reopened'
+
+  priority.low:    'Low'
+  priority.normal: 'Normal'
+  priority.high:   'High'
+  priority.urgent: 'Urgent'
+
+  decision.resolve:           'Decision issued'
+  decision.reject:            'Not approved'
+  decision.request_more_info: 'More information needed from you'
+  decision.escalate:          'Escalated for review'
+  decision.pre_approved:      'Preliminary approval 🎉'
+  decision.declined:          'Not approved'
+  decision.docs_required:     'More documents needed'
+
+  structure.murabaha:  'Murabaha'
+  structure.ijara:     'Ijara ending in ownership'
+  structure.musharaka: 'Diminishing Musharaka'
+
+  employment.government:    'Government sector'
+  employment.private:       'Private sector'
+  employment.self_employed: 'Self-employed'
+  employment.retired:       'Retired'
+
+  city.riyadh:   'Riyadh'
+  city.jeddah:   'Jeddah'
+  city.dammam:   'Dammam'
+  city.makkah:   'Makkah'
+  city.madinah:  'Madinah'
+  city.khobar:   'Khobar'
+
+  stage.enquiry:           'Enquiry'
+  stage.estimated:         'Estimated'
+  stage.documents_pending: 'Waiting for documents'
+  stage.submitted:         'Submitted'
+  stage.withdrawn:         'Withdrawn'

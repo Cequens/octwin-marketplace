@@ -1,0 +1,6 @@
+flow_id: services
+
+strings:
+  intro:        '🔧 Our services — swipe to browse. Prices cover the call-out only:'
+  from:         '💰 Call-out from {price}'
+  btn_request:  '🛠️ Request a technician'

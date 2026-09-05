@@ -1,0 +1,16 @@
+flow_id: home
+
+strings:
+  header:             '🛠️ HomeFix Home Maintenance'
+  greeting:           'Welcome 🛠️ Describe the problem and send a photo, and we will send you a technician in your area.'
+  emergency:          '🚨 You have {count} emergency request(s) being handled right now.'
+  open:               '🧾 You have {count} open request(s).'
+  cta:                'Pick'
+  row_request:        '🛠️ Request a technician'
+  row_request_d:      'Plumbing · electrical · AC · carpentry · painting'
+  row_emergency:      '🚨 Emergency'
+  row_emergency_d:    'Major leak · power cut · danger'
+  row_services:       '🔧 Services and prices'
+  row_services_d:     'Call-out fee for each service'
+  row_mine:           '📋 My requests'
+  row_mine_d:         'The status of your work orders'

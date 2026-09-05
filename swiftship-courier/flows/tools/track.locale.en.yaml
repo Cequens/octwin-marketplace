@@ -1,0 +1,11 @@
+flow_id: track
+
+strings:
+  header:       '📦 Parcel {tn}'
+  status:       '📍 Status: {status}'
+  last_scan:    '🕐 Last update: {scan}'
+  recipient:    '👤 Recipient: {recipient}'
+  cod:          '💵 To collect on delivery: {amount}'
+  footer:       'The status comes live from the shipping system.'
+  btn_problem:  '⚠️ There is a problem'
+  btn_pickup:   '🚚 Book a collection'

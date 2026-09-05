@@ -1,0 +1,33 @@
+flow_id: my-visits
+
+strings:
+  header:        '📋 Your appointments'
+  intro:         'Pick an appointment to rate it or follow it up:'
+  cta:           'Appointments'
+  row_title:     '🗓️ Appointment #{ref}'
+
+  st.requested:  'Awaiting confirmation'
+  st.confirmed:  'Confirmed ✅'
+  st.checked_in: 'At the clinic'
+  st.completed:  'Visit complete'
+  st.cancelled:  'Cancelled'
+  st.no_show:    'Did not attend'
+
+  cancel_header: '✅ Appointment cancelled'
+  cancel_body:   'Your appointment is cancelled and the time is free for someone else. We are here if you would like a new one.'
+  btn_rebook:    '🗓️ Book a new appointment'
+  btn_mine:      '📋 My appointments'
+
+  rate_header:   '⭐ Rate your visit'
+  rate_body:     'How was your visit with {dentist} — {slot}?'
+  rate_cta:      'Rating'
+  stars5:        '⭐⭐⭐⭐⭐ Excellent'
+  stars4:        '⭐⭐⭐⭐ Very good'
+  stars3:        '⭐⭐⭐ Good'
+  stars2:        '⭐⭐ Fair'
+  stars1:        '⭐ Poor'
+
+  thanks_header:  '🙏 Thank you for your rating'
+  thanks_body:    'We saved your rating ({stars} out of 5) and it genuinely affects how our dentists are ranked.'
+  thanks_footer:  'If you would like to add a note about the visit, send it now and we will attach it to your rating.'
+  comment_thanks: '🙏 Your note arrived and has been added to your rating — thank you for your time.'

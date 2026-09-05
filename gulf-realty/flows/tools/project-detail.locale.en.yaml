@@ -1,0 +1,15 @@
+flow_id: project-detail
+
+strings:
+  developer:     '🏗️ Developer: {developer}'
+  area:          '📍 Area: {area}'
+  handover:      '🔑 Handover: {handover}'
+  from:          '💰 From {price}'
+  plan:          '📆 Payment plan: {plan}'
+  highlights:    '✨ {highlights}'
+  units_header:     '— Available units —'
+  bedrooms_suffix:  ' bedrooms'
+  sqft_suffix:      ' sq ft'
+  btn_viewing:   '🗓️ Book a viewing'
+  btn_mortgage:  '🧮 Work out the instalment'
+  btn_back:      '↩️ Other projects'

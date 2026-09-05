@@ -1,0 +1,41 @@
+flow_id: visa-file
+
+strings:
+  # The flow's OWN prompt — English, because it instructs the model rather than speaking to the
+  # pilgrim. Byte-identical to the Arabic and English files.
+  vision_prompt: >-
+    The data page of a passport. Reply as JSON:
+    {"passport_number":"exactly as printed, no spaces added or removed, else null",
+    "nationality":"country as printed, else null",
+    "full_name":"name in Latin characters as printed, else null"}.
+    Copy characters exactly. Never infer a nationality from a name or a number format.
+  status_header:     '📂 ہمارے پاس آپ کی فائلیں'
+  status_note:       'ℹ️ صورتحال ویزا ٹیم تازہ کرتی ہے، اور کسی بھی فیصلے کی اطلاع ہم فوراً دیتے ہیں۔'
+  btn_upload:        '📎 دستاویز اپ لوڈ کریں'
+  btn_query:         '💬 ہماری ٹیم سے پوچھیں'
+  btn_trip:          '🧾 میری بکنگ کی تفصیلات'
+  btn_status:        '📂 میری فائل کی صورتحال'
+  btn_more:          '📎 ایک اور پاسپورٹ اپ لوڈ کریں'
+  btn_home:          '🏠 مرکزی مینو'
+
+  label.name:        'مسافر کا نام'
+  label.passport:    'پاسپورٹ کے ڈیٹا صفحے کی تصویر'
+  label.photo:       'ذاتی تصویر (اختیاری)'
+  skip:              'چھوڑ دیں ⏭️'
+
+  caption:           '{name} کا پاسپورٹ'
+  reply:             'گاہک نے {name} کے پاسپورٹ کی تصویر اپ لوڈ کی۔'
+  uploaded_header:   '✅ دستاویز موصول ہو گئی'
+  uploaded_body:     '{name} کے پاسپورٹ کی تصویر فائل #{ref} میں شامل کر دی گئی۔'
+  uploaded_next:     'باقی مسافروں کے پاسپورٹ ایک ایک کر کے بھیجیں، ویزا ٹیم جائزہ شروع کر دے گی۔'
+
+  default_question:  'ویزا کے بارے میں سوال'
+  query_header:      '💬 آپ کا سوال موصول ہو گیا'
+  query_body:        'ہم نے آپ کے لیے فائل #{ref} کھول دی ہے، اور ہماری ٹیم {hours} گھنٹوں میں جواب دے گی۔ ان کا جواب یہیں چیٹ میں پہنچے گا۔'
+
+  # The zero branch — no file open yet.
+  none_header:       '📂 ابھی کوئی فائل نہیں'
+  none_body:         'اس وقت آپ کی کوئی ویزا فائل کھلی ہوئی نہیں۔ پیکج کی بکنگ محفوظ ہوتے ہی فائل خودکار طور پر کھل جاتی ہے، اور ویزا ٹیم فوراً کام شروع کر دیتی ہے۔'
+  btn_packages:      '🕋 پیکجز دیکھیں'
+  caption_photo:     'ذاتی تصویر — {name}'
+  uploaded_photo:    '🖼️ ہمیں ذاتی تصویر بھی مل گئی۔'

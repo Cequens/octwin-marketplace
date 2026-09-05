@@ -1,0 +1,9 @@
+flow_id: browse-projects
+
+strings:
+  intro:        '🏙️ We have {total} projects available — swipe to browse:'
+  by:           '🏗️ Developer: {developer}'
+  handover:     '🔑 Handover: {handover}'
+  from:         '💰 From {price}'
+  btn_detail:   '📋 Details'
+  btn_viewing:  '🗓️ Book a viewing'

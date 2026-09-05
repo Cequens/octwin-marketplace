@@ -1,0 +1,7 @@
+flow_id: branches
+
+strings:
+  header:      'Our branches 📍'
+  body:        'Every branch opens daily from 10am to 12 midnight. Tap a branch to book there:'
+  book:        'Book'
+  tap_to_book: 'Tap to book 🗓️'

@@ -10,7 +10,7 @@
 # No pack DB, no code — pure YAML.
 
 id:          oud-atelier
-version: 2.2.0
+version: 2.5.0
 description: 'Luxury oud & perfume boutique — fragrance quiz, product carousel, cart and checkout on WhatsApp, Arabic-first for the Gulf.'
 
 listing:
@@ -31,6 +31,7 @@ widget:
   about:  'Find your scent, browse the collection, and order here.'
 
 supported_channels: [whatsapp, web]
+supported_languages: [ar, en, es]
 # `embedding` — product_search embeds the shopper's free text. `storage` — the
 # catalog images. No data-store: the catalog, cart and orders are platform
 # system entities.
@@ -39,8 +40,13 @@ required_adapters:  [messaging, embedding, storage]
 default_settings:
   locale: ar
 
-default_conversation_context:
-  lang: { type: enum, enum: [ar, en, bilingual], default: ar, describe: 'Reply language.' }
+# No `default_conversation_context.lang:` here. That knob was copy-pasted boilerplate:
+# nothing in this pack ever read `$context.lang`, so its `en` / `bilingual` options offered
+# an operator a switch that changed nothing. Removed across the marketplace 2026-09-05.
+#
+# The language is not a manifest setting. Automatic detection reads the customer's own words
+# (`language-detect.ts`), `/lang` overrides it per contact, and what the pack can actually
+# render is derived from the `locale.<lang>.yaml` files it ships.
 
 flows:
   - home

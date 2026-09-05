@@ -1,0 +1,15 @@
+flow_id: home
+
+strings:
+  header:            '🔧 MotorCare Service'
+  greeting:          'Welcome to MotorCare 🔧 Send a photo of the problem and we will look at it right away.'
+  open_jobs:         '🧾 You have {count} open job card(s).'
+  cta:               'Pick'
+  row_damage:        '📸 Check my problem from a photo'
+  row_damage_d:      'Send a photo and we will name the department and the problem'
+  row_services:      '🔧 Service packages'
+  row_services_d:    'Periodic · AC · brakes · bodywork'
+  row_book:          '🗓️ Book a bay'
+  row_book_d:        'Pick the package and a time that suits you'
+  row_garage:        '🚗 My cars'
+  row_garage_d:      'Your cars and how their work is going'

@@ -1,0 +1,15 @@
+flow_id: home
+
+strings:
+  header:          '🌊 Red Sea Resorts'
+  greeting:        'Bienvenido 🌊 Reservamos tu estancia junto al mar en minutos.'
+  live:            '🧾 Tienes {count} reserva(s) activa(s).'
+  cta:             'Elige'
+  row_rooms:       '🛏️ Habitaciones y precios'
+  row_rooms_d:     'El Gouna · Hurgada · Marsa Alam'
+  row_sea:         '🌅 Vista al mar'
+  row_sea_d:       'Solo las habitaciones frente al mar'
+  row_book:        '📅 Reservar una estancia'
+  row_book_d:      'Elige la habitación, las fechas y el régimen'
+  row_mine:        '🧾 Mis reservas'
+  row_mine_d:      'Tus reservas, su estado y el depósito'

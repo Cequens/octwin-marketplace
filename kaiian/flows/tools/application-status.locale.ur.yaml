@@ -1,0 +1,16 @@
+flow_id: application-status
+strings:
+  # تفصیلی کارڈ (ایک درخواست) — مرحلہ اور وضاحت $enum_label کے ذریعے
+  detail.header:  '🚗 درخواست APP-{ref}'
+  detail.name:    '• نام: {name}'
+  detail.region:  '• علاقہ: {region}'
+  detail.vehicle: '• گاڑی: {vehicle}'
+  detail.stage:   '• صورتحال: {stage}'
+  detail.updated: '• آخری تازہ کاری: {when}'
+  refresh_button: 'صورتحال تازہ کریں'
+  lookup_failed:  'آپ کی درخواست تلاش کرتے ہوئے خرابی ہوئی — تھوڑی دیر بعد دوبارہ کوشش کریں۔'
+
+  # درخواستوں کی فہرست (شاذ و نادر — موبائل پر تکرار سے گریز)
+  list.header: 'آپ کی درخواستیں 🚗'
+  list.body:   'آپ کی {count} درخواستیں درج ہیں — صورتحال دیکھنے کے لیے ایک منتخب کریں:'
+  list.cta:    'درخواست منتخب کریں'

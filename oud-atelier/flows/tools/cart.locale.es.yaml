@@ -1,0 +1,57 @@
+flow_id: cart
+
+strings:
+  header:          '🛒 Tu cesta'
+  empty:           'Tu cesta está vacía por ahora. Explora la colección, o déjanos ayudarte a encontrar tu aroma ✨'
+  subtotal:        'Total: {subtotal}'
+  btn_checkout:    '✅ Completar el pedido'
+  btn_shop:        '🛍️ Ver más'
+  btn_clear:       '🗑️ Vaciar la cesta'
+  btn_quiz:        '🔎 Encuentra tu aroma'
+  btn_orders:      '📦 Mis pedidos'
+  btn_confirm:     'Confirmar el pedido ✅'
+  btn_cancel:      'Cancelar ❌'
+
+  progress.header: '🚚 Datos de entrega'
+  progress.total:  '🧾 Total del pedido: {total}'
+  progress.city:   '✅ Ciudad'
+
+  label.recipient: 'Nombre del destinatario'
+  label.city:      'Ciudad'
+  label.address:   'Dirección — barrio, calle y edificio'
+  label.pin:       'Punto de entrega en el mapa'
+  skip_pin:        'Con la dirección basta ⏭️'
+  label.payment:   'Forma de pago'
+  label.phone: 'Un número para contactar sobre el pedido'
+
+  field_header.city:    '🏙️ ¿A qué ciudad enviamos el pedido?'
+  field_cta.city:       'Ciudades'
+  field_header.payment: '💳 ¿Cómo prefieres pagar?'
+  field_cta.payment:    'Elige'
+
+  city.riyadh:   'Riad'
+  city.jeddah:   'Yeda'
+  city.dammam:   'Dammam'
+  city.makkah:   'La Meca'
+  city.madinah:  'Medina'
+  city.abha:     'Abha'
+
+  payment.cash:           '💵 Pago contra entrega'
+  payment.transfer:       '🏦 Transferencia bancaria'
+  payment.cash_plain:     'Pago contra entrega'
+  payment.transfer_plain: 'Transferencia bancaria'
+
+  confirm_header:  '📋 Confirmar el pedido'
+  confirm_footer:  'Revisa los detalles y pulsa confirmar para realizar el pedido.'
+  preview.header:  '🧾 Resumen de tu pedido:'
+  preview.total:   '💰 Total: {total}'
+  preview.to:      '👤 Destinatario: {recipient}'
+  preview.address: '📍 Dirección: {address}'
+  preview.payment: '💳 Pago: {payment}'
+
+  placed_header:   '✅ Tu pedido está realizado'
+  placed_body:     'Número de pedido: #{ref}'
+  placed_cash:     '💵 Pago contra entrega — ten preparado el importe para el repartidor.'
+  placed_transfer: '🏦 Te enviaremos el número de cuenta para la transferencia, y el pedido se envía una vez confirmada.'
+  placed_footer:   'Puedes preguntarme por tu pedido cuando quieras 📦'
+  aborted:         'El pedido está cancelado — tu cesta se conserva tal cual 🛒'

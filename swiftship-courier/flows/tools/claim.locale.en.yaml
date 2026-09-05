@@ -1,0 +1,38 @@
+flow_id: claim
+
+strings:
+  # The flow's OWN vision prompt — it knows which document it is looking at, where a pack-wide
+  # image prompt has to serve every picture a customer might send. English, because it instructs
+  # the model rather than speaking to the customer — so it is byte-identical to the Arabic file,
+  # including the duplicated "a photograph of a photograph of" (logged in the marketplace backlog;
+  # correcting it here would put the two languages out of step).
+  vision_prompt: >-
+    A photograph of a photograph of a damaged parcel or its shipping label. Reply as JSON: {"tracking_number":"tracking number exactly as printed on the label, else null",
+    "visible_damage":"one or two short lines in Egyptian Arabic describing ONLY the damage that is visible, else null"}.
+    Copy characters exactly — never correct, complete or reformat a value, and never infer one
+    that is not visible.
+  status_header:  '🎫 Your tickets'
+  status_note:    'ℹ️ Any decision from our team reaches you here in the chat straight away.'
+  btn_new:        '⚠️ New problem'
+  btn_track:      '🔍 Track a parcel'
+  btn_status:     '🎫 My tickets'
+
+  label.tracking: 'Tracking number'
+  label.type:     'Type of problem'
+  label.details:  'Details of the problem'
+
+  field_header.type: '⚠️ What exactly is the problem?'
+  field_cta.type:    'Pick'
+
+  type.late_delivery:  '⏰ The parcel is late'
+  type.damaged_parcel: '📦 The parcel is damaged'
+  type.lost_parcel:    '❓ The parcel is lost'
+  type.wrong_address:  '📍 Wrong address'
+  type.general_query:  '💬 General question'
+
+  subject:            'Complaint about parcel {tn}'
+  opened_header:      '🎫 Your complaint has been filed'
+  opened_ref:         '🎫 Ticket number: #{ref}'
+  opened_sla:         '⏱️ Our team will reply within {hours} hours'
+  opened_no_promise:  'ℹ️ The complaints team reviews the parcel and the paperwork, and any compensation is decided by them — not from here.'
+  opened_footer:      'Their reply will reach you here in the chat.'

@@ -1,0 +1,6 @@
+flow_id: rooms
+
+strings:
+  intro:      '🛏️ Our available rooms — swipe to browse:'
+  from:       '💰 From {price} per night (bed and breakfast)'
+  btn_book:   '📅 Book'

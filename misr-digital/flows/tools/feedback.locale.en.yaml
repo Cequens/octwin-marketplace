@@ -1,0 +1,16 @@
+# Every user-visible string for the feedback flow, keyed by `$t("feedback.<key>")`.
+# Formal register — see the note in home.locale.en.yaml.
+flow_id: feedback
+
+strings:
+  # The rating ask, shown when ⭐ is tapped on a service card (no `helpful` yet).
+  ask_rating:      'Was the information on "{service}" sufficient for what you needed?'
+  fb_yes:          '👍 Yes, sufficient'
+  fb_no:           '👎 Something was missing'
+  thanks_positive: 'Thank you 🙏 Your feedback helps us improve the information provided to other citizens.'
+  ask_missing:     'We apologise for that 🙏 Could you tell us what was missing from the information on "{service}"? (The documents? The fees? The processing time?) Please write your note in a message and we will review it.'
+  thanks_comment:  'We have received your note, thank you very much 🙏 We will review the information for this service and update it.'
+  comment_failed:  'We apologise, your note was not recorded. Could you please send it again? 🙏'
+  # Every terminal offers a way onward — no conversation should end on a full stop.
+  btn_related:     '🔎 Another service'
+  btn_home:        '🗂️ Main menu'

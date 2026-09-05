@@ -1,0 +1,66 @@
+flow_id: apply
+
+strings:
+  # The flow's OWN vision prompt — it knows which document it is looking at, where a pack-wide
+  # image prompt has to serve every picture a customer might send. English, because it instructs
+  # the model rather than speaking to the customer — so it is byte-identical to the Arabic file
+  # rather than translated.
+  vision_prompt: >-
+    A photograph of a salary certificate or payslip. Reply as JSON: {"monthly_income":"net monthly figure as a NUMBER only, no currency or separators, else null","full_name":"employee name as printed, else null",
+    "employer":"employing company as printed, else null"}.
+    Copy characters exactly — never correct, complete or reformat a value, and never infer one
+    that is not visible.
+  progress.header:      '📝 Finance application'
+  progress.product:     '📋 Product: {product}'
+  progress.employment:  '✅ Employer'
+  progress.city:        '✅ City'
+
+  label.product:      'Product'
+  label.name:         'Full name'
+  label.employment:   'Employer'
+  label.city:         'City'
+  label.income:       'Monthly income'
+  label.obligations:  'Current monthly commitments'
+
+  field_header.product:    '📋 Which finance product?'
+  field_cta.product:       'Products'
+  field_header.employment: '💼 Who do you work for?'
+  field_cta.employment:    'Pick'
+  field_header.city:       '📍 Which city?'
+  field_cta.city:          'Cities'
+
+  emp.government:    'Government sector'
+  emp.private:       'Private sector'
+  emp.self_employed: 'Self-employed'
+  emp.retired:       'Retired'
+
+  city.riyadh:   'Riyadh'
+  city.jeddah:   'Jeddah'
+  city.dammam:   'Dammam'
+  city.makkah:   'Makkah'
+  city.madinah:  'Madinah'
+  city.khobar:   'Khobar'
+
+  preview.header:      '📋 Review your application'
+  preview.product:     '📋 Product: {product}'
+  preview.name:        '👤 Name: {name}'
+  preview.employment:  '💼 Employer: {employment}'
+  preview.city:        '📍 City: {city}'
+  preview.income:      '💰 Monthly income: {income}'
+  preview.consent:     'ℹ️ By confirming, you agree to the application being studied and to a credit check.'
+  approve_header:      '📝 Confirm your submission'
+  approve_footer:      'Tap confirm to send the application to the finance committee.'
+  confirm_title:       'Confirm submission ✅'
+  cancel_title:        'Cancel ❌'
+
+  case_subject:     'Finance application — {name}'
+  done_header:      '✅ Your application has been submitted'
+  done_ref:         '🧾 Application number: #{ref}'
+  done_case:        '📂 Study number: #{ref} — a reply within {hours} hours'
+  done_docs:        '📎 Send photos of your ID, salary certificate and bank statement to speed up the study.'
+  done_no_promise:  'ℹ️ We cannot tell you the outcome now — the decision comes from the finance committee and will reach you here.'
+  done_footer:      'Any decision or request for documents will reach you in this conversation.'
+  done_no_case:     '⚠️ Your application is saved, but we could not open the study automatically — our team will open it by hand and get in touch.'
+  btn_products:     '📋 Products'
+  btn_home:         '🏠 Main menu'
+  aborted:          'The submission is cancelled. We are here whenever you need us 🏡'

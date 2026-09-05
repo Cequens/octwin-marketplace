@@ -1,0 +1,15 @@
+flow_id: home
+
+strings:
+  header:           '📦 SwiftShip'
+  greeting:         'Hello! 📦 Send your tracking number and I will tell you exactly where your parcel is.'
+  open_tickets:     '🎫 You have {count} open ticket(s) with our team.'
+  cta:              'Pick'
+  row_track:        '🔍 Track a parcel'
+  row_track_d:      'Type the tracking number and find out where it is'
+  row_pickup:       '🚚 Book a collection'
+  row_pickup_d:     'A price from the rate card and a collection time'
+  row_claim:        '⚠️ Problem with a parcel'
+  row_claim_d:      'Late · damaged · lost · wrong address'
+  row_status:       '🎫 My tickets'
+  row_status_d:     'Your complaints and what our team decided'

@@ -1,0 +1,65 @@
+flow_id: otc
+
+strings:
+  intro:           '🛒 We have {total} products available without a prescription — swipe and pick:'
+  btn_add:         '🛒 Add to basket'
+  btn_basket:      '🧾 My basket'
+  btn_browse:      '🛒 Browse the shelf'
+  btn_rx:          '📄 Send a prescription'
+  btn_checkout:    '✅ Complete the order'
+  btn_orders:      '📦 My orders'
+  btn_confirm:     'Confirm the order ✅'
+  btn_cancel:      'Cancel ❌'
+  basket_header:   '🧾 Your basket'
+  basket_empty:    'Your basket is empty. Pick from the shelf, or send a prescription to the pharmacist.'
+  # Was: "the branch will call you to confirm the order and payment" — a promise nothing kept,
+  # because the basket created no order and notified nobody. Now it points at the real next step.
+  basket_footer:   'Tap "Complete the order" and we will take your delivery details.'
+  subtotal:        '💰 Products total: {subtotal}'
+  fee:             '🛵 Delivery: {fee}'
+  total:           '📌 Total: {total}'
+
+  progress.header: '🚚 Delivery details'
+  progress.total:  '🧾 Order total: {total}'
+  progress.area:   '✅ Area'
+
+  label.name:      'Name'
+  label.area:      'Area'
+  label.address:   'Address — street, building and flat'
+  label.pin:       'Delivery point on the map'
+  skip_pin:        'The address is enough ⏭️'
+  label.phone:     'Mobile number'
+  label.payment:   'Payment method'
+
+  field_header.area:    '📍 Deliver to which area?'
+  field_cta.area:       'Areas'
+  field_header.payment: '💳 How would you like to pay?'
+  field_cta.payment:    'Pick'
+
+  area.nasr_city:   'Nasr City'
+  area.maadi:       'Maadi'
+  area.heliopolis:  'Heliopolis'
+  area.zamalek:     'Zamalek'
+  area.october:     '6th of October'
+  area.giza:        'Giza'
+
+  pay.cash:         '💵 Cash on delivery'
+  pay.card:         '💳 Card on delivery'
+  pay.cash_plain:   'Cash on delivery'
+  pay.card_plain:   'Card on delivery'
+
+  confirm_header:   '📋 Confirm the order'
+  confirm_footer:   'Check the order and tap confirm.'
+  preview.header:   '🧾 Your order:'
+  preview.to:       '👤 Name: {name}'
+  preview.address:  '📍 Address: {address}'
+  preview.payment:  '💳 Payment: {payment}'
+
+  case_subject:     'Shelf order #{ref}'
+  placed_header:    '✅ Your order is placed'
+  placed_ref:       '🧾 Order number: #{ref}'
+  placed_sla:       '🛵 The pharmacy is preparing your order and will contact you within {hours} hours at the latest.'
+  placed_cash:      '💵 Please have the cash ready for the delivery driver.'
+  placed_card:      '💳 The driver will have a card machine with them.'
+  placed_no_case:   '⚠️ Your order is saved, but we could not send it to the packing desk automatically — the pharmacy is following it up by hand.'
+  order_aborted:    'The order is cancelled — your basket is untouched 🧾'

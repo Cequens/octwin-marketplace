@@ -1,0 +1,5 @@
+# oud-atelier — pack-wide English strings shared across flows.
+# Keys must MATCH `locale.ar.yaml` exactly — same names, same {placeholders}.
+pack_id: oud-atelier
+strings:
+  greeting: 'Welcome to Oud Atelier 🕌 How may I help you?'

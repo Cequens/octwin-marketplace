@@ -1,0 +1,52 @@
+flow_id: mortgage-estimate
+
+strings:
+  # The flow's OWN vision prompt — it knows which document it is looking at, where a pack-wide
+  # image prompt has to serve every picture a customer might send. English, because it instructs
+  # the model rather than speaking to the customer — byte-identical to the Arabic file.
+  vision_prompt: >-
+    A photograph of a salary certificate or payslip. Reply as JSON: {"monthly_income":"net monthly figure as a NUMBER only, no currency or separators, else null",
+    "employer":"employing company as printed, else null",
+    "nationality":"nationality as printed, else null"}.
+    Copy characters exactly — never correct, complete or reformat a value, and never infer one
+    that is not visible.
+  progress.header:   '🧮 Finance calculator'
+  progress.project:  '🏙️ Project: {project}'
+  progress.down:     '💵 Down payment: {pct}%'
+  progress.tenor:    '📆 Term: {years} years'
+
+  label.project:     'Project'
+  label.down:        'Down payment'
+  label.tenor:       'Finance term'
+  label.name:        'Name'
+  label.income:      'Monthly income'
+
+  field_header.project: '🏙️ Choose a project'
+  field_cta.project:    'Projects'
+  field_header.down:    '💵 How much is the down payment?'
+  field_cta.down:       'Pick'
+  field_header.tenor:   '📆 Finance term'
+  field_cta.tenor:      'Pick'
+
+  down.p10:  '10% down payment'
+  down.p20:  '20% down payment'
+  down.p30:  '30% down payment'
+  down.p50:  '50% down payment'
+
+  tenor.y5:  '5 years'
+  tenor.y10: '10 years'
+  tenor.y15: '15 years'
+  tenor.y20: '20 years'
+  tenor.y25: '25 years'
+
+  header:            '🧮 Estimated monthly instalment'
+  line.project:      '🏙️ {project}'
+  line.price:        '🏷️ Unit price: {amount}'
+  line.down:         '💵 Down payment ({pct}%): {amount}'
+  line.financed:     '🏦 Amount financed: {amount}'
+  line.tenor:        '📆 Term: {years} years'
+  line.monthly:      '📌 Monthly instalment: {amount}'
+  disclaimer:        'ℹ️ An estimate at a fixed murabaha rate, for guidance only — approval and the final rate come from the lender.'
+  btn_viewing:       '🗓️ Book a viewing'
+  btn_browse:        '🏙️ Other projects'
+  lead_note:         'Finance enquiry: {pct}% down over {years} years — estimated instalment {monthly}.'

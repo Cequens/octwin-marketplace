@@ -1,0 +1,6 @@
+flow_id: my-requests
+
+strings:
+  header:        '📋 آپ کی درخواستیں'
+  btn_new:       '🛠️ نئی درخواست'
+  btn_services:  '🔧 خدمات'

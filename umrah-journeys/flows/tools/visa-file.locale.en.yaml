@@ -1,0 +1,42 @@
+flow_id: visa-file
+
+strings:
+  # The flow's OWN prompt — it knows it is looking at a passport data page, where a pack-wide
+  # image prompt has to serve receipts and vaccination cards too. English, because it instructs
+  # the model rather than speaking to the pilgrim — byte-identical to the Arabic file.
+  vision_prompt: >-
+    The data page of a passport. Reply as JSON:
+    {"passport_number":"exactly as printed, no spaces added or removed, else null",
+    "nationality":"country as printed, else null",
+    "full_name":"name in Latin characters as printed, else null"}.
+    Copy characters exactly. Never infer a nationality from a name or a number format.
+  status_header:     '📂 Your files with us'
+  status_note:       'ℹ️ The status is updated by the visa team, and we tell you about any decision straight away.'
+  btn_upload:        '📎 Upload a document'
+  btn_query:         '💬 Ask our team'
+  btn_trip:          '🧾 My booking details'
+  btn_status:        '📂 My file status'
+  btn_more:          '📎 Upload another passport'
+  btn_home:          '🏠 Main menu'
+
+  label.name:        "Traveller's name"
+  label.passport:    'Photo of the passport data page'
+  label.photo:       'Personal photo (optional)'
+  skip:              'Skip ⏭️'
+
+  caption:           "{name}'s passport"
+  reply:             "The customer uploaded a photo of {name}'s passport."
+  uploaded_header:   '✅ Document received'
+  uploaded_body:     "{name}'s passport photo has been added to file #{ref}."
+  uploaded_next:     'Send the other travellers’ passports one at a time, and the visa team will begin the review.'
+
+  default_question:  'A question about the visa'
+  query_header:      '💬 We received your question'
+  query_body:        'We have opened file #{ref} for you, and our team will reply within {hours} hours. Their reply reaches you here in the chat.'
+
+  # The zero branch — no file open yet.
+  none_header:       '📂 No file yet'
+  none_body:         'You have no visa file open at the moment. A file is opened automatically as soon as a package booking is held, and the visa team starts on it right away.'
+  btn_packages:      '🕋 See the packages'
+  caption_photo:     'Personal photo — {name}'
+  uploaded_photo:    '🖼️ We received the personal photo as well.'

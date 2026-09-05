@@ -1,0 +1,26 @@
+flow_id: my-schedule
+
+strings:
+  header:         '🗓️ Your classes'
+  intro:          'Your upcoming and past classes — pick a booking to view or cancel it:'
+  cta:            'My classes'
+  row_title:      '🎟️ Booking #{ref}'
+
+  detail.class:   '🏋️ Class: {class}'
+  detail.slot:    '🕐 Time: {slot}'
+
+  cancel_confirm.header: '⚠️ Confirm the cancellation'
+  cancel_confirm.body:   'This booking will be cancelled and the place offered to another member. It cannot be undone from the chat.'
+  cancel_confirm.yes:    'Yes, cancel it ✅'
+  cancel_confirm.keep:   'Keep the booking ↩️'
+  cancel_kept:    'Done — your booking stands. See you in class 💪'
+
+  cancel_header:  '✅ Booking cancelled'
+  cancel_body:    'Your booking is cancelled, the place is free for another member, and we have stopped the reminders for this class. We are here if you want a different time.'
+
+  already_header: 'ℹ️ Nothing to cancel'
+  already_body:   'This booking is already "{status}", so there is no need to cancel it again.'
+  not_found:      'We could not find that booking. Please open "My classes" and pick from the list.'
+
+  btn_book:       '📅 Book a class'
+  btn_mine:       '🗓️ My classes'

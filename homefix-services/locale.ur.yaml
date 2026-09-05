@@ -1,0 +1,57 @@
+# homefix-services — pack-wide Urdu strings.
+#
+# `urgency.*` / `emirate.*` / `window.*` label the select values the flows echo back,
+# and `stage.*` / `stage_hint.*` the `work_order` pipeline — all resolved through
+# `$enum_label`, so no flow hardcodes a value's wording. `decision.*` labels the
+# dispatch dispositions declared in worklist.yaml.
+#
+# The key after the dot is a declared id, not prose — byte-identical to `locale.ar.yaml`;
+# only the value is translated.
+#
+# NOTE: this root file is what registers `ur` for the pack. With `ar` and `ur` both being
+# Arabic-SCRIPT languages, the detector's free script pass can no longer choose between them
+# and hands the message to the model — by design, and measured at zero ur→ar errors.
+pack_id: homefix-services
+strings:
+  field_picker_footer: 'فہرست میں سے منتخب کریں 👆'
+
+  urgency.emergency:  'ہنگامی 🚨'
+  urgency.soon:       'فوری ⚡'
+  urgency.routine:    'عام 🗓️'
+
+  emirate.dubai:      'دبئی'
+  emirate.sharjah:    'شارجہ'
+  emirate.abu_dhabi:  'ابوظہبی'
+  emirate.ajman:      'عجمان'
+  emirate.rak:        'راس الخیمہ'
+
+  window.morning:     'صبح'
+  window.afternoon:   'دوپہر'
+  window.evening:     'شام'
+
+  trade.plumbing:     'پلمبنگ'
+  trade.electrical:   'بجلی'
+  trade.ac:           'ایئر کنڈیشننگ'
+  trade.carpentry:    'کارپینٹری'
+  trade.painting:     'پینٹ'
+  trade.appliance:    'گھریلو آلات'
+  trade.other:        'دیگر'
+
+  stage.received:       'درخواست موصول'
+  stage.dispatched:     'کاریگر روانہ 👷'
+  stage.on_site:        'کاریگر موقع پر'
+  stage.awaiting_parts: 'پرزہ جات کا انتظار'
+  stage.completed:      'مکمل ✅'
+  stage.cancelled:      'منسوخ'
+
+  stage_hint.received:       'ℹ️ آپ کے علاقے کی ٹیم کے پاس درخواست پہنچ گئی ہے اور کاریگر مقرر کیا جا رہا ہے۔'
+  stage_hint.dispatched:     'ℹ️ کاریگر مقرر ہو گیا — وہ پہنچنے سے پہلے آپ کو فون کرے گا۔'
+  stage_hint.on_site:        'ℹ️ کاریگر اس وقت موقع پر موجود ہے۔'
+  stage_hint.awaiting_parts: 'ℹ️ پرزہ جات درکار ہیں — دستیاب ہوتے ہی ہم آپ کو وقت بتا دیں گے۔'
+  stage_hint.completed:      'ℹ️ کام مکمل ہو گیا۔ اگر مسئلہ دوبارہ ہو تو فوراً رابطہ کریں۔'
+  stage_hint.cancelled:      'ℹ️ یہ درخواست منسوخ ہے۔'
+
+  decision.technician_assigned: 'کاریگر مقرر کر دیا گیا'
+  decision.quote_sent:          'تخمینہ بھیج دیا گیا'
+  decision.parts_needed:        'پرزہ جات درکار ہیں'
+  decision.job_done:            'کام مکمل ہو گیا'

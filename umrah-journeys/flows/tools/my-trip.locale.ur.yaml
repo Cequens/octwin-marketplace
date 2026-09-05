@@ -1,0 +1,13 @@
+flow_id: my-trip
+
+strings:
+  header:        '🧾 آپ کی بکنگ'
+  pax_suffix:    ' مسافر'
+  btn_visa:      '📂 ویزا کی صورتحال'
+  btn_upload:    '📎 دستاویز اپ لوڈ کریں'
+  btn_packages:  '🕋 پیکجز'
+
+  # The zero branch — no booking yet.
+  none_header:   '🧾 ابھی کوئی بکنگ نہیں'
+  none_body:     'ہمارے پاس ابھی آپ کی کوئی بکنگ درج نہیں۔ کیا آپ دستیاب پیکجز دیکھنا چاہیں گے تاکہ ہم ایک محفوظ کر دیں؟'
+  btn_book:      '📝 پیکج بک کریں'

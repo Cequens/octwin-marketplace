@@ -1,0 +1,19 @@
+flow_id: home
+
+strings:
+  header:        '🌱 Nakhla Giving'
+  greeting:      'Welcome to Nakhla Giving — your donation reaches the beneficiary directly.'
+  pending:       '⏳ You have {count} donation(s) waiting for payment.'
+  footer:        'A licensed charity · instant receipt on WhatsApp'
+  cta:           'How would you like to give?'
+
+  row_appeals:   '📋 Available campaigns'
+  row_appeals_d: 'See where your donations go'
+  row_donate:    '🌱 Donate now'
+  row_donate_d:  'Choose a campaign and an amount, and we will send a secure payment link'
+  row_p100:      '💚 Give SAR 100'
+  row_p250:      '💚 Give SAR 250'
+  row_p500:      '💚 Give SAR 500'
+  row_preset_d:  'Choose the campaign and we take you straight to payment'
+  row_mine:      '🧾 My donations'
+  row_mine_d:    'Your donation history and receipts'

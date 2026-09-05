@@ -1,0 +1,8 @@
+flow_id: branches
+
+strings:
+  header: 'Our branches 📍'
+  body:   'These are our branches and their addresses. Pick one to see its doctors and book 👇'
+  cta:    'Branches'
+  phone:  '☎️ {phone}'
+  empty:  'We have no branches available right now.'

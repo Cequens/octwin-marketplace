@@ -7,7 +7,7 @@
 # No pack DB, no code — pure YAML.
 
 id:          glamour-salon
-version: 1.6.0
+version: 1.8.0
 description: 'Beauty salon & spa — service menu, stylist booking that respects real treatment lengths, reminders, and a rating that ranks the team.'
 
 listing:
@@ -28,13 +28,19 @@ widget:
   about:  'Book a stylist, choose your treatment, and see real availability.'
 
 supported_channels: [whatsapp, web]
+supported_languages: [ar, en]
 required_adapters:  [messaging]
 
 default_settings:
   locale: ar
 
-default_conversation_context:
-  lang: { type: enum, enum: [ar, en, bilingual], default: ar, describe: 'Reply language.' }
+# No `default_conversation_context.lang:` here. That knob was copy-pasted boilerplate:
+# nothing in this pack ever read `$context.lang`, so its `en` / `bilingual` options offered
+# an operator a switch that changed nothing. Removed across the marketplace 2026-09-05.
+#
+# The language is not a manifest setting. Automatic detection reads the customer's own words
+# (`language-detect.ts`), `/lang` overrides it per contact, and what the pack can actually
+# render is derived from the `locale.<lang>.yaml` files it ships.
 
 flows:
   - home

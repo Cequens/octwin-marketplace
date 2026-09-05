@@ -1,0 +1,18 @@
+flow_id: home
+
+strings:
+  header:            '🕋 Umrah and Hajj Journeys'
+  greeting:          'Welcome 🌙 We will help you choose your package and take care of the visa.'
+  live_trips:        '🧾 You have {count} live booking(s).'
+  open_cases:        '📂 You have {count} file(s) being handled by our team.'
+  cta:               'Pick'
+  row_packages:      '🕋 Umrah packages'
+  row_packages_d:    'Economy · comfort · Ramadan'
+  row_hajj:          '🐫 Hajj packages'
+  row_hajj_d:        'Permit Hajj with a Mina camp'
+  row_book:          '📝 Book a package'
+  row_book_d:        'We collect the group details and hold the booking'
+  row_visa:          '📂 Visa file'
+  row_visa_d:        'Upload passports and follow the visa status'
+  row_trip:          '🧾 My booking'
+  row_trip_d:        'Your trip details and where they stand'

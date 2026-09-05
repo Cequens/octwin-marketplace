@@ -1,0 +1,48 @@
+flow_id: fragrance-finder
+
+strings:
+  progress.header:   '🔎 Encuentra tu aroma'
+  progress.family:   '✅ Familia olfativa'
+  progress.occasion: '✅ Ocasión'
+
+  label.family:   'Familia olfativa'
+  label.occasion: 'Ocasión'
+  label.budget:   'Presupuesto'
+
+  field_header.family:   '🌿 ¿Qué familia olfativa te gusta?'
+  field_cta.family:      'Elige'
+  field_header.occasion: '🎯 ¿Para qué ocasión?'
+  field_cta.occasion:    'Elige'
+  field_header.budget:   '💰 ¿Cuál es tu presupuesto?'
+  field_cta.budget:      'Elige'
+
+  family.oud:    '🪵 Oud y amaderados'
+  family.floral: '🌹 Rosa y florales'
+  family.amber:  '🍯 Ámbar y almizcle'
+  family.fresh:  '🍃 Fresco y ligero'
+
+  occasion.daily:   '☀️ Uso diario'
+  occasion.evening: '🌙 Noches y ocasiones'
+  occasion.wedding: '💍 Bodas y reuniones'
+  occasion.gift:    '🎁 Un regalo'
+
+  budget.b500:  'Hasta 500 SAR'
+  budget.b1000: 'Hasta 1.000 SAR'
+  budget.bopen: 'Sin límite'
+
+  brief.oud:     'un oud amaderado y resinoso de gran presencia'
+  brief.floral:  'un aroma suave de rosa y flores'
+  brief.amber:   'un ámbar y almizcle oriental y cálido'
+  brief.fresh:   'un aroma fresco y ligero para el día'
+  brief.daily:   'para uso diario'
+  brief.evening: 'para las noches y las ocasiones'
+  brief.wedding: 'para bodas y reuniones, de larga duración'
+  brief.gift:    'ideal como regalo, con envoltorio de lujo'
+  brief.b500:    'a un precio moderado'
+  brief.b1000:   'a un precio intermedio'
+  brief.bopen:   'de la gama de lujo'
+
+  result:          '✨ Según tus respuestas, estos son {count} de los que mejor te encajan:'
+  result_widened:  '✨ No encontré nada exacto dentro de tu presupuesto, pero estos {count} son los más cercanos a tu gusto:'
+  btn_add:         '🛒 Añadir a la cesta'
+  btn_detail:      '📋 Detalles'

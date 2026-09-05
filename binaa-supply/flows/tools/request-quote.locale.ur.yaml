@@ -1,0 +1,36 @@
+flow_id: request-quote
+
+strings:
+  label.material:      'مطلوبہ شے'
+  label.qty:           'مقدار'
+  label.site:          'ترسیل کی جگہ'
+  label.pin:           'نقشے پر مقام'
+  skip_pin:            'نام ہی کافی ہے ⏭️'
+  label.name:          'گاہک کا نام'
+  unit_generic:        'یونٹ'
+
+  field_header.site:   '📍 ترسیل کی جگہ'
+  field_body.site:     'آپ کہاں ترسیل چاہتے ہیں؟'
+  field_cta.site:      'مقام منتخب کریں'
+
+  confirm_header:      '📝 اپنی درخواست دیکھیں'
+  confirm_footer:      'تصدیق کریں تاکہ ہم درخواست سیلز کو بھیج دیں۔'
+  preview.material:    '🧱 شے: {material}'
+  preview.sku:         '🏷️ کوڈ: {sku}'
+  preview.qty:         '🔢 مقدار: {qty} {unit}'
+  preview.total:       '💰 تخمینی کل: {total}'
+  preview.no_price:    '💰 قیمت سیلز منظور کر کے آپ کو بھیجے گی۔'
+  preview.site:        '📍 ترسیل: {site}'
+  preview.name:        '👤 بنام: {name}'
+  btn_confirm:         '✅ درخواست کی تصدیق کریں'
+  btn_cancel:          '❌ منسوخ'
+
+  filed_header:        '✅ آپ کی درخواست درج ہو گئی'
+  filed_ref:           '🧾 درخواست نمبر: {ref}'
+  filed_line:          '🧱 {material} — {qty} {unit}'
+  filed_total:         '💰 تخمینی کل: {total}'
+  filed_next:          'سیلز درخواست دیکھ کر منظور شدہ قیمت کے ساتھ رابطہ کرے گی۔'
+  offline_note:        'ℹ️ ہم نے درخواست اپنے پاس محفوظ کر لی اور سیلز کو اطلاع دے دی۔ سیلز سسٹم میں تازہ کاری میں کچھ وقت لگ سکتا ہے۔'
+  btn_my_quotes:       '📄 میری درخواستیں'
+  btn_more:            '🧱 دیگر اشیاء'
+  aborted:             'کوئی بات نہیں، درخواست منسوخ کر دی گئی۔ جب ضرورت ہو ہم حاضر ہیں۔'

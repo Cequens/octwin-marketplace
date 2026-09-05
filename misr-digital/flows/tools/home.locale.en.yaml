@@ -1,0 +1,22 @@
+# Every user-visible string for the home flow, keyed by `$t("home.<key>")`.
+#
+# Register: FORMAL throughout, matching the Arabic file's فصحى. This pack fronts a
+# real government portal, so the copy carries the register a citizen expects from
+# one — casual English reads as unofficial here, however friendly. The agent prompt
+# enforces the same rule for its own free text (prompts/identity.md).
+flow_id: home
+
+strings:
+  header:       'Digital Egypt 🇪🇬'
+  # Two parts on purpose. `greeting` is the FALLBACK for the agent's own opening
+  # line and is the only half a personalised turn replaces; `value_prop` is the
+  # standing line that says what this bot is for, and always renders. They used
+  # to be one string behind `$coalesce`, which meant any agent-composed greeting
+  # silently discarded the whole explanation.
+  greeting:     'Welcome to the Digital Egypt assistant 👋'
+  value_prop:   'I can help you find the government service you need, see its required documents, fees and processing time, and then guide you to begin it on the official portal. Please choose from the list:'
+  cta:          'Choose'
+  row_services: '🗂️ Browse services by category'
+  row_find:     '🔎 Search for a service by name'
+  row_portal:   '🌐 Open the Digital Egypt portal'
+  row_faq:      '❓ Frequently asked questions'

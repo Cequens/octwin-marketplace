@@ -1,0 +1,15 @@
+flow_id: home
+
+strings:
+  header:          '🛡️ Shield Motor Insurance'
+  greeting:        'Welcome 🛡️ We can report an accident, or work out an estimated premium for you.'
+  open_claims:     '🧾 You have {count} open claim(s).'
+  cta:             'Pick'
+  row_claim:       '🚨 Report an accident'
+  row_claim_d:     'Accident · theft · glass · injury'
+  row_status:      '🧾 My claim status'
+  row_status_d:    'The assessor’s decision and the reply time'
+  row_quote:       '🧮 Work out an estimated premium'
+  row_quote_d:     'From the published pricing factors'
+  row_plans:       '📋 Plans and cover'
+  row_plans_d:     'Third party · comprehensive · agency repair'

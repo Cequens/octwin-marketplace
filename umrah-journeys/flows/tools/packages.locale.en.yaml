@@ -1,0 +1,7 @@
+flow_id: packages
+
+strings:
+  intro:       '🕋 We have {total} packages available — swipe to browse:'
+  from:        '💰 {price} per person'
+  btn_detail:  '📋 Details'
+  btn_book:    '📝 Book'

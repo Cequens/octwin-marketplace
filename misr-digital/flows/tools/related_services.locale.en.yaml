@@ -1,0 +1,12 @@
+# Strings for the related_services flow, keyed by $t("related_services.<key>").
+# Formal register — see the note in home.locale.en.yaml.
+flow_id: related_services
+
+strings:
+  header:          'Related services 🔎'
+  body:            'You may also need one of these services. Choose one to view its details and the documents required.'
+  choose:          'Choose a service'
+  tap_for_details: 'Tap to view the details and documents'
+  fallback:        'You may browse services by category, or search for a service by name.'
+  btn_categories:  '🗂️ Browse categories'
+  btn_search:      '🔎 Search by name'

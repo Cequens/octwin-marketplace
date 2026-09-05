@@ -1,0 +1,45 @@
+flow_id: book-viewing
+
+strings:
+  progress.header:   '🗓️ Booking a viewing'
+  progress.project:  '🏙️ Project: {project}'
+  progress.advisor:  '👤 Advisor: {advisor}'
+  progress.slot:     '🕐 Time: {slot}'
+
+  label.project:     'Project'
+  label.advisor:     'Property advisor'
+  label.slot:        'Time'
+  label.party:       'Number of people coming'
+  label.name:        'Name'
+
+  field_header.project: '🏙️ Which project would you like to view?'
+  field_cta.project:    'Projects'
+  field_header.advisor: '👤 Choose an advisor'
+  field_cta.advisor:    'Advisors'
+  field_header.slot:    '🕐 Available times'
+  field_cta.slot:       'Times'
+  field_header.party:   '👥 How many people are coming?'
+  field_cta.party:      'Pick'
+
+  party.one:   'One person'
+  party.two:   'Two people'
+  party.four:  'Family (3-4)'
+
+  preview.header:   '📋 Confirm the viewing'
+  preview.project:  '🏙️ Project: {project}'
+  preview.advisor:  '👤 Advisor: {advisor}'
+  preview.slot:     '🕐 Time: {slot}'
+  preview.party:    '👥 People coming: {party}'
+  approve_header:   '🗓️ Review the booking'
+  approve_footer:   'Tap confirm to complete the booking.'
+  confirm_title:    'Confirm the booking ✅'
+  cancel_title:     'Cancel ❌'
+
+  lead_note:        'Viewing booked for {slot} with {advisor}.'
+  # Double-quoted so `\n` is a REAL newline (a single-quoted YAML scalar would
+  # emit the two characters verbatim).
+  success:          "✅ Your viewing with {advisor} is confirmed — {slot}.\nBooking number: {ref}\n⏰ You will get a reminder before the appointment."
+  slot_taken:       '⚠️ Sorry, that time was booked moments ago. Pick another one and we will finish the booking.'
+  aborted:          'The booking is cancelled. We are here whenever you need us 🌟'
+  reminder.body:    '⏰ Reminder: viewing at {project} — {slot}.'
+  reminder.mine:    '📁 My requests'

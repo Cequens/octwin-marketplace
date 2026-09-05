@@ -1,0 +1,6 @@
+flow_id: contact
+
+strings:
+  header: 'Contact us 📞'
+  body:   "Phone: 01093333755\nOpening hours: daily from 10am to 12 midnight 🕙\nWe take cash or card 💳"
+  call:   '📞 Call now'

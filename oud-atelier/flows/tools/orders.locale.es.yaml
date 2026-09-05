@@ -1,0 +1,23 @@
+flow_id: orders
+
+strings:
+  header:           '📦 Tus pedidos'
+  intro:            'Elige un pedido para ver sus detalles:'
+  cta:              'Pedidos'
+  row_title:        '📦 Pedido #{ref}'
+  detail_header:    '📦 Pedido #{ref}'
+  detail_total:     '💰 Total: {total}'
+  detail_status:    '🚚 Estado: {status}'
+  detail_address:   '📍 Dirección: {address}'
+  detail_payment:   '💳 Pago: {payment}'
+  btn_back:         '↩️ Otros pedidos'
+  btn_shop:         '🛍️ Ver más'
+
+  stage.placed:     'Realizado'
+  stage.packed:     'Preparado'
+  stage.shipped:    'En camino 🚚'
+  stage.delivered:  'Entregado ✅'
+  stage.cancelled:  'Cancelado'
+
+  pay.cash:         'Pago contra entrega'
+  pay.transfer:     'Transferencia bancaria'

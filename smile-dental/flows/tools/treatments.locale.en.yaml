@@ -1,0 +1,9 @@
+flow_id: treatments
+
+strings:
+  header:      '🦷 Treatments and prices'
+  intro:       'We offer {total} treatments — pick one and we will book you in:'
+  footer:      'Prices start from the figure shown and are set after an examination.'
+  cta:         'Treatments'
+  min_suffix:  ' minutes'
+  covered:     'Covered by insurance ✅'

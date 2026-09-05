@@ -1,0 +1,10 @@
+# Strings for the find_service flow, keyed by $t("find_service.<key>").
+# Formal register — see the note in home.locale.en.yaml.
+flow_id: find_service
+
+strings:
+  ask:             'Please type the name of the service you are looking for, or what you need (for example: licence renewal, birth certificate, traffic fines) and I will search for it. 🔎'
+  header:          'Search results 🔎'
+  body:            'These are the services closest to your request. Choose one to view its details and the documents required.'
+  choose:          'Choose a service'
+  tap_for_details: 'Tap to view the details and documents'

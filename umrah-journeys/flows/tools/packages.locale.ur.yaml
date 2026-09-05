@@ -1,0 +1,7 @@
+flow_id: packages
+
+strings:
+  intro:       '🕋 ہمارے پاس {total} پیکجز دستیاب ہیں — دیکھنے کے لیے سلائیڈ کریں:'
+  from:        '💰 فی کس {price}'
+  btn_detail:  '📋 تفصیلات'
+  btn_book:    '📝 بک کریں'

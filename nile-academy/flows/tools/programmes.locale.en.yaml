@@ -1,0 +1,8 @@
+flow_id: programmes
+
+strings:
+  intro:       '📚 We have {total} programmes — swipe to browse:'
+  seats:       '💡 {seats} place(s) left'
+  full:        '⚠️ Fully booked'
+  btn_apply:   '📝 Apply'
+  btn_tour:    '🏫 Book a visit'

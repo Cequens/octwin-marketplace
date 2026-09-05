@@ -1,0 +1,51 @@
+flow_id: book-visit
+
+strings:
+  # The flow's OWN vision prompt — it knows which document it is looking at, where a pack-wide
+  # image prompt has to serve every picture a customer might send. English, because it instructs
+  # the model rather than speaking to the customer — byte-identical to the Arabic file.
+  vision_prompt: >-
+    A photograph of a dental-insurance card. Reply as JSON: {"insurer":"insurer name as printed, else null","member_id":"member number exactly as printed, no spaces added, else null",
+    "valid_until":"expiry date printed on the card as YYYY-MM-DD, else null"}.
+    Copy characters exactly — never correct, complete or reformat a value, and never infer one
+    that is not visible.
+  progress.header:    '🗓️ Booking an appointment'
+  progress.treatment: '🦷 Treatment: {treatment}'
+  progress.dentist:   '👩‍⚕️ Dentist: {dentist}'
+  progress.slot:      '🕐 Time: {slot}'
+
+  label.treatment: 'Treatment'
+  label.dentist:   'Dentist'
+  label.slot:      'Time'
+  label.complaint: 'What is troubling you'
+  label.insurer:   'Insurance company'
+  label.member:    'Membership number'
+
+  field_header.treatment: '🦷 Which treatment do you need?'
+  field_cta.treatment:    'Treatments'
+  field_header.dentist:   '👩‍⚕️ Choose a dentist'
+  field_cta.dentist:      'Dentists'
+  field_header.slot:      '🕐 Available times'
+  field_cta.slot:         'Times'
+
+  preview.header:    '📋 Confirm the appointment'
+  preview.treatment: '🦷 Treatment: {treatment}'
+  preview.dentist:   '👩‍⚕️ Dentist: {dentist}'
+  preview.slot:      '🕐 Time: {slot}'
+  preview.complaint: '📝 Complaint: {complaint}'
+  preview.insurer:   '🪪 Insurance: {insurer}'
+  approve_header:    '🗓️ Review the appointment'
+  approve_footer:    'Tap confirm to lock in the time.'
+  confirm_title:     'Confirm the appointment ✅'
+  cancel_title:      'Cancel ❌'
+
+  done_header:       '✅ Your appointment is confirmed'
+  done_body:         '👩‍⚕️ {dentist} — 🕐 {slot}'
+  done_ref:          '🧾 Booking number: #{ref}'
+  done_reminder:     '⏰ We will remind you the day before and again two hours ahead.'
+  btn_mine:          '📋 My appointments'
+  btn_treatments:    '🦷 Treatments'
+  slot_taken:        '⚠️ Sorry, that time was booked moments ago. Pick another one and we will carry on.'
+  aborted:           'The booking is cancelled. We are here whenever you need us 🦷'
+  reminder.body:     '⏰ A reminder of your appointment with {dentist} — {slot}.'
+  reminder.mine:     '📋 My appointments'

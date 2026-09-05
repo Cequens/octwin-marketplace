@@ -1,0 +1,48 @@
+flow_id: fragrance-finder
+
+strings:
+  progress.header:   '🔎 Find your scent'
+  progress.family:   '✅ Fragrance family'
+  progress.occasion: '✅ Occasion'
+
+  label.family:   'Fragrance family'
+  label.occasion: 'Occasion'
+  label.budget:   'Budget'
+
+  field_header.family:   '🌿 Which fragrance family do you like?'
+  field_cta.family:      'Pick'
+  field_header.occasion: '🎯 For which occasion?'
+  field_cta.occasion:    'Pick'
+  field_header.budget:   '💰 What is your budget?'
+  field_cta.budget:      'Pick'
+
+  family.oud:    '🪵 Oud and woody'
+  family.floral: '🌹 Rose and floral'
+  family.amber:  '🍯 Amber and musk'
+  family.fresh:  '🍃 Fresh and light'
+
+  occasion.daily:   '☀️ Everyday wear'
+  occasion.evening: '🌙 Evenings and occasions'
+  occasion.wedding: '💍 Weddings and gatherings'
+  occasion.gift:    '🎁 A gift'
+
+  budget.b500:  'Up to SAR 500'
+  budget.b1000: 'Up to SAR 1,000'
+  budget.bopen: 'No limit'
+
+  brief.oud:     'a heavy, resinous woody oud'
+  brief.floral:  'a soft rose and floral scent'
+  brief.amber:   'a warm oriental amber and musk'
+  brief.fresh:   'a light, fresh daytime scent'
+  brief.daily:   'for everyday wear'
+  brief.evening: 'for evenings and occasions'
+  brief.wedding: 'for weddings and gatherings, long-lasting'
+  brief.gift:    'suitable as a gift, with luxury wrapping'
+  brief.b500:    'at a modest price'
+  brief.b1000:   'at a mid-range price'
+  brief.bopen:   'from the luxury range'
+
+  result:          '✨ Based on your answers, here are {count} of the best matches for you:'
+  result_widened:  '✨ I did not find an exact match within your budget, but these {count} are closest to your taste:'
+  btn_add:         '🛒 Add to basket'
+  btn_detail:      '📋 Details'

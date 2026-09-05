@@ -1,0 +1,10 @@
+flow_id: products
+
+strings:
+  header:  '📋 Finance products'
+  intro:   'Pick a product to work out an estimated instalment:'
+  footer:  'Terms and rates are published and may change; the final decision rests with the finance committee.'
+  cta:     'Products'
+  rate:    'Profit rate {rate}%'
+  down:    'From {pct}% down'
+  term:    'Up to {years} years'

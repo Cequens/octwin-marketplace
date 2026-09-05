@@ -1,0 +1,6 @@
+flow_id: my-bookings
+
+strings:
+  header:      '🧾 Tus reservas'
+  btn_rooms:   '🛏️ Habitaciones'
+  btn_book:    '📅 Nueva reserva'

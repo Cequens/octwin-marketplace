@@ -1,0 +1,8 @@
+flow_id: services
+
+strings:
+  intro:      '🔧 We have {total} service packages — swipe to browse:'
+  from:       '💰 From {price}'
+  duration:   '⏱️ About {min} minutes'
+  btn_book:   '🗓️ Book'
+  btn_check:  '📸 Check from a photo'

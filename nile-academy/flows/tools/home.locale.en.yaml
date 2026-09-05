@@ -1,0 +1,13 @@
+flow_id: home
+
+strings:
+  header:              '🎓 Nile Academy'
+  greeting:            'Welcome 🎓 We will help you pick a programme and book a school visit.'
+  live:                '📂 You have {count} open application(s).'
+  cta:                 'Pick'
+  row_programmes:      '📚 Programmes and fees'
+  row_programmes_d:    'Kindergarten · primary · preparatory · secondary'
+  row_tour:            '🏫 Book a school visit'
+  row_tour_d:          'A tour with the admissions team'
+  row_apply:           '📝 Apply for admission'
+  row_apply_d:         'We collect the details and the documents'

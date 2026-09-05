@@ -1,0 +1,10 @@
+flow_id: campaigns
+
+strings:
+  intro:  'We have {count} active campaigns right now — choose the one that speaks to you.'
+
+  # Carousel card copy. A card has no title field of its own, so the name is the
+  # first markdown line of the body; `**…**` renders as bold on both channels.
+  card_title:    '**{title}**'
+  card_progress: '🎯 {raised} raised of {goal}'
+  btn_give:      '🌱 Give to this'

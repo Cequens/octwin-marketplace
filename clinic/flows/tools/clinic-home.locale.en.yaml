@@ -1,0 +1,14 @@
+flow_id: clinic-home
+
+strings:
+  header:              'Welcome to the clinic 👋'
+  body_default:        'I can help you find a doctor and book an appointment. Pick from the list 👇'
+  body_with_upcoming:  'You have {count} upcoming appointment(s). What would you like to do? 👇'
+  cta:                 'Services'
+
+  action.find:     'Find a doctor 🔍'
+  action.book:     'Book an appointment 📅'
+  action.manage:   'My appointments 🗓️'
+  action.branches: 'Our branches and addresses 📍'
+
+  memory_note:    'Showed clinic home menu'

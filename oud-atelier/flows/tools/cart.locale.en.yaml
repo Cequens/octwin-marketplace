@@ -1,0 +1,57 @@
+flow_id: cart
+
+strings:
+  header:          '🛒 Your basket'
+  empty:           'Your basket is empty just now. Browse the collection, or let us help you find your scent ✨'
+  subtotal:        'Total: {subtotal}'
+  btn_checkout:    '✅ Complete the order'
+  btn_shop:        '🛍️ Browse more'
+  btn_clear:       '🗑️ Empty the basket'
+  btn_quiz:        '🔎 Find your scent'
+  btn_orders:      '📦 My orders'
+  btn_confirm:     'Confirm the order ✅'
+  btn_cancel:      'Cancel ❌'
+
+  progress.header: '🚚 Delivery details'
+  progress.total:  '🧾 Order total: {total}'
+  progress.city:   '✅ City'
+
+  label.recipient: "Recipient's name"
+  label.city:      'City'
+  label.address:   'Address — district, street and building'
+  label.pin:       'Delivery point on the map'
+  skip_pin:        'The address is enough ⏭️'
+  label.payment:   'Payment method'
+  label.phone: 'A number to call about the order'
+
+  field_header.city:    '🏙️ Which city are we delivering to?'
+  field_cta.city:       'Cities'
+  field_header.payment: '💳 How would you prefer to pay?'
+  field_cta.payment:    'Pick'
+
+  city.riyadh:   'Riyadh'
+  city.jeddah:   'Jeddah'
+  city.dammam:   'Dammam'
+  city.makkah:   'Makkah'
+  city.madinah:  'Madinah'
+  city.abha:     'Abha'
+
+  payment.cash:           '💵 Cash on delivery'
+  payment.transfer:       '🏦 Bank transfer'
+  payment.cash_plain:     'Cash on delivery'
+  payment.transfer_plain: 'Bank transfer'
+
+  confirm_header:  '📋 Confirm the order'
+  confirm_footer:  'Check the details and tap confirm to place the order.'
+  preview.header:  '🧾 Your order summary:'
+  preview.total:   '💰 Total: {total}'
+  preview.to:      '👤 Recipient: {recipient}'
+  preview.address: '📍 Address: {address}'
+  preview.payment: '💳 Payment: {payment}'
+
+  placed_header:   '✅ Your order is placed'
+  placed_body:     'Order number: #{ref}'
+  placed_cash:     '💵 Cash on delivery — please have the amount ready for the courier.'
+  placed_transfer: '🏦 We will send you the account number for the transfer, and the order ships once the transfer is confirmed.'
+  placed_footer:   'You can ask me about your order at any time 📦'
+  aborted:         'The order is cancelled — your basket is saved as it was 🛒'

@@ -1,0 +1,15 @@
+flow_id: doctor-search
+
+strings:
+  detail_body:    'Doctor details 👇'
+  results_body:   'We found {count} matching doctor(s) 👇 Pick one to book.'
+  empty:          'No doctors match that search right now. Try another specialty or branch.'
+  not_found:      'We cannot find that doctor. Could you pick one from the search results?'
+
+  # Carousel card lines
+  card.rating:    '⭐ {rating} ({count} reviews)'
+  card.fee:       '💵 Consultation: {fee} EGP'
+  card.tpas:      '🩺 Insurance accepted: {tpas}'
+  card.no_tpas:   '🩺 No contracted insurance — payment in cash'
+
+  button.book:    'Book 📅'

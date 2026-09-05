@@ -1,0 +1,27 @@
+# shawarma-express — pack-wide English strings.
+#
+# `stage.*` / `stage_hint.*` are the `food_order` pipeline, resolved via `$enum_label`
+# so no flow hardcodes a stage word. The key after the dot is a declared id —
+# byte-identical to `locale.ar.yaml`; only the value is translated.
+pack_id: shawarma-express
+strings:
+  field_picker_footer: 'Pick from the list 👆'
+
+  stage.placed:           'Placed'
+  stage.preparing:        'Being cooked 👨‍🍳'
+  stage.out_for_delivery: 'With the driver 🛵'
+  stage.delivered:        'Delivered ✅'
+  stage.cancelled:        'Cancelled'
+
+  stage_hint.placed:           'ℹ️ Your order has reached the branch and is being prepared.'
+  stage_hint.preparing:        'ℹ️ The kitchen is making your order now.'
+  stage_hint.out_for_delivery: 'ℹ️ The driver is on the way to you — have the cash ready if you are paying in cash.'
+  stage_hint.delivered:        'ℹ️ Enjoy your meal 🌯'
+  stage_hint.cancelled:        'ℹ️ This order is cancelled. We are here whenever you need us.'
+
+  area.nasr_city:   'Nasr City'
+  area.maadi:       'Maadi'
+  area.zamalek:     'Zamalek'
+  area.heliopolis:  'Heliopolis'
+  area.october:     '6th of October'
+  area.giza:        'Giza'

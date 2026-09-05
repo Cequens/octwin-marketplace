@@ -1,0 +1,47 @@
+flow_id: prescription
+
+strings:
+  # The flow's OWN vision prompt. Narrower than a pack-wide one could be, because this one knows
+  # it is looking at a prescription — and English, because it instructs the model rather than
+  # speaking to the patient. Byte-identical to the Arabic file: it is a transcription contract,
+  # and any drift between the two languages would change what gets transcribed.
+  vision_prompt: >-
+    A photograph of a medical prescription. Transcribe it EXACTLY. Reply as JSON:
+    {"items_verbatim":"every prescribed line exactly as written, one per line, original script and
+    spelling, no corrections, no expansions of abbreviations, no translation",
+    "patient_name":"as printed, else null","prescriber":"prescribing doctor as printed, else null",
+    "legible":true|false}. If any line is unclear, still copy what is visible and set legible=false.
+    Never substitute a medicine you think was intended.
+  status_header:    '🧾 Your prescriptions'
+  status_note:      "ℹ️ The pharmacist's decision reaches you here in the chat as soon as the review is done."
+  btn_new:          '📄 Send a prescription'
+  btn_home:         '🏠 Main menu'
+  btn_status:       '🧾 My prescription status'
+  btn_otc:          '🛒 Products without a prescription'
+
+  label.photo:      'A photo of the whole prescription, clear and complete'
+  label.patient:    "Patient's name"
+  label.area:       'Delivery area'
+  label.address:    'Address — street, building and flat'
+  label.pin:        'Delivery point on the map'
+  skip_pin:         'The address is enough ⏭️'
+  label.phone:      'Mobile number'
+
+  field_header.area: '📍 Deliver to which area?'
+  field_cta.area:    'Areas'
+
+  area.nasr_city:   'Nasr City'
+  area.maadi:       'Maadi'
+  area.heliopolis:  'Heliopolis'
+  area.zamalek:     'Zamalek'
+  area.october:     '6th of October'
+  area.giza:        'Giza'
+
+  case_subject:     'Prescription review — {patient}'
+  caption:          'Prescription for {patient}'
+  done_header:      '✅ Your prescription has reached the pharmacist'
+  done_ref:         '🧾 Order number: #{ref}'
+  done_case:        '👨‍⚕️ Review number: #{ref} — the pharmacist replies within {hours} hours'
+  done_no_advice:   'ℹ️ We cannot comment on the medicine or the dose — the pharmacist is the one who reviews and decides, and their decision reaches you here.'
+  done_footer:      'If anything on the prescription needs clarifying, the pharmacist will ask you through this chat.'
+  done_no_case:     '⚠️ Your order is saved, but we could not send it to the pharmacist automatically — call the branch and we will follow it up right away.'

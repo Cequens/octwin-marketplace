@@ -1,0 +1,6 @@
+# smile-dental — pack-wide English strings shared across flows.
+# Keys must MATCH `locale.ar.yaml` exactly — same names, same {placeholders}.
+pack_id: smile-dental
+strings:
+  field_picker_footer: 'Pick from the list 👆'
+  greeting:            'Welcome to Smile Dental Clinic 🦷 How can I help you?'

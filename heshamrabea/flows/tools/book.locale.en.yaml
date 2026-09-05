@@ -1,0 +1,25 @@
+flow_id: book
+
+strings:
+  choose:          'Pick'
+  egp:             'EGP'
+
+  branch_header:   'Pick a branch 📍'
+  branch_body:     'Which branch would you like to book at?'
+  pro_header:      'Pick a barber 💈'
+  pro_body:        'Barbers at {branch}:'
+  service_header:  'Pick a service ✂️'
+  service_body:    'Choose the service you need:'
+  slot_header:     'Pick a time 🗓️'
+  slot_body:       'Times available over the next few days:'
+
+  preview:         "Confirm your booking 📋\nBranch: {branch}\nBarber: {pro}\nService: {service} ({price} EGP)\nTime: {slot}\n\nShall we confirm?"
+  confirm_btn:     'Confirm ✅'
+  cancel_btn:      'Cancel ❌'
+
+  done_header:     'Booked ✅'
+  done_body:       "Your booking is confirmed 🎉\nBooking number: {ref}\nBranch: {branch}\nBarber: {pro}\nService: {service}\nTime: {slot}\nPrice: {price} EGP\n\nSee you soon! To change or cancel, call us on 01093333755."
+  reminder:        'Reminder ⏰ You have an appointment in two hours at {branch} with {pro} ({slot}). See you soon 💈'
+
+  cancelled:       'Your booking is cancelled. Happy to help any time 🙏'
+  slot_taken:      'Sorry, that time has just been taken 🙏 Try another time, or call us on 01093333755.'

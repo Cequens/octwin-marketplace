@@ -1,0 +1,15 @@
+# Strings for the services (category menu) flow, keyed by $t("services.<key>").
+flow_id: services
+
+strings:
+  header:             'Service categories 🗂️'
+  body:               'Choose the category your service falls under, and the services available within it will be shown to you in detail.'
+  choose:             'Choose a category'
+  cat_civil_status:   '🪪 Civil status'
+  cat_traffic:        '🚗 Traffic and vehicles'
+  cat_notary:         '📜 Real-estate registry and notarisation'
+  cat_supply:         '🍞 Supply and rations'
+  cat_courts:         '⚖️ Courts and justice'
+  cat_commercial:     '🏢 Commercial registry'
+  cat_realestate_tax: '🏠 Property tax'
+  cat_health:         '🩺 Health and insurance'

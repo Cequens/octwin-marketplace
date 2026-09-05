@@ -1,0 +1,15 @@
+flow_id: home
+
+strings:
+  header:              '🦷 Smile Dental Clinic'
+  greeting:            'Welcome to Smile 🦷 We will book your appointment in a minute.'
+  upcoming:            '📅 You have {count} upcoming appointment(s).'
+  cta:                 'Pick'
+  row_treatments:      '🦷 Treatments and prices'
+  row_treatments_d:    'Cleaning · fillings · whitening · braces · implants'
+  row_dentists:        '👩‍⚕️ Our dentists'
+  row_dentists_d:      'Their specialities and ratings'
+  row_book:            '🗓️ Book an appointment'
+  row_book_d:          'Pick the treatment, the dentist and the time'
+  row_visits:          '📋 My appointments'
+  row_visits_d:        'Your appointments, and rate your visit'

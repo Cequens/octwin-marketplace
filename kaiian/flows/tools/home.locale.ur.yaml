@@ -1,0 +1,15 @@
+flow_id: home
+strings:
+  greeting_default: 'کیان سپورٹ میں خوش آمدید 👋 میں آپ کی کیا مدد کر سکتا ہوں؟'
+
+  card_header:  'کیان سپورٹ'
+  status_open:  '🎫 آپ کی کھلی درخواستیں: {count}'
+  card_footer:  'فہرست میں سے منتخب کریں 👆'
+  list_button:  'اختیارات'
+
+  row_report_title: 'مسئلہ رپورٹ کریں'
+  row_report_desc:  'زائد کٹوتی، ڈرائیور کی شکایت، یا کیپٹن کا مسئلہ'
+  row_status_title: 'میری درخواستوں کی صورتحال'
+  row_status_desc:  'پہلے سے کھولی گئی درخواست دیکھیں'
+
+  memory_note: 'کیان سپورٹ کا مینو دکھایا (کھلی درخواستیں: {count})۔'

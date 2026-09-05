@@ -12,7 +12,7 @@
 # byte-faithful widget simulation on web.
 
 id:          ecommerce
-version:     '1.3.0'
+version:     '1.4.0'
 description: 'Meta-commerce demo — catalog, product cards, cart, and checkout on WhatsApp + web.'
 
 # Marketplace presentation — how this pack appears in the console catalog a
@@ -54,7 +54,6 @@ default_settings:
 
 default_conversation_context:
   channel_contact_handle: { type: string, describe: 'Speaker channel handle (whatsapp E.164, web session id, …).' }
-  lang:                   { type: enum, enum: [en, ar, bilingual], default: en }
 
 # Demo catalog seed (platform-owned `product` entity). The checked-in
 # `catalog.seed.json` below carries the products + their baked embeddings.

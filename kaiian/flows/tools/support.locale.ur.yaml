@@ -1,0 +1,48 @@
+flow_id: support
+strings:
+  # Field labels (progress + gap prompts)
+  label.issue_type:    'درخواست کی قسم'
+  label.mobile:        'موبائل نمبر'
+  label.description:   'مسئلے کی تفصیل'
+  label.extra_details: 'اضافی تفصیلات'
+  label.evidence_photo: 'ثبوت کے طور پر تصویر بھیجیں (اسکرین شاٹ / رسید / تصویر — اختیاری)'
+  skip_evidence:        'چھوڑ دیں — کوئی تصویر نہیں'
+  label.region:        'آپریٹنگ علاقہ'
+
+  # issue_type picker (labels from pack-level kaiian.cases.<value> via $enum_label)
+  field_header.issue_type: 'آپ کی درخواست کس قسم کی ہے؟'
+  field_cta.issue_type:    'منتخب کریں'
+  section.passenger:       'مسافروں کے مسائل'
+  section.captain:         'کیپٹن کے مسائل'
+
+  # region picker (labels from pack-level kaiian.region.<value> via $enum_label)
+  field_header.region:     'آپ کس علاقے میں کام کرتے ہیں؟'
+  field_cta.region:        'علاقہ منتخب کریں'
+
+  # Validation
+  invalid_mobile: 'یہ نمبر درست نہیں لگتا — براہِ کرم اپنا پورا موبائل نمبر بھیجیں۔'
+
+  # Running progress card
+  progress.header:      '📋 آپ کی درخواست اب تک:'
+  progress.issue:       '• قسم: {issue}'
+  progress.mobile:      '• موبائل: {mobile}'
+  progress.description: '• مسئلہ: {description}'
+  progress.region:      '• علاقہ: {region}'
+
+  # Review-before-open card
+  approve_header:       'بھیجنے سے پہلے اپنی درخواست کی تفصیلات دیکھ لیں 👇'
+  approve_confirm:      'تصدیق کریں اور درخواست کھولیں ✅'
+  approve_cancel:       'منسوخ ❌'
+  preview.header:       'درخواست کی تفصیلات:'
+  preview.issue:        '• قسم: {issue}'
+  preview.mobile:       '• موبائل: {mobile}'
+  preview.description:  '• مسئلہ: {description}'
+  preview.extra:        '• اضافی تفصیلات: {extra}'
+  preview.evidence:     '• ثبوت کی تصویر: ✅ منسلک'
+  preview.region:       '• علاقہ: {region}'
+
+  evidence_caption: 'گاہک نے درخواست کھولتے وقت ثبوت منسلک کیا'
+  # Post-open confirmation (ref + SLA)
+  opened:       'آپ کی درخواست نمبر {ref} کھول دی گئی ✅ ہماری ٹیم {sla} گھنٹوں میں آپ کے نمبر پر رابطہ کرے گی۔ صبر کا شکریہ 🙏'
+  open_failed:  'درج کرتے ہوئے ہمارے ہاں معمولی خرابی ہوئی، تھوڑی دیر بعد دوبارہ کوشش کریں اور مسئلہ برقرار رہے تو مجھے بتائیں۔'
+  aborted:      'ٹھیک ہے، درخواست منسوخ کر دی۔ اگر ارادہ بدلے یا کچھ اور درکار ہو تو میں موجود ہوں 🙌'

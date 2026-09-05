@@ -1,0 +1,11 @@
+# gulf-realty — pack-wide Urdu strings shared across flows.
+# Keys must MATCH `locale.ar.yaml` exactly — same names, same {placeholders}.
+#
+# NOTE: this root file is what registers `ur` for the pack. With `ar` and `ur` both being
+# Arabic-SCRIPT languages, the detector's free script pass can no longer choose between them
+# and hands the message to the model — by design, and measured at zero ur→ar errors.
+pack_id: gulf-realty
+strings:
+  greeting: 'گلف ریئلٹی میں خوش آمدید 🏙️ میں آپ کی کیا مدد کر سکتا ہوں؟'
+  currency_aed: 'درہم'
+  currency_sar: 'ریال'

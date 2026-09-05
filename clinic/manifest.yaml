@@ -10,7 +10,7 @@
 # keys are rejected. Required: id, version (string), description.
 
 id:          clinic
-version: 2.3.0
+version: 2.5.0
 description: 'Outpatient appointment reservation for clinics & hospital outpatient clinics — Arabic-first, WhatsApp + web.'
 
 # Marketplace presentation — how this pack appears in the console catalog a
@@ -45,6 +45,7 @@ widget:
 # medical-document image intake. Bookable/searchable capability is declared in
 # the sibling xrm.yaml / scheduling.yaml / surveys.yaml.
 supported_channels: [whatsapp, web]
+supported_languages: [ar, en]
 required_adapters:  [messaging, vision]
 # Default locale for platform-emitted copy + this pack's `$t()` lookups.
 default_settings:

@@ -1,0 +1,21 @@
+flow_id: my-requests
+
+strings:
+  header:           '📁 Your requests'
+  viewings_header:  '— Viewings —'
+  leads_header:     '— Finance enquiries and questions —'
+  btn_book:         '🗓️ New viewing'
+  btn_browse:       '🏙️ Browse projects'
+
+  stage.requested:      'Awaiting confirmation'
+  stage.confirmed:      'Confirmed ✅'
+  stage.checked_in:     'In progress'
+  stage.completed:      'Completed'
+  stage.cancelled:      'Cancelled'
+
+  lead.new:             'New'
+  lead.qualified:       'Qualified'
+  lead.viewing_booked:  'Viewing booked'
+  lead.offer_made:      'Offer made'
+  lead.reserved:        'Reserved 🎉'
+  lead.lost:            'Closed'

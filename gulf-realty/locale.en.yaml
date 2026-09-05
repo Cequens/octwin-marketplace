@@ -1,0 +1,7 @@
+# gulf-realty — pack-wide English strings shared across flows.
+# Keys must MATCH `locale.ar.yaml` exactly — same names, same {placeholders}.
+pack_id: gulf-realty
+strings:
+  greeting: 'Welcome to Gulf Realty 🏙️ How can I help you?'
+  currency_aed: 'AED'
+  currency_sar: 'SAR'

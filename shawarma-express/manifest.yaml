@@ -7,7 +7,7 @@
 # with milestones, and per-branch fulfilment. No pack DB, no code — pure YAML.
 
 id:          shawarma-express
-version:     '2.0.0'
+version:     '2.2.0'
 description: 'Shawarma restaurant delivery — menu carousel, basket, checkout with delivery details, live order tracking, and an automated abandoned-basket nudge.'
 
 listing:
@@ -28,13 +28,19 @@ widget:
   about:  'Order from the menu and follow your delivery.'
 
 supported_channels: [whatsapp, web]
+supported_languages: [ar, en]
 required_adapters:  [messaging]
 
 default_settings:
   locale: ar
 
-default_conversation_context:
-  lang: { type: enum, enum: [ar, en, bilingual], default: ar, describe: 'Reply language.' }
+# No `default_conversation_context.lang:` here. That knob was copy-pasted boilerplate:
+# nothing in this pack ever read `$context.lang`, so its `en` / `bilingual` options offered
+# an operator a switch that changed nothing. Removed across the marketplace 2026-09-05.
+#
+# The language is not a manifest setting. Automatic detection reads the customer's own words
+# (`language-detect.ts`), `/lang` overrides it per contact, and what the pack can actually
+# render is derived from the `locale.<lang>.yaml` files it ships.
 
 # Minimum-order and delivery fee live here, not in a flow — the branch manager can
 # change them without touching YAML logic.

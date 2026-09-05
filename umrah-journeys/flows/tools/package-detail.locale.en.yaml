@@ -1,0 +1,14 @@
+flow_id: package-detail
+
+strings:
+  nights:    '🌙 {nights} nights'
+  makkah:    '🕋 Makkah hotel: {hotel}'
+  madinah:   '🕌 Madinah hotel: {hotel}'
+  distance:  '📍 {distance}'
+  transport: '🚌 {transport}'
+  includes:  '✅ {includes}'
+  price:     '💰 Price per person: {price}'
+  footer:    'Prices are per person in a double room and vary with the room type.'
+  btn_book:  '📝 Book this package'
+  btn_ask:   '💬 Ask a question'
+  btn_back:  '↩️ Other packages'

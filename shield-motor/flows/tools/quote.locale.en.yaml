@@ -1,0 +1,45 @@
+flow_id: quote
+
+strings:
+  label.plan:   'Plan'
+  label.value:  'Vehicle value'
+  label.driver: "Driver's age"
+  label.ncd:    'Years without a claim'
+
+  field_header.plan:   '📋 Which plan would you prefer?'
+  field_cta.plan:      'Plans'
+  field_header.value:  '🚗 Roughly what is the vehicle worth?'
+  field_cta.value:     'Pick'
+  field_header.driver: '👤 How old is the driver?'
+  field_cta.driver:    'Pick'
+  field_header.ncd:    '🏅 How many years without a claim?'
+  field_cta.ncd:       'Pick'
+
+  value.v50:   'Up to AED 50,000'
+  value.v100:  'Up to AED 100,000'
+  value.v200:  'Up to AED 200,000'
+  value.v400:  'Up to AED 400,000'
+  value.v800:  'Up to AED 800,000'
+
+  driver.under_25:      'Under 25'
+  driver.from_25_to_40: '25 to 40'
+  driver.over_40:       'Over 40'
+
+  ncd.n0:  'None'
+  ncd.n1:  'One year'
+  ncd.n3:  '3 years'
+  ncd.n5:  '5 years or more'
+
+  header:          '🧮 Estimated annual premium'
+  line.plan:       '📋 Plan: {plan}'
+  line.value:      '🚗 Vehicle value: {value}'
+  line.base:       '🏷️ Base premium: {base}'
+  line.load:       '⬆️ Young-driver loading: {pct}%'
+  line.ncd:        '⬇️ No-claims discount: {pct}%'
+  line.premium:    '📌 Estimated premium: {premium}'
+  line.excess:     '💠 Excess payable on a claim: {excess}'
+  line.agency:     '🔧 Agency repair included'
+  disclaimer:      'ℹ️ An estimate worked out from the published pricing factors — it is not a binding offer.'
+  footer:          'The final premium is issued by underwriting after they review the ownership papers and the driving licence.'
+  btn_plans:       '📋 Other plans'
+  btn_home:        '🏠 Main menu'

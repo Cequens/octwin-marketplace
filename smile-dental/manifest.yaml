@@ -7,7 +7,7 @@
 # No pack DB, no code — pure YAML.
 
 id:          smile-dental
-version: 1.7.0
+version: 1.9.0
 description: 'Dental clinic booking — treatment menu, dentist availability, appointment reminders and a post-visit rating that ranks the dentists.'
 
 listing:
@@ -28,6 +28,7 @@ widget:
   about:  'Book a check-up, see real availability, and get a reminder before your visit.'
 
 supported_channels: [whatsapp, web]
+supported_languages: [ar, en]
 # `vision` reads insurance cards and X-ray referrals. No data-store: dentists and
 # treatments are XRM records, the visit is the `booking` system entity, and the
 # rating is a `survey_response`.
@@ -36,8 +37,13 @@ required_adapters:  [messaging, vision]
 default_settings:
   locale: ar
 
-default_conversation_context:
-  lang: { type: enum, enum: [ar, en, bilingual], default: ar, describe: 'Reply language.' }
+# No `default_conversation_context.lang:` here. That knob was copy-pasted boilerplate:
+# nothing in this pack ever read `$context.lang`, so its `en` / `bilingual` options offered
+# an operator a switch that changed nothing. Removed across the marketplace 2026-09-05.
+#
+# The language is not a manifest setting. Automatic detection reads the customer's own words
+# (`language-detect.ts`), `/lang` overrides it per contact, and what the pack can actually
+# render is derived from the `locale.<lang>.yaml` files it ships.
 
 flows:
   - home

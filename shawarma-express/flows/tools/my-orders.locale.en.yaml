@@ -1,0 +1,6 @@
+flow_id: my-orders
+
+strings:
+  header:      '🛵 Your orders'
+  btn_menu:    '🌯 Menu'
+  btn_basket:  '🛒 My basket'

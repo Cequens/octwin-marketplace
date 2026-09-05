@@ -1,0 +1,44 @@
+flow_id: manage-appointments
+
+strings:
+  list_header:  'Your appointments'
+  list_body:    'You have {count} appointment(s). Pick one to manage it.'
+  list_cta:     'Appointments'
+  upcoming:     '🟢 Upcoming'
+  past:         '✓ Past'
+  none:         'You have no appointments right now. Would you like to book one?'
+
+  detail.doctor:   'Doctor: {doctor}'
+  detail.slot:     'Time: {slot}'
+  detail.branch:   'Branch: {branch}'
+  detail.for_whom: 'Visit for: {who}'
+
+  button.reschedule: 'Change the time 🔄'
+  button.cancel:     'Cancel ❌'
+  button.rate:       'Rate ⭐'
+
+  not_found: 'We cannot find that appointment.'
+  confirmed: '✅ Your appointment is confirmed. Thank you!'
+  cancelled: '❌ Your appointment is cancelled. Just tell me if you want to book again.'
+
+  # Cancel confirmation (approve/decline card shown before the appointment is cancelled).
+  cancel_confirm.header: 'Confirm the cancellation'
+  cancel_confirm.body:   'Are you sure you want to cancel this appointment?'
+  cancel_confirm.yes:    'Yes, cancel it ❌'
+  cancel_confirm.keep:   'Back'
+  cancel_kept:           'No problem, we left the appointment as it is. ✅'
+
+  rate_header: 'Rate your visit'
+  rate_cta:    'Rating'
+  # The invite has to live in the rendered body: a render halts the turn, so the
+  # agent gets no chance to add a line of its own after it.
+  rated:         'Thank you for your rating ({stars}⭐)! 🙏 If you would like to say more about the visit, send it in a message — that part is optional.'
+  comment_saved: 'We got your feedback, thank you! 🙏'
+  rate_first:    'Give the visit a star rating first, then write your comment.'
+
+  reschedule_header: '🗓️ Pick a new time'
+  reschedule_cta:    'Available times'
+  no_slots:          'This doctor has no times available soon. Please try later.'
+  rescheduled:       '🔄 Your appointment has been moved. We will remind you before the new time.'
+  reschedule_failed: 'Sorry, we could not move the appointment (was the new time just taken?). Try another one.'
+  reminder_text:     '⏰ A reminder of your upcoming appointment at the clinic.'

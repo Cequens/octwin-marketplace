@@ -7,7 +7,7 @@
 # `approve_apply` confirm-before-commit. No pack DB, no code — pure YAML.
 
 id:          gulf-realty
-version: 1.10.0
+version: 1.13.0
 description: 'Off-plan & ready property brokerage for the Gulf — project carousels, mortgage estimates, and site-viewing bookings on WhatsApp.'
 
 listing:
@@ -28,6 +28,7 @@ widget:
   about:  'Browse properties, see payment plans, and book a viewing.'
 
 supported_channels: [whatsapp, web]
+supported_languages: [ar, en, ur]
 # No data-store: developments/units/leads are XRM records, viewings are the
 # `booking` system entity, availability is the platform scheduling engine.
 # `vision` powers inbound ID / salary-certificate intake.
@@ -43,8 +44,13 @@ config:
   finance:
     profit_rate: 0.049
 
-default_conversation_context:
-  lang: { type: enum, enum: [ar, en, bilingual], default: ar, describe: 'Reply language.' }
+# No `default_conversation_context.lang:` here. That knob was copy-pasted boilerplate:
+# nothing in this pack ever read `$context.lang`, so its `en` / `bilingual` options offered
+# an operator a switch that changed nothing. Removed across the marketplace 2026-09-05.
+#
+# The language is not a manifest setting. Automatic detection reads the customer's own words
+# (`language-detect.ts`), `/lang` overrides it per contact, and what the pack can actually
+# render is derived from the `locale.<lang>.yaml` files it ships.
 
 flows:
   - home

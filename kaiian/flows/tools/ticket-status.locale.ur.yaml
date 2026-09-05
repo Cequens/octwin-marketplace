@@ -1,0 +1,21 @@
+flow_id: ticket-status
+strings:
+  # Detail card (one ticket) — status/type/outcome resolve via $enum_label.
+  detail.header:  '🎫 درخواست نمبر {ref}'
+  detail.type:    '• قسم: {type}'
+  detail.status:  '• صورتحال: {status}'
+  detail.opened:  '• کھولی گئی: {when}'
+  detail.outcome: '• نتیجہ: {outcome}'
+  detail.needed:  '• آپ سے درکار: {what}'
+  back_button:    'صورتحال تازہ کریں'
+  reply_button:   'ٹیم کو جواب دیں'
+
+  # Next-turn briefs (memory_note) — carry the case_id so a reply can be captured.
+  memory.awaiting: 'درخواست (case_id={case_id}) گاہک سے معلومات کی منتظر ہے: {what}۔ اگر گاہک مطلوبہ معلومات بھیجے تو اسی case_id اور اس کے پیغام کے ساتھ reply-to-case کو کال کریں — ٹول کو کال کیے بغیر کبھی یہ دعویٰ نہ کریں کہ آپ نے بھیج دیا۔'
+  memory.shown:    'درخواست {ref} (case_id={case_id}) کی تفصیلات دکھائیں — صورتحال {status}۔'
+
+  # Ticket picker (two or more tickets)
+  list.header: 'آپ کی درخواستیں 🎫'
+  list.body:   'آپ کی {count} درخواستیں درج ہیں — تفصیلات دیکھنے کے لیے ایک منتخب کریں:'
+  list.footer: 'فہرست میں سے منتخب کریں 👆'
+  list.cta:    'درخواست منتخب کریں'

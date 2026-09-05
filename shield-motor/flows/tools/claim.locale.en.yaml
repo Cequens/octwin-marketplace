@@ -1,0 +1,56 @@
+flow_id: claim
+
+strings:
+  # The flow's OWN prompt. English — it instructs the model, it does not speak to the customer,
+  # so it stays byte-identical to the Arabic file. `visible_damage` is written into the claim an
+  # Arabic-speaking assessor reads, so the STORED value must not change language with the customer.
+  vision_prompt: >-
+    A photograph of a damaged vehicle. Reply as JSON:
+    {"plate":"licence plate exactly as printed, else null",
+    "make_model":"make and model if identifiable, else null",
+    "visible_damage":"one or two short lines in Egyptian Arabic describing ONLY what is visible"}.
+    Never estimate a repair cost and never state whether the car is safe to drive.
+  status_header:  '🧾 Your claims'
+  status_note:    'ℹ️ The assessor’s decision reaches you here in the chat — we only show what is on record.'
+  btn_new:        '🚨 Report an accident'
+  btn_home:       '🏠 Main menu'
+  btn_status:     '🧾 My claim status'
+
+  label.type:        'Type of incident'
+  label.policy:      'Policy number'
+  label.plate:       'Plate number'
+  label.emirate:     'Emirate'
+  label.when:        'When it happened'
+  label.location:    'Where it happened'
+  label.pin:         'Location of the accident on the map'
+  skip_pin:          'The description is enough ⏭️'
+  label.description: 'Describe what happened'
+  label.police:      'Police report number'
+  label.phone: 'A number for the inspection officer to call'
+
+  field_header.type:    '🚨 What kind of incident?'
+  field_cta.type:       'Pick'
+  field_header.emirate: '📍 Which emirate?'
+  field_cta.emirate:    'Emirates'
+
+  type.own_damage:   '🚗 Damage to my vehicle'
+  type.third_party:  '🚙 Accident with another party'
+  type.windscreen:   '🪟 Windscreen'
+  type.theft:        '🔓 Theft'
+  type.injury:       '🚑 Someone was injured'
+
+  em.dubai:      'Dubai'
+  em.sharjah:    'Sharjah'
+  em.abu_dhabi:  'Abu Dhabi'
+  em.ajman:      'Ajman'
+  em.rak:        'Ras Al Khaimah'
+
+  case_subject:       'Claim — plate {plate}'
+  caption:            'Damage to vehicle {plate}'
+  done_header:        '✅ Your report has been filed'
+  done_ref:           '🧾 Notification number: #{ref}'
+  done_case:          '👨‍🔧 Claim number: #{ref} — a reply within {hours} hours'
+  done_no_coverage:   'ℹ️ We cannot decide cover or liability from here — the assessor reviews the accident and tells you their decision.'
+  done_injury:        '🚑 If anyone is injured, call an ambulance and the police immediately, before anything else.'
+  done_footer:        'The assessor may ask for more documents through this chat.'
+  done_no_case:       '⚠️ The report is saved, but we could not open the claim automatically — call the claims line and we will follow it up right away.'

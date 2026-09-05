@@ -1,0 +1,61 @@
+flow_id: book-appointment
+
+strings:
+  # The flow's OWN prompt — it knows it is looking at an insurance card, where a pack-wide image
+  # prompt also has to serve referral letters and lab results.
+  #
+  # NOT TRANSLATED, and byte-identical to the Arabic file on purpose: this instructs the MODEL,
+  # not the customer, and the JSON keys in it are read by the step that parses the reply.
+  vision_prompt: >-
+    Photographs of a health-insurance card, possibly front and back. Reply as JSON:
+    {"tpa":"insurer or third-party administrator name as printed, else null",
+    "member_id":"member or policy number exactly as printed, no spaces added, else null",
+    "valid_until":"expiry as YYYY-MM-DD if shown, else null}.
+    Copy characters exactly. If the images are not an insurance card, reply with all nulls.
+  # Progress card (prepended to every prompt)
+  progress.header:    '📋 Booking summary'
+  progress.doctor:    'Doctor: {doctor}'
+  progress.slot:      'Time: {slot}'
+  progress.for_whom:  'Visit for: {who}'
+
+  for_whom.self:      'Myself'
+  for_whom.dependent: 'A family member'
+
+  # Field labels (shown in the progress / missing list)
+  label.specialty:       'Specialty'
+  label.doctor:          'Doctor'
+  label.slot:            'Time'
+  label.for_whom:        'Who the visit is for'
+  label.dependent_name:  "Family member's name"
+  label.reason:          'Reason for the visit'
+  label.insurance:       'Insurance'
+
+  # Picker headers / call-to-action labels
+  field_header.specialty: '🩺 Pick a specialty'
+  field_cta.specialty:    'Specialties'
+  field_header.doctor:    '👨‍⚕️ Pick a doctor'
+  field_cta.doctor:       'Doctors'
+  field_header.slot:      '🗓️ Pick a time'
+  field_cta.slot:         'Available times'
+  field_header.for_whom:  '👤 Who is the visit for?'
+  field_cta.for_whom:     'Pick'
+
+  # Confirmation preview
+  preview.header:     '📋 Confirm the booking'
+  preview.doctor:     'Doctor: {doctor}'
+  preview.slot:       'Time: {slot}'
+  preview.for_whom:   'Visit for: {who}'
+  preview.reason:     'Reason: {reason}'
+  preview.insurance:  'Insurance: {tpa}'
+  approve_header:     'Confirm the booking'
+  approve_footer:     'Check the details and tap confirm.'
+
+  # Reminder card (delivered T-24h / T-2h)
+  reminder.body:        '⏰ A reminder of your appointment with {doctor} on {slot}. What would you like to do?'
+  reminder.confirm:     'Confirm ✅'
+  reminder.reschedule:  'Change the time 🔄'
+  reminder.cancel:      'Cancel ❌'
+
+  success:    '✅ Your appointment with {doctor} on {slot} is confirmed. We will remind you before it.'
+  slot_taken: 'Sorry, that time has just been taken. Would you like to pick another one?'
+  aborted:    'No problem, the booking is cancelled. Just tell me if you want to book again.'

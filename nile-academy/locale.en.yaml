@@ -1,0 +1,43 @@
+# nile-academy — pack-wide English strings.
+# `stage.*` / `stage_hint.*` are the admissions funnel, resolved via `$enum_label`.
+# `status.*` covers the `booking` system entity (campus tours).
+# The key after the dot is a declared id, not prose — byte-identical to `locale.ar.yaml`;
+# only the value is translated.
+pack_id: nile-academy
+strings:
+  field_picker_footer: 'Pick from the list 👆'
+
+  status.requested:  'Awaiting confirmation'
+  status.confirmed:  'Confirmed ✅'
+  status.checked_in: 'At the school'
+  status.completed:  'Visit complete'
+  status.cancelled:  'Cancelled'
+  status.no_show:    'Did not attend'
+
+  stage.enquiry:              'Enquiry'
+  stage.tour_booked:          'Visit booked'
+  stage.application_started:  'Application in progress'
+  stage.documents_complete:   'Documents complete'
+  stage.assessment_scheduled: 'Assessment scheduled'
+  stage.offer_made:           'Offer made 🎉'
+  stage.enrolled:             'Enrolled'
+  stage.declined:             'Not accepted'
+
+  stage_hint.enquiry:              'ℹ️ We have not started the application yet — tell me the programme and I will carry on with you.'
+  stage_hint.tour_booked:          'ℹ️ Your visit is booked. We will complete the application after the tour.'
+  stage_hint.application_started:  'ℹ️ Documents are missing — send the birth certificate and the latest report card.'
+  stage_hint.documents_complete:   'ℹ️ The file is complete, and the admissions team is setting the assessment date.'
+  stage_hint.assessment_scheduled: 'ℹ️ The assessment date is set — we will send you the details.'
+  stage_hint.offer_made:           'ℹ️ An offer has been made 🎉 Check the enrolment steps and the fees.'
+  stage_hint.enrolled:             'ℹ️ Enrolment is complete. Welcome to Nile Academy!'
+  stage_hint.declined:             'ℹ️ Unfortunately the application was not accepted this time.'
+
+  stage_level.kg:          'Kindergarten'
+  stage_level.primary:     'Primary'
+  stage_level.preparatory: 'Preparatory'
+  stage_level.secondary:   'Secondary'
+
+  curriculum.national: 'National'
+  curriculum.british:  'British'
+  curriculum.american: 'American'
+  curriculum.ib:       'International Baccalaureate'

@@ -1,0 +1,15 @@
+flow_id: project-detail
+
+strings:
+  developer:     '🏗️ ڈویلپر: {developer}'
+  area:          '📍 علاقہ: {area}'
+  handover:      '🔑 حوالگی: {handover}'
+  from:          '💰 {price} سے'
+  plan:          '📆 ادائیگی کا منصوبہ: {plan}'
+  highlights:    '✨ {highlights}'
+  units_header:     '— دستیاب یونٹ —'
+  bedrooms_suffix:  ' بیڈروم'
+  sqft_suffix:      ' مربع فٹ'
+  btn_viewing:   '🗓️ ملاقات طے کریں'
+  btn_mortgage:  '🧮 قسط نکالیں'
+  btn_back:      '↩️ دیگر منصوبے'

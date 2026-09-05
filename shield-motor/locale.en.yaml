@@ -1,0 +1,61 @@
+# shield-motor — pack-wide English strings.
+#
+# `cases.*` / `status.*` / `decision.*` are the boot-enforced casework locale contract: every
+# language this pack ships must carry the complete set, or the pack is REFUSED at load. The
+# decision wording is written so it can be relayed verbatim: `claim_declined` says the claim is
+# not covered without the bot adding a reason the assessor did not give.
+#
+# The key after the dot is a declared id from `worklist.yaml`, not prose — byte-identical to
+# `locale.ar.yaml`; only the value is translated.
+pack_id: shield-motor
+strings:
+  field_picker_footer: 'Pick from the list 👆'
+
+  cases.own_damage:   'Damage to the vehicle'
+  cases.third_party:  'Accident with another party'
+  cases.theft:        'Theft'
+  cases.injury:       'Accident with injuries'
+  cases.windscreen:   'Windscreen'
+  cases.policy_query: 'Policy question'
+
+  status.open:              'Reported'
+  status.in_progress:       'Under assessment'
+  status.awaiting_customer: 'Waiting for your documents'
+  status.resolved:          'Decision issued'
+  status.closed:            'Closed'
+  status.reopened:          'Reopened'
+
+  priority.low:    'Low'
+  priority.normal: 'Normal'
+  priority.high:   'High'
+  priority.urgent: 'Urgent'
+
+  decision.resolve:            'Decision issued'
+  decision.reject:             'Claim not covered'
+  decision.request_more_info:  'More documents needed from you'
+  decision.escalate:           'Escalated for review'
+  decision.assessor_assigned:  'Assessor assigned'
+  decision.documents_required: 'Documents needed'
+  decision.settlement_offered: 'Settlement offered 💰'
+  decision.claim_declined:     'Claim not covered'
+
+  cover.third_party:        'Third party'
+  cover.comprehensive:      'Comprehensive'
+  cover.comprehensive_plus: 'Comprehensive Plus'
+
+  emirate.dubai:      'Dubai'
+  emirate.sharjah:    'Sharjah'
+  emirate.abu_dhabi:  'Abu Dhabi'
+  emirate.ajman:      'Ajman'
+  emirate.rak:        'Ras Al Khaimah'
+
+  stage.notified:          'Reported'
+  stage.documents_pending: 'Waiting for documents'
+  stage.assessor_review:   'With the assessor'
+  stage.closed:            'Closed'
+
+  qstage.enquiry:   'Enquiry'
+  qstage.quoted:    'Quoted'
+  qstage.submitted: 'Submitted'
+  qstage.issued:    'Policy issued'
+  qstage.lapsed:    'Lapsed'

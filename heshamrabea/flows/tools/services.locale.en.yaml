@@ -1,0 +1,12 @@
+flow_id: services
+
+strings:
+  header:             'Services and prices ✂️'
+  body:               'Pick the section you want:'
+  choose:             'Pick'
+  cat_haircut:        '💇 Haircuts'
+  cat_beard:          '🧔 Beard and styling'
+  cat_hair_treatment: '✨ Hair treatments'
+  cat_skin:           '🧖 Skincare'
+  cat_hands_feet:     '💅 Hands and feet'
+  cat_package:        '👑 Groom packages'

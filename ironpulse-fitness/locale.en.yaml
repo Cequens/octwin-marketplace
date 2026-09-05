@@ -1,0 +1,31 @@
+# ironpulse-fitness — pack-wide English strings.
+#
+# `status.*` covers the `booking` system entity's pipeline stages (resolved via
+# `$enum_label` from my-schedule), and `stage.*` the pack's own `member_lead` funnel.
+# The key after the dot is a declared id — byte-identical to `locale.ar.yaml`;
+# only the value is translated.
+pack_id: ironpulse-fitness
+strings:
+  field_picker_footer: 'Pick from the list 👆'
+
+  status.requested:  'Awaiting confirmation'
+  status.confirmed:  'Confirmed ✅'
+  status.checked_in: 'Checked in'
+  status.completed:  'Completed'
+  status.cancelled:  'Cancelled'
+  # The system pipeline has this stage even though no flow moves a booking to it —
+  # without the key an operator-side reschedule renders the raw `rescheduled` token.
+  status.rescheduled: 'Rescheduled'
+  status.no_show:    'Did not attend'
+
+  stage.enquiry:        'Enquiry'
+  stage.trial_booked:   'Trial class booked'
+  stage.trial_attended: 'Attended the trial'
+  stage.member:         'Member 💪'
+  stage.lapsed:         'Membership lapsed'
+
+  goal.weight_loss:     'Lose weight'
+  goal.muscle_gain:     'Build muscle'
+  goal.endurance:       'Fitness and endurance'
+  goal.general_fitness: 'General fitness'
+  goal.rehab:           'Rehabilitation'

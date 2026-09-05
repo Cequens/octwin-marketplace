@@ -1,0 +1,13 @@
+flow_id: my-quotes
+
+strings:
+  header:        '📄 My requests'
+  intro:         'You have {count} request(s). Tap any one to browse fresh prices.'
+  cta:           'Pick a request'
+  row_title:     '{ref} · {material}'
+  row_qty:       '{qty} {unit}'
+
+  none_header:   '📄 No requests yet'
+  none_body:     'You can browse the price list or file a quote request, and we will come back with an approved price.'
+  btn_prices:    '🧱 Price list'
+  btn_rfq:       '📝 Request a quote'

@@ -1,0 +1,21 @@
+flow_id: my-requests
+
+strings:
+  header:           '📁 آپ کی درخواستیں'
+  viewings_header:  '— ملاقاتیں —'
+  leads_header:     '— فنانس کی درخواستیں اور سوالات —'
+  btn_book:         '🗓️ نئی ملاقات'
+  btn_browse:       '🏙️ منصوبے دیکھیں'
+
+  stage.requested:      'تصدیق کا انتظار'
+  stage.confirmed:      'تصدیق شدہ ✅'
+  stage.checked_in:     'جاری'
+  stage.completed:      'مکمل'
+  stage.cancelled:      'منسوخ'
+
+  lead.new:             'نیا'
+  lead.qualified:       'اہل'
+  lead.viewing_booked:  'ملاقات طے ہو گئی'
+  lead.offer_made:      'پیشکش دی گئی'
+  lead.reserved:        'محفوظ کر لیا 🎉'
+  lead.lost:            'بند'

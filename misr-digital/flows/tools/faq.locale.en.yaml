@@ -1,0 +1,27 @@
+# Strings for the faq flow, keyed by $t("faq.<key>").
+# Formal register — see the note in home.locale.en.yaml.
+flow_id: faq
+
+strings:
+  body: |-
+    ❓ Frequently asked questions about Digital Egypt
+
+    🔹 How do I begin a service?
+    Choose the service here, review its documents and fees, then press "Begin the service on the portal" to complete it on the official website.
+
+    🔹 Do I need an account?
+    Yes. You register on the portal using your national ID number and a mobile number registered in your name, and an activation code is sent to you.
+
+    🔹 How is payment made?
+    Most services are paid for electronically by bank card or mobile wallet, with a delivery fee added depending on the service.
+
+    🔹 How do documents arrive?
+    Many services (such as ID cards and certificates) are delivered to your registered address by post.
+
+    🔹 Are the fees and timings shown here final?
+    No. They are indicative and subject to change — the official source is always the service page on the portal.
+
+    Type the name of any service and I will help you reach it 👍
+  btn_search:     '🔎 Search for a service'
+  btn_categories: '🗂️ Browse categories'
+  btn_home:       '🏠 Main menu'

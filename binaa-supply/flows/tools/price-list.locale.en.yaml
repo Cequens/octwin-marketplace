@@ -1,0 +1,22 @@
+flow_id: price-list
+
+strings:
+  header:            '🧱 Price list'
+  intro:             'These are the latest prices from the sales system ({total} items).'
+  footer:            'Prices include VAT · delivery to site'
+  cta:               'Pick an item'
+  out:               '⚠️ Out of stock right now'
+  lead:              '🚚 Delivery within {days} day(s)'
+
+  card.sku:          '🏷️ Code: {sku}'
+  card.price:        '💰 {price} / {unit}'
+  card.in:           '✅ In stock at the warehouse'
+  card.out:          '⚠️ Out of stock right now — we can source it to order'
+  card.source:       'ℹ️ This price comes straight from the sales system at the moment you asked.'
+  btn_rfq:           '📝 Request a quote'
+  btn_back:          '↩️ Other items'
+
+  not_configured:    '⚙️ Our price system is not fully connected yet. Contact sales and we will help you right away.'
+  down_header:       '⚠️ Prices are unavailable right now'
+  down_body:         'We could not reach the price system at this moment. You can still file your request and we will come back with the approved price.'
+  btn_rfq_anyway:    '📝 File the request'

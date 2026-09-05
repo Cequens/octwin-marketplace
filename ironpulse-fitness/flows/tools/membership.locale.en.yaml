@@ -1,0 +1,27 @@
+flow_id: membership
+
+strings:
+  label.goal:       'What you want from training'
+  label.experience: 'Your previous experience'
+  label.name:       'Name'
+
+  field_header.goal:       '🎯 What is your goal?'
+  field_cta.goal:          'Pick'
+  field_header.experience: '📊 How much training have you done?'
+  field_cta.experience:    'Pick'
+
+  goal.weight_loss:      '⚖️ Lose weight'
+  goal.muscle_gain:      '💪 Build muscle'
+  goal.endurance:        '🏃 Fitness and endurance'
+  goal.general_fitness:  '✨ General fitness'
+  goal.rehab:            '🩹 Rehabilitation'
+
+  exp.none:     'Complete beginner'
+  exp.some:     'I have trained before'
+  exp.regular:  'I train regularly'
+
+  header:       '🎫 Membership plans'
+  intro:        'Pick a plan and book your free trial class:'
+  footer:       'Prices include VAT.'
+  cta:          'Plans'
+  classes_in:   'Classes included ✅'

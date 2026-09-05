@@ -1,0 +1,65 @@
+# umrah-journeys — pack-wide English strings.
+#
+# The `cases.*` / `status.*` / `decision.*` blocks are the CASEWORK LOCALE
+# CONTRACT: a pack that works the `case` entity must cover, PER LANGUAGE, one
+# label per declared `work.case.types` id, all six `case` pipeline stages, and
+# every decision (the standard preset ∪ this pack's customs). Coverage is checked
+# at boot in BOTH directions — a missing key and an orphan key naming an
+# undeclared value both fail — so this file is load-bearing, not decoration.
+#
+# `stage.*` / `stage_hint.*` are the pack's own `trip` pipeline, resolved through
+# `$enum_label` so the flows never hardcode a stage word.
+#
+# The key after the dot is a declared id — byte-identical to `locale.ar.yaml`;
+# only the value is translated.
+
+pack_id: umrah-journeys
+strings:
+  field_picker_footer: 'Pick from the list 👆'
+
+  # Case types (category `cases`) — one per worklist.yaml work.case.types id
+  cases.visa_file:      'Visa file'
+  cases.booking_change: 'Booking change'
+  cases.payment_proof:  'Proof of payment'
+  cases.general_query:  'General query'
+
+  # Case pipeline stages (category `status`) — all six, none optional
+  status.open:              'Under review'
+  status.in_progress:       'Being handled'
+  status.awaiting_customer: 'Waiting for your reply'
+  status.resolved:          'Completed'
+  status.closed:            'Closed'
+  status.reopened:          'Reopened'
+
+  # Priority (category `priority`)
+  priority.low:    'Low'
+  priority.normal: 'Normal'
+  priority.high:   'High'
+  priority.urgent: 'Urgent'
+
+  # Decisions (category `decision`) — the standard preset + this pack's customs
+  decision.resolve:           'Completed'
+  decision.reject:            'Rejected'
+  decision.request_more_info: 'More documents needed from you'
+  decision.escalate:          'Escalated'
+  decision.visa_approved:     'Visa approved 🎉'
+  decision.docs_incomplete:   'Documents incomplete'
+  decision.payment_confirmed: 'Payment confirmed'
+
+  # Trip pipeline (category `stage`) — the pack's own xrm.yaml pipeline
+  stage.enquiry:      'Enquiry'
+  stage.reserved:     'Booking held'
+  stage.docs_pending: 'Waiting for documents'
+  stage.visa_issued:  'Visa issued'
+  stage.ticketed:     'Tickets issued'
+  stage.travelled:    'Journey complete'
+  stage.cancelled:    'Cancelled'
+
+  # Per-stage explainer (category `stage_hint`) — what the pilgrim should do next
+  stage_hint.enquiry:      'ℹ️ We have not held a booking yet — tell me the package and I will carry on with you.'
+  stage_hint.reserved:     'ℹ️ The booking is held. Next step: upload photos of the passports.'
+  stage_hint.docs_pending: 'ℹ️ Documents are missing — upload the passports so we can begin the visa paperwork.'
+  stage_hint.visa_issued:  'ℹ️ The visa has been issued 🎉 We are preparing the tickets and will send you the details.'
+  stage_hint.ticketed:     'ℹ️ The tickets are issued — we will send you the itinerary and the meeting-point details.'
+  stage_hint.travelled:    'ℹ️ May Allah accept your worship 🌙'
+  stage_hint.cancelled:    'ℹ️ This booking is cancelled. We are here if you would like a new one.'

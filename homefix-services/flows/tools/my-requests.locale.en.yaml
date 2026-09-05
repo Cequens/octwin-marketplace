@@ -1,0 +1,6 @@
+flow_id: my-requests
+
+strings:
+  header:        '📋 Your requests'
+  btn_new:       '🛠️ New request'
+  btn_services:  '🔧 Services'

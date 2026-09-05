@@ -1,0 +1,15 @@
+flow_id: home
+
+strings:
+  header:              '💪 IronPulse'
+  greeting:            'Welcome to IronPulse 💪 Ready for your next class?'
+  upcoming:            '📅 You have {count} class(es) booked.'
+  cta:                 'Pick'
+  row_classes:         '🏋️ Class schedule'
+  row_classes_d:       'Spinning · HIIT · yoga · boxing · weights'
+  row_book:            '📅 Book a class'
+  row_book_d:          'Pick the class, the trainer and the time'
+  row_membership:      '🎫 Memberships and prices'
+  row_membership_d:    'Monthly, yearly and class-pass options'
+  row_schedule:        '🗓️ My classes'
+  row_schedule_d:      'Your upcoming classes, and cancelling a booking'

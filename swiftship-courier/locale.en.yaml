@@ -1,0 +1,77 @@
+# swiftship-courier — pack-wide English strings.
+#
+# The `cases.*` / `status.*` / `decision.*` blocks are the CASEWORK LOCALE CONTRACT
+# (boot-enforced in both directions: a missing key AND an orphan key both fail), and it is
+# enforced PER LANGUAGE — this file must carry the complete set. The `stage.*` /
+# `stage_hint.*` blocks are the `shipment` tracking pipeline — the explainer is what turns a
+# status word into an expectation, and `track` renders it straight from `$enum_label`, so no
+# flow hardcodes a status sentence.
+#
+# The key after the dot is a declared id, not prose — byte-identical to `locale.ar.yaml`;
+# only the value is translated.
+pack_id: swiftship-courier
+strings:
+  field_picker_footer: 'Pick from the list 👆'
+
+  # Case types (one per worklist.yaml work.case.types id)
+  cases.damaged_parcel: 'Damaged parcel'
+  cases.lost_parcel:    'Lost parcel'
+  cases.late_delivery:  'Late delivery'
+  cases.wrong_address:  'Wrong address'
+  cases.general_query:  'General query'
+
+  # Case pipeline stages — all six
+  status.open:              'Under review'
+  status.in_progress:       'Being handled'
+  status.awaiting_customer: 'Waiting for your reply'
+  status.resolved:          'Resolved'
+  status.closed:            'Closed'
+  status.reopened:          'Reopened'
+
+  priority.low:    'Low'
+  priority.normal: 'Normal'
+  priority.high:   'High'
+  priority.urgent: 'Urgent'
+
+  # Decisions — the standard preset + this pack's customs
+  decision.resolve:               'Resolved'
+  decision.reject:                'Complaint rejected'
+  decision.request_more_info:     'More information needed from you'
+  decision.escalate:              'Escalated'
+  decision.compensation_approved: 'Compensation approved 💰'
+  decision.reschedule_delivery:   'New delivery time arranged'
+  decision.returned_to_sender:    'Returned to sender'
+
+  # Shipment tracking pipeline
+  stage.created:          'Shipment created'
+  stage.picked_up:        'Collected'
+  stage.in_transit:       'In transit 🚚'
+  stage.at_hub:           'At the sorting hub'
+  stage.out_for_delivery: 'Out with the driver 🛵'
+  stage.delivered:        'Delivered ✅'
+  stage.failed_attempt:   'Delivery attempt failed ⚠️'
+  stage.returned:         'Returned to sender'
+
+  stage_hint.created:          'ℹ️ The shipment is registered and we are waiting to collect it from the sender.'
+  stage_hint.picked_up:        'ℹ️ We have collected the parcel and it is on its way to the sorting hub.'
+  stage_hint.in_transit:       'ℹ️ The parcel is moving between branches — we will update you as soon as it reaches your area.'
+  stage_hint.at_hub:           'ℹ️ The parcel is at the sorting hub and is being prepared for delivery.'
+  stage_hint.out_for_delivery: 'ℹ️ It is with the driver today — please keep your phone to hand.'
+  stage_hint.delivered:        'ℹ️ Delivered. If there is a problem, file a complaint and our team will review it.'
+  stage_hint.failed_attempt:   'ℹ️ We tried to deliver and could not — file a complaint and we will rebook it.'
+  stage_hint.returned:         'ℹ️ The parcel has gone back to the sender.'
+
+  service.same_day:  'Same day'
+  service.next_day:  'Next day'
+  service.standard:  'Standard'
+  service.bulky:     'Large item'
+
+  region.cairo:       'Cairo and Giza'
+  region.alexandria:  'Alexandria'
+  region.delta:       'The Delta'
+  region.upper:       'Upper Egypt'
+
+  weight.under_1:   'Under 1 kg'
+  weight.under_5:   'Up to 5 kg'
+  weight.under_20:  'Up to 20 kg'
+  weight.over_20:   'Over 20 kg'

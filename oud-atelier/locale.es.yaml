@@ -1,0 +1,9 @@
+# oud-atelier — pack-wide Spanish strings shared across flows.
+# Keys must MATCH `locale.ar.yaml` exactly — same names, same {placeholders}.
+#
+# NOTE: this root file is what registers `es` for the pack. Spanish and English are both
+# LATIN-script, so unlike the Arabic/Urdu packs the script pass cannot separate them at all
+# and every Latin message goes to the model — which is already how English was detected.
+pack_id: oud-atelier
+strings:
+  greeting: 'Bienvenido a Oud Atelier 🕌 ¿En qué puedo ayudarle?'

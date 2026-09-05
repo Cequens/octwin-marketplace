@@ -1,0 +1,11 @@
+# Strings for the start_service flow, keyed by $t("start_service.<key>").
+# Formal register — see the note in home.locale.en.yaml.
+flow_id: start_service
+
+strings:
+  body:       'Please press the button below to go to the service page on the Digital Egypt portal and complete your application. You will need to sign in with your account on the portal.'
+  open:       '🚀 Open the service page'
+  footer:     'Digital Egypt 🇪🇬'
+  not_online: '⏳ This service is not yet available electronically on the portal, and must be applied for at the office of the relevant authority.'
+  btn_other:  '🔎 Another service'
+  btn_home:   '🗂️ Main menu'

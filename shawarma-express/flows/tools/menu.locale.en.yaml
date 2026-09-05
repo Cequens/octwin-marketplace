@@ -1,0 +1,6 @@
+flow_id: menu
+
+strings:
+  intro:       '🌯 We have {total} items available — swipe and pick:'
+  btn_add:     '🛒 Add to basket'
+  btn_basket:  '🧾 My basket'

@@ -1,0 +1,36 @@
+# motorcare-service — pack-wide English strings.
+#
+# `stage.*` / `stage_hint.*` are the `repair_job` pipeline, resolved via
+# `$enum_label` so no flow hardcodes a stage word. `decision.*` labels the workshop
+# dispositions declared in worklist.yaml.
+#
+# The key after the dot is a declared id, not prose — byte-identical to `locale.ar.yaml`;
+# only the value is translated.
+pack_id: motorcare-service
+strings:
+  field_picker_footer: 'Pick from the list 👆'
+
+  stage.received:   'Job card received'
+  stage.inspecting: 'Being inspected'
+  stage.quoted:     'Quote sent'
+  stage.in_repair:  'Under repair'
+  stage.ready:      'Ready for collection'
+  stage.collected:  'Collected'
+  stage.cancelled:  'Cancelled'
+
+  stage_hint.received:   'ℹ️ Your job card is in the workshop queue and the car will be inspected.'
+  stage_hint.inspecting: 'ℹ️ The technician is inspecting the car now, and we will send you the quote afterwards.'
+  stage_hint.quoted:     'ℹ️ Your quote has arrived — your reply starts the work.'
+  stage_hint.in_repair:  'ℹ️ Work on your car is under way.'
+  stage_hint.ready:      'ℹ️ Your car is ready for collection 🎉'
+  stage_hint.collected:  'ℹ️ The car has been collected. Thank you for trusting us.'
+  stage_hint.cancelled:  'ℹ️ This job card is cancelled.'
+
+  area.mechanical:  'Mechanical'
+  area.body:        'Body and paint'
+  area.diagnostics: 'Computer diagnostics'
+
+  decision.quote_ready:          'Quote ready'
+  decision.parts_ordered:        'Parts ordered'
+  decision.ready_for_collection: 'Car ready for collection'
+  decision.declined_by_customer: 'Customer declined the quote'

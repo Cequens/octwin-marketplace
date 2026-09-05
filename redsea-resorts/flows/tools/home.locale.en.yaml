@@ -1,0 +1,15 @@
+flow_id: home
+
+strings:
+  header:          '🌊 Red Sea Resorts'
+  greeting:        'Welcome 🌊 We will book your stay by the sea in minutes.'
+  live:            '🧾 You have {count} live booking(s).'
+  cta:             'Pick'
+  row_rooms:       '🛏️ Rooms and prices'
+  row_rooms_d:     'El Gouna · Hurghada · Marsa Alam'
+  row_sea:         '🌅 Sea view'
+  row_sea_d:       'Only the rooms facing the sea'
+  row_book:        '📅 Book a stay'
+  row_book_d:      'Pick the room, the dates and the board basis'
+  row_mine:        '🧾 My bookings'
+  row_mine_d:      'Your bookings, their status and the deposit'

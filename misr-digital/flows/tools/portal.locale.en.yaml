@@ -1,0 +1,7 @@
+# Strings for the portal flow, keyed by $t("portal.<key>").
+flow_id: portal
+
+strings:
+  header: 'The Digital Egypt portal 🌐'
+  body:   'This is the official portal for government electronic services. You may sign in with your account, or create a new one using your national ID number and mobile number, and then begin any service.'
+  open:   '🌐 Open the portal now'

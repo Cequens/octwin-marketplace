@@ -1,0 +1,9 @@
+flow_id: browse-projects
+
+strings:
+  intro:        '🏙️ ہمارے پاس {total} منصوبے دستیاب ہیں — دیکھنے کے لیے سلائیڈ کریں:'
+  by:           '🏗️ ڈویلپر: {developer}'
+  handover:     '🔑 حوالگی: {handover}'
+  from:         '💰 {price} سے'
+  btn_detail:   '📋 تفصیلات'
+  btn_viewing:  '🗓️ ملاقات طے کریں'

@@ -1,0 +1,8 @@
+flow_id: service_list
+
+strings:
+  header:      'Services and prices'
+  body:        'Prices are in Egyptian pounds. Tap a service to book an appointment:'
+  book:        'Book'
+  egp:         'EGP'
+  tap_to_book: 'Tap to book 🗓️'

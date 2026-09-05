@@ -1,0 +1,14 @@
+flow_id: package-detail
+
+strings:
+  nights:    '🌙 {nights} راتیں'
+  makkah:    '🕋 مکہ کا ہوٹل: {hotel}'
+  madinah:   '🕌 مدینہ کا ہوٹل: {hotel}'
+  distance:  '📍 {distance}'
+  transport: '🚌 {transport}'
+  includes:  '✅ {includes}'
+  price:     '💰 فی کس قیمت: {price}'
+  footer:    'قیمتیں ڈبل کمرے میں فی کس ہیں اور کمرے کی قسم کے مطابق بدلتی ہیں۔'
+  btn_book:  '📝 یہ پیکج بک کریں'
+  btn_ask:   '💬 سوال پوچھیں'
+  btn_back:  '↩️ دیگر پیکجز'

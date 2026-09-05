@@ -1,0 +1,51 @@
+flow_id: mortgage-estimate
+
+strings:
+  # The flow's OWN vision prompt — English, because it instructs the model rather than speaking
+  # to the customer. Byte-identical to the Arabic and English files.
+  vision_prompt: >-
+    A photograph of a salary certificate or payslip. Reply as JSON: {"monthly_income":"net monthly figure as a NUMBER only, no currency or separators, else null",
+    "employer":"employing company as printed, else null",
+    "nationality":"nationality as printed, else null"}.
+    Copy characters exactly — never correct, complete or reformat a value, and never infer one
+    that is not visible.
+  progress.header:   '🧮 فنانس کیلکولیٹر'
+  progress.project:  '🏙️ منصوبہ: {project}'
+  progress.down:     '💵 پیشگی رقم: {pct}%'
+  progress.tenor:    '📆 مدت: {years} سال'
+
+  label.project:     'منصوبہ'
+  label.down:        'پیشگی رقم'
+  label.tenor:       'فنانس کی مدت'
+  label.name:        'نام'
+  label.income:      'ماہانہ آمدنی'
+
+  field_header.project: '🏙️ منصوبہ منتخب کریں'
+  field_cta.project:    'منصوبے'
+  field_header.down:    '💵 پیشگی رقم کتنی ہو گی؟'
+  field_cta.down:       'منتخب کریں'
+  field_header.tenor:   '📆 فنانس کی مدت'
+  field_cta.tenor:      'منتخب کریں'
+
+  down.p10:  '10% پیشگی رقم'
+  down.p20:  '20% پیشگی رقم'
+  down.p30:  '30% پیشگی رقم'
+  down.p50:  '50% پیشگی رقم'
+
+  tenor.y5:  '5 سال'
+  tenor.y10: '10 سال'
+  tenor.y15: '15 سال'
+  tenor.y20: '20 سال'
+  tenor.y25: '25 سال'
+
+  header:            '🧮 تخمینی ماہانہ قسط'
+  line.project:      '🏙️ {project}'
+  line.price:        '🏷️ یونٹ کی قیمت: {amount}'
+  line.down:         '💵 پیشگی رقم ({pct}%): {amount}'
+  line.financed:     '🏦 فنانس کی رقم: {amount}'
+  line.tenor:        '📆 مدت: {years} سال'
+  line.monthly:      '📌 ماہانہ قسط: {amount}'
+  disclaimer:        'ℹ️ یہ ایک مقررہ مرابحہ شرح پر تخمینہ ہے، صرف رہنمائی کے لیے — منظوری اور آخری شرح فنانس ادارے کی طرف سے آتی ہے۔'
+  btn_viewing:       '🗓️ ملاقات طے کریں'
+  btn_browse:        '🏙️ دیگر منصوبے'
+  lead_note:         'فنانس کی درخواست: {pct}% پیشگی، {years} سال — تخمینی قسط {monthly}۔'

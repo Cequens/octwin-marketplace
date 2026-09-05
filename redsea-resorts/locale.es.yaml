@@ -1,0 +1,50 @@
+# redsea-resorts — pack-wide Spanish strings.
+# `stage_hint.held` is load-bearing: a held room is not a confirmed booking, and the guest
+# must be told so plainly rather than discovering it at the desk. The Spanish has to carry
+# that as clearly as the Arabic does.
+#
+# The key after the dot is a declared id — byte-identical to `locale.ar.yaml`;
+# only the value is translated.
+#
+# NOTE: this root file is what registers `es` for the pack. Spanish and English are both
+# LATIN-script, so unlike the Arabic/Urdu packs the script pass cannot separate them at all
+# and every Latin message goes to the model — which is already how English was detected.
+pack_id: redsea-resorts
+strings:
+  field_picker_footer: 'Elige de la lista 👆'
+
+  status.requested:  'Pendiente de confirmación'
+  status.confirmed:  'Confirmada ✅'
+  status.checked_in: 'Registrado'
+  status.completed:  'Estancia finalizada'
+  status.cancelled:  'Cancelada'
+  status.no_show:    'No se presentó'
+
+  stage.held:       'Reserva provisional (pendiente de depósito)'
+  stage.confirmed:  'Confirmada ✅'
+  stage.checked_in: 'Registrado'
+  stage.completed:  'Estancia finalizada'
+  stage.cancelled:  'Cancelada'
+  stage.no_show:    'No se presentó'
+
+  stage_hint.held:       'ℹ️ La habitación está retenida provisionalmente a tu nombre — se confirma en cuanto llegue el depósito.'
+  stage_hint.confirmed:  'ℹ️ Tu reserva está confirmada. Te esperamos 🌊'
+  stage_hint.checked_in: 'ℹ️ Tu estancia está en curso — dinos si necesitas cualquier cosa.'
+  stage_hint.completed:  'ℹ️ Gracias por elegir nuestros complejos 🌊'
+  stage_hint.cancelled:  'ℹ️ Esta reserva está cancelada.'
+  stage_hint.no_show:    'ℹ️ No se presentó en la fecha reservada.'
+
+  board.bb: 'Alojamiento y desayuno'
+  board.hb: 'Media pensión'
+  board.ai: 'Todo incluido'
+
+  view.sea:    'Vista al mar'
+  view.pool:   'Vista a la piscina'
+  view.garden: 'Vista al jardín'
+  view.lagoon: 'Vista a la laguna'
+
+  destination.hurghada:   'Hurgada'
+  destination.el_gouna:   'El Gouna'
+  destination.marsa_alam: 'Marsa Alam'
+  destination.sharm:      'Sharm el Sheij'
+  destination.dahab:      'Dahab'

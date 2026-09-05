@@ -1,0 +1,64 @@
+flow_id: book-pickup
+
+strings:
+  label.service:    'Service type'
+  label.from:       'Collect from'
+  label.to:         'Deliver to'
+  label.weight:     'Parcel weight'
+  label.address:    'Collection address — street, building and floor'
+  label.pin:        'Collection point on the map'
+  skip_pin:         'The address is enough ⏭️'
+  label.recipient:  "Recipient's name"
+  label.phone:      "Recipient's mobile"
+  label.window:     'Collection time'
+  label.sender_phone: "Sender's number to call at collection"
+
+  field_header.service: '🚚 Which service?'
+  field_cta.service:    'Services'
+  field_header.from:    '📍 Collect from which area?'
+  field_header.to:      '🎯 Deliver to which area?'
+  field_cta.region:     'Areas'
+  field_header.weight:  '⚖️ Roughly how heavy is the parcel?'
+  field_cta.weight:     'Pick'
+  field_header.window:  '🕐 What collection time suits you?'
+  field_cta.window:     'Pick'
+
+  svc.same_day:  '⚡ Same day'
+  svc.next_day:  '📅 Next day'
+  svc.standard:  '📦 Standard'
+  svc.bulky:     '🪑 Large item'
+
+  reg.cairo:       'Cairo and Giza'
+  reg.alexandria:  'Alexandria'
+  reg.delta:       'The Delta'
+  reg.upper:       'Upper Egypt'
+
+  wt.under_1:   'Under 1 kg'
+  wt.under_5:   'Up to 5 kg'
+  wt.under_20:  'Up to 20 kg'
+  wt.over_20:   'Over 20 kg'
+
+  win.morning:    '🌅 Morning'
+  win.afternoon:  '☀️ Afternoon'
+  win.evening:    '🌙 Evening'
+
+  preview.header:   '📋 Confirm the collection request'
+  preview.service:  '🚚 Service: {service}'
+  preview.route:    '📍 From {from} to {to}'
+  preview.weight:   '⚖️ Weight: {weight}'
+  preview.price:    '💰 Price: {price}'
+  preview.eta:      '⏱️ Delivery takes about {hours} hours'
+  preview.address:  '🏠 Collect from: {address}'
+  preview.no_rate:  'ℹ️ There is no published price for this route — our team will price it and contact you before collection.'
+  approve_header:   '🚚 Review the request'
+  approve_footer:   'Tap confirm to file the collection request.'
+  confirm_title:    'Confirm the request ✅'
+  cancel_title:     'Cancel ❌'
+
+  done_header:    '✅ Your collection request is filed'
+  done_ref:       '🧾 Request number: #{ref}'
+  done_price:     '💰 Price: {price}'
+  done_unpriced:  '💰 Price: our team will price it and contact you.'
+  done_next:      '🚚 The driver will call you before arriving.'
+  btn_home:       '🏠 Main menu'
+  aborted:        'The request is cancelled. We are here whenever you need us 📦'

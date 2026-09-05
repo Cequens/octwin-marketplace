@@ -1,0 +1,32 @@
+# binaa-supply — pack-wide English strings.
+#
+# `stage.*` is the `quote` pipeline and `category.*` / `city.*` are select options,
+# all resolved through `$enum_label` so no flow hardcodes a stage or section word.
+# The `shipped` label is the one a customer sees after someone edits a cell in the
+# workbook — the visible end of the inbound seam.
+#
+# The KEY after the dot is a declared id from `xrm.yaml`, not prose: it must stay
+# byte-identical to `locale.ar.yaml`. Only the value is translated.
+pack_id: binaa-supply
+strings:
+  field_picker_footer: 'Pick from the list 👆'
+
+  stage.new:       'New'
+  stage.quoted:    'Quoted'
+  stage.won:       'Approved ✅'
+  stage.shipped:   'Shipped 🚚'
+  stage.delivered: 'Delivered ✅'
+  stage.lost:      'Cancelled'
+
+  category.cement:   'Cement'
+  category.steel:    'Steel'
+  category.blocks:   'Blocks'
+  category.sand:     'Sand and gravel'
+  category.tiles:    'Ceramics and tiles'
+  category.plumbing: 'Plumbing'
+
+  city.riyadh:  'Riyadh'
+  city.kharj:   'Al Kharj'
+  city.diriyah: 'Diriyah'
+  city.qassim:  'Qassim'
+  city.dammam:  'Dammam'

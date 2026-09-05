@@ -1,0 +1,22 @@
+# glamour-salon — pack-wide English strings.
+# `status.*` covers the `booking` system entity's stages, resolved via `$enum_label`.
+# The key after the dot is a declared stage id, not prose — it stays byte-identical
+# to `locale.ar.yaml`; only the value is translated.
+pack_id: glamour-salon
+strings:
+  field_picker_footer: 'Pick from the list 👆'
+
+  status.requested:  'Awaiting confirmation'
+  status.confirmed:  'Confirmed ✅'
+  status.checked_in: 'At the salon'
+  status.completed:  'Visit complete'
+  status.cancelled:  'Cancelled'
+  status.no_show:    'Did not attend'
+
+  category.hair:     'Hair'
+  category.colour:   'Colour and treatments'
+  category.nails:    'Nails'
+  category.skincare: 'Skincare'
+  category.spa:      'Spa'
+  category.makeup:   'Make-up'
+  category.bridal:   'Bridal'

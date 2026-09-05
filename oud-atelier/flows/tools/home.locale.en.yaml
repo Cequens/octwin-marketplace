@@ -1,0 +1,17 @@
+flow_id: home
+
+strings:
+  header:          '🕌 Oud Atelier'
+  greeting:        'Welcome to Oud Atelier 🌟 Carefully chosen perfumes and oud oil.'
+  cart_waiting:    '🛒 You have {count} item(s) in your basket — total {subtotal}.'
+  cta:             'Pick'
+  row_shop:        '🛍️ Browse products'
+  row_shop_d:      'Oud oil · incense · perfumes'
+  row_quiz:        '🔎 Find your scent'
+  row_quiz_d:      'A few quick questions and we will recommend one'
+  row_gifts:       '🎁 Gifts'
+  row_gifts_d:     'Wrapped sets with a gift card'
+  row_cart:        '🛒 Basket'
+  row_cart_d:      'Check your basket and complete the order'
+  row_orders:      '📦 My orders'
+  row_orders_d:    'The status of your previous orders'

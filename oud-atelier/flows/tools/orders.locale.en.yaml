@@ -1,0 +1,23 @@
+flow_id: orders
+
+strings:
+  header:           '📦 Your orders'
+  intro:            'Pick an order to see its details:'
+  cta:              'Orders'
+  row_title:        '📦 Order #{ref}'
+  detail_header:    '📦 Order #{ref}'
+  detail_total:     '💰 Total: {total}'
+  detail_status:    '🚚 Status: {status}'
+  detail_address:   '📍 Address: {address}'
+  detail_payment:   '💳 Payment: {payment}'
+  btn_back:         '↩️ Other orders'
+  btn_shop:         '🛍️ Browse more'
+
+  stage.placed:     'Placed'
+  stage.packed:     'Packed'
+  stage.shipped:    'On the way 🚚'
+  stage.delivered:  'Delivered ✅'
+  stage.cancelled:  'Cancelled'
+
+  pay.cash:         'Cash on delivery'
+  pay.transfer:     'Bank transfer'

@@ -1,0 +1,8 @@
+# Strings for the service_list flow, keyed by $t("service_list.<key>").
+flow_id: service_list
+
+strings:
+  header:          'Available services 📋'
+  body:            'These are the services available within this category. Choose one to view its details, the documents required, and to begin it.'
+  choose:          'Choose a service'
+  tap_for_details: 'Tap to view the details and documents'

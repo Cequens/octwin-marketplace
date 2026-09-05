@@ -1,0 +1,15 @@
+flow_id: home
+
+strings:
+  header:          '🏙️ Gulf Realty'
+  greeting:        'Welcome to Gulf Realty 👋 Pick from the list:'
+  live_viewings:   '📅 You have {count} upcoming viewing(s).'
+  cta:             'Pick'
+  row_browse:      '🏙️ Browse projects'
+  row_browse_d:    'Off-plan and ready homes across the Gulf'
+  row_mortgage:    '🧮 Finance calculator'
+  row_mortgage_d:  'An estimated monthly instalment in seconds'
+  row_viewing:     '🗓️ Book a viewing'
+  row_viewing_d:   'A site visit with a property advisor'
+  row_mine:        '📁 My requests'
+  row_mine_d:      'Your viewings and current requests'

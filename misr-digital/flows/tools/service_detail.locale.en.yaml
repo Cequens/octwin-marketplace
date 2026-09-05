@@ -1,0 +1,19 @@
+# Every user-visible string for the service_detail flow, keyed by
+# `$t("service_detail.<key>")`. Formal register — see the note in home.locale.en.yaml.
+flow_id: service_detail
+
+strings:
+  lbl_authority:    '🏛️ Responsible authority:'
+  lbl_requirements: '📑 Documents / conditions required:'
+  lbl_fees:         '💰 Fees:'
+  lbl_time:         '⏱️ Processing time:'
+  lbl_channel:      '🖥️ How to apply:'
+  disclaimer:       'ℹ️ Fees and processing times are indicative and subject to change — the official source is the service page on the portal.'
+  footer:           'Digital Egypt 🇪🇬'
+  start:            '🚀 Begin the service on the portal'
+  not_online_yet:   '⏳ This service is not yet available electronically on the Digital Egypt portal, and must be applied for at the office of the relevant authority. The information above is for guidance, and you will find the service here as soon as it becomes available on the portal.'
+  # The three taps on a service card. WhatsApp caps buttons at 3 and titles at 20
+  # code points — the longest below is 17, so all three survive.
+  btn_start:        '🚀 Begin service'
+  btn_rate:         '⭐ Rate the info'
+  btn_related:      '🔎 Another service'

@@ -2,7 +2,7 @@
 # Helps citizens browse Egypt's digital-government services, understand the
 # requirements/fees/timing for each, and get routed to start it on digital.gov.eg.
 id:          misr-digital
-version:     '1.11.0'
+version:     '1.13.0'
 description: 'مصر الرقمية: تصفّح الخدمات الحكومية الإلكترونية، اعرف المستندات والرسوم ومدة التنفيذ، وابدأ الخدمة على البوابة.'
 
 listing:
@@ -27,6 +27,7 @@ widget:
   about:  'Find any government service — what to bring, what it costs, how long it takes.'
 
 supported_channels: [whatsapp, web]
+supported_languages: [ar, en]
 required_adapters:  [messaging]
 
 default_settings:

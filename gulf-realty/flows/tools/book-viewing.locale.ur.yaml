@@ -1,0 +1,45 @@
+flow_id: book-viewing
+
+strings:
+  progress.header:   '🗓️ ملاقات طے کرنا'
+  progress.project:  '🏙️ منصوبہ: {project}'
+  progress.advisor:  '👤 مشیر: {advisor}'
+  progress.slot:     '🕐 وقت: {slot}'
+
+  label.project:     'منصوبہ'
+  label.advisor:     'پراپرٹی مشیر'
+  label.slot:        'وقت'
+  label.party:       'آنے والوں کی تعداد'
+  label.name:        'نام'
+
+  field_header.project: '🏙️ آپ کون سا منصوبہ دیکھنا چاہیں گے؟'
+  field_cta.project:    'منصوبے'
+  field_header.advisor: '👤 مشیر منتخب کریں'
+  field_cta.advisor:    'مشیر'
+  field_header.slot:    '🕐 دستیاب اوقات'
+  field_cta.slot:       'اوقات'
+  field_header.party:   '👥 کتنے افراد آ رہے ہیں؟'
+  field_cta.party:      'منتخب کریں'
+
+  party.one:   'ایک فرد'
+  party.two:   'دو افراد'
+  party.four:  'خاندان (3-4)'
+
+  preview.header:   '📋 ملاقات کی تصدیق'
+  preview.project:  '🏙️ منصوبہ: {project}'
+  preview.advisor:  '👤 مشیر: {advisor}'
+  preview.slot:     '🕐 وقت: {slot}'
+  preview.party:    '👥 آنے والے: {party}'
+  approve_header:   '🗓️ بکنگ دیکھیں'
+  approve_footer:   'بکنگ مکمل کرنے کے لیے تصدیق دبائیں۔'
+  confirm_title:    'بکنگ کی تصدیق ✅'
+  cancel_title:     'منسوخ ❌'
+
+  lead_note:        '{advisor} کے ساتھ {slot} کی ملاقات طے ہوئی۔'
+  # Double-quoted so `\n` is a REAL newline (a single-quoted YAML scalar would
+  # emit the two characters verbatim).
+  success:          "✅ {advisor} کے ساتھ آپ کی ملاقات طے ہو گئی — {slot}۔\nبکنگ نمبر: {ref}\n⏰ ملاقات سے پہلے آپ کو یاد دہانی بھیجی جائے گی۔"
+  slot_taken:       '⚠️ معذرت، یہ وقت ابھی ابھی بک ہو گیا۔ دوسرا وقت منتخب کریں، ہم بکنگ مکمل کر دیں گے۔'
+  aborted:          'بکنگ منسوخ کر دی گئی۔ جب ضرورت ہو ہم حاضر ہیں 🌟'
+  reminder.body:    '⏰ یاد دہانی: {project} کی ملاقات — {slot}۔'
+  reminder.mine:    '📁 میری درخواستیں'

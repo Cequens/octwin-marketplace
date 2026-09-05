@@ -1,0 +1,46 @@
+flow_id: estimate
+
+strings:
+  label.product: 'Product'
+  label.price:   'Property price'
+  label.down:    'Down payment'
+  label.term:    'Finance term'
+
+  field_header.product: '📋 Which finance product?'
+  field_cta.product:    'Products'
+  field_header.price:   '🏠 Roughly what is the property price?'
+  field_cta.price:      'Pick'
+  field_header.down:    '💵 How much is the down payment?'
+  field_cta.down:       'Pick'
+  field_header.term:    '📆 Over how long?'
+  field_cta.term:       'Pick'
+
+  price.p500:   'Up to SAR 500,000'
+  price.p800:   'Up to SAR 800,000'
+  price.p1200:  'Up to SAR 1.2 million'
+  price.p2000:  'Up to SAR 2 million'
+  price.p3000:  'Up to SAR 3 million'
+
+  down.d10:  '10% down payment'
+  down.d15:  '15% down payment'
+  down.d20:  '20% down payment'
+  down.d30:  '30% down payment'
+  down.d50:  '50% down payment'
+
+  term.y10:  '10 years'
+  term.y15:  '15 years'
+  term.y20:  '20 years'
+  term.y25:  '25 years'
+
+  header:          '🧮 Estimated monthly instalment'
+  line.product:    '📋 {product} ({structure})'
+  line.price:      '🏠 Property price: {amount}'
+  line.down:       '💵 Down payment ({pct}%): {amount}'
+  line.financed:   '🏦 Amount financed: {amount}'
+  line.term:       '📆 Term: {years} years'
+  line.rate:       '📈 Published profit rate: {rate}%'
+  line.monthly:    '📌 Estimated monthly instalment: {amount}'
+  disclaimer:      'ℹ️ An estimate for guidance only, worked out from the published rate — it is not an offer and not an approval.'
+  footer:          'The decision and the final amount come from the finance committee after the application is studied.'
+  btn_apply:       '📝 Apply'
+  btn_products:    '📋 Other products'

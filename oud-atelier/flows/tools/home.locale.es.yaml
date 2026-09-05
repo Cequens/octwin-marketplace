@@ -1,0 +1,17 @@
+flow_id: home
+
+strings:
+  header:          '🕌 Oud Atelier'
+  greeting:        'Bienvenido a Oud Atelier 🌟 Perfumes y aceite de oud escogidos con cuidado.'
+  cart_waiting:    '🛒 Tienes {count} producto(s) en tu cesta — total {subtotal}.'
+  cta:             'Elige'
+  row_shop:        '🛍️ Ver productos'
+  row_shop_d:      'Aceite de oud · incienso · perfumes'
+  row_quiz:        '🔎 Encuentra tu aroma'
+  row_quiz_d:      'Unas preguntas rápidas y te recomendamos uno'
+  row_gifts:       '🎁 Regalos'
+  row_gifts_d:     'Estuches envueltos con tarjeta de regalo'
+  row_cart:        '🛒 Cesta'
+  row_cart_d:      'Revisa tu cesta y completa el pedido'
+  row_orders:      '📦 Mis pedidos'
+  row_orders_d:    'El estado de tus pedidos anteriores'

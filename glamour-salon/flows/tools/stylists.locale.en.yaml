@@ -1,0 +1,6 @@
+flow_id: stylists
+
+strings:
+  intro:      '👩‍🎨 Our team — ordered by what clients rated them:'
+  rating:     '⭐ {rating} from {count} reviews'
+  btn_book:   '📅 Book with her'

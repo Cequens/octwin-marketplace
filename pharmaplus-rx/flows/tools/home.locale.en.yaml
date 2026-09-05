@@ -1,0 +1,15 @@
+flow_id: home
+
+strings:
+  header:          '💊 PharmaPlus'
+  greeting:        'Welcome 💊 Send a photo of your prescription for the pharmacist to review, or order from the shelf.'
+  in_review:       '🧾 You have {count} prescription(s) with the pharmacist.'
+  cta:             'Pick'
+  row_rx:          '📄 Send a prescription'
+  row_rx_d:        'The photo goes to the pharmacist for review'
+  row_status:      '🧾 My prescription status'
+  row_status_d:    "The pharmacist's decision and the reply time"
+  row_otc:         '🛒 Products without a prescription'
+  row_otc_d:       'Pain relief · vitamins · baby · devices'
+  row_orders:      '📦 My orders'
+  row_orders_d:    'Your orders and where they are'

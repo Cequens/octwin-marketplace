@@ -1,0 +1,13 @@
+flow_id: home
+
+strings:
+  header:            '🏡 Barakah Home Finance'
+  greeting:          'Welcome 🏡 We will walk you through the options and work out an estimated instalment. The decision rests with the finance committee.'
+  in_review:         '📂 You have {count} application(s) under study.'
+  cta:               'Pick'
+  row_products:      '📋 Products and terms'
+  row_products_d:    'Murabaha · Ijara · diminishing Musharaka'
+  row_estimate:      '🧮 Work out an estimated instalment'
+  row_estimate_d:    'From the published rates only'
+  row_apply:         '📝 Apply for finance'
+  row_apply_d:       'We collect the details and pass them to the finance committee'

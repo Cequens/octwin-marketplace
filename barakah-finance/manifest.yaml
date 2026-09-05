@@ -8,7 +8,7 @@
 # record; nothing is inferred.
 
 id:          barakah-finance
-version: 1.11.0
+version: 1.13.0
 description: 'Islamic home finance — indicative murabaha instalment from published rates, a complete application intake, and a credit review a real underwriter decides.'
 
 listing:
@@ -29,13 +29,19 @@ widget:
   about:  'See what your instalments would look like, and apply for a review.'
 
 supported_channels: [whatsapp, web]
+supported_languages: [ar, en]
 required_adapters:  [messaging, vision, storage]
 
 default_settings:
   locale: ar
 
-default_conversation_context:
-  lang: { type: enum, enum: [ar, en, bilingual], default: ar, describe: 'Reply language.' }
+# No `default_conversation_context.lang:` here. That knob was copy-pasted boilerplate:
+# nothing in this pack ever read `$context.lang`, so its `en` / `bilingual` options offered
+# an operator a switch that changed nothing. Removed across the marketplace 2026-09-05.
+#
+# The language is not a manifest setting. Automatic detection reads the customer's own words
+# (`language-detect.ts`), `/lang` overrides it per contact, and what the pack can actually
+# render is derived from the `locale.<lang>.yaml` files it ships.
 
 flows:
   - home

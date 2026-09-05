@@ -1,0 +1,13 @@
+flow_id: my-trip
+
+strings:
+  header:        '🧾 Your booking'
+  pax_suffix:    ' traveller(s)'
+  btn_visa:      '📂 Visa status'
+  btn_upload:    '📎 Upload a document'
+  btn_packages:  '🕋 Packages'
+
+  # The zero branch — no booking yet.
+  none_header:   '🧾 No booking yet'
+  none_body:     'We have not recorded a booking for you yet. Would you like to see the available packages and have us hold one for you?'
+  btn_book:      '📝 Book a package'

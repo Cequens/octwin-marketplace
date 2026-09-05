@@ -17,7 +17,7 @@
 # No pack DB, no code — pure YAML.
 
 id:          binaa-supply
-version:     '1.8.0'
+version:     '1.11.0'
 description: 'Building-materials wholesaler — live prices from the company spreadsheet, RFQs written back into it, Slack alerts to the sales desk, and shipment updates pushed to the customer on WhatsApp.'
 
 listing:
@@ -38,13 +38,19 @@ widget:
   about:  'Check prices, request a quote, and track your order.'
 
 supported_channels: [whatsapp, web]
+supported_languages: [ar, en, ur]
 required_adapters:  [messaging]
 
 default_settings:
   locale: ar
 
-default_conversation_context:
-  lang: { type: enum, enum: [ar, en, bilingual], default: ar, describe: 'Reply language.' }
+# No `default_conversation_context.lang:` here. That knob was copy-pasted boilerplate:
+# nothing in this pack ever read `$context.lang`, so its `en` / `bilingual` options offered
+# an operator a switch that changed nothing. Removed across the marketplace 2026-09-05.
+#
+# The language is not a manifest setting. Automatic detection reads the customer's own words
+# (`language-detect.ts`), `/lang` overrides it per contact, and what the pack can actually
+# render is derived from the `locale.<lang>.yaml` files it ships.
 
 # The currency and the list page size live here so the yard manager can change
 # them without touching flow logic.

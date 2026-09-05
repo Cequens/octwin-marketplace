@@ -1,0 +1,45 @@
+flow_id: book-tour
+
+strings:
+  progress.header:  '🏫 Book a visit'
+  progress.campus:  '🏫 Campus: {campus}'
+  progress.slot:    '🕐 Time: {slot}'
+
+  label.campus:    'Campus'
+  label.slot:      'Time'
+  label.guardian:  "Guardian's name"
+  label.party:     'Number of people coming'
+
+  field_header.campus: '🏫 Which campus would you like to visit?'
+  field_cta.campus:    'Campuses'
+  field_header.slot:   '🕐 Available tour times'
+  field_cta.slot:      'Times'
+  field_header.party:  '👥 How many people are coming?'
+  field_cta.party:     'Pick'
+  places_left:         '{remaining} place(s) left'
+
+  party.one:    'One person'
+  party.two:    'Two people'
+  party.three:  'Three'
+
+  preview.header:  '📋 Confirm the visit'
+  preview.campus:  '🏫 Campus: {campus}'
+  preview.slot:    '🕐 Time: {slot}'
+  preview.party:   '👥 People coming: {party}'
+  approve_header:  '🏫 Review the visit'
+  approve_footer:  'Tap confirm to hold your place on the tour.'
+  confirm_title:   'Confirm the visit ✅'
+  cancel_title:    'Cancel ❌'
+
+  done_header:    '✅ Your visit is booked'
+  done_body:      '🏫 {campus} — 🕐 {slot}'
+  done_address:   '📍 Address: {address}'
+  done_ref:       '🧾 Booking number: #{ref}'
+  done_bring:     '📎 Bring the birth certificate and the latest report card if you can.'
+  btn_apply:      '📝 Apply'
+  btn_progs:      '📚 Programmes'
+  full:           '⚠️ This tour filled up moments ago. Pick another time and we will book it for you.'
+  aborted:        'The booking is cancelled. We are here whenever you need us 🎓'
+  enquiry_note:   'Enquiry with a booked visit to {campus} — {slot}.'
+  reminder.body:  '⏰ A reminder of your visit to {campus} — {slot}. We look forward to seeing you!'
+  reminder.progs: '📚 Programmes'

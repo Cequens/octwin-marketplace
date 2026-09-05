@@ -1,0 +1,6 @@
+flow_id: shop
+
+strings:
+  intro:      '🛍️ He elegido {count} de nuestra colección para ti — desliza para verlos:'
+  btn_add:    '🛒 Añadir a la cesta'
+  btn_detail: '📋 Detalles'

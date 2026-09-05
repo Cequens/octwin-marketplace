@@ -1,0 +1,12 @@
+flow_id: dentists
+
+strings:
+  intro:              '👩‍⚕️ Our dentists — ordered by what patients rated them:'
+  rating:             '⭐ {rating} from {count} reviews'
+  btn_book:           '🗓️ Book with them'
+  sp.general:         '🦷 General dentistry'
+  sp.orthodontics:    '😁 Orthodontics'
+  sp.periodontics:    '🩹 Gums'
+  sp.endodontics:     '🔬 Root canal'
+  sp.pediatric:       '🧒 Children'
+  sp.cosmetic:        '✨ Cosmetic dentistry'

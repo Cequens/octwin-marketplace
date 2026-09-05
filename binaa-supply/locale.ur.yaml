@@ -1,0 +1,35 @@
+# binaa-supply — pack-wide Urdu strings.
+#
+# `stage.*` is the `quote` pipeline and `category.*` / `city.*` are select options,
+# all resolved through `$enum_label` so no flow hardcodes a stage or section word.
+#
+# The KEY after the dot is a declared id from `xrm.yaml`, not prose: it must stay
+# byte-identical to `locale.ar.yaml`. Only the value is translated.
+#
+# NOTE: this file is what registers `ur` for the pack (`derivePackLocales` reads root-level
+# files only). Once it exists, Arabic and Urdu are both Arabic-SCRIPT languages the pack
+# ships, so the detector's free script pass can no longer decide between them and hands the
+# message to the model — by design, and measured at zero ur→ar errors.
+pack_id: binaa-supply
+strings:
+  field_picker_footer: 'فہرست میں سے منتخب کریں 👆'
+
+  stage.new:       'نیا'
+  stage.quoted:    'قیمت دی گئی'
+  stage.won:       'منظور شدہ ✅'
+  stage.shipped:   'روانہ کر دیا 🚚'
+  stage.delivered: 'پہنچا دیا ✅'
+  stage.lost:      'منسوخ'
+
+  category.cement:   'سیمنٹ'
+  category.steel:    'سریا'
+  category.blocks:   'بلاک'
+  category.sand:     'ریت اور بجری'
+  category.tiles:    'ٹائل اور سیرامک'
+  category.plumbing: 'پلمبنگ'
+
+  city.riyadh:  'ریاض'
+  city.kharj:   'الخرج'
+  city.diriyah: 'الدرعیہ'
+  city.qassim:  'القصیم'
+  city.dammam:  'الدمام'

@@ -25,7 +25,7 @@
 # No pack DB, no code — pure YAML.
 
 id:          nakhla-giving
-version: 0.8.0
+version: 0.10.0
 description: 'Charity donations over WhatsApp — browse campaigns, get a Moyasar checkout link on the turn, and receive a receipt the moment the payment clears.'
 
 listing:
@@ -46,13 +46,19 @@ widget:
   about:  'Give in a few taps, choose your cause, and get a receipt.'
 
 supported_channels: [whatsapp, web]
+supported_languages: [ar, en]
 required_adapters:  [messaging]
 
 default_settings:
   locale: ar
 
-default_conversation_context:
-  lang: { type: enum, enum: [ar, en, bilingual], default: ar, describe: 'Reply language.' }
+# No `default_conversation_context.lang:` here. That knob was copy-pasted boilerplate:
+# nothing in this pack ever read `$context.lang`, so its `en` / `bilingual` options offered
+# an operator a switch that changed nothing. Removed across the marketplace 2026-09-05.
+#
+# The language is not a manifest setting. Automatic detection reads the customer's own words
+# (`language-detect.ts`), `/lang` overrides it per contact, and what the pack can actually
+# render is derived from the `locale.<lang>.yaml` files it ships.
 
 # Currency and the preset amounts live here so the charity can change them
 # without touching flow logic. `minor_units` is the multiplier Moyasar wants:

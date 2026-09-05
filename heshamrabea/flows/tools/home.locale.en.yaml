@@ -1,0 +1,13 @@
+# User-visible strings for the home flow, keyed by $t("home.<key>").
+flow_id: home
+
+strings:
+  header:       "Hesham Rabea Men's Barbershop 💈"
+  greeting:     'Welcome to Hesham Rabea 👋 Pick from the list:'
+  cta:          'Pick'
+  row_book:     '🗓️ Book an appointment'
+  row_services: '✂️ Services and prices'
+  row_offers:   '👑 Groom packages'
+  row_branches: '📍 Branches'
+  row_contact:  '📞 Contact us and hours'
+  row_faq:      '❓ Frequently asked questions'

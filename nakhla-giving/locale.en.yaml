@@ -1,0 +1,35 @@
+# nakhla-giving — pack-wide English strings.
+#
+# This file exists because `my-donations` renders a donation's stage through
+# `$enum_label($item.stage, "stage")` with NO fallback argument. Without these keys the
+# donor's status line resolved to nothing on every gift — the pack was the only one in the
+# marketplace with no pack-level locale at all.
+#
+# The `stage.*` values mirror `xrm.yaml`'s `stage_labels:`, which is the CANONICAL
+# source (the console reads it directly). Keep the two in step: the declaration names the
+# stage for the operator, this file is the flow-side lookup for the donor.
+#
+# The key after the dot is a declared id — byte-identical to `locale.ar.yaml`;
+# only the value is translated.
+pack_id: nakhla-giving
+strings:
+  # `donation` pipeline — what `my-donations` reads.
+  stage.pending:  'Awaiting payment'
+  stage.paid:     'Paid'
+  stage.failed:   'Payment failed'
+  stage.refunded: 'Refunded'
+
+  # `appeal` pipeline. No flow renders these today, but the two pipelines share this flat
+  # `stage.` namespace and their keys do not collide, so declaring them keeps a future
+  # `$enum_label(appeal.stage, "stage")` from hitting the same empty-string bug.
+  stage.draft:  'Draft'
+  stage.active: 'Active campaign'
+  stage.closed: 'Closed'
+
+  # Per-stage explainers — what the donor should expect next. `stage_hints:` in xrm.yaml is
+  # the canonical home for these now; kept here in step so a flow can render one via
+  # `$enum_label(stage, "stage_hint")` the way the other packs do.
+  stage_hint.pending:  'Your pledge is recorded but not yet paid — complete the payment and your receipt will arrive.'
+  stage_hint.paid:     'Your donation has arrived and the receipt has been issued. May God reward you.'
+  stage_hint.failed:   'The payment did not complete — you can try again.'
+  stage_hint.refunded: 'The amount has been returned to you.'

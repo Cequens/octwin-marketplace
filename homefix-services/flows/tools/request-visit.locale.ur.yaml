@@ -1,0 +1,83 @@
+flow_id: request-visit
+
+strings:
+  # The flow's OWN prompt. English — it instructs the model rather than speaking to the customer,
+  # so it is byte-identical to the Arabic and English files. `visible_issue` stays in Egyptian
+  # Arabic ON PURPOSE even for an Urdu conversation: it is written into the work order that a
+  # dispatcher reads, so the stored value must not change language with the customer.
+  vision_prompt: >-
+    A photograph of a household fault a technician has been asked to fix. Reply as JSON:
+    {"trade":"plumbing|electrical|ac|carpentry|painting|appliance|other",
+    "urgency":"routine|soon|emergency",
+    "visible_issue":"one or two short lines in Egyptian Arabic describing ONLY what is visible"}.
+    Judge urgency from visible harm — water actively escaping or exposed live wiring is emergency.
+    Never quote a price and never say whether something is safe to use.
+  progress.header:   '🛠️ کاریگر کی درخواست'
+  progress.service:  '🔧 خدمت: {service}'
+  progress.urgency:  '✅ کتنی جلدی'
+  progress.emirate:  '✅ امارت'
+
+  label.service:  'مطلوبہ خدمت'
+  label.urgency:  'کتنی جلدی'
+  label.emirate:  'امارت'
+  label.property: 'پتہ'
+  new_address:    '➕ نیا پتہ'
+  field_header.property: '🏠 وزٹ کس پتے پر ہے؟'
+  field_cta.property:    'میرے پتے'
+  label.address:  'پتہ — عمارت، فلیٹ اور منزل نمبر'
+  label.pin:      'نقشے پر آپ کا مقام'
+  label.contact:  'رابطے کا نام'
+  label.phone:    'پہنچنے پر رابطے کا نمبر'
+  label.window:   'پسندیدہ وقت'
+  label.fault:    'مسئلہ بیان کریں'
+  label.photo:    'مسئلے کی تصویر (اختیاری)'
+  skip:           'چھوڑ دیں ⏭️'
+  skip_pin:       'پتہ ہی کافی ہے ⏭️'
+
+  field_header.service: '🔧 آپ کو کون سی خدمت چاہیے؟'
+  field_cta.service:    'خدمات'
+  field_header.urgency: '⏱️ کتنی جلدی درکار ہے؟'
+  field_cta.urgency:    'منتخب کریں'
+  field_header.emirate: '📍 کس امارت میں؟'
+  field_cta.emirate:    'امارات'
+  field_header.window:  '🕐 کون سا وقت مناسب ہے؟'
+  field_cta.window:     'منتخب کریں'
+
+  urg.emergency:  '🚨 ہنگامی — 4 گھنٹے میں'
+  urg.soon:       '⚡ فوری — 12 گھنٹے میں'
+  urg.routine:    '🗓️ عام — 48 گھنٹے میں'
+
+  em.dubai:      'دبئی'
+  em.sharjah:    'شارجہ'
+  em.abu_dhabi:  'ابوظہبی'
+  em.ajman:      'عجمان'
+  em.rak:        'راس الخیمہ'
+
+  win.morning:    '🌅 صبح (8 — 12)'
+  win.afternoon:  '☀️ دوپہر (12 — 5)'
+  win.evening:    '🌙 شام (5 — 9)'
+
+  preview.header:    '📋 درخواست کی تصدیق'
+  preview.service:   '🔧 خدمت: {service}'
+  preview.urgency:   '⏱️ فوریت: {urgency}'
+  preview.emirate:   '📍 امارت: {emirate}'
+  preview.address:   '🏠 پتہ: {address}'
+  preview.pin:       '📍 نقشے پر مقام: بھیج دیا گیا'
+  preview.window:    '🕐 پسندیدہ وقت: {window}'
+  preview.callout:   '💰 معائنہ فیس: {fee}'
+  preview.surcharge: '🚨 ہنگامی بلاوے کی اضافی فیس: {fee}'
+  preview.note:      'ℹ️ یہ صرف معائنہ فیس ہے — مرمت کی لاگت کاریگر کے معائنے کے بعد طے ہوتی ہے اور آپ کو تخمینے کے طور پر بھیجی جاتی ہے۔'
+  approve_header:    '🛠️ درخواست دیکھیں'
+  approve_footer:    'تصدیق کریں تاکہ درخواست آپ کے علاقے کی ٹیم کو بھیج دی جائے۔'
+  confirm_title:     'درخواست کی تصدیق ✅'
+  cancel_title:      'منسوخ ❌'
+
+  done_header:  '✅ آپ کی درخواست بھیج دی گئی'
+  done_ref:     '🧾 ورک آرڈر نمبر: #{ref}'
+  done_crew:    '👷 {emirate} کی ٹیم کے سپرد'
+  done_window:  '⏱️ ہم زیادہ سے زیادہ {hours} گھنٹوں میں رابطہ کریں گے'
+  done_next:    '📞 کاریگر پہنچنے سے پہلے وقت کی تصدیق کے لیے فون کرے گا۔'
+  done_footer:  'آپ کسی بھی وقت "میری درخواستیں" سے صورتحال دیکھ سکتے ہیں۔'
+  btn_mine:     '📋 میری درخواستیں'
+  btn_services: '🔧 خدمات'
+  aborted:      'درخواست منسوخ کر دی گئی۔ جب ضرورت ہو ہم حاضر ہیں 🛠️'

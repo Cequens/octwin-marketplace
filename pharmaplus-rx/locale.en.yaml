@@ -1,0 +1,81 @@
+# pharmaplus-rx — pack-wide English strings.
+#
+# The wording here is part of the SAFETY DESIGN, and the English must carry it as carefully as
+# the Arabic does. `stage_hint.pharmacist_review` says a pharmacist is READING the prescription
+# — never that it is approved — and `decision.needs_clarification` is phrased so it can be
+# relayed verbatim without the bot adding a clinical gloss.
+#
+# `cases.*` / `status.*` / `decision.*` are the boot-enforced casework locale contract, checked
+# per language. The key after the dot is a declared id, not prose — byte-identical to
+# `locale.ar.yaml`; only the value is translated.
+pack_id: pharmaplus-rx
+strings:
+  field_picker_footer: 'Pick from the list 👆'
+
+  cases.prescription_review: 'Prescription review'
+  cases.repeat_request:      'Repeat prescription request'
+  cases.insurance_query:     'Insurance query'
+  cases.general_query:       'General query'
+  cases.otc_order:           'Shelf order'
+
+  status.open:              'With the pharmacist'
+  status.in_progress:       'Under review'
+  status.awaiting_customer: 'Waiting for your reply'
+  status.resolved:          'Review complete'
+  status.closed:            'Closed'
+  status.reopened:          'Reopened'
+
+  priority.low:    'Low'
+  priority.normal: 'Normal'
+  priority.high:   'High'
+  priority.urgent: 'Urgent'
+
+  decision.resolve:                 'Review complete'
+  decision.reject:                  'Could not be dispensed'
+  decision.request_more_info:       'Clarification needed from you'
+  decision.escalate:                'Escalated to the responsible pharmacist'
+  decision.approved_for_dispensing: 'Approved for dispensing ✅'
+  decision.needs_clarification:     'The prescription needs clarifying'
+  decision.item_unavailable:        'The medicine is not available'
+  decision.refer_to_prescriber:     'Please go back to the prescribing doctor'
+  decision.order_dispatched:        'Your order is on its way 🛵'
+
+  stage.received:          'Order received'
+  stage.pharmacist_review: 'The pharmacist is reviewing the prescription'
+  stage.approved:          'Approved for dispensing'
+  stage.dispensed:         'Prepared'
+  stage.delivered:         'Delivered ✅'
+  stage.rejected:          'Could not be dispensed'
+
+  stage_hint.received:          'ℹ️ We have your order and it is on its way to the pharmacist.'
+  stage_hint.pharmacist_review: 'ℹ️ The pharmacist is reviewing the prescription now — this is not an approval. We will tell you their decision as soon as they are done.'
+  stage_hint.approved:          'ℹ️ The pharmacist has approved dispensing, and your order is being prepared.'
+  stage_hint.dispensed:         'ℹ️ Your order is ready and on its way to you.'
+  stage_hint.delivered:         'ℹ️ Delivered. Get well soon 🌿'
+  stage_hint.rejected:          'ℹ️ The pharmacist could not dispense this prescription — read their message and speak to your doctor.'
+
+  # `otc_order` pipeline (shelf orders — no clinical review involved)
+  stage.placed:           'Placed'
+  stage.packed:           'Packed'
+  stage.out_for_delivery: 'With the driver 🛵'
+  stage.cancelled:        'Cancelled'
+
+  stage_hint.placed:           'ℹ️ The order has reached the pharmacy and is being prepared.'
+  stage_hint.packed:           'ℹ️ The order is ready and going out with the driver.'
+  stage_hint.out_for_delivery: 'ℹ️ The driver is on the way — have the cash ready if you are paying in cash.'
+  stage_hint.cancelled:        'ℹ️ This order is cancelled.'
+
+  area.nasr_city:   'Nasr City'
+  area.maadi:       'Maadi'
+  area.heliopolis:  'Heliopolis'
+  area.zamalek:     'Zamalek'
+  area.october:     '6th of October'
+  area.giza:        'Giza'
+
+  category.pain_relief: 'Pain relief'
+  category.cold_flu:    'Cold and flu'
+  category.vitamins:    'Vitamins'
+  category.baby:        'Baby care'
+  category.skincare:    'Skincare'
+  category.first_aid:   'First aid'
+  category.devices:     'Medical devices'

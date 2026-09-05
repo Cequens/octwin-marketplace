@@ -7,7 +7,7 @@
 # room record, and add-ons are a second, optional pass so a guest is never blocked.
 
 id:          redsea-resorts
-version: 1.6.0
+version: 1.9.0
 description: 'Red Sea resort reservations — room carousel, real room-inventory availability, board-basis pricing, and stay confirmation on WhatsApp.'
 
 listing:
@@ -28,13 +28,19 @@ widget:
   about:  'Check availability, compare board options, and book your stay.'
 
 supported_channels: [whatsapp, web]
+supported_languages: [ar, en, es]
 required_adapters:  [messaging]
 
 default_settings:
   locale: ar
 
-default_conversation_context:
-  lang: { type: enum, enum: [ar, en, bilingual], default: ar, describe: 'Reply language.' }
+# No `default_conversation_context.lang:` here. That knob was copy-pasted boilerplate:
+# nothing in this pack ever read `$context.lang`, so its `en` / `bilingual` options offered
+# an operator a switch that changed nothing. Removed across the marketplace 2026-09-05.
+#
+# The language is not a manifest setting. Automatic detection reads the customer's own words
+# (`language-detect.ts`), `/lang` overrides it per contact, and what the pack can actually
+# render is derived from the `locale.<lang>.yaml` files it ships.
 
 config:
   policy:

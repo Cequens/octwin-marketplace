@@ -1,0 +1,6 @@
+flow_id: services
+
+strings:
+  intro:      '💅 Our services — swipe to browse:'
+  duration:   '⏱️ Takes about {min} minutes'
+  btn_book:   '📅 Book'

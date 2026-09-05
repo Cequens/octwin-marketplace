@@ -1,0 +1,6 @@
+flow_id: rooms
+
+strings:
+  intro:      '🛏️ Nuestras habitaciones disponibles — desliza para verlas:'
+  from:       '💰 Desde {price} por noche (alojamiento y desayuno)'
+  btn_book:   '📅 Reservar'

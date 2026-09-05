@@ -1,0 +1,39 @@
+flow_id: donate
+
+strings:
+  # Gap-card labels — one per collect field, read by `$collect_missing_labels`.
+  f_appeal:        'Campaign'
+  f_amount:        'Amount'
+  f_donor:         'Name'
+  err_amount:      'The amount must be greater than zero 🙏'
+
+  # The appeal picker (a dynamic `options:` block, so these are bare keys).
+  pick_header:     '🌱 Where would you like your donation to go?'
+  pick_body:       'These are the campaigns open right now.'
+  pick_cta:        'Choose a campaign'
+
+  stale_appeal:    'It looks like this campaign has closed or is not available at the moment 🌿 Would you like to see the open campaigns?'
+  btn_appeals:     '📋 Available campaigns'
+
+  confirm_header:  '📝 Review your donation'
+  preview_appeal:  '🌱 Campaign: {appeal}'
+  preview_amount:  '💰 Amount: {amount}'
+  preview_donor:   '👤 In the name of: {donor}'
+  btn_confirm:     '✅ Confirm and issue the payment link'
+  btn_cancel:      '❌ Cancel'
+
+  # `ready_link` (a raw {url} line) and `btn_mine` were REMOVED with the switch to
+  # a `cta_url` render: the link now rides a native URL button, and that intent
+  # carries only one button. Never print a checkout URL into body text — in the
+  # Arabic twin, bidi reordering breaks it across lines and strands the punctuation.
+  ready_header:    '🔒 Your payment link is ready'
+  ready_amount:    '💰 {amount} towards {appeal}'
+  ready_note:      'ℹ️ Payment happens on the payment gateway’s own page — we never ask you for card details here.'
+  ready_footer:    'Your receipt arrives here as soon as the payment goes through'
+  btn_pay:         '🔒 Pay now'
+
+  no_link_header:  '⏳ We have recorded your donation'
+  no_link_body:    'We recorded your donation but could not issue the payment link just now. Our team will send you the link shortly, and nothing has been charged.'
+
+  not_configured:  'Sorry, our payment gateway needs setting up by the team. We have noted your interest and will be in touch shortly 🌿'
+  save_failed:     'Something went wrong on our side and we could not record the donation. Please try again in a moment.'

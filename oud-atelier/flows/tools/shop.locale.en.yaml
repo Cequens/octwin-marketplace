@@ -1,0 +1,6 @@
+flow_id: shop
+
+strings:
+  intro:      '🛍️ I have picked {count} from our collection for you — swipe to browse:'
+  btn_add:    '🛒 Add to basket'
+  btn_detail: '📋 Details'

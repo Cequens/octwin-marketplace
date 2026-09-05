@@ -1,0 +1,15 @@
+flow_id: product
+
+strings:
+  price:          '💰 Precio: {price}'
+  notes:          '🌿 Notas: {notes}'
+  longevity:      '⏳ Duración: {longevity}'
+  long.light:     'Ligera'
+  long.moderate:  'Moderada'
+  long.long:      'Larga'
+  long.very_long: 'Muy larga'
+  in_stock:       '📦 En stock, listo para enviar'
+  out_of_stock:   '⚠️ Agotado por ahora'
+  btn_add:        '🛒 Añadir a la cesta'
+  btn_cart:       '🧾 Mi cesta'
+  btn_more:       '🛍️ Otros productos'

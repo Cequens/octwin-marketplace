@@ -1,0 +1,53 @@
+# homefix-services — pack-wide English strings.
+#
+# `urgency.*` / `emirate.*` / `window.*` label the select values the flows echo back,
+# and `stage.*` / `stage_hint.*` the `work_order` pipeline — all resolved through
+# `$enum_label`, so no flow hardcodes a value's wording. `decision.*` labels the
+# dispatch dispositions declared in worklist.yaml.
+#
+# The key after the dot is a declared id, not prose — byte-identical to `locale.ar.yaml`;
+# only the value is translated.
+pack_id: homefix-services
+strings:
+  field_picker_footer: 'Pick from the list 👆'
+
+  urgency.emergency:  'Emergency 🚨'
+  urgency.soon:       'Urgent ⚡'
+  urgency.routine:    'Routine 🗓️'
+
+  emirate.dubai:      'Dubai'
+  emirate.sharjah:    'Sharjah'
+  emirate.abu_dhabi:  'Abu Dhabi'
+  emirate.ajman:      'Ajman'
+  emirate.rak:        'Ras Al Khaimah'
+
+  window.morning:     'Morning'
+  window.afternoon:   'Afternoon'
+  window.evening:     'Evening'
+
+  trade.plumbing:     'Plumbing'
+  trade.electrical:   'Electrical'
+  trade.ac:           'Air conditioning'
+  trade.carpentry:    'Carpentry'
+  trade.painting:     'Painting'
+  trade.appliance:    'Home appliances'
+  trade.other:        'Other'
+
+  stage.received:       'Request received'
+  stage.dispatched:     'Technician on the way 👷'
+  stage.on_site:        'Technician on site'
+  stage.awaiting_parts: 'Waiting for parts'
+  stage.completed:      'Completed ✅'
+  stage.cancelled:      'Cancelled'
+
+  stage_hint.received:       'ℹ️ Your area team has the request and is assigning a technician.'
+  stage_hint.dispatched:     'ℹ️ A technician is assigned — they will call you before arriving.'
+  stage_hint.on_site:        'ℹ️ The technician is on site now.'
+  stage_hint.awaiting_parts: 'ℹ️ Parts are needed — we will tell you the arrival time as soon as they are available.'
+  stage_hint.completed:      'ℹ️ The work is done. If the problem comes back, contact us straight away.'
+  stage_hint.cancelled:      'ℹ️ This request is cancelled.'
+
+  decision.technician_assigned: 'Technician assigned'
+  decision.quote_sent:          'Quote sent'
+  decision.parts_needed:        'Parts needed'
+  decision.job_done:            'Work completed'

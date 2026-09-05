@@ -1,0 +1,44 @@
+flow_id: book-appointment
+
+strings:
+  progress.header:     '📅 Book an appointment'
+  progress.treatment:  '💅 Service: {treatment}'
+  progress.stylist:    '👩‍🎨 Specialist: {stylist}'
+  progress.slot:       '🕐 Time: {slot}'
+
+  label.treatment:  'Service'
+  label.stylist:    'Specialist'
+  label.slot:       'Time'
+  label.notes:      'Notes for the specialist'
+
+  field_header.treatment: '💅 Which service would you like?'
+  field_cta.treatment:    'Services'
+  field_header.stylist:   '👩‍🎨 Choose your specialist'
+  field_cta.stylist:      'The team'
+  field_header.slot:      '🕐 Available times'
+  field_cta.slot:         'Times'
+
+  preview.header:     '📋 Confirm your appointment'
+  preview.treatment:  '💅 Service: {treatment}'
+  preview.stylist:    '👩‍🎨 Specialist: {stylist}'
+  preview.slot:       '🕐 Time: {slot}'
+  preview.duration:   '⏱️ Takes about {min} minutes'
+  preview.notes:      '📝 Notes: {notes}'
+  approve_header:     '📅 Review your appointment'
+  approve_footer:     'Tap confirm to lock in the time.'
+  confirm_title:      'Confirm the appointment ✅'
+  cancel_title:       'Cancel ❌'
+
+  done_header:   '✅ Your appointment is confirmed'
+  done_body:     '👩‍🎨 {stylist} — 🕐 {slot}'
+  done_ref:      '🧾 Booking number: #{ref}'
+  done_note:     '⏰ We will send you a reminder the day before.'
+  btn_mine:      '🗓️ My appointments'
+  btn_services:  '💅 Other services'
+  # Two failures, two strings — they shared one line until 2026-08-08, which told a
+  # client her time was "taken" when it had simply never been long enough.
+  slot_taken:    '⚠️ Sorry, that time has just been booked. Pick another one from the available times and we will lock it in for you.'
+  slot_expired:  '⚠️ That time is no longer long enough for this service. Please pick another from the available times.'
+  aborted:       'The booking is cancelled. We are here whenever you need us 💐'
+  reminder.body: '⏰ A reminder of your {treatment} appointment — {slot}. We look forward to seeing you 💐'
+  reminder.mine: '🗓️ My appointments'

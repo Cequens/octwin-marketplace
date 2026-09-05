@@ -1,0 +1,19 @@
+flow_id: home
+
+strings:
+  header:          '🏗️ Binaa Building Materials'
+  greeting:        'Welcome to Binaa Building Materials — live prices and delivery to site.'
+  open_rfqs:       '📄 You have {count} quote request(s) under review.'
+  footer:          'Riyadh, Al Kharj and Diriyah · delivery to site'
+  cta:             'How can we help?'
+
+  row_prices:      '🧱 Price list'
+  row_prices_d:    'Prices updated live from the sales system'
+  row_cement:      '🪨 Cement'
+  row_cement_d:    'Every type of cement and mortar'
+  row_steel:       '🔧 Steel'
+  row_steel_d:     'Rebar in all sizes'
+  row_rfq:         '📝 Request a quote'
+  row_rfq_d:       'We log your request and come back with an approved price'
+  row_mine:        '📄 My requests'
+  row_mine_d:      'Track your requests and shipping'
