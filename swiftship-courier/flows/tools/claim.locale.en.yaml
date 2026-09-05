@@ -3,11 +3,13 @@ flow_id: claim
 strings:
   # The flow's OWN vision prompt — it knows which document it is looking at, where a pack-wide
   # image prompt has to serve every picture a customer might send. English, because it instructs
-  # the model rather than speaking to the customer — so it is byte-identical to the Arabic file,
-  # including the duplicated "a photograph of a photograph of" (logged in the marketplace backlog;
-  # correcting it here would put the two languages out of step).
+  # the model rather than speaking to the customer — so it is byte-identical to the Arabic file.
+  # It read "a photograph of a photograph of a damaged parcel" until 2026-09-05; that names a
+  # different subject from the one the courier's customer actually sends, on a pass that
+  # transcribes a tracking number off a label. Corrected in BOTH language files at once, because
+  # the two drifting apart is what changes what gets transcribed.
   vision_prompt: >-
-    A photograph of a photograph of a damaged parcel or its shipping label. Reply as JSON: {"tracking_number":"tracking number exactly as printed on the label, else null",
+    A photograph of a damaged parcel or its shipping label. Reply as JSON: {"tracking_number":"tracking number exactly as printed on the label, else null",
     "visible_damage":"one or two short lines in Egyptian Arabic describing ONLY the damage that is visible, else null"}.
     Copy characters exactly — never correct, complete or reformat a value, and never infer one
     that is not visible.
