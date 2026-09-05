@@ -129,19 +129,31 @@ steps:
 
   # Advance the guardian's EXISTING application if they have one, else create the enquiry
   # so the tour is still attributable. Either way exactly one record reaches `tour_booked`.
+  #
+  # The place is ALREADY HELD by `reserve_place` above, so no bookkeeping outcome here may
+  # cost the guardian their confirmation card or their reminder. Every port continues to
+  # `fire_milestone` for that reason — an empty port body would synthesise a canonical
+  # terminal (`ok: []` → `end: applied`) and end the flow right here.
   advance_funnel:
     - if: '$state.application_id != null'
       then:
-        - do: record_save
+        # `record_stage`, not `record_save`. A save may only set the INITIAL stage, on create:
+        # passing `stage:` together with a `record_id:` is refused outright — the ENTIRE write,
+        # fields included — because writing the column directly would bypass the pipeline
+        # check, the `stage_change` event, `completed_at`, and the `on.enter` reactions.
+        - do: record_stage
           args:
-            entity:    application
             record_id: '$state.application_id'
-            stage:     tour_booked
+            to:        tour_booked
           bind: app
           outputs:
-            ok:      []
-            invalid: []
-            failed:  []
+            ok:          [{ goto: fire_milestone }]
+            # Already at or past `tour_booked` — this guardian has booked a tour before, so
+            # the milestone has already fired. `$app.record_id` is unset on these ports, which
+            # is what makes `fire_milestone` skip itself rather than double-count the funnel.
+            not_allowed: [{ goto: fire_milestone }]
+            not_found:   [{ goto: fire_milestone }]
+            failed:      [{ goto: fire_milestone }]
       else:
         - do: record_save
           args:
@@ -152,10 +164,9 @@ steps:
               notes:         '$t("book-tour.enquiry_note", { campus: $coalesce($campus_label, "-"), slot: $coalesce($state.slot_label, "-") })'
           bind: app
           outputs:
-            ok:      []
-            invalid: []
-            failed:  []
-    - goto: fire_milestone
+            ok:      [{ goto: fire_milestone }]
+            invalid: [{ goto: fire_milestone }]
+            failed:  [{ goto: fire_milestone }]
 
   fire_milestone:
     - if: '$app.record_id != null'
