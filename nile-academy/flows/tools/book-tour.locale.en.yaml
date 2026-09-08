@@ -43,3 +43,4 @@ strings:
   enquiry_note:   'Enquiry with a booked visit to {campus} — {slot}.'
   reminder.body:  '⏰ A reminder of your visit to {campus} — {slot}. We look forward to seeing you!'
   reminder.progs: '📚 Programmes'
+  no_slots:   'Sorry, this campus has no tour times available right now. Would you like to try another campus, or shall I look again later?'

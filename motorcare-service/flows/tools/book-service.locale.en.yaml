@@ -42,3 +42,4 @@ strings:
   aborted:          'The booking is cancelled. We are here whenever you need us 🔧'
   reminder.body:    '⏰ A reminder of your car service appointment — {slot} at {bay}.'
   reminder.garage:  '🚗 My cars'
+  no_slots:   'Sorry, the workshop has no times available right now. Shall I look for the next opening later?'

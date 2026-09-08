@@ -118,6 +118,9 @@ steps:
               # picker and the reservation agree by construction: only starts with enough
               # consecutive free slots to hold the whole treatment are offered.
               fetch:  { do: slot_list, args: { resource_record_id: '$state.stylist_id', fits_minutes: '$coalesce($tr_minutes, $state.tr_minutes, 90)' }, bind: slots }
+              # A fully-booked stylist is a normal answer, not a fault. `fallback: text`
+              # is wrong here — this field holds the slot the booking writes.
+              on_empty: no_slots
               rows:   '$slots'
               map:
                 value: '$item.slot_start'
@@ -229,3 +232,9 @@ steps:
 
   aborted:
     - end: { status: aborted, body: '{$t("book-appointment.aborted")}' }
+
+  # Reached from the slot picker's on_empty: when there is nothing free to
+  # offer. aborted, not applied - nothing was booked, and the terminal drives
+  # the envelope, thread memory and analytics.
+  no_slots:
+    - end: { status: aborted, body: '{$t("book-appointment.no_slots")}' }

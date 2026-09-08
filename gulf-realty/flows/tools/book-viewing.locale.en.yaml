@@ -43,3 +43,4 @@ strings:
   aborted:          'The booking is cancelled. We are here whenever you need us 🌟'
   reminder.body:    '⏰ Reminder: viewing at {project} — {slot}.'
   reminder.mine:    '📁 My requests'
+  no_slots:   'Sorry, this advisor has no viewing times available right now. Would you like to try another advisor, or shall I look again later?'

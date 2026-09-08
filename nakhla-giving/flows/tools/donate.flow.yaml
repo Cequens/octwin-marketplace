@@ -84,7 +84,10 @@ steps:
       outputs:
         ok:     [{ goto: gather }]
         empty:  [{ goto: none_live }]
-        failed: [{ goto: none_live }]
+        # Not `none_live` — see the note in campaigns.flow.yaml. A fault here is an
+        # authoring error, and routing it to "no live appeals" hides a broken pack
+        # behind a sentence a donor will simply believe.
+        failed: []
 
   seed:
     - assign:

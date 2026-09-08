@@ -29,6 +29,7 @@ strings:
   cancel_kept:           'تمام، سيبنا الموعد زي ما هو. ✅'
 
   rate_header: 'قيّم زيارتك'
+  rate_body:   'اختر عدد النجوم من ١ لـ ٥.'
   rate_cta:    'التقييم'
   # The invite has to live in the rendered body: a render halts the turn, so the
   # agent gets no chance to add a line of its own after it.
@@ -37,6 +38,7 @@ strings:
   rate_first:    'قيّم الزيارة بالنجوم الأول، وبعدها اكتب رأيك.'
 
   reschedule_header: '🗓️ اختر موعد جديد'
+  reschedule_body:   'دي المواعيد المتاحة القريبة. اختر الوقت اللي يناسبك.'
   reschedule_cta:    'المواعيد المتاحة'
   no_slots:          'مفيش مواعيد متاحة قريبة للطبيب ده. جرّب لاحقاً.'
   rescheduled:       '🔄 تم تغيير موعدك. هنفكّرك قبل الموعد الجديد.'

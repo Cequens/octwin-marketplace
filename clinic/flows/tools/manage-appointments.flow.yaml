@@ -167,6 +167,12 @@ steps:
     - render:
         render_intent: list_picker
         header: '{$t("manage-appointments.rate_header")}'
+        # `body:` is REQUIRED on a list_picker. WhatsApp rejects an interactive
+        # list with no `interactive.body.text`, so without this the message was
+        # never delivered — the flow reached this step and the patient saw
+        # nothing at all. On web it drew with the header alone, which is why it
+        # looked fine in testing.
+        body:   '{$t("manage-appointments.rate_body")}'
         cta:    '{$t("manage-appointments.rate_cta")}'
         items:
           - { title: '⭐',          on_select: { invoke: manage-appointments, with: { action: rate, appointment_id: '$input.appointment_id', stars: 1 } } }
@@ -338,6 +344,9 @@ steps:
     - render:
         render_intent: list_picker
         header: '{$t("manage-appointments.reschedule_header")}'
+        # Required — see the note on `rate_body` above. Without it WhatsApp
+        # refused the message and the reschedule picker never arrived.
+        body:   '{$t("manage-appointments.reschedule_body")}'
         cta:    '{$t("manage-appointments.reschedule_cta")}'
         items: '$slots'
         item_template:

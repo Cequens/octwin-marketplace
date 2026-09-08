@@ -47,3 +47,4 @@ strings:
   trial_note:     'Trial class: {class} — {slot}.'
   reminder.body:  '⏰ Reminder: {class} — {slot}. Do not forget your kit and water!'
   reminder.mine:  '🗓️ My classes'
+  no_slots:   'Sorry, this trainer has no classes available right now. Would you like to try another trainer, or shall I look again later?'

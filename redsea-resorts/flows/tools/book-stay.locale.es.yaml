@@ -70,3 +70,4 @@ strings:
   btn_rooms:     '🛏️ Otras habitaciones'
   sold_out:      '⚠️ Lo sentimos, la última habitación de este tipo en esa fecha se reservó hace un momento. Elige otra fecha y te reservamos.'
   aborted:       'La reserva está cancelada. Estamos aquí cuando nos necesites 🌊'
+  no_slots:   'Lo sentimos, esta habitación no tiene fechas disponibles en este momento. ¿Quiere probar otro tipo de habitación, o vuelvo a mirar más tarde?'

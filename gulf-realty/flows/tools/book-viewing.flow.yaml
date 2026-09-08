@@ -124,6 +124,9 @@ steps:
               header: book-viewing.field_header.slot
               cta:    book-viewing.field_cta.slot
               fetch:  { do: slot_list, args: { resource_record_id: '$state.advisor_id' }, bind: slots }
+              # A fully-booked advisor is a normal answer, not a fault. `fallback: text`
+              # is wrong here — this field holds the slot the viewing writes.
+              on_empty: no_slots
               rows:   '$slots'
               map:
                 value: '$item.slot_start'
@@ -245,3 +248,9 @@ steps:
 
   aborted:
     - end: { status: aborted, body: '{$t("book-viewing.aborted")}' }
+
+  # Reached from the slot picker's on_empty: when there is nothing free to
+  # offer. aborted, not applied - nothing was booked, and the terminal drives
+  # the envelope, thread memory and analytics.
+  no_slots:
+    - end: { status: aborted, body: '{$t("book-viewing.no_slots")}' }

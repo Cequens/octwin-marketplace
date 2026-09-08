@@ -80,6 +80,9 @@ steps:
               header: book-stay.field_header.arrival
               cta:    book-stay.field_cta.arrival
               fetch:  { do: slot_list, args: { resource_record_id: '$state.room_id' }, bind: slots }
+              # A fully-booked room is a normal answer, not a fault. `fallback: text`
+              # is wrong here — this field holds the arrival slot the stay writes.
+              on_empty: no_slots
               rows:   '$slots'
               map:
                 value:       '$item.slot_start'
@@ -262,3 +265,9 @@ steps:
 
   aborted:
     - end: { status: aborted, body: '{$t("book-stay.aborted")}' }
+
+  # Reached from the slot picker's on_empty: when there is nothing free to
+  # offer. aborted, not applied - nothing was booked, and the terminal drives
+  # the envelope, thread memory and analytics.
+  no_slots:
+    - end: { status: aborted, body: '{$t("book-stay.no_slots")}' }

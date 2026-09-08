@@ -98,7 +98,10 @@ steps:
       outputs:
         ok:     [{ goto: show_widened }]
         empty:  [{ goto: nothing }]
-        failed: [{ goto: nothing }]
+        # This is the WIDENED search — the last attempt — so `nothing` here reads as
+        # "we have nothing like that", a claim about the catalogue. A fault must not
+        # make that claim on our behalf.
+        failed: []
 
   show:
     - render:

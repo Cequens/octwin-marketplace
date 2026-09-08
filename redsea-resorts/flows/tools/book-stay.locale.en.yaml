@@ -70,3 +70,4 @@ strings:
   btn_rooms:     '🛏️ Other rooms'
   sold_out:      '⚠️ Sorry, the last room of this type on that date went moments ago. Pick another date and we will book you in.'
   aborted:       'The booking is cancelled. We are here whenever you need us 🌊'
+  no_slots:   'Sorry, this room has no dates available right now. Would you like to try another room type, or shall I look again later?'

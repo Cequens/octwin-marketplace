@@ -66,7 +66,9 @@ steps:
       outputs:
         ok:     [{ goto: show }]
         empty:  [{ goto: none }]
-        failed: [{ goto: none }]
+        # "You have no donations yet" is a statement about this donor's history.
+        # A fault is a statement about us, and it must not borrow the first one.
+        failed: []
 
   show:
     - assign:

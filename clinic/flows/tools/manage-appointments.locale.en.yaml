@@ -29,6 +29,7 @@ strings:
   cancel_kept:           'No problem, we left the appointment as it is. ✅'
 
   rate_header: 'Rate your visit'
+  rate_body:   'Pick a rating from 1 to 5 stars.'
   rate_cta:    'Rating'
   # The invite has to live in the rendered body: a render halts the turn, so the
   # agent gets no chance to add a line of its own after it.
@@ -37,6 +38,7 @@ strings:
   rate_first:    'Give the visit a star rating first, then write your comment.'
 
   reschedule_header: '🗓️ Pick a new time'
+  reschedule_body:   'Here are the next available times. Choose the one that suits you.'
   reschedule_cta:    'Available times'
   no_slots:          'This doctor has no times available soon. Please try later.'
   rescheduled:       '🔄 Your appointment has been moved. We will remind you before the new time.'

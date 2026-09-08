@@ -42,3 +42,4 @@ strings:
   aborted:       'The booking is cancelled. We are here whenever you need us 💐'
   reminder.body: '⏰ A reminder of your {treatment} appointment — {slot}. We look forward to seeing you 💐'
   reminder.mine: '🗓️ My appointments'
+  no_slots:   'Sorry, this stylist has no times available right now. Would you like to try another stylist, or shall I look again later?'

@@ -103,6 +103,10 @@ steps:
               fetch:  { do: slot_list, args: { resource_record_id: '$state.doctor_id' }, bind: slots }
               rows:   '$slots'
               map:    { value: '$item.slot_start', label: '$lines($compact([$item.local_date, $item.local_time, $item.meta.branch_label]), " — ")' }
+              # A fully-booked doctor is a NORMAL answer, not a fault — so say it
+              # instead of dying. `fallback: text` is wrong here: this field holds a
+              # slot_start the booking writes, and a typed time is not one.
+              on_empty: no_slots
           # Who the visit is for.
           - field: for_whom
             label: '$t("book-appointment.label.for_whom")'
@@ -271,3 +275,9 @@ steps:
 
   aborted:
     - end: { status: aborted, body: '{$t("book-appointment.aborted")}' }
+
+  # Reached from the slot picker's `on_empty:` when the doctor has no free times.
+  # `aborted`, not `applied` — nothing was booked, and the terminal drives the
+  # envelope, thread memory and analytics.
+  no_slots:
+    - end: { status: aborted, body: '{$t("book-appointment.no_slots")}' }

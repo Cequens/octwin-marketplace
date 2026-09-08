@@ -44,7 +44,13 @@ steps:
       outputs:
         ok:     [{ goto: narrow }]
         empty:  [{ goto: none_live }]
-        failed: [{ goto: none_live }]
+        # `empty` and `failed` are different statements and must not share a branch.
+        # "There are no live appeals" is an answer; a `failed` here is an authoring
+        # fault (an entity that is not declared, a `where` that will not compile),
+        # and telling a donor there is nothing to give to is the version of that
+        # least likely to be reported back to us. `[]` is the canonical handler:
+        # it renders the reason and ends.
+        failed: []
 
   narrow:
     # `$filter`'s predicate takes a field name or an equality object and never
