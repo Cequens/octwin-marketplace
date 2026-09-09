@@ -277,9 +277,11 @@ steps:
     - end: applied
 
   # ── The comment (second answer, arrives as free text on a later turn) ──────
-  # survey_submit upserts on (survey_key, subject_ref), so submitting again with
-  # both answers updates the SAME response rather than adding one. `stars` is
-  # required, so read it back off the existing row instead of asking twice.
+  # survey_submit upserts on (survey_key, subject_ref) and MERGES the answer bag
+  # per key, so submitting the comment ALONE updates the same response and keeps
+  # the stars — which still score and still satisfy `required`.
+  # This read exists only to tell "already rated" from "not rated yet"; it does
+  # NOT feed the submit. Never read the stars back to re-send them.
   do_rate_comment:
     - do: record_list
       args:
@@ -289,7 +291,6 @@ steps:
             - { field: survey_key,  op: eq, value: visit_feedback }
             - { field: subject_ref, op: eq, value: '$input.appointment_id' }
         limit: 1
-      bind: prior
       outputs:
         ok:     [{ goto: submit_comment }]
         empty:  [{ goto: rate_first }]
@@ -301,7 +302,6 @@ steps:
         survey:      visit_feedback
         subject_ref: '$input.appointment_id'
         answers:
-          stars:   '$prior.rows[0].fields.answers.stars'
           comment: '$input.comment'
       outputs:
         ok:     [{ goto: comment_saved }]

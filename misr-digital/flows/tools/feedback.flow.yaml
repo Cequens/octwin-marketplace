@@ -203,12 +203,13 @@ steps:
 
   load_prior:
     - assign: { svc: '$page.rows[0]' }
-    # Read the rating back off the existing response instead of trusting `$input`.
-    # `helpful` is a REQUIRED rating question, so the re-submit has to carry it — and
-    # the tap's value is long gone ($input is per-turn). Re-sending it from $input as
-    # a STRING is what silently sank the first version of this step: a rating question
-    # rejects "1", the whole submit failed, and the comment was never stored. Same
-    # shape as clinic's do_rate_comment.
+    # Look for an existing response — existence ONLY, to pick the branch below. Its
+    # values are never read: survey_submit merges the answer bag per key, so the
+    # rating that came from a tap is kept by the upsert without being re-sent.
+    # Never re-send it from `$input` either: the tap's value is long gone ($input is
+    # per-turn) and it arrives as a STRING, which is what silently sank the first
+    # version of this step — a rating question rejects "1", the whole submit failed,
+    # and the comment was never stored. Same shape as clinic's do_rate_comment.
     - do: record_list
       args:
         entity: survey_response
@@ -217,7 +218,6 @@ steps:
           all:
             - { field: survey_key,  op: eq, value: service_feedback }
             - { field: subject_ref, op: eq, value: '$svc.id' }
-      bind: prior
       outputs:
         ok:     [{ goto: submit_comment }]
         # No prior response is the NORMAL case for a live service: its card is a
@@ -228,14 +228,15 @@ steps:
 
   submit_comment:
     # Same (survey_key, subject_ref) → when a rating DID come first this UPDATES that
-    # response rather than adding a second one. `$get` returns null when there is no
-    # prior row, and a null optional answer is simply absent.
+    # response rather than adding a second one, and survey_submit MERGES the answer
+    # bag per key — so sending `missing` alone keeps that rating and keeps the score.
+    # Do not read `helpful` back to re-send it; the read above only decides whether a
+    # rating exists at all, and on the live cta_url path it usually does not.
     - do: survey_submit
       args:
         survey:      service_feedback
         subject_ref: '$svc.id'
         answers:
-          helpful: '$get($prior.rows, "0.fields.answers.helpful")'
           missing: '$input.missing'
       bind: resp
       outputs:
