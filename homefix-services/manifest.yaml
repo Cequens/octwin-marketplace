@@ -7,7 +7,7 @@
 # recurring-maintenance contract pipeline. No pack DB, no code — pure YAML.
 
 id:          homefix-services
-version: 2.5.0
+version: 2.6.0
 description: 'Home maintenance & handyman dispatch — describe the fault, send a photo and a location pin, and get a routed work order with a real response window.'
 
 listing:
@@ -55,6 +55,7 @@ flows:
   - services
   - request-visit
   - my-requests
+  - rate-job
 
 # NO `inbound_preprocessing.image`, deliberately.
 #
@@ -82,6 +83,7 @@ agents:
       - services
       - request-visit
       - my-requests
+      - rate-job
     include_platform_protocol: true
     instructions:
       - file: prompts/identity.md

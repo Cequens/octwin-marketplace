@@ -28,6 +28,7 @@ than upgrading it on their behalf.
 | 🚨 **Emergency** | The same flow with urgency pre-set — one tap from the menu. |
 | 🔧 **Services & fees** | Trade-photo cards with the call-out fee for each service. |
 | 📋 **My requests** | Every work order's crew, stage and what happens next. |
+| ⭐ **Rate the visit** | Offered on **My requests** only once a job is `completed` — one tap, 1-5. The rows come from `surveys.yaml`, so the flow spells out no star of its own. |
 
 Send a photo or a voice note and the platform reads it — the trade and the description are
 pre-filled instead of re-asked.
@@ -43,6 +44,10 @@ pre-filled instead of re-asked.
   one record, and the technician gets coordinates rather than "next to the bakery".
 - **A funnel** on `work_order` (`received → dispatched → on_site → awaiting_parts →
   completed`) with milestones on dispatched and completed.
+- **A services list ordered by customers, not by an operator.** `trade_service.popularity` used
+  to be a manual weight nobody outside the console could move; it is now a `rollup:` over the
+  ratings, so `search.rank_by` puts the best-rated trade first and the number is earned. The
+  engine maintains it — no flow does any bookkeeping.
 
 ## For the pack author
 

@@ -1,0 +1,19 @@
+# The post-job questionnaire — one question, asked once, on a job that is finished.
+#
+# This file plus one `survey_submit` is the whole feedback loop. `trade_service.popularity`
+# carries a `rollup:` keyed on the response's `service` field (xrm.yaml), so the platform
+# recomputes the ranking on every rating and no flow does any bookkeeping.
+#
+# One question on purpose. A second costs responses, and the score is computed from one
+# question anyway.
+
+surveys:
+  job_feedback:
+    label:   { en: 'Job feedback', ar: 'تقييم الزيارة', ur: 'کام کی رائے' }
+    # subject_ref is the WORK ORDER id — `survey_submit` upserts on
+    # (survey_key, subject_ref, contact_id), so one job yields one rating per customer
+    # and a re-rating replaces it instead of stacking a second row.
+    subject: work_order
+    questions:
+      - { key: stars, type: rating, scale: 5, required: true, label: { en: 'Rating', ar: 'التقييم', ur: 'درجہ بندی' } }
+    score: stars

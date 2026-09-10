@@ -4,3 +4,4 @@ strings:
   header:        '📋 طلباتك'
   btn_new:       '🛠️ طلب جديد'
   btn_services:  '🔧 الخدمات'
+  btn_rate:      '⭐ قيّم الزيارة'

@@ -1,0 +1,8 @@
+flow_id: rate-job
+
+strings:
+  header:   '⭐ Rate the visit'
+  body:     'How did the technician do?'
+  cta:      'Rate'
+  thanks:   '🙏 Thank you — that helps the next customer pick well.'
+  btn_home: '🏠 Home'

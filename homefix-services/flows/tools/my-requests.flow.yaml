@@ -45,6 +45,11 @@ steps:
                  [$latest != null ? $enum_label($latest.stage, "stage_hint", "") : null]
                )), "\n")'
         buttons:
+          # Only on a finished job. An `{if, then}` with no `else` resolves to undefined
+          # and the parent strips it from the array, so the card keeps two buttons the
+          # rest of the time rather than needing a second copy of itself.
+          - if:   '$latest.stage == "completed"'
+            then: { title: '{$t("my-requests.btn_rate")}', on_select: { invoke: rate-job, with: { job_id: '$latest.id', service_id: '$latest.fields.service' } } }
           - { title: '{$t("my-requests.btn_new")}',      on_select: { invoke: request-visit } }
           - { title: '{$t("my-requests.btn_services")}', on_select: { invoke: services } }
       memory_note: 'Showed {$length($page.rows)} work order(s); latest stage {$latest.stage}.'

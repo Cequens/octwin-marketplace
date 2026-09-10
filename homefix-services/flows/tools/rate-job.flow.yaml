@@ -1,0 +1,78 @@
+# rate-job — one question on a finished job, and the service ranking maintained off it.
+#
+# NOTHING here spells out a star. `$survey("job_feedback")` reads the declaration this
+# pack already ships and `.ask.choices` IS the rows, so changing `scale: 5` in
+# surveys.yaml changes what the customer is offered — there is no second copy to forget.
+#
+# Two turns by design: the ⭐ button on `my-requests` arrives with no `stars`, so the
+# first pass asks and ends; the tap comes back as a fresh call and records. Nothing
+# re-executes, so nothing can double-count.
+
+flow_id:     rate-job
+version:     1
+description: |-
+  Rate a completed work order, 1-5. Set by the ⭐ button on `my-requests`, which
+  supplies both ids. Not usually called with no arguments.
+
+input:
+  job_id:
+    type:     string
+    describe: 'The completed work order being rated (button-internal).'
+  service_id:
+    type:     string
+    describe: 'The service that job was for — the ranking dimension (button-internal).'
+  stars:
+    type:     number
+    optional: true
+    describe: 'The rating, 1-5. Absent until the customer taps one.'
+
+entry:
+  - if:   '$input.stars == null'
+    goto: ask
+  - else: true
+    goto: submit
+
+steps:
+  ask:
+    - render:
+        render_intent: list_picker
+        header: '{$t("rate-job.header")}'
+        body:   '{$t("rate-job.body")}'
+        cta:    '{$t("rate-job.cta")}'
+        items:
+          for_each: '$survey("job_feedback").ask.choices'
+          as: c
+          template:
+            title:     '$c.label'
+            on_select: { invoke: rate-job, with: { job_id: '$input.job_id', service_id: '$input.service_id', stars: '$c.value' } }
+      memory_note: 'Asked the customer to rate work order {$input.job_id}.'
+    - end: applied
+
+  submit:
+    # ONE write, and nothing after it. `fields:` stamps the ranking dimension in the same
+    # statement — a write cannot half-succeed — and `trade_service.popularity` recomputes
+    # itself the moment this lands. No aggregate, no write-back, no chain to route.
+    - do: survey_submit
+      args:
+        survey:      job_feedback
+        subject_ref: '$input.job_id'
+        answers:     { stars: '$input.stars' }
+        fields:      { service: '$input.service_id' }
+      outputs:
+        ok:     [{ goto: thanks }]
+        failed: [{ goto: not_saved }]
+
+  thanks:
+    - render:
+        render_intent: detail_card
+        body: '{$t("rate-job.thanks")}'
+        buttons:
+          - { title: '{$t("rate-job.btn_home")}', on_select: { invoke: home } }
+      memory_note: 'Recorded a rating for work order {$input.job_id}.'
+    - end: applied
+
+  not_saved:
+    # NOT the thanks copy. Telling someone their rating is recorded when it is not is
+    # worse than admitting it failed — they gave up a tap for nothing either way.
+    - answer:
+        instructions: 'The rating did not save. Apologise in one line and say we will ask again later. Do NOT claim it was recorded, and do not ask them to rate again now.'

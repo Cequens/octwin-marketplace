@@ -21,7 +21,19 @@ entities:
       description: { type: textarea, label: { en: 'Description', ar: 'الوصف' } }
       price_from:  { type: money, label: { en: 'From', ar: 'يبدأ من' }, sortable: true, currency: AED }
       photo:       { type: image, label: { en: 'Photo', ar: 'الصورة' } }
-      popularity:  { type: number, label: { en: 'Popularity', ar: 'الأكثر طلباً' }, default: 0, description: { en: 'Manual ordering weight for the services list — higher shows earlier.', ar: 'وزن ترتيب يدوي لقائمة الخدمات — الأعلى يظهر أولاً.' } }
+      # ENGINE-MAINTAINED. It was a manual ordering weight nobody could move but an
+      # operator; now the `rollup:` recomputes it after every rating (surveys.yaml), so
+      # `rank_by` below orders the list on what customers actually said.
+      #
+      # `where:` pins the survey — one `survey_response` table holds every survey a pack
+      # declares, so without it a second questionnaire's answers would land here.
+      popularity:  { type: number, label: { en: 'Rating', ar: 'التقييم', ur: 'درجہ بندی' }, default: 0,
+                     rollup: { from: survey_response, via: service, op: avg, field: score,
+                               where: { all: [{ field: survey_key, op: eq, value: job_feedback }] } },
+                     description: { en: 'Average customer rating, maintained by the platform from job_feedback responses.', ar: 'متوسط تقييم العملاء، تحافظ عليه المنصة من ردود job_feedback.' } }
+      rating_count: { type: number, label: { en: 'Ratings', ar: 'عدد التقييمات', ur: 'درجہ بندیاں' }, default: 0,
+                      rollup: { from: survey_response, via: service, op: count,
+                                where: { all: [{ field: survey_key, op: eq, value: job_feedback }] } } }
     list: [trade, price_from]
     search: { text: [name, description], semantic: [name, description], rank_by: popularity }
 
@@ -144,6 +156,18 @@ entities:
       active:    { en: 'Active', ar: 'ساري' }
       expired:   { en: 'Expired', ar: 'منتهي' }
       cancelled: { en: 'Cancelled', ar: 'ملغى' }
+
+  # ── The rating (extends the platform system entity) ──────────────────────
+  # `service` is the ROLLUP DIMENSION. The response is keyed on the WORK ORDER
+  # (`subject_ref`), so the rated service cannot be derived from the response alone —
+  # `rate-job` stamps it in the same `survey_submit` write via `fields:`, never with a
+  # second `record_save` that could fail on its own.
+  survey_response:
+    extends: system
+    fields:
+      service: { type: record, entity: trade_service, label: { en: 'Service', ar: 'الخدمة', ur: 'خدمت' } }
+    list: [survey_key, score, service]
+
 segments:
   open_orders:
     entity: work_order
