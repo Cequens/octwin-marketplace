@@ -41,8 +41,21 @@ entities:
       photo:         { type: image, label: { en: 'Photo', ar: 'الصورة' } }
       consult_fee:   { type: money, label: { en: 'Consultation fee', ar: 'الكشف' }, currency: EGP }
       accepted_tpas: { type: text, label: { en: 'Insurers', ar: 'التأمينات المقبولة' } }   # comma-separated
-      rating:        { type: number, label: { en: 'Rating', ar: 'التقييم' }, default: 0, description: { en: 'Computed from patient survey responses after each visit — do not type over it; the next response recalculates it.', ar: 'محسوب من تقييمات المرضى بعد كل زيارة — لا تعدّله يدوياً، فأي تقييم جديد يعيد حسابه.' } }
-      rating_count:  { type: number, label: { en: 'Ratings', ar: 'عدد التقييمات' }, default: 0, description: { en: 'How many responses the rating averages. A low count means the rating is not yet meaningful.', ar: 'عدد التقييمات التي بُني عليها المتوسط. العدد القليل يعني أن التقييم غير دال بعد.' } }
+      # Both are ENGINE-MAINTAINED. The `rollup:` declaration is the whole mechanism: the
+      # platform recomputes them after every `survey_response` write whose `doctor` points
+      # here, so the flow does no bookkeeping at all.
+      #
+      # `where:` pins the survey. One `survey_response` table holds every survey a pack
+      # declares, so without the pin a second questionnaire's answers would land in the
+      # doctors' ratings the moment the two subject spaces overlapped.
+      rating:        { type: number, label: { en: 'Rating', ar: 'التقييم' }, default: 0,
+                       rollup: { from: survey_response, via: doctor, op: avg, field: score,
+                                 where: { all: [{ field: survey_key, op: eq, value: visit_feedback }] } },
+                       description: { en: 'Maintained by the platform from patient survey responses — do not type over it; the next response recalculates it.', ar: 'تحسبه المنصة من تقييمات المرضى — لا تعدّله يدوياً، فأي تقييم جديد يعيد حسابه.' } }
+      rating_count:  { type: number, label: { en: 'Ratings', ar: 'عدد التقييمات' }, default: 0,
+                       rollup: { from: survey_response, via: doctor, op: count,
+                                 where: { all: [{ field: survey_key, op: eq, value: visit_feedback }] } },
+                       description: { en: 'How many responses the rating averages. A low count means the rating is not yet meaningful.', ar: 'عدد التقييمات التي بُني عليها المتوسط. العدد القليل يعني أن التقييم غير دال بعد.' } }
     list: [specialty, branch]
     # Fuzzy Arabic search over the doctor name AND the specialty word — a typed
     # "جلدية" returns dermatologists (generalizes the old doctor_search RPC).
@@ -109,13 +122,15 @@ entities:
       slot_label:    { type: text, label: { en: 'Slot', ar: 'الموعد' } }
 
   # ── The visit rating (extends the platform system entity) ────────────────
-  # `doctor` is the ROLLUP DIMENSION. `survey_submit` upserts one response per
-  # APPOINTMENT (subject_ref = the booking id, so a re-rating updates in place),
-  # which means the rated doctor can't be derived from the response alone —
-  # manage-appointments stamps it right after submitting. That single field is
-  # what lets `record_aggregate` average a doctor's scores (→ doctor.rating,
-  # which doctor search ranks on) and what groups the console's per-doctor
-  # response counts.
+  # `doctor` is the ROLLUP DIMENSION — the `via:` of `doctor.rating`'s declaration above.
+  #
+  # It has to exist because `survey_submit` upserts one response per APPOINTMENT
+  # (subject_ref = the booking id, so a re-rating updates in place), and the rated doctor
+  # cannot be derived from the response alone. `manage-appointments` passes it as
+  # `survey_submit { fields: { doctor: … } }`, in the SAME write as the answer.
+  #
+  # That single field is what the engine averages into `doctor.rating` (which doctor search
+  # ranks on) and what groups the console's per-doctor response counts.
   survey_response:
     extends: system
     label:       { en: 'Visit feedback', ar: 'تقييم الزيارة' }

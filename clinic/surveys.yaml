@@ -3,10 +3,10 @@
 # collected by manage-appointments: the stars arrive from a tap, the comment from
 # the next free-text turn (a second survey_submit upserts onto the same response).
 #
-# The star rating rolls up into the doctor record's `rating` + `rating_count` via
-# `record_aggregate` over the response's `doctor` field (the rollup dimension the
-# pack adds in xrm.yaml — see the survey_response extension there), which doctor
-# search (record_search rank_by: rating) then orders on.
+# The star rating rolls up into the doctor record's `rating` + `rating_count`, and the
+# PLATFORM maintains both: they carry a `rollup:` in xrm.yaml keyed on the response's
+# `doctor` field, so the engine recomputes them on every submit and the flow does no
+# bookkeeping. Doctor search (record_search rank_by: rating) then orders on the result.
 
 surveys:
   visit_feedback:

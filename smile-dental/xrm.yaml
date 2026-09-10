@@ -37,8 +37,19 @@ entities:
       photo:        { type: image, label: { en: 'Photo', ar: 'الصورة' } }
       timezone:     { type: text, label: { en: 'Timezone', ar: 'المنطقة الزمنية' }, default: 'Asia/Dubai' }
       # Written back by the survey rollup — never typed by hand.
-      rating:       { type: number, label: { en: 'Rating', ar: 'التقييم' }, default: 0, sortable: true, description: { en: 'Computed from patient survey responses — it ranks the dentist picker.', ar: 'محسوب من تقييمات المرضى — وهو ما يرتب قائمة الأطباء.' } }
-      rating_count: { type: number, label: { en: 'Ratings', ar: 'عدد التقييمات' }, default: 0, description: { en: 'How many responses the rating averages.', ar: 'عدد التقييمات التي بُني عليها المتوسط.' } }
+      # Both are ENGINE-MAINTAINED. The `rollup:` declaration is the whole mechanism: the
+      # platform recomputes them after every `survey_response` write whose `dentist` points
+      # here, so the flow does no bookkeeping at all.
+      #
+      # `where:` pins the survey. One `survey_response` table holds every survey a pack
+      # declares, so without the pin a second questionnaire's answers would land in these
+      # ratings the moment the two subject spaces overlapped.
+      rating:       { type: number, label: { en: 'Rating', ar: 'التقييم' }, default: 0, sortable: true, description: { en: 'Computed from patient survey responses — it ranks the dentist picker.', ar: 'محسوب من تقييمات المرضى — وهو ما يرتب قائمة الأطباء.' },
+                      rollup: { from: survey_response, via: dentist, op: avg, field: score,
+                                where: { all: [{ field: survey_key, op: eq, value: visit_feedback }] } } }
+      rating_count: { type: number, label: { en: 'Ratings', ar: 'عدد التقييمات' }, default: 0, description: { en: 'How many responses the rating averages.', ar: 'عدد التقييمات التي بُني عليها المتوسط.' },
+                      rollup: { from: survey_response, via: dentist, op: count,
+                                where: { all: [{ field: survey_key, op: eq, value: visit_feedback }] } } }
     list: [title, specialty, rating]
     search: { text: [name, languages], rank_by: rating }
 

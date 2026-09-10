@@ -27,7 +27,11 @@ surveys:
       # feedback arrives as free text with no rating attached. Making this required
       # would reject exactly the responses most worth having. Score is simply absent
       # for those, and `avg` passes over them.
-      - { key: helpful, type: rating, scale: 5, required: false, label: { en: 'Was the information enough?', ar: 'هل كانت المعلومات كافية؟' } }
+      # A THUMB, so a boolean — not a 1-5 rating with only two of its values ever used.
+      # The card offers 👍/👎 and nothing between, and encoding that as `5`/`1` on a
+      # five-point scale made the console report "4.2 / 5" for a two-answer question.
+      # As a boolean the platform scores it 1/0 and reports the share who said yes.
+      - { key: helpful, type: boolean, required: false, label: { en: 'Was the information enough?', ar: 'هل كانت المعلومات كافية؟' } }
       # Free text, and the most useful field on the form: what a citizen says is
       # MISSING names the gap directly. Captured on the follow-up turn after ❌.
       - { key: missing, type: text, label: { en: 'What was missing?', ar: 'إيه اللي كان ناقص؟' } }

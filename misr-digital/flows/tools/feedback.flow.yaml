@@ -8,8 +8,8 @@
 #      the SAME response (survey_submit keys on (survey_key, subject_ref)).
 # Asking "what was missing?" of someone who just said it was fine would be noise.
 #
-# `service` is stamped alongside subject_ref because subject_ref is plain text and
-# record_aggregate cannot group on it — see the survey_response extension in xrm.yaml.
+# Nothing is stamped: `service.helpful_avg` / `.helpful_count` declare a `rollup:` keyed
+# on `subject_ref` (xrm.yaml), so the engine maintains them off the response itself.
 
 flow_id:     feedback
 version:     1
@@ -24,9 +24,9 @@ input:
     optional: true
     describe: 'The service code being rated (button-internal).'
   helpful:
-    type:     string
+    type:     boolean
     optional: true
-    describe: 'Rating 1-5 from the tapped button — 5 = the briefing was enough, 1 = it was not.'
+    describe: 'Whether the briefing was enough — true from 👍, false from 👎. Absent until they tap.'
   missing:
     type:     string
     optional: true
@@ -66,8 +66,8 @@ steps:
         render_intent: detail_card
         body: '{$t("feedback.ask_rating", { service: $svc.title })}'
         buttons:
-          - { title: '{$t("feedback.fb_yes")}', on_select: { invoke: feedback, with: { code: '$svc.fields.code', helpful: '5' } } }
-          - { title: '{$t("feedback.fb_no")}',  on_select: { invoke: feedback, with: { code: '$svc.fields.code', helpful: '1' } } }
+          - { title: '{$t("feedback.fb_yes")}', on_select: { invoke: feedback, with: { code: '$svc.fields.code', helpful: true } } }
+          - { title: '{$t("feedback.fb_no")}',  on_select: { invoke: feedback, with: { code: '$svc.fields.code', helpful: false } } }
       memory_note: 'Asked whether the briefing for {$svc.title} was sufficient.'
     - end: applied
 
@@ -87,85 +87,30 @@ steps:
 
   submit:
     - assign: { svc: '$page.rows[0]' }
-    # Bound, not detached: a citizen who is told "thanks, recorded" must have had it
-    # actually recorded, and the comment turn needs this response to upsert onto.
-    # `survey_submit` takes only survey/answers/subject_ref/contact_id — the rollup
-    # dimension is stamped by the record_save below, exactly as clinic does it.
+    # ONE write, and nothing after it.
+    #
+    # `subject_ref` IS the service, so `service.helpful_avg` / `.helpful_count` roll up
+    # straight off it (`rollup: { via: subject_ref }` in xrm.yaml) and the engine
+    # recomputes both the moment this lands. No dimension to stamp, no aggregates, no
+    # write-back.
+    #
+    # This replaced FOUR steps whose failure ports all routed to `thanks` — so the
+    # catalog's helpfulness figures could drift while the citizen was thanked.
     - do: survey_submit
       args:
         survey:      service_feedback
         answers:     { helpful: '$input.helpful' }
         subject_ref: '$svc.id'
-      bind: resp
       outputs:
-        ok:     [{ goto: stamp_service }]
+        ok:     [{ goto: thanks }]
         # survey_submit declares ok + failed only — no `invalid` port to handle.
         failed: [{ goto: thanks }]
 
-  stamp_service:
-    # subject_ref already holds this id, but as plain text — record_aggregate can only
-    # group on the typed field, so it gets its own column.
-    - do: record_save
-      args:
-        entity:    survey_response
-        record_id: '$resp.record_id'
-        fields:    { service: '$svc.id' }
-      outputs:
-        ok:      [{ goto: recompute_avg }]
-        # The response IS recorded either way; without the dimension the rollup just
-        # misses this one. Never make the citizen pay for our bookkeeping.
-        invalid: [{ goto: thanks }]
-        failed:  [{ goto: thanks }]
-
-  recompute_avg:
-    # This is what stops the score being a number nobody reads: it lands back on the
-    # service record, so the catalog itself is ordered by which entries actually helped.
-    # `all: true` is REQUIRED — record_aggregate stopped defaulting to project-wide on
-    # 2026-07-31, and this average is every citizen's verdict, not just this one's.
-    - do: record_aggregate
-      args:
-        entity: survey_response
-        op:     avg
-        field:  score
-        all:    true
-        where:  { all: [{ field: service, op: eq, value: '$svc.id' }] }
-      bind: avg_helpful
-      outputs:
-        ok:     [{ goto: recompute_count }]
-        failed: [{ goto: thanks }]
-
-  recompute_count:
-    - do: record_aggregate
-      args:
-        entity: survey_response
-        op:     count
-        all:    true
-        where:  { all: [{ field: service, op: eq, value: '$svc.id' }] }
-      bind: helpful_n
-      outputs:
-        ok:     [{ goto: write_rollup }]
-        failed: [{ goto: thanks }]
-
-  write_rollup:
-    - do: record_save
-      args:
-        entity:    service
-        record_id: '$svc.id'
-        fields:
-          helpful_avg:   '$avg_helpful.value'
-          helpful_count: '$helpful_n.value'
-      outputs:
-        ok:      [{ goto: thanks }]
-        invalid: [{ goto: thanks }]
-        failed:  [{ goto: thanks }]
-
   thanks:
-    # Both paths converge here after the rollup. `missing` is only ever set on the
-    # free-text turn, so it distinguishes them.
-    - if:   '$input.missing != null'
-      goto: thanks_comment
+    # Only the TAP path reaches here — the comment turn ends at `thanks_comment` now that
+    # it needs no rollup chain of its own.
     # 👎 → ask the one question worth asking. 👍 → say thank you and stop.
-    - if:   '$input.helpful == "1"'
+    - if:   '$input.helpful == false'
       goto: ask_missing
     # Never a bare text_card. Someone who just took the trouble to rate a briefing is
     # the most engaged person in the funnel; thanking them and going silent is the
@@ -197,54 +142,28 @@ steps:
         where:  { all: [{ field: code, op: eq, value: '$input.code' }] }
       bind: page
       outputs:
-        ok:     [{ goto: load_prior }]
-        empty:  [{ goto: no_context }]
-        failed: [{ end: failed }]
-
-  load_prior:
-    - assign: { svc: '$page.rows[0]' }
-    # Look for an existing response — existence ONLY, to pick the branch below. Its
-    # values are never read: survey_submit merges the answer bag per key, so the
-    # rating that came from a tap is kept by the upsert without being re-sent.
-    # Never re-send it from `$input` either: the tap's value is long gone ($input is
-    # per-turn) and it arrives as a STRING, which is what silently sank the first
-    # version of this step — a rating question rejects "1", the whole submit failed,
-    # and the comment was never stored. Same shape as clinic's do_rate_comment.
-    - do: record_list
-      args:
-        entity: survey_response
-        limit:  1
-        where:
-          all:
-            - { field: survey_key,  op: eq, value: service_feedback }
-            - { field: subject_ref, op: eq, value: '$svc.id' }
-      outputs:
         ok:     [{ goto: submit_comment }]
-        # No prior response is the NORMAL case for a live service: its card is a
-        # cta_url, which carries no buttons, so the note arrives with no rating first.
-        # `helpful` is optional in surveys.yaml precisely so this still records.
-        empty:  [{ goto: submit_comment }]
+        empty:  [{ goto: no_context }]
         failed: [{ end: failed }]
 
   submit_comment:
     # Same (survey_key, subject_ref) → when a rating DID come first this UPDATES that
     # response rather than adding a second one, and survey_submit MERGES the answer
     # bag per key — so sending `missing` alone keeps that rating and keeps the score.
-    # Do not read `helpful` back to re-send it; the read above only decides whether a
-    # rating exists at all, and on the live cta_url path it usually does not.
+    # Do not read `helpful` back to re-send it — the merge keeps it. On the live cta_url
+    # path there is no tap at all, so usually there is no rating to keep.
     - do: survey_submit
       args:
         survey:      service_feedback
         subject_ref: '$svc.id'
         answers:
           missing: '$input.missing'
-      bind: resp
       outputs:
-        # Through the SAME stamp + rollup chain as the tap path. Skipping it left the
-        # free-text responses — the ones carrying the actual defect report — with no
-        # `service` on them, which made them invisible to record_aggregate. On the live
-        # cta_url path there is no tap at all, so that was every useful response.
-        ok:     [{ goto: stamp_service }]
+        # The rollup is a declaration now, so a comment-only response counts toward
+        # `helpful_count` with nothing extra to do. That used to need the whole stamp
+        # chain, and skipping it left the free-text responses — the ones carrying the
+        # actual defect report — invisible to the aggregate.
+        ok:     [{ goto: thanks_comment }]
         # NOT the thanks copy. Telling a citizen "recorded, we'll fix it" when nothing
         # was written is worse than admitting the note didn't save.
         failed: [{ goto: comment_failed }]

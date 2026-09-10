@@ -85,21 +85,36 @@ entities:
       # nobody reads: a LOW helpful_avg with a healthy helpful_count names a catalog
       # entry whose requirements/fees/timing are wrong — the same class of defect the
       # manual portal audit found on 2026-08-05, but surfaced from real use.
-      helpful_avg:     { type: number }       # متوسط تقييم كفاية المعلومات
-      helpful_count:   { type: number }       # عدد التقييمات
+      # ENGINE-MAINTAINED. The `rollup:` declaration is the whole mechanism: the platform
+      # recomputes both after every `service_feedback` response whose `subject_ref` is this
+      # service — no stamp step, no aggregates, nothing in the flow to fail quietly.
+      #
+      # `via: subject_ref` is the point: the SUBJECT of this survey IS the thing being
+      # compared, so the rollup keys straight on the platform's own column and this pack
+      # needs no mirror field on `survey_response` at all.
+      #
+      # `helpful` is a BOOLEAN (a thumb), stored 1/0 — so its mean IS the share who said
+      # the briefing was enough. `where:` pins the survey, since one response table holds
+      # every survey a pack declares.
+      helpful_avg:     { type: number,        # نسبة من قالوا إن المعلومات كافية (0..1)
+                         rollup: { from: survey_response, via: subject_ref, op: avg, field: score,
+                                   where: { all: [{ field: survey_key, op: eq, value: service_feedback }] } } }
+      helpful_count:   { type: number,        # عدد التقييمات
+                         rollup: { from: survey_response, via: subject_ref, op: count,
+                                   where: { all: [{ field: survey_key, op: eq, value: service_feedback }] } } }
 
-  # The feedback response, extended with the ROLLUP DIMENSION. `subject_ref` already
-  # holds the service id, but it is a plain `text` column (not a typed record ref), so
-  # `record_aggregate` cannot group on it — hence this typed mirror, stamped by the
-  # `feedback` flow. Same reason clinic extends survey_response with `doctor`.
+  # The feedback response — LABELS ONLY. It used to add a typed `service` mirror of
+  # `subject_ref`, on the belief that "record_aggregate cannot group on a text field".
+  # That was never true: `record_aggregate` filters, and `eq` on a text field works. The
+  # mirror only ever bought a console breakdown row, and `service.helpful_avg`'s
+  # `rollup: { via: subject_ref }` now earns that directly — so the field is gone and
+  # the flow no longer stamps anything.
   survey_response:
     extends: system
     label:       { en: 'Service feedback', ar: 'تقييم الخدمة' }
     icon:        '⭐'
     description: { en: "A citizen's verdict on whether a service briefing was complete — it ranks the catalog by which entries actually helped", ar: 'رأي المواطن في اكتمال معلومات الخدمة — ويرتّب الدليل حسب الخدمات اللي فعلاً أفادت' }
-    fields:
-      service: { type: record, entity: service, label: { en: 'Service', ar: 'الخدمة' } }
-    list: [survey_key, score, service]
+    list: [survey_key, score, subject_ref]
 
 demo:
   # ==================== الأحوال المدنية (civil_status) ====================

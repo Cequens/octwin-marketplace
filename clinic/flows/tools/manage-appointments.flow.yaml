@@ -185,8 +185,8 @@ steps:
 
   do_rate:
     # The rated DOCTOR comes off the booking: survey_submit keys the response on the
-    # APPOINTMENT (upsert on subject_ref), so the rollup dimension has to be stamped
-    # separately — see the survey_response extension in xrm.yaml.
+    # APPOINTMENT (upsert on subject_ref), so the doctor has to travel with the submit.
+    # That is what `fields:` is for — see the survey_response extension in xrm.yaml.
     - do: record_get
       args: { entity: booking, record_id: '$input.appointment_id' }
       bind: rated_appt
@@ -196,72 +196,27 @@ steps:
         failed:    [{ end: failed }]
 
   submit_rating:
-    # Bound (not detached) — the rollup needs the response id, and a rating the
-    # patient can see acknowledged has to be one that actually persisted.
+    # ONE write does all of it.
+    #
+    # `fields:` stamps the rollup dimension in the same statement as the answer, and
+    # `doctor.rating` / `doctor.rating_count` carry a declared `rollup:` (xrm.yaml), so the
+    # engine recomputes them the moment this lands. `record_search rank_by: rating` then
+    # re-orders the picker — a rated visit still changes who surfaces first.
+    #
+    # This replaced FIVE steps: stamp the dimension, record_aggregate the average,
+    # record_aggregate the count, record_save the doctor. Every one of them routed its
+    # failure port to `rating_thanks`, because making a patient pay for our bookkeeping is
+    # not an option — which meant the rating could silently drift while they were thanked.
+    # One write cannot half-succeed.
     - do: survey_submit
-      args: { survey: visit_feedback, answers: { stars: '$input.stars' }, subject_ref: '$input.appointment_id' }
-      bind: resp
+      args:
+        survey:      visit_feedback
+        subject_ref: '$input.appointment_id'
+        answers:     { stars: '$input.stars' }
+        fields:      { doctor: '$rated_appt.fields.resource_id' }
       outputs:
-        ok:     [{ goto: stamp_rated_doctor }]
+        ok:     [{ goto: rating_thanks }]
         failed: [{ end: failed }]
-
-  stamp_rated_doctor:
-    # Shallow per-key patch — `answers`/`score`/contact stay as submitted.
-    - do: record_save
-      args:
-        entity:    survey_response
-        record_id: '$resp.record_id'
-        fields:    { doctor: '$rated_appt.fields.resource_id' }
-      outputs:
-        ok:      [{ goto: recompute_doctor_avg }]
-        # The response IS recorded either way; without the dimension the rollup
-        # would just miss this one, so thank the patient and skip it.
-        invalid: [{ goto: rating_thanks }]
-        failed:  [{ goto: rating_thanks }]
-
-  recompute_doctor_avg:
-    - do: record_aggregate
-      args:
-        entity: survey_response
-        op:     avg
-        field:  score
-        # A doctor's rating is every patient's opinion of them, not this
-        # patient's — so the project-wide scope is the point. `all: true` is
-        # required since 2026-07-31: `record_aggregate` no longer defaults to
-        # project-wide, because that default shipped a cross-contact leak.
-        all:    true
-        where:  { all: [{ field: doctor, op: eq, value: '$rated_appt.fields.resource_id' }] }
-      bind: avg_score
-      outputs:
-        ok:     [{ goto: recompute_doctor_count }]
-        failed: [{ goto: rating_thanks }]
-
-  recompute_doctor_count:
-    - do: record_aggregate
-      args:
-        entity: survey_response
-        op:     count
-        all:    true                    # every patient's response — see above
-        where:  { all: [{ field: doctor, op: eq, value: '$rated_appt.fields.resource_id' }] }
-      bind: rating_n
-      outputs:
-        ok:     [{ goto: write_doctor_rating }]
-        failed: [{ goto: rating_thanks }]
-
-  write_doctor_rating:
-    # `rating` is what doctor search ranks on (record_search rank_by: rating), so
-    # the ordering patients see is now derived from their own ratings.
-    - do: record_save
-      args:
-        entity:    doctor
-        record_id: '$rated_appt.fields.resource_id'
-        fields:
-          rating:       '$round($coalesce($avg_score.value, 0), 1)'
-          rating_count: '$coalesce($rating_n.value, 0)'
-      outputs:
-        ok:      [{ goto: rating_thanks }]
-        invalid: [{ goto: rating_thanks }]
-        failed:  [{ goto: rating_thanks }]
 
   rating_thanks:
     # Journey: the patient rated the visit → attended stage + visit_completed goal (terminal).

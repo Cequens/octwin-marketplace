@@ -114,14 +114,34 @@ steps:
     - if: '$input.stars == null'
       then:
         - goto: ask_stars
+    # The rated DENTIST comes off the booking: the survey keys the response on the
+    # VISIT (upsert on subject_ref), so the rollup dimension has to travel WITH the submit.
+    # Read it first, then one write does everything.
+    - do: record_get
+      args: { entity: booking, record_id: '$input.visit_id' }
+      bind: rated
+      outputs:
+        ok:        [{ goto: submit_rating }]
+        not_found: [{ goto: none }]
+        failed:    [{ goto: unavailable }]
+
+  submit_rating:
+    # ONE write. `fields:` stamps the rollup dimension alongside the answer, and
+    # `dentist.rating` / `.rating_count` carry a declared `rollup:` (xrm.yaml), so the
+    # engine recomputes them the moment this lands.
+    #
+    # This replaced FIVE steps — read the booking, stamp the dimension, aggregate the
+    # average, aggregate the count, save the dentist. Every one routed its failure port to
+    # `thanks`, because a client must not pay for our bookkeeping — which meant the
+    # rating could drift silently while they were thanked. One write cannot half-succeed.
     - do: survey_submit
       args:
         survey:      visit_feedback
         subject_ref: '$input.visit_id'
         answers:     { stars: '$input.stars' }
-      bind: response
+        fields:      { dentist: '$rated.fields.dentist' }
       outputs:
-        ok:     [{ goto: stamp_dentist }]
+        ok:     [{ goto: thanks }]
         failed: [{ goto: unavailable }]
 
   ask_stars:
@@ -150,69 +170,6 @@ steps:
 
   # A survey's subject is the BOOKING, so the rated dentist is not derivable from
   # the response — stamp it now, or the rollup below has no dimension to group on.
-  stamp_dentist:
-    - do: record_get
-      args: { entity: booking, record_id: '$input.visit_id' }
-      bind: rated
-      outputs:
-        ok:        [{ goto: write_dimension }]
-        not_found: [{ goto: thanks }]
-        failed:    [{ goto: thanks }]
-
-  write_dimension:
-    - do: record_save
-      args:
-        entity:    survey_response
-        record_id: '$response.record_id'
-        fields:    { dentist: '$rated.fields.dentist' }
-      outputs:
-        ok:      [{ goto: rollup }]
-        invalid: [{ goto: thanks }]
-        failed:  [{ goto: thanks }]
-
-  rollup:
-    # Average every response about this dentist, and how many there are.
-    - do: record_aggregate
-      args:
-        entity: survey_response
-        op:     avg
-        # Every client's rating of this practitioner — the project-wide scope IS
-        # the point here, so it is stated rather than inherited.
-        all:    true
-        field:  score
-        where:  { all: [{ field: dentist, op: eq, value: '$rated.fields.dentist' }] }
-      bind: avg
-      outputs:
-        ok:     [{ goto: rollup_count }]
-        failed: [{ goto: thanks }]
-
-  rollup_count:
-    - do: record_aggregate
-      args:
-        entity: survey_response
-        op:     count
-        # Every client's rating of this practitioner — the project-wide scope IS
-        # the point here, so it is stated rather than inherited.
-        all:    true
-        where:  { all: [{ field: dentist, op: eq, value: '$rated.fields.dentist' }] }
-      bind: n
-      outputs:
-        ok:     [{ goto: write_rating }]
-        failed: [{ goto: thanks }]
-
-  write_rating:
-    - do: record_save
-      args:
-        entity:    dentist
-        record_id: '$rated.fields.dentist'
-        fields:
-          rating:       '$round($coalesce($avg.value, 0), 1)'
-          rating_count: '$coalesce($n.value, 0)'
-      outputs:
-        ok:      [{ goto: thanks }]
-        invalid: [{ goto: thanks }]
-        failed:  [{ goto: thanks }]
-
   thanks:
     - render:
         render_intent: detail_card
