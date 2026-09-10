@@ -28,7 +28,7 @@ than upgrading it on their behalf.
 | 🚨 **Emergency** | The same flow with urgency pre-set — one tap from the menu. |
 | 🔧 **Services & fees** | Trade-photo cards with the call-out fee for each service. |
 | 📋 **My requests** | Every work order's crew, stage and what happens next. |
-| ⭐ **Rate the visit** | Offered on **My requests** only once a job is `completed` — one tap, 1-5. The rows come from `surveys.yaml`, so the flow spells out no star of its own. |
+| ⭐ **Rate the visit** | Two ways in, one question. It is offered on **My requests** once a job is `completed`, and the job reaching `completed` also **asks unprompted** — an `on.enter` hook sends the same ⭐ rows without waiting for the customer to open the bot. Both read `surveys.yaml`, so there is one copy of the scale. |
 
 Send a photo or a voice note and the platform reads it — the trade and the description are
 pre-filled instead of re-asked.

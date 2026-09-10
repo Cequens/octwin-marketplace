@@ -85,6 +85,17 @@ entities:
       initial:  received
       terminal: [completed, cancelled]
       outcomes: { completed: won, cancelled: lost }
+    # Ask the moment the job is DONE, without waiting for the customer to come back.
+    #
+    # The ⭐ button on `my-requests` only reaches someone who opens the bot again — and most
+    # people never do. This asks from the record itself: an operator marks the job completed
+    # at 11pm and the question goes out, as the same five ⭐ rows `rate-job` renders (they come
+    # from surveys.yaml, so there is one copy). The tap invokes `rate-job` with both ids and
+    # the star, exactly as the in-conversation ask does.
+    #
+    # `cooldown_hours: 168` because a re-completed job must not re-ask within the week.
+    # NOTE the 24-hour WhatsApp window: this reaches a customer who messaged us recently,
+    # which after a just-finished job is the normal case.
     # What each stage MEANS — rendered above the console pipeline control and on
     # each move button. Kept in step with the `stage_hint.*` locale keys the flows
     # resolve through `$enum_label(stage, "stage_hint")`.
@@ -121,6 +132,26 @@ entities:
             title:        '⏰ تجاوز المهلة — أمر عمل {{ record.record_number }}'
             body:         'الاستعجال: {{ record.fields.urgency }} · الإمارة: {{ record.fields.emirate }}. راجع الإسناد وبلّغ العميل.'
             due_in_hours: 1
+      # Ask the moment the job is DONE, without waiting for the customer to come back.
+      #
+      # The ⭐ button on `my-requests` only reaches someone who opens the bot again, and most
+      # people never do. This asks from the record itself: an operator marks the job completed
+      # at 11pm and the question goes out — the same five ⭐ rows `rate-job` renders, because
+      # both come from surveys.yaml and there is only one copy. The tap invokes `rate-job` with
+      # both ids and the star, exactly as the in-conversation ask does.
+      #
+      # `cooldown_hours: 168` so a re-completed job cannot re-ask within the week. Note the
+      # 24-hour WhatsApp window: this reaches a customer who messaged recently, which after a
+      # just-finished job is the normal case.
+      enter:
+        completed:
+          - survey:
+              survey:  job_feedback
+              message: 'شكراً لاختيارك HomeFix 🛠️ إزاي كانت زيارة الفني؟'
+              cta:     'قيّم الزيارة'
+              invoke:  rate-job
+              with:    { job_id: '{{ record.id }}', service_id: '{{ record.fields.service }}' }
+              cooldown_hours: 168
 
   contract:
     label: { en: 'Maintenance contract', ar: 'عقد صيانة' }
