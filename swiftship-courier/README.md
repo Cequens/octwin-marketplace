@@ -33,8 +33,8 @@ lands with `ops_delta` on an 8-hour SLA, with nobody typing a region.
 
 Pure YAML — no code, no pack database.
 
-- `xrm.yaml` — `shipment.dedupe_by: tracking_number` is what makes `record_get match:` work as a
-  waybill lookup, and the demo seeds shipments at **different stages** (including a failed
+- `xrm.yaml` — `unique: true` on `shipment.tracking_number` is what makes `record_get match:`
+  work as a waybill lookup, and the demo seeds shipments at **different stages** (including a failed
   attempt) so `track` has something honest to report.
 - `flows/tools/track.flow.yaml` — note `$normalize_digits` + `$trim` + `$upper` before the
   lookup, and `all: true` (a waybill is looked up by number, not by who is asking, so a
