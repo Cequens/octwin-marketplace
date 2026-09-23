@@ -141,10 +141,8 @@ steps:
 
   render_cart:
     - assign:
-        # NOT `$filter(rows, $item… > 0)` — `$filter`'s predicate is a field PATH or an
-        # equality object, never a per-row expression (only `$map` binds `$item`), so an
-        # expression predicate silently returns the whole array. `$filter_gte` is the
-        # per-field comparison form.
+        # `$filter_gte` is the per-field threshold form. `$filter($rows, $item.fields.qty > 0)`
+        # works too — an expression predicate runs per row with `$item` bound.
         live: '$filter_gte($coalesce($lines.rows, []), "fields.qty", 1)'
     - if: '$length($live) == 0'
       then:

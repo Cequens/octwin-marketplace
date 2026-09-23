@@ -45,10 +45,11 @@ Worth reading:
 
 - `xrm.yaml` — the three entities, `search: { semantic: [...] }` (what makes the quiz work), the
   pipeline + milestones, and the `generate:` demo seed.
-- `flows/tools/cart.flow.yaml` — a `dispatch:` router, an upsert-on-`dedupe_by` add, and a
-  `collect:` → `approve_apply` → write → `foreach` stock-decrement commit path. Two comments in
-  it record real gotchas: `$filter`'s predicate is a field path (not a per-row expression), and a
-  `record` field's value is not a plain `record_id` — resolve it by `dedupe_by` instead.
+- `flows/tools/cart.flow.yaml` — a `dispatch:` router, an add that upserts on the composite
+  `unique` constraint `(contact_id, sku)` in `xrm.yaml`, and a `collect:` → `approve_apply` →
+  write → `foreach` stock-decrement commit path. One comment in it records a real gotcha: a
+  `record` field's value is not a plain `record_id` — resolve it by the entity's unique `sku`
+  (`record_get match:`) instead.
 - `flows/tools/fragrance-finder.flow.yaml` — a `collect:` whose `derive:` block turns three taps
   into one sentence.
 
