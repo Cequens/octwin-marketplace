@@ -2,8 +2,8 @@
 # Strict schema: unknown keys are rejected on deploy. Keep `octwin validate` green.
 
 id:          xpeng-egypt
-version: 4.5.0
-description: 'XPeng Egypt assistant — browse models, capture leads, book test drives, activate the XPeng App, and open after-sales support tickets on WhatsApp & web (AR/EN).'
+version: '4.6.0'
+description: 'XPeng Egypt assistant — browse models, capture leads, book test drives, activate the XPeng App, open after-sales support tickets, or talk to a person, on WhatsApp & web (AR/EN).'
 
 # Storefront face. Without this block the pack still publishes and installs, but
 # lands in the catalog with no title, no tagline and NO CATEGORY — every
@@ -51,6 +51,8 @@ flows:
   - open-support
   - ticket-status
   - after-sales
+  # A person holds the conversation — the platform's live-handoff module (worklist.yaml `work.handoff`).
+  - talk-to-agent
 
 # Voice notes → speech-to-text, then the normal agent turn with the transcript
 # in the pre-turn briefing. WITHOUT this block the platform defaults to
@@ -83,6 +85,7 @@ agents:
       - open-support
       - ticket-status
       - after-sales
+      - talk-to-agent
     include_platform_protocol: true
     instructions:
       - file: prompts/identity.md

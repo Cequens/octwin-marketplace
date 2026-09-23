@@ -1,0 +1,61 @@
+flow_id:     talk-to-agent
+version:     1
+description: |-
+  [interactive Tool] Connect the customer to a PERSON from the XPeng Egypt team, who will hold
+  this conversation from the next message. Call the moment the customer asks for a human, is
+  upset after an answer that did not help, is stranded, or asks for something no other tool
+  covers — never say "I'll connect you" without calling it. Pass `reason` when it is clear
+  (roadside = stranded car; charging = charger or charging problem; sales = a purchase or quote
+  question a person should take; other = anything else) and a one-line `summary` of what they
+  need, in English, for the operator. After it returns, say nothing more: the person replies here.
+
+input:
+  reason:
+    type: enum
+    enum: [roadside, charging, sales, other]
+    optional: true
+    describe: 'Why a person is needed — routes the handoff to the right team. Leave empty when unclear.'
+  summary:
+    type: string
+    optional: true
+    describe: 'ONE line for the operator: who the customer is and what they need, in English.'
+
+entry:
+  - else: true
+    goto: request
+
+steps:
+  request:
+    - do: handoff_request
+      args:
+        reason:  '$coalesce($input.reason, "other")'
+        summary: '$input.summary'
+      bind: handoff
+      outputs:
+        ok:     [{ goto: connecting }]
+        failed: [{ goto: offer_ticket }]
+
+  # The one line the customer reads while they wait. From here the AI Agent is silent: every
+  # message they send lands in the operator's Live chat pane, unanswered, until someone accepts
+  # — or the platform returns them to the AI Agent after the accept window. The minutes come
+  # from `handoff_request` (`accept_within_minutes`), never typed here: a tenant can retune
+  # the window from the console, and the promise must move with the clock that keeps it.
+  connecting:
+    - render:
+        render_intent: text_card
+        body: '{$t("talk-to-agent.connecting", { minutes: $handoff.accept_within_minutes })}'
+      # A FACT, not an instruction: the platform keeps the AI Agent silent while a person holds the
+      # chat, so a "stay silent" note could only be read after the handoff ends — when it is false.
+      memory_note: 'Handoff #{$handoff.handoff_number} opened for a person (reason {$coalesce($input.reason, "other")}). A person answers the customer until the conversation is handed back; you will be briefed then.'
+    - end: applied
+
+  # The pack works the handoff entity, so this only fires on a platform fault. Offer the exit
+  # that always exists rather than a dead end.
+  offer_ticket:
+    - render:
+        render_intent: detail_card
+        body: '{$t("talk-to-agent.unavailable")}'
+        buttons:
+          - { title: '{$t("talk-to-agent.open_ticket")}', on_select: { invoke: open-support } }
+      memory_note: 'Could not open a handoff ({$handoff.reason}); offered the customer a support ticket instead.'
+    - end: failed

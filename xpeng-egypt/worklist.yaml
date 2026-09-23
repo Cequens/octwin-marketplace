@@ -57,3 +57,36 @@ work:
       charging_issue:       { queue: technical_service, priority: high,   sla: { resolve_within_hours: 8,  first_response_within_hours: 2   } }
       # 🗂️ Anything else after-sales (catch-all).
       other:                { queue: customer_care,     priority: normal, sla: { resolve_within_hours: 48, first_response_within_hours: 8   } }
+
+  # ── Live handoff — a PERSON holds the conversation in place of the AI Agent ──
+  #
+  # A handoff is the platform `handoff` system entity, worked through this same engine: the
+  # queue it lands in, who is assigned, and the first-reply clock are the record's own work
+  # columns. What is different from a case is what happens to the CONVERSATION — while a
+  # handoff is waiting or active the AI Agent is silent, and the customer's messages go to
+  # the operator's Live chat pane in the console.
+  #
+  # `route_by: reason` — `reason` is the field `handoff_request` stores, so a charging or
+  # roadside handoff reaches Technical Service and a sales question reaches Customer Care,
+  # with `customer_care` as the safety net for a reason the map does not name.
+  #
+  # `handoff:` is the block only this entity may carry. Five minutes to accept before the
+  # customer is returned to the AI Agent with an apology (and the ticket path); thirty quiet
+  # minutes before an active chat is handed back. Both are tunable per project from
+  # Settings → Work. `whatsapp_signature` stays off: the web widget shows the operator's
+  # name as a chip, and on WhatsApp the join line already says a person is here.
+  #
+  # The `first_response_within_hours: 0.25` is the same 15-minute promise a roadside ticket
+  # makes — and it is kept by the same person, because the roadside flow opens the ticket
+  # AND asks for a person in one turn (see open-support.flow.yaml).
+  #
+  # `operator_dictation: true` lets the operator TALK a reply instead of typing it — the
+  # speech is turned into text in their draft, to check and send. It is on here because a
+  # roadside desk often answers from a phone or a car. Each use is a billed speech-to-text
+  # call on the project; set it to false to remove the Dictate button and the cost.
+  handoff:
+    route_by: reason
+    map:      { roadside: technical_service, charging: technical_service, sales: customer_care, other: customer_care }
+    fallback: customer_care
+    sla:      { resolve_within_hours: 2, first_response_within_hours: 0.25 }
+    handoff:  { accept_within_minutes: 5, idle_return_minutes: 30, whatsapp_signature: false, operator_dictation: true }

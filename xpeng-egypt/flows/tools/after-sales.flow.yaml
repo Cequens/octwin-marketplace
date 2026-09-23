@@ -32,6 +32,7 @@ steps:
           - { title: '{$t("after-sales.row_activate_title")}', description: '{$t("after-sales.row_activate_desc")}', on_select: { invoke: activate-app } }
           - { title: '{$t("after-sales.row_support_title")}',  description: '{$t("after-sales.row_support_desc")}',  on_select: { invoke: open-support } }
           - { title: '{$t("after-sales.row_status_title")}',   description: '{$t("after-sales.row_status_desc")}',   on_select: { invoke: ticket-status } }
+          - { title: '{$t("after-sales.row_human_title")}',    description: '{$t("after-sales.row_human_desc")}',    on_select: { invoke: talk-to-agent } }
       memory_note: 'Showed after-sales menu — {$open_count} open ticket(s).'
       data: { open_count: '$open_count' }
     - end: applied

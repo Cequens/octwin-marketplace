@@ -1,0 +1,6 @@
+flow_id: talk-to-agent
+
+strings:
+  connecting:  "We're connecting you to a person from our team — they'll join right here within {minutes} minutes. If nobody can, I'll be right back to help ⏳"
+  unavailable: "Sorry — we couldn't connect you to a person right now. Would you like to open a support ticket instead? Our team will get back to you."
+  open_ticket: '🎫 Open a ticket'

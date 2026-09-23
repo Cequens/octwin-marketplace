@@ -16,3 +16,5 @@ strings:
   row_support_desc:   'تعطّل، مشكلة شحن، أو أي مشكلة تانية بعد البيع'
   row_status_title:   '🎫 تذاكري'
   row_status_desc:    'تابع — أو اتصرّف في — تذكرة سجّلتها قبل كده'
+  row_human_title:    '💬 كلّم حد من الفريق'
+  row_human_desc:     'اتكلم مع شخص من فريقنا هنا مباشرة'

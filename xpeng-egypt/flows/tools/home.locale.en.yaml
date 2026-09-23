@@ -22,3 +22,5 @@ strings:
   row_branches_desc:   'Locations, hours and contact numbers'
   row_aftersales_title: '🛠️ After-sales & owner support'
   row_aftersales_desc:  'Activate your app, report an issue, or track a ticket'
+  row_human_title:      '💬 Talk to a person'
+  row_human_desc:       'Chat with someone from our team right here'

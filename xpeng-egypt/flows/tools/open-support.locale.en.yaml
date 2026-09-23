@@ -16,3 +16,4 @@ strings:
   f_pin:     'Share your location on the map so we can reach you faster'
   skip_pin:  'The description is enough ⏭️'
   confirm:   'Your support ticket has been logged as XP-{ref} 🎫 Our team will contact you within {sla} hours. You can ask me about its status any time.'
+  confirm_roadside: "Your roadside ticket is XP-{ref} 🚨 We're connecting you to a person from our team right now — they'll reply here shortly. Stay safely with your car ⏳"

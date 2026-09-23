@@ -43,6 +43,8 @@ steps:
           - { title: '{$t("home.row_quote_title")}',     description: '{$t("home.row_quote_desc")}',     on_select: { invoke: capture-lead } }
           - { title: '{$t("home.row_branches_title")}',  description: '{$t("home.row_branches_desc")}',  on_select: { invoke: list-branches } }
           - { title: '{$t("home.row_aftersales_title")}', description: '{$t("home.row_aftersales_desc")}', on_select: { invoke: after-sales } }
+          # A person, one tap away. The AI Agent goes silent from the next message.
+          - { title: '{$t("home.row_human_title")}',      description: '{$t("home.row_human_desc")}',      on_select: { invoke: talk-to-agent } }
       memory_note: 'Showed home menu — {$open_count} open ticket(s), {$booking_count} upcoming test drive(s).'
       data: { open_count: '$open_count', booking_count: '$booking_count' }
     - end: applied

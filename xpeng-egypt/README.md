@@ -65,15 +65,34 @@ the ticket to the **Escalations** queue and sends the customer a different apolo
 failure. The alarm is `automation.yaml`, which sweeps every 5 minutes — without it the
 targets above are stamped and never read, which is how this pack shipped until v2.9.0.
 
+### Live handoff — a person holds the conversation
+
+Since v4.6.0 the assistant can hand a conversation to a **person**, who chats with the customer
+from the console's Live chat page and hands it back. The AI Agent is silent for the whole segment.
+
+| how it starts | routed to | what the customer reads |
+|---|---|---|
+| "💬 Talk to a person" on the home / after-sales menus, or the assistant calling `talk-to-agent` | by `reason` — roadside / charging → Technical Service, sales / other → Customer Care | "We're connecting you to a person from our team…" |
+| a **roadside** ticket (`open-support`) — the ticket opens AND a person is requested in one turn | Technical Service | the ticket number, and that a person is joining |
+| a supervisor pressing **Take over** on any open conversation | held by them | nothing until they write |
+
+Two clocks, both tunable per project from Settings → Work without a deploy: nobody accepts within
+**5 minutes** → the customer is returned to the AI Agent with an apology and the ticket path; an
+active chat quiet for **30 minutes** → returned. On return the AI Agent is briefed (the operator's
+note + the last messages) on the customer's next message. The 15-minute first-reply promise on a
+handoff is the same one a roadside ticket makes — kept by the same person. Declared in
+`worklist.yaml` under `work.handoff`; no `roles.yaml` needed (the platform's standard `agent` /
+`supervisor` roles cover the desk).
+
 ## Layout
 
 ```
 manifest.yaml                 # the pack: id, agent, flows, channels (and its version)
 prompts/identity.md           # the assistant's system prompt (bilingual behaviour)
-flows/tools/*.flow.yaml        # the 10 capabilities (+ .locale.ar/.en.yaml strings)
+flows/tools/*.flow.yaml        # the 11 capabilities (+ .locale.ar/.en.yaml strings)
 xrm.yaml                       # records: model · branch · lead · booking (+ demo seed data)
 scheduling.yaml                # bookable test-drive slots
-worklist.yaml                  # after-sales casework (queues, types, both SLA clocks)
+worklist.yaml                  # after-sales casework (queues, types, both SLA clocks) + the live handoff block
 automation.yaml                # the SLA alarm: sweeps both clocks, escalates a breach
 journeys/purchase.journey.yaml # the sales funnel (stages · goals · events)
 commands.yaml · messages.*     # slash commands + platform messages

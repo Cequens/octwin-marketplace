@@ -87,8 +87,22 @@ steps:
         # failed → throws → error-net
 
   confirm:
+    # A stranded driver gets the ticket AND a person. The roadside promise is a first human
+    # reply within 30 minutes; a ticket alone waits for someone to open the inbox, a handoff
+    # puts the customer's next message in front of whoever accepts — the same operator, the
+    # same clock. `detach` so a handoff fault can never fail an already-opened ticket; the
+    # confirm card tells the customer which of the two happened.
+    - if: '$state.type == "roadside_assistance"'
+      then:
+        # `detach` produces no result, so nothing is bound — the confirm card below already
+        # tells the customer a person is joining; a failure surfaces on the record, not here.
+        - do: handoff_request
+          args:
+            reason:  roadside
+            summary: '"Roadside ticket XP-" + $c.case_number + ": " + $coalesce($state.where, $state.details)'
+          detach: true
     - render:
         render_intent: text_card
-        body: '{$t("open-support.confirm", { ref: $c.case_number, sla: $coalesce($c.sla_hours, 48) })}'
-      memory_note: 'Opened after-sales ticket XP-{$c.case_number} (type {$state.type}, case_id {$c.case_id}).'
+        body: '{$state.type == "roadside_assistance" ? $t("open-support.confirm_roadside", { ref: $c.case_number }) : $t("open-support.confirm", { ref: $c.case_number, sla: $coalesce($c.sla_hours, 48) })}'
+      memory_note: 'Opened after-sales ticket XP-{$c.case_number} (type {$state.type}, case_id {$c.case_id}).{$state.type == "roadside_assistance" ? " A person was also requested (handoff) — stay silent until the conversation is returned to you." : ""}'
     - end: applied

@@ -22,3 +22,5 @@ strings:
   row_branches_desc:   'العناوين والمواعيد وأرقام التواصل'
   row_aftersales_title: '🛠️ خدمة ما بعد البيع'
   row_aftersales_desc:  'فعّل تطبيقك، بلّغ عن مشكلة، أو تابع تذكرة'
+  row_human_title:      '💬 كلّم حد من الفريق'
+  row_human_desc:       'اتكلم مع شخص من فريقنا هنا مباشرة'
