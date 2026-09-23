@@ -4,6 +4,8 @@
 # (threaded forward via $input). `entry` routes to the next stage by which fields are
 # present. The only suspend is the confirm card (approve_apply). This invoke-chain is
 # more robust than chained resume:$self pauses.
+# A service picked FIRST (from `service_list`) rides through the branch and barber
+# pickers, and the service step is skipped once a barber is chosen.
 flow_id:     book
 version:     1
 description: |-
@@ -28,7 +30,8 @@ input:
 entry:
   - if:   '$input.slot_start != null'
     goto: hydrate
-  - if:   '$input.service_id != null'
+  # Slots need the barber, so a service alone (from `service_list`) still starts at the branch.
+  - if:   '$input.service_id != null && $input.pro_id != null'
     goto: load_slots
   - if:   '$input.pro_id != null'
     goto: load_services
@@ -57,7 +60,8 @@ steps:
         item_template:
           title:       '{$item.title}'
           description: '{$item.fields.phone}'
-          on_select:   { invoke: book, with: { branch_code: '$item.fields.code' } }
+          # `service_id` is absent unless the journey began at `service_list`; an absent value drops out of the tap.
+          on_select:   { invoke: book, with: { branch_code: '$item.fields.code', service_id: '$input.service_id' } }
       memory_note: 'Offered branches to book at.'
     - end: applied
 
@@ -101,6 +105,7 @@ steps:
             with:
               branch_code: '$input.branch_code'
               pro_id:      '$item.id'
+              service_id:  '$input.service_id'
       memory_note: 'Offered barbers.'
     - end: applied
 

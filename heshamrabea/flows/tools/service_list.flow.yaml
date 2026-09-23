@@ -5,12 +5,18 @@ version:     1
 description: List services in a category with prices. Reached from the services menu; not usually called directly.
 
 input:
+  # An enum, so the agent can only send a code the `where` below can match.
   category:
-    type:     string
+    type:     enum
+    enum:     [haircut, beard, hair_treatment, skin, hands_feet, package]
     optional: true
-    describe: 'Service category code (haircut, beard, hair_treatment, skin, hands_feet, package).'
+    describe: 'Service category code.'
 
+# No category → the category menu. Filtering on an absent value failed the whole call
+# ("where … 'category' expects a string"), ~2,000 times on staging in the 14 days to 2026-09-23.
 entry:
+  - if:   '$input.category == null'
+    goto: no_category
   - else: true
     goto: load
 
@@ -38,8 +44,11 @@ steps:
         item_template:
           title:       '{$item.title} — {$format_number($item.fields.price)} {$t("service_list.egp")}'
           description: '{$t("service_list.tap_to_book")}'
-          on_select:   { invoke: book }
+          # Carry the chosen service: without it `book` started over and asked for the service again.
+          on_select:   { invoke: book, with: { service_id: '$item.id' } }
       memory_note: 'Listed services in a category ({$page.total}).'
     - end: applied
   none:
     - answer: { instructions: 'No services were found in that category. Offer the other categories, or the phone 01093333755.' }
+  no_category:
+    - answer: { instructions: 'No category was given. Call the services tool to show the service categories.' }
