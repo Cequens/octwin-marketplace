@@ -35,6 +35,9 @@ entities:
       phone:       { type: text, label: { en: 'Phone', ar: 'الهاتف' } }
       delivers_to: { type: text, label: { en: 'Delivers to', ar: 'يوصّل إلى' } }
       open_hours:  { type: text, label: { en: 'Open hours', ar: 'مواعيد العمل' } }
+      # The pin the `branches` carousel's Directions link opens in Google Maps.
+      location:    { type: geo, label: { en: 'Location', ar: 'الموقع على الخريطة' } }
+      photo:       { type: image, label: { en: 'Photo', ar: 'الصورة' } }
     list: [area, phone]
     search: { text: [name, delivers_to] }
 
@@ -142,8 +145,8 @@ demo:
     fields: { code: 'DES-RIZ', name: 'رز بلبن', category: desserts, description: 'رز بلبن بالقرفة والمكسرات. Rice pudding with cinnamon and nuts.', price: 45, spicy: false, popularity: 2, photo: 'generate:Appetising food photograph of Middle Eastern rice pudding in a small glass bowl topped with cinnamon and crushed pistachios, warm lighting.' }
 
   - entity: branch
-    fields: { name: 'فرع مدينة نصر', area: nasr_city, phone: '01001234567', delivers_to: 'مدينة نصر · مصر الجديدة · العباسية', open_hours: 'يومياً ١٢ ظهراً — ٣ فجراً' }
+    fields: { name: 'فرع مدينة نصر', area: nasr_city, phone: '01001234567', delivers_to: 'مدينة نصر · مصر الجديدة · العباسية', open_hours: 'يومياً ١٢ ظهراً — ٣ فجراً', location: { lat: 30.0566, lng: 31.3453 }, photo: 'generate:A bright modern shawarma restaurant storefront at night on a busy Nasr City street in Cairo, warm lights, photorealistic.' }
   - entity: branch
-    fields: { name: 'فرع المعادي', area: maadi, phone: '01007654321', delivers_to: 'المعادي · دجلة · زهراء المعادي', open_hours: 'يومياً ١٢ ظهراً — ٢ فجراً' }
+    fields: { name: 'فرع المعادي', area: maadi, phone: '01007654321', delivers_to: 'المعادي · دجلة · زهراء المعادي', open_hours: 'يومياً ١٢ ظهراً — ٢ فجراً', location: { lat: 29.9602, lng: 31.2569 }, photo: 'generate:A cosy shawarma shop with a glass front on a leafy Maadi street in Cairo, early evening, photorealistic.' }
   - entity: branch
-    fields: { name: 'فرع أكتوبر', area: october, phone: '01009876543', delivers_to: '٦ أكتوبر · الشيخ زايد · حدائق أكتوبر', open_hours: 'يومياً ١ ظهراً — ٢ فجراً' }
+    fields: { name: 'فرع أكتوبر', area: october, phone: '01009876543', delivers_to: '٦ أكتوبر · الشيخ زايد · حدائق أكتوبر', open_hours: 'يومياً ١ ظهراً — ٢ فجراً', location: { lat: 29.9727, lng: 30.9437 }, photo: 'generate:A shawarma restaurant counter in a modern mall food court in 6th of October City, Egypt, photorealistic.' }

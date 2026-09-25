@@ -12,6 +12,7 @@ mid-basket, the platform nudges them **on its own**, with no flow and no turn.
 | 🛒 **Basket** | Add / remove / clear. A second add of the same dish updates the quantity rather than stacking a line. |
 | ✅ **Checkout** | Name → area → address → payment → cutlery, with the **delivery minimum enforced** and the delivery fee added before the customer confirms. The nearest branch covering their area is picked automatically. The customer may tap or simply type an answer ("المعادي", "no thanks"). |
 | 🛵 **Track** | Every order's stage with a plain-language "what happens next". |
+| 📍 **Branches** | A photo carousel of the branches, each card with a **🗺️ Directions** button that opens Google Maps at the branch pin. |
 
 Send a voice note and the platform transcribes it — the order is read out of the transcript
 instead of being dictated twice.
@@ -59,6 +60,9 @@ Pure YAML — no code, no pack database.
   `$format_number` so they match the prices beside them.
 - `messages.ar.yaml` + `messages.en.yaml` — the platform's own failure copy, in the customer's
   language.
+- `flows/tools/branches.flow.yaml` — a carousel whose card buttons are LINKS (`url:` instead of
+  `on_select:`). On WhatsApp a card is two routing buttons OR one link and every card must be the same
+  kind, so a branch finder with one Directions link per card is a native link carousel.
 
 ```bash
 octwin deploy --seed

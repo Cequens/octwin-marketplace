@@ -1,0 +1,49 @@
+# branches — where we are: a carousel of the branches, each card one tap from directions.
+#
+# Every card's only button is a LINK (`url:`), so on WhatsApp this is a native link carousel —
+# Meta draws a card as up to two routing buttons OR one link, and every card in a carousel must be
+# the same kind. The link opens Google Maps at the branch pin (the Maps URL API, which opens the
+# Maps app on a phone). One branch arrives as a single image message with its Directions button.
+flow_id:     branches
+version:     1
+description: Show our branches with directions. Call when the customer asks where we are, for an address, a branch near them, or directions.
+
+entry:
+  - else: true
+    goto: load
+
+steps:
+  load:
+    - do: record_list
+      args: { entity: branch, all: true, limit: 10 }
+      bind: page
+      outputs:
+        ok:     [{ goto: show }]
+        empty:  [{ goto: none }]
+        failed: [{ goto: unavailable }]
+
+  show:
+    - render:
+        render_intent: carousel
+        body: '{$t("branches.intro")}'
+        items: '$page.rows'
+        item_template:
+          image_url: '$coalesce($item.fields.photo, "")'
+          body: '$lines($compact([
+                   "*" + $item.fields.name + "*",
+                   $item.fields.open_hours,
+                   $t("branches.delivers", { areas: $item.fields.delivers_to })
+                 ]), "\n")'
+          buttons:
+            - title: '{$t("branches.btn_directions")}'
+              url:   'https://www.google.com/maps/search/?api=1&query={$item.fields.location.lat},{$item.fields.location.lng}'
+      memory_note: 'Showed {$length($page.rows)} branch(es), each with a directions link.'
+    - end: applied
+
+  none:
+    - render: { render_intent: text_card, body: '{$t("branches.none")}' }
+    - end: applied
+
+  unavailable:
+    - answer:
+        instructions: 'The branch list could not be read. Apologise in one line and offer to try again shortly. Do NOT invent an address.'

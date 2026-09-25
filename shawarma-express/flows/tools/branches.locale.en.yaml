@@ -1,0 +1,7 @@
+flow_id: branches
+
+strings:
+  intro:          '📍 Our branches — tap "Directions" and the map takes you there:'
+  delivers:       '🛵 Delivers to: {areas}'
+  btn_directions: '🗺️ Directions'
+  none:           'No branches are listed yet. Message us and we will point you the right way.'
