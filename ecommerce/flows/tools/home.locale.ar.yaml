@@ -1,0 +1,12 @@
+flow_id: home
+
+strings:
+  header:       '🛍️ أهلاً بك في المتجر'
+  body:         'ماذا تريد أن تفعل؟'
+  cta:          'اختر'
+  row_browse:   '🔎 تصفّح المنتجات'
+  row_browse_d: 'اطّلع على ما لدينا'
+  row_cart:     '🛒 السلة'
+  row_cart_d:   'المنتجات التي اخترتها'
+  row_orders:   '📦 طلباتي'
+  row_orders_d: 'تتبّع طلبًا أو ألغِه أو عدّله'

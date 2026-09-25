@@ -26,15 +26,15 @@ steps:
               price:       '$p.price'
               image_url:   '$p.image_url'
               description: '$p.description'
-              body:        'Here are the details.'
+              body:        '{$t("product.body")}'
               buttons:
-                - { title: '🛒 Add to cart', on_select: { invoke: cart, with: { action: add, product_id: '$p.retailer_id' } } }
-                - { title: 'Keep shopping',  on_select: { invoke: shop } }
+                - { title: '{$t("product.btn_add")}',  on_select: { invoke: cart, with: { action: add, product_id: '$p.retailer_id' } } }
+                - { title: '{$t("product.btn_shop")}', on_select: { invoke: shop } }
             memory_note: 'Showed product {$p.title}.'
           - end: applied
         empty:
-          - render: { render_intent: text_card, body: 'That product is not available.' }
+          - render: { render_intent: text_card, body: '{$t("product.empty")}' }
           - end: applied
         failed:
-          - render: { render_intent: text_card, body: 'Could not load that product right now.' }
+          - render: { render_intent: text_card, body: '{$t("product.failed")}' }
           - end: failed

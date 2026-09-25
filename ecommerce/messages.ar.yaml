@@ -1,0 +1,18 @@
+# ecommerce — platform-emitted envelope copy (Arabic). The customer's language picks between
+# this file and `messages.en.yaml`; a key left out here comes from the English file
+# (`default_settings.locale: en`), and one neither sets is the platform's own words.
+errors:
+  failed:
+    failure: { body: 'عذرًا، حدث خطأ. حاول مرة أخرى.' }
+  unhandled_tool_error:
+    failure: { body: 'عذرًا، حدث خطأ غير متوقع. حاول مرة أخرى بعد قليل. 🙏' }
+
+agents:
+  shop:
+    agentDisabled:    'مساعد المتجر غير متاح مؤقتًا. حاول لاحقًا. 🙏'
+    transientError:   'عذرًا، حدث خطأ مؤقت. حاول مرة أخرى بعد قليل. 🙏'
+    workflowExpired:  'عذرًا، انتهت الجلسة. لنبدأ من جديد.'
+    workflowError:    'عذرًا، حدث خطأ أثناء إتمام ذلك. حاول مرة أخرى.'
+    workflowDisabled: 'هذه الميزة غير مفعّلة الآن.'
+    toolDisabled:     'هذه الميزة غير مفعّلة الآن.'
+    directTapError:   'عذرًا، حدث خطأ. حاول مرة أخرى.'

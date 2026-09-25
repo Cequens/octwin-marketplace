@@ -1,0 +1,21 @@
+flow_id: cart
+
+strings:
+  header:         '🛒 Your cart'
+  subtotal:       'Subtotal: {subtotal}'
+  total:          'Total: {total}'
+  empty:          'Your cart is empty. Browse products to add something!'
+  empty_checkout: 'Your cart is empty — nothing to check out yet.'
+  btn_checkout:   'Checkout'
+  btn_shop:       'Keep shopping'
+  btn_confirm:    'Confirm order'
+  btn_edit:       'Edit cart'
+  confirm_header: 'Confirm your order'
+  review_pay:     'Review order #{number} and pay.'
+  pay_label:      'Pay securely now'
+  placed_cod:     'Order #{number} placed! We are getting it ready — you will pay on delivery.'
+  placed_footer:  'Ask me for your order status any time.'
+  err_update:     'Could not update your cart right now.'
+  err_add:        'Could not add that item right now.'
+  err_load:       'Could not load your cart right now.'
+  err_checkout:   'Checkout failed — your cart may be empty.'

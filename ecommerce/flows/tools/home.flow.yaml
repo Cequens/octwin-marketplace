@@ -14,12 +14,12 @@ steps:
   show:
     - render:
         render_intent: list_picker
-        header: 'Welcome to the shop'
-        body:   'What would you like to do?'
-        cta:    'Choose'
+        header: '{$t("home.header")}'
+        body:   '{$t("home.body")}'
+        cta:    '{$t("home.cta")}'
         items:
-          - { title: 'Browse products', description: 'See what we have', on_select: { invoke: 'shop' } }
-          - { title: 'View cart',       description: 'Your items so far', on_select: { invoke: 'cart', with: { action: view } } }
-          - { title: 'My orders',       description: 'Track, cancel, or edit an order', on_select: { invoke: 'orders', with: { action: list } } }
+          - { title: '{$t("home.row_browse")}', description: '{$t("home.row_browse_d")}', on_select: { invoke: 'shop' } }
+          - { title: '{$t("home.row_cart")}',   description: '{$t("home.row_cart_d")}',   on_select: { invoke: 'cart', with: { action: view } } }
+          - { title: '{$t("home.row_orders")}', description: '{$t("home.row_orders_d")}', on_select: { invoke: 'orders', with: { action: list } } }
       memory_note: 'Showed the shop home menu.'
     - end: applied

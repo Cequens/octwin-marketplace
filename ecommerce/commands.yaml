@@ -4,5 +4,7 @@
 
 - match:    '/clear'
   action:   close_conversation
-  reply: 'Conversation cleared ✅ You can start a fresh shopping session.'
+  # One reply in both languages: a command's reply is a single message, whatever the locale.
+  # Double-quoted, so `\n` is a real line break (a single-quoted `\n` would print as two characters).
+  reply: "Conversation cleared ✅ You can start a fresh shopping session.\nتم مسح المحادثة ✅ يمكنك بدء جلسة تسوّق جديدة."
   source:   '/clear'

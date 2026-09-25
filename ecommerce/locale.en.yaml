@@ -1,0 +1,22 @@
+# ecommerce — pack-wide English strings.
+#
+# These root files also PUT A LANGUAGE ON THE PACK'S ROSTER: detection and `/lang` can only
+# choose a language the pack ships a root `locale.<lang>.yaml` for.
+#
+# `order_status.*` / `payment_status.*` label the platform `order`'s values for the shopper,
+# through `$enum_label(<value>, "order_status")` in `orders` — the keys are the platform's
+# values, byte-identical in `locale.ar.yaml`; only the text is translated.
+pack_id: ecommerce
+strings:
+  order_status.pending:    'Received'
+  order_status.processing: 'Being prepared'
+  order_status.shipped:    'Shipped'
+  order_status.completed:  'Delivered'
+  order_status.canceled:   'Canceled'
+  order_status.returned:   'Returned'
+
+  payment_status.none:     'Pay on delivery'
+  payment_status.pending:  'Awaiting payment'
+  payment_status.captured: 'Paid'
+  payment_status.failed:   'Payment failed'
+  payment_status.refunded: 'Refunded'

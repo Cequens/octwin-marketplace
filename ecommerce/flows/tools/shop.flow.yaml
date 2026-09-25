@@ -16,6 +16,8 @@ entry:
 
 steps:
   search:
+    # The prices on the cards come back in the conversation's language — `product_search`
+    # formats for it, so an Arabic shopper reads ‏45.00 US$ and an English one $45.00.
     - do: product_search
       args: { query: '$input.query', category: '$input.category', limit: 8 }
       bind: results
@@ -25,20 +27,20 @@ steps:
           - track: { event: searched, timeline: true }
           - render:
               render_intent: carousel
-              body: 'Here is what I found — tap a product to add it or see details.'
+              body: '{$t("shop.found")}'
               placeholder_url: 'https://placehold.co/600x600/png?text=Product'
               items: '$results'
               item_template:
                 image_url: '$item.image_url'
                 body: '$lines([$item.title, $item.price])'
                 buttons:
-                  - { title: '🛒 Add to cart', on_select: { invoke: cart,    with: { action: add, product_id: '$item.retailer_id' } } }
-                  - { title: 'Details',        on_select: { invoke: product, with: { product_id: '$item.retailer_id' } } }
+                  - { title: '{$t("shop.btn_add")}',     on_select: { invoke: cart,    with: { action: add, product_id: '$item.retailer_id' } } }
+                  - { title: '{$t("shop.btn_details")}', on_select: { invoke: product, with: { product_id: '$item.retailer_id' } } }
             memory_note: 'Showed {$length($results)} products for the search.'
           - end: applied
         empty:
-          - render: { render_intent: text_card, body: 'I could not find anything matching that. Want me to broaden the search?' }
+          - render: { render_intent: text_card, body: '{$t("shop.empty")}' }
           - end: applied
         failed:
-          - render: { render_intent: text_card, body: 'Search is unavailable right now — please try again in a moment.' }
+          - render: { render_intent: text_card, body: '{$t("shop.failed")}' }
           - end: failed

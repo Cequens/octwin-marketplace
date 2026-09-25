@@ -1,0 +1,21 @@
+flow_id: cart
+
+strings:
+  header:         '🛒 سلتك'
+  subtotal:       'المجموع الفرعي: {subtotal}'
+  total:          'الإجمالي: {total}'
+  empty:          'سلتك فارغة. تصفّح المنتجات لتضيف شيئًا!'
+  empty_checkout: 'سلتك فارغة — لا يوجد ما تدفعه بعد.'
+  btn_checkout:   'إتمام الشراء'
+  btn_shop:       'متابعة التسوّق'
+  btn_confirm:    'تأكيد الطلب'
+  btn_edit:       'تعديل السلة'
+  confirm_header: 'أكّد طلبك'
+  review_pay:     'راجع الطلب رقم #{number} وادفع.'
+  pay_label:      'ادفع الآن بأمان'
+  placed_cod:     'تم تسجيل الطلب رقم #{number}! نجهّزه الآن — الدفع عند الاستلام.'
+  placed_footer:  'اسألني عن حالة طلبك في أي وقت.'
+  err_update:     'تعذّر تحديث سلتك الآن.'
+  err_add:        'تعذّرت إضافة هذا المنتج الآن.'
+  err_load:       'تعذّر عرض سلتك الآن.'
+  err_checkout:   'تعذّر إتمام الشراء — قد تكون سلتك فارغة.'

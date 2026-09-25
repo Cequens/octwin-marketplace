@@ -1,0 +1,12 @@
+flow_id: home
+
+strings:
+  header:       '🛍️ Welcome to the shop'
+  body:         'What would you like to do?'
+  cta:          'Choose'
+  row_browse:   '🔎 Browse products'
+  row_browse_d: 'See what we have'
+  row_cart:     '🛒 View cart'
+  row_cart_d:   'Your items so far'
+  row_orders:   '📦 My orders'
+  row_orders_d: 'Track, cancel, or edit an order'

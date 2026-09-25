@@ -1,0 +1,8 @@
+flow_id: product
+
+strings:
+  body:     'Here are the details.'
+  btn_add:  '🛒 Add to cart'
+  btn_shop: 'Keep shopping'
+  empty:    'That product is not available.'
+  failed:   'Could not load that product right now.'

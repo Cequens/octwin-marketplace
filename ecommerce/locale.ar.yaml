@@ -1,0 +1,15 @@
+# ecommerce — pack-wide Arabic strings. Keys are byte-identical to `locale.en.yaml`.
+pack_id: ecommerce
+strings:
+  order_status.pending:    'تم الاستلام'
+  order_status.processing: 'قيد التجهيز'
+  order_status.shipped:    'تم الشحن'
+  order_status.completed:  'تم التسليم'
+  order_status.canceled:   'ملغى'
+  order_status.returned:   'مُرتجع'
+
+  payment_status.none:     'الدفع عند الاستلام'
+  payment_status.pending:  'بانتظار الدفع'
+  payment_status.captured: 'مدفوع'
+  payment_status.failed:   'فشل الدفع'
+  payment_status.refunded: 'مُسترد'

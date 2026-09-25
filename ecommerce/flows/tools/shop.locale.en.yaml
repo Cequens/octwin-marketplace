@@ -1,0 +1,8 @@
+flow_id: shop
+
+strings:
+  found:       'Here is what I found — tap a product to add it or see details.'
+  btn_add:     '🛒 Add to cart'
+  btn_details: 'Details'
+  empty:       'I could not find anything matching that. Want me to broaden the search?'
+  failed:      'Search is unavailable right now — please try again in a moment.'

@@ -49,7 +49,7 @@ steps:
       outputs:
         ok:      [ { goto: render_cart } ]
         invalid: []   # item not in cart → agent gets the reason + retries
-        failed:  [ { render: { render_intent: text_card, body: 'Could not update your cart right now.' } }, { end: failed } ]
+        failed:  [ { render: { render_intent: text_card, body: '{$t("cart.err_update")}' } }, { end: failed } ]
 
   set_item_qty:
     - do: cart_update_qty
@@ -58,7 +58,7 @@ steps:
       outputs:
         ok:      [ { goto: render_cart } ]
         invalid: []   # item not in cart → agent gets the reason + retries
-        failed:  [ { render: { render_intent: text_card, body: 'Could not update your cart right now.' } }, { end: failed } ]
+        failed:  [ { render: { render_intent: text_card, body: '{$t("cart.err_update")}' } }, { end: failed } ]
 
   add_item:
     - do: cart_add
@@ -68,7 +68,7 @@ steps:
         # Journey: an item was added → cart stage + added_to_cart goal.
         ok:      [ { track: { event: added_to_cart, timeline: true } }, { goto: render_cart } ]
         invalid: []   # unknown SKU → agent gets the reason + retries
-        failed:  [ { render: { render_intent: text_card, body: 'Could not add that item right now.' } }, { end: failed } ]
+        failed:  [ { render: { render_intent: text_card, body: '{$t("cart.err_add")}' } }, { end: failed } ]
 
   show_cart:
     - do: cart_view
@@ -76,21 +76,21 @@ steps:
       bind: cart
       outputs:
         ok:     [ { goto: render_cart } ]
-        failed: [ { render: { render_intent: text_card, body: 'Could not load your cart right now.' } }, { end: failed } ]
+        failed: [ { render: { render_intent: text_card, body: '{$t("cart.err_load")}' } }, { end: failed } ]
 
   render_cart:
     - if: '$cart.empty'
       then:
-        - render: { render_intent: text_card, body: 'Your cart is empty. Browse products to add something!' }
+        - render: { render_intent: text_card, body: '{$t("cart.empty")}' }
         - end: applied
     - render:
         render_intent: detail_card
-        header: 'Your cart'
+        header: '{$t("cart.header")}'
         body:   '$summarize_items($cart.items, "{quantity}× {title} — {line_total}", { separator: "\n" })'
-        footer: 'Subtotal: {$cart.subtotal}'
+        footer: '{$t("cart.subtotal", { subtotal: $cart.subtotal })}'
         buttons:
-          - { title: 'Checkout',      on_select: { invoke: 'cart', with: { action: checkout } } }
-          - { title: 'Keep shopping', on_select: { invoke: 'shop' } }
+          - { title: '{$t("cart.btn_checkout")}', on_select: { invoke: 'cart', with: { action: checkout } } }
+          - { title: '{$t("cart.btn_shop")}',     on_select: { invoke: 'shop' } }
       memory_note: 'Cart has {$cart.count} item(s), subtotal {$cart.subtotal}.'
     - end: applied
 
@@ -112,24 +112,24 @@ steps:
       bind: cart
       outputs:
         ok:     [ { goto: render_confirm_gate } ]
-        failed: [ { render: { render_intent: text_card, body: 'Could not load your cart right now.' } }, { end: failed } ]
+        failed: [ { render: { render_intent: text_card, body: '{$t("cart.err_load")}' } }, { end: failed } ]
 
   render_confirm_gate:
     - if: '$cart.empty'
       then:
-        - render: { render_intent: text_card, body: 'Your cart is empty — nothing to check out yet.' }
+        - render: { render_intent: text_card, body: '{$t("cart.empty_checkout")}' }
         - end: applied
     - render:
         render_intent: detail_card
-        header: 'Confirm your order'
+        header: '{$t("cart.confirm_header")}'
         body:   '$summarize_items($cart.items, "{quantity}× {title} — {line_total}", { separator: "\n" })'
         # No payment promise here — whether the next step is a card checkout or
         # pay-on-delivery is only known after the order exists (see build_payment).
-        footer: 'Total: {$cart.subtotal}'
+        footer: '{$t("cart.total", { total: $cart.subtotal })}'
         buttons:
-          - { title: 'Confirm order',  on_select: { invoke: 'cart', with: { action: checkout, confirmed: true } } }
-          - { title: 'Edit cart',      on_select: { invoke: 'cart', with: { action: view } } }
-          - { title: 'Keep shopping',  on_select: { invoke: 'shop' } }
+          - { title: '{$t("cart.btn_confirm")}', on_select: { invoke: 'cart', with: { action: checkout, confirmed: true } } }
+          - { title: '{$t("cart.btn_edit")}',    on_select: { invoke: 'cart', with: { action: view } } }
+          - { title: '{$t("cart.btn_shop")}',    on_select: { invoke: 'shop' } }
       memory_note: 'Order NOT placed yet — showed a confirm-order review ({$cart.count} item(s), subtotal {$cart.subtotal}); awaiting the Confirm tap.'
     - end: applied
 
@@ -144,7 +144,7 @@ steps:
           # One point covers both the gateway-checkout and pay-on-delivery branches.
           - track: { event: order_placed, value: '$order.total_minor / 100', timeline: true }
           - goto: build_payment
-        failed: [ { render: { render_intent: text_card, body: 'Checkout failed — your cart may be empty.' } }, { end: failed } ]
+        failed: [ { render: { render_intent: text_card, body: '{$t("cart.err_checkout")}' } }, { end: failed } ]
 
   # OPEN the payment rail. A configured gateway creates a real hosted checkout
   # session (order → payment_status: pending + the gateway ref stored; its webhook
@@ -161,11 +161,13 @@ steps:
         empty:  [ { goto: render_confirmation } ]
         failed: [ { goto: render_confirmation } ]
 
+  # The order card's row labels (Subtotal · Total …) and its pay button default are the PLATFORM's,
+  # resolved in the conversation's language; the amounts below are formatted for it too.
   render_checkout:
     - render:
         render_intent:  order_details
         reference_id:   '$order.reference_id'
-        body:           'Review order #{$order.record_number} and pay.'
+        body:           '{$t("cart.review_pay", { number: $order.record_number })}'
         currency:       '$coalesce($order.currency, "USD")'
         items:          '$map($order.items, { name: $item.name, quantity: $item.quantity, amount: $format_money($item.amount_minor / 100, $coalesce($order.currency, "USD")), amount_minor: $item.amount_minor })'
         subtotal:       '$format_money($order.subtotal_minor / 100, $coalesce($order.currency, "USD"))'
@@ -174,7 +176,7 @@ steps:
         total_minor:    '$order.total_minor'
         # Reached only via the `ok` port, so a real gateway session exists — the
         # secure-payment promise is always true here.
-        pay_label:      'Pay securely now'
+        pay_label:      '{$t("cart.pay_label")}'
         payment_url:    '$pay.payment_url'
       memory_note: 'Opened a secure {$pay.provider} checkout for order #{$order.record_number} (payment_status now pending) — the shopper pays on the gateway page and its webhook confirms the payment.'
     - end: applied
@@ -183,8 +185,8 @@ steps:
     - render:
         render_intent:  order_details
         reference_id:   '$order.reference_id'
-        body:           'Order #{$order.record_number} placed! We are getting it ready — you will pay on delivery.'
-        footer:         'Ask me for your order status any time.'
+        body:           '{$t("cart.placed_cod", { number: $order.record_number })}'
+        footer:         '{$t("cart.placed_footer")}'
         currency:       '$coalesce($order.currency, "USD")'
         items:          '$map($order.items, { name: $item.name, quantity: $item.quantity, amount: $format_money($item.amount_minor / 100, $coalesce($order.currency, "USD")), amount_minor: $item.amount_minor })'
         subtotal:       '$format_money($order.subtotal_minor / 100, $coalesce($order.currency, "USD"))'
