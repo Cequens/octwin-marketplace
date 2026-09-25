@@ -1,0 +1,234 @@
+<!doctype html>
+<!--
+  Shawarma Express — the printed menu the pack's `menu-file` flow sends.
+
+  SOURCE of menu.pdf and menu.png beside it (render commands: README.md). The dishes, prices,
+  branches and delivery terms are the pack's own — `shawarma-express/xrm.yaml` demo rows and
+  `manifest.yaml` config — so the file and the in-chat carousel agree. Change one, change both.
+-->
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<title>Shawarma Express — Menu</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800;900&display=block" rel="stylesheet">
+<style>
+  @page { size: 210mm 297mm; margin: 0; }
+  :root {
+    --brand: #9d174d; --brand-deep: #5f0d2e; --gold: #d4a24c; --cream: #fbf5ec;
+    --paper: #fffdf9; --ink: #2a1712; --muted: #7b6558; --line: #ead9c6;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { width: 210mm; height: 297mm; }
+  body {
+    font-family: 'Cairo', 'Segoe UI', sans-serif; color: var(--ink); background: var(--cream);
+    -webkit-print-color-adjust: exact; print-color-adjust: exact;
+  }
+  .page { width: 210mm; height: 297mm; display: flex; flex-direction: column; overflow: hidden; }
+
+  /* ── hero ─────────────────────────────────────────────────────────── */
+  .hero {
+    position: relative; padding: 11mm 13mm 9mm; color: #fff; display: flex; align-items: center; gap: 7mm;
+    background:
+      radial-gradient(circle at 12% 20%, rgba(255,255,255,.10) 0 18mm, transparent 18.2mm),
+      radial-gradient(circle at 8% 95%, rgba(255,255,255,.06) 0 26mm, transparent 26.2mm),
+      linear-gradient(135deg, var(--brand) 0%, var(--brand-deep) 100%);
+  }
+  .hero::after {  /* a gold rule under the band */
+    content: ''; position: absolute; inset: auto 0 0 0; height: 1.6mm;
+    background: linear-gradient(90deg, transparent, var(--gold) 20%, var(--gold) 80%, transparent);
+  }
+  .logo { width: 30mm; height: 30mm; border-radius: 50%; border: 1.4mm solid rgba(255,255,255,.9); box-shadow: 0 2mm 6mm rgba(0,0,0,.25); object-fit: cover; flex: none; }
+  .brand h1 { font-size: 34pt; font-weight: 900; line-height: 1.05; letter-spacing: .5px; }
+  .brand .latin { direction: ltr; text-align: right; font-size: 11pt; font-weight: 700; letter-spacing: 5px; color: var(--gold); margin-top: 1mm; }
+  .brand .tag { font-size: 12pt; font-weight: 600; margin-top: 2.5mm; opacity: .95; }
+  .brand .tag-en { direction: ltr; text-align: right; font-size: 9pt; opacity: .8; }
+  .stamp {
+    margin-inline-start: auto; width: 27mm; height: 27mm; border-radius: 50%; flex: none;
+    border: .6mm dashed rgba(255,255,255,.7); display: grid; place-content: center; text-align: center;
+  }
+  .stamp b { font-size: 16pt; font-weight: 900; line-height: 1; }
+  .stamp span { font-size: 8pt; letter-spacing: 3px; color: var(--gold); font-weight: 700; }
+
+  /* ── dishes ───────────────────────────────────────────────────────── */
+  .menu { flex: 1; display: grid; grid-template-columns: 1.18fr 1fr; gap: 0 9mm; padding: 7mm 13mm 5mm; }
+  .col { display: flex; flex-direction: column; gap: 5mm; }
+  h2 {
+    display: flex; align-items: baseline; gap: 2.5mm; font-size: 16pt; font-weight: 800; color: var(--brand);
+    border-bottom: .5mm solid var(--line); padding-bottom: 1.2mm; margin-bottom: 1mm;
+  }
+  h2 .ico { font-size: 14pt; }
+  h2 em { font-style: normal; direction: ltr; margin-inline-start: auto; font-size: 8.5pt; font-weight: 700; color: var(--muted); letter-spacing: 2.5px; text-transform: uppercase; }
+  .dish { padding: 1.2mm 0 1.6mm; }
+  .dish + .dish { border-top: .3mm dashed var(--line); }
+  .row { display: flex; align-items: baseline; gap: 2mm; }
+  .row h3 { font-size: 12.5pt; font-weight: 800; white-space: nowrap; }
+  .row .hot { font-size: 9pt; }
+  .row .lead { flex: 1; border-bottom: .45mm dotted #cdb49b; transform: translateY(-1.1mm); min-width: 6mm; }
+  .price { font-size: 13pt; font-weight: 900; color: var(--brand); white-space: nowrap; }
+  .price small { font-size: 8pt; font-weight: 700; color: var(--muted); }
+  .en { direction: ltr; text-align: right; font-size: 8.5pt; font-weight: 700; color: var(--muted); letter-spacing: .3px; margin-top: -.6mm; }
+  .desc { font-size: 9pt; color: #4d3a31; line-height: 1.5; margin-top: .8mm; }
+  .desc-en { direction: ltr; text-align: right; font-size: 7.5pt; color: var(--muted); line-height: 1.4; }
+
+  .star {
+    font-size: 7.5pt; font-weight: 800; color: var(--brand-deep); background: #f6e3b8; border-radius: 99px;
+    padding: .2mm 2.2mm; white-space: nowrap; transform: translateY(-.6mm);
+  }
+
+  /* ── delivery + branches ─────────────────────────────────────────── */
+  .delivery {
+    margin: 0 13mm; display: flex; align-items: center; gap: 4mm; padding: 3.2mm 5mm; border-radius: 3mm;
+    background: var(--brand); color: #fff;
+  }
+  .delivery .big { font-size: 12pt; font-weight: 800; }
+  .delivery .big i { font-style: normal; color: var(--gold); }
+  .delivery .en-line { direction: ltr; margin-inline-start: auto; font-size: 8.5pt; opacity: .85; }
+  .branches { display: grid; grid-template-columns: repeat(3, 1fr); gap: 4mm; padding: 5mm 13mm 0; }
+  .branch { background: var(--paper); border: .4mm solid var(--line); border-radius: 3mm; padding: 3mm 3.5mm; }
+  .branch h4 { font-size: 11pt; font-weight: 800; color: var(--brand); }
+  .branch .en { margin-top: -.8mm; }
+  .branch ul { list-style: none; margin-top: 1.6mm; font-size: 8.3pt; line-height: 1.65; color: #4d3a31; }
+  .branch .tel { direction: ltr; display: inline-block; font-weight: 700; letter-spacing: .4px; }
+
+  footer {
+    margin-top: auto; padding: 5mm 13mm 7mm; display: flex; align-items: center; gap: 4mm;
+    font-size: 10.5pt;
+  }
+  footer .wa { font-weight: 800; }
+  footer .wa-en { direction: ltr; font-size: 8.5pt; color: var(--muted); }
+  footer .legend { margin-inline-start: auto; font-size: 8.5pt; color: var(--muted); }
+</style>
+</head>
+<body>
+<div class="page">
+
+  <header class="hero">
+    <img class="logo" src="../../shawarma-express/widget/avatar.png" alt="">
+    <div class="brand">
+      <h1>شاورما إكسبريس</h1>
+      <div class="latin">SHAWARMA EXPRESS</div>
+      <p class="tag">شاورما على الفحم — من مطبخنا لحد باب البيت</p>
+      <p class="tag-en">Charcoal shawarma, from our kitchen to your door</p>
+    </div>
+    <div class="stamp"><b>المنيو</b><span>MENU</span></div>
+  </header>
+
+  <main class="menu">
+    <div class="col">
+      <section>
+        <h2><span class="ico">🌯</span> الشاورما <em>Shawarma</em></h2>
+        <article class="dish">
+          <div class="row"><h3>شاورما فراخ سوري</h3><span class="star">⭐ الأكثر طلباً</span><span class="lead"></span><span class="price">٩٥ <small>ج.م</small></span></div>
+          <div class="en">Syrian chicken shawarma</div>
+          <p class="desc">فراخ متبّلة على الفحم مع طحينة وثوم وخيار مخلل في خبز سوري.</p>
+          <p class="desc-en">Charcoal chicken with tahini, garlic and pickles in Syrian bread.</p>
+        </article>
+        <article class="dish">
+          <div class="row"><h3>شاورما لحمة</h3><span class="star">⭐ الأكثر طلباً</span><span class="lead"></span><span class="price">١٢٠ <small>ج.م</small></span></div>
+          <div class="en">Beef shawarma</div>
+          <p class="desc">لحمة بلدي مع طحينة وطماطم وبقدونس.</p>
+          <p class="desc-en">Beef with tahini, tomato and parsley.</p>
+        </article>
+        <article class="dish">
+          <div class="row"><h3>شاورما حارة</h3><span class="hot">🌶️</span><span class="lead"></span><span class="price">١٠٥ <small>ج.م</small></span></div>
+          <div class="en">Spicy chicken shawarma</div>
+          <p class="desc">فراخ بصوص حار وجبنة شيدر.</p>
+          <p class="desc-en">Chicken with hot sauce and cheddar.</p>
+        </article>
+      </section>
+
+      <section>
+        <h2><span class="ico">🔥</span> المشويات <em>Grills</em></h2>
+        <article class="dish">
+          <div class="row"><h3>مشويات مشكل</h3><span class="lead"></span><span class="price">٣٢٠ <small>ج.م</small></span></div>
+          <div class="en">Mixed grill</div>
+          <p class="desc">كباب وكفتة وشيش طاووق مع رز وسلطة وخبز.</p>
+          <p class="desc-en">Kebab, kofta and shish tawook with rice, salad and bread.</p>
+        </article>
+      </section>
+    </div>
+
+    <div class="col">
+      <section>
+        <h2><span class="ico">🍟</span> الإضافات <em>Sides</em></h2>
+        <article class="dish">
+          <div class="row"><h3>بطاطس محمرة</h3><span class="lead"></span><span class="price">٤٠ <small>ج.م</small></span></div>
+          <div class="en">Crispy fries</div>
+          <p class="desc">بطاطس مقرمشة مع صوص الثوم.</p>
+          <p class="desc-en">With garlic dip.</p>
+        </article>
+      </section>
+
+      <section>
+        <h2><span class="ico">🥤</span> المشروبات <em>Drinks</em></h2>
+        <article class="dish">
+          <div class="row"><h3>ليمون بالنعناع</h3><span class="lead"></span><span class="price">٣٠ <small>ج.م</small></span></div>
+          <div class="en">Mint lemonade</div>
+          <p class="desc">عصير ليمون طازج بالنعناع.</p>
+          <p class="desc-en">Freshly squeezed, with mint.</p>
+        </article>
+      </section>
+
+      <section>
+        <h2><span class="ico">🍮</span> الحلويات <em>Desserts</em></h2>
+        <article class="dish">
+          <div class="row"><h3>رز بلبن</h3><span class="lead"></span><span class="price">٤٥ <small>ج.م</small></span></div>
+          <div class="en">Rice pudding</div>
+          <p class="desc">رز بلبن بالقرفة والمكسرات.</p>
+          <p class="desc-en">With cinnamon and nuts.</p>
+        </article>
+      </section>
+
+    </div>
+  </main>
+
+  <div class="delivery">
+    <span style="font-size:15pt">🛵</span>
+    <span class="big">التوصيل <i>٢٥ ج.م</i> · الحد الأدنى للطلب <i>٨٠ ج.م</i></span>
+    <span class="en-line">Delivery EGP 25 · Minimum order EGP 80</span>
+  </div>
+
+  <section class="branches">
+    <div class="branch">
+      <h4>📍 فرع مدينة نصر</h4>
+      <div class="en">Nasr City</div>
+      <ul>
+        <li>🕐 يومياً ١٢ ظهراً — ٣ فجراً</li>
+        <li>🛵 مدينة نصر · مصر الجديدة · العباسية</li>
+        <li>☎️ <span class="tel">010 0123 4567</span></li>
+      </ul>
+    </div>
+    <div class="branch">
+      <h4>📍 فرع المعادي</h4>
+      <div class="en">Maadi</div>
+      <ul>
+        <li>🕐 يومياً ١٢ ظهراً — ٢ فجراً</li>
+        <li>🛵 المعادي · دجلة · زهراء المعادي</li>
+        <li>☎️ <span class="tel">010 0765 4321</span></li>
+      </ul>
+    </div>
+    <div class="branch">
+      <h4>📍 فرع أكتوبر</h4>
+      <div class="en">6th of October</div>
+      <ul>
+        <li>🕐 يومياً ١ ظهراً — ٢ فجراً</li>
+        <li>🛵 ٦ أكتوبر · الشيخ زايد · حدائق أكتوبر</li>
+        <li>☎️ <span class="tel">010 0987 6543</span></li>
+      </ul>
+    </div>
+  </section>
+
+  <footer>
+    <span style="font-size:16pt">💬</span>
+    <div>
+      <div class="wa">اطلب على واتساب — ابعت «هاي» واختار من المنيو</div>
+      <div class="wa-en">Order on WhatsApp — say "hi" and pick from the menu</div>
+    </div>
+    <span class="legend">🌶️ حار · Spicy</span>
+  </footer>
+
+</div>
+</body>
+</html>

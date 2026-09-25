@@ -19,7 +19,8 @@ connections:
     # The whole address, not a host: the operation has no path, so the file IS the base URL.
     base_url:
       required: true
-      example:  'https://example.com/files/menu.pdf'
+      # The demo's own menu, hosted in this repo (`assets/shawarma-express/` — menu.png works too).
+      example:  'https://raw.githubusercontent.com/Cequens/octwin-marketplace/master/assets/shawarma-express/menu.pdf'
     auth:     { kind: none }
     health:   { operation: menu_pdf }
     setup_hint: >-

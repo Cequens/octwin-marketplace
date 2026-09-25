@@ -69,7 +69,10 @@ Pure YAML — no code, no pack database.
   address serves and binds `{ media_ref, filename, kind, … }`; the flow sends a `document_card` (or,
   for an image menu, a buttonless `detail_card` with `image_url`). The operator pastes the file's
   address under Outbound → Integrations → **Printable menu**; until then the flow offers the in-chat
-  menu.
+  menu. For the demo, paste the designed menu this repo hosts:
+  `https://raw.githubusercontent.com/Cequens/octwin-marketplace/master/assets/shawarma-express/menu.pdf`
+  (or `menu.png` for the photo version) — source and render steps in
+  [`../assets/shawarma-express/`](../assets/shawarma-express/README.md).
 
 ```bash
 octwin deploy --seed
