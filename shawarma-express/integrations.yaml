@@ -1,0 +1,35 @@
+# The one outside system: wherever the restaurant keeps its printed menu.
+#
+# The pack sends that FILE to a customer who asks for the full menu — the operator pastes its
+# address once (a PDF on the website, a direct-download link, a POS export) and a new menu reaches
+# customers the moment the file is replaced, with no redeploy. `expect: binary` is what makes the
+# platform store the answer as a file rather than read it as JSON.
+#
+# NOTHING here is a secret. The address is operator data, entered once in the console under
+# Outbound → Integrations.
+
+version: 1
+
+connections:
+  menu_file:
+    label:    { en: 'Printable menu (file)', ar: 'المنيو المطبوع (ملف)' }
+    describe: >-
+      The address of the restaurant's current menu file — a PDF (or a JPEG/PNG image) that the
+      pack sends to a customer who asks for the full menu.
+    # The whole address, not a host: the operation has no path, so the file IS the base URL.
+    base_url:
+      required: true
+      example:  'https://example.com/files/menu.pdf'
+    auth:     { kind: none }
+    health:   { operation: menu_pdf }
+    setup_hint: >-
+      Paste the full address of the menu file. It must download the file itself, not open a page
+      that shows it — "Test connection" names the file it got, and fails on a web page.
+
+operations:
+  menu_pdf:
+    connection: menu_file
+    describe:   'GET the current menu file (PDF, or a JPEG/PNG image). The file is the connection address itself.'
+    method:     GET
+    path:       ''
+    response:   { expect: binary }

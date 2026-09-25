@@ -7,7 +7,7 @@
 # with milestones, and per-branch fulfilment. No pack DB, no code — pure YAML.
 
 id:          shawarma-express
-version:     '2.4.0'
+version:     '2.5.0'
 description: 'Shawarma restaurant delivery — menu carousel, basket, checkout with delivery details, live order tracking, and an automated abandoned-basket nudge.'
 
 listing:
@@ -60,6 +60,7 @@ flows:
   - basket
   - my-orders
   - branches
+  - menu-file
 
 # A voice note is how a lot of Egyptian customers actually order.
 inbound_preprocessing:
@@ -80,6 +81,7 @@ agents:
       - basket
       - my-orders
       - branches
+      - menu-file
     include_platform_protocol: true
     instructions:
       - file: prompts/identity.md

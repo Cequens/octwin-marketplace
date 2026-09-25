@@ -1,0 +1,51 @@
+# menu-file — send the full printed menu as a file.
+#
+# The file lives with the restaurant, not in the pack: `integrations.yaml` declares a binary
+# operation, the operator pastes the file's address, and `integration_call` hands back the stored
+# file as a `MEDIA-` ref. A PDF goes out as a document (its name shown on the bubble); an image
+# menu goes out as a photo — a `detail_card` with `image_url` and no buttons.
+flow_id:     menu-file
+version:     1
+description: Send the full printed menu as a file. Call when the customer asks for the whole menu to keep, a menu PDF, a price list, or to download or save the menu.
+
+entry:
+  - else: true
+    goto: fetch
+
+steps:
+  fetch:
+    - do: integration_call
+      args: { operation: menu_pdf }
+      bind: file
+      outputs:
+        ok:
+          - if: '$file.kind == "image"'
+            then:
+              - render:
+                  render_intent: detail_card
+                  image_url: '$file.media_ref'
+                  body: '{$t("menu-file.caption")}'
+                memory_note: 'Sent the full menu as an image.'
+            else:
+              - render:
+                  render_intent: document_card
+                  document_url: '$file.media_ref'
+                  filename: '$file.filename'
+                  body: '{$t("menu-file.caption")}'
+                memory_note: 'Sent the full menu as a file ({$file.filename}).'
+          - end: applied
+        # Not set up, not found, or the address serves something we cannot send: offer the
+        # in-chat menu instead. The operator sees the reason under Outbound → Integrations.
+        empty:   [{ goto: missing }]
+        invalid: [{ goto: missing }]
+        denied:  [{ goto: missing }]
+        failed:  [{ goto: missing }]
+
+  missing:
+    - render:
+        render_intent: detail_card
+        body: '{$t("menu-file.missing")}'
+        buttons:
+          - { title: '{$t("menu-file.btn_menu")}', on_select: { invoke: menu } }
+      memory_note: 'The menu file is not available; offered the in-chat menu.'
+    - end: applied

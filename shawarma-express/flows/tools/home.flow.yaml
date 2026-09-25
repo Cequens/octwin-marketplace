@@ -51,5 +51,6 @@ steps:
           - { title: '{$t("home.row_basket")}',  description: '{$t("home.row_basket_d")}',  on_select: { invoke: basket, with: { action: view } } }
           - { title: '{$t("home.row_track")}',   description: '{$t("home.row_track_d")}',   on_select: { invoke: my-orders } }
           - { title: '{$t("home.row_branches")}', description: '{$t("home.row_branches_d")}', on_select: { invoke: branches } }
+          - { title: '{$t("home.row_menu_file")}', description: '{$t("home.row_menu_file_d")}', on_select: { invoke: menu-file } }
       memory_note: 'Showed the Shawarma Express menu ({$in_basket} in basket, {$live} live order(s)).'
     - end: applied

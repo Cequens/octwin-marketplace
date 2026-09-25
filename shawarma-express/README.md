@@ -13,6 +13,7 @@ mid-basket, the platform nudges them **on its own**, with no flow and no turn.
 | ✅ **Checkout** | Name → area → address → payment → cutlery, with the **delivery minimum enforced** and the delivery fee added before the customer confirms. The nearest branch covering their area is picked automatically. The customer may tap or simply type an answer ("المعادي", "no thanks"). |
 | 🛵 **Track** | Every order's stage with a plain-language "what happens next". |
 | 📍 **Branches** | A photo carousel of the branches, each card with a **🗺️ Directions** button that opens Google Maps at the branch pin. |
+| 📄 **Menu as PDF** | The restaurant's printed menu, sent as a file the customer can keep (or as a photo, when the menu is an image). Replace the file and the next customer gets the new one. |
 
 Send a voice note and the platform transcribes it — the order is read out of the transcript
 instead of being dictated twice.
@@ -63,6 +64,12 @@ Pure YAML — no code, no pack database.
 - `flows/tools/branches.flow.yaml` — a carousel whose card buttons are LINKS (`url:` instead of
   `on_select:`). On WhatsApp a card is two routing buttons OR one link and every card must be the same
   kind, so a branch finder with one Directions link per card is a native link carousel.
+- `integrations.yaml` + `flows/tools/menu-file.flow.yaml` — a FILE from outside the pack. The
+  `menu_pdf` operation is `response: { expect: binary }`, so `integration_call` stores what the
+  address serves and binds `{ media_ref, filename, kind, … }`; the flow sends a `document_card` (or,
+  for an image menu, a buttonless `detail_card` with `image_url`). The operator pastes the file's
+  address under Outbound → Integrations → **Printable menu**; until then the flow offers the in-chat
+  menu.
 
 ```bash
 octwin deploy --seed
