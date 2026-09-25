@@ -25,3 +25,4 @@ strings:
   footer:       'Prices include VAT.'
   cta:          'Plans'
   classes_in:   'Classes included ✅'
+  saved_goal:   '🎯 Saved to your profile — your goal: {goal}'

@@ -4,6 +4,7 @@ strings:
   header:              '💪 آيرون بالس'
   greeting:            'أهلاً بك في آيرون بالس 💪 جاهز للحصة القادمة؟'
   upcoming:            '📅 لديك {count} حصة محجوزة.'
+  your_goal:           '🎯 هدفك: {goal}'
   cta:                 'اختر'
   row_classes:         '🏋️ جدول الحصص'
   row_classes_d:       'سبيننج · هيت · يوجا · بوكسينج · أثقال'

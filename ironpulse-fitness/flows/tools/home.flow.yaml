@@ -30,7 +30,10 @@ steps:
         header: '{$t("home.header")}'
         body: '$lines($compact([
                  $coalesce($input.message, $t("home.greeting")),
-                 $upcoming > 0 ? $t("home.upcoming", { count: $upcoming }) : null
+                 $upcoming > 0 ? $t("home.upcoming", { count: $upcoming }) : null,
+                 $contact.metadata.ironpulse_fitness.goal != null
+                   ? $t("home.your_goal", { goal: $enum_label($contact.metadata.ironpulse_fitness.goal, "goal") })
+                   : null
                ]), "\n")'
         cta: '{$t("home.cta")}'
         items:

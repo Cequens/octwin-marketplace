@@ -50,7 +50,12 @@ Pure YAML — no code, no pack database.
   from the engine row, and the `full` port renders a real "pick another slot" card rather than an
   error. A trial booking also advances `member_lead` to `trial_booked` — the sales event.
 - `flows/tools/membership.flow.yaml` — a `collect:` that captures the lead *before* showing
-  prices, so an abandoned enquiry is still a lead.
+  prices, so an abandoned enquiry is still a lead. `goal` and `experience` are `type: choice`, so a
+  typed "عايز أبني عضلات" lands on a listed goal. The goal is also saved on the member's contact
+  (`upsert_platform_contact`, namespace `ironpulse_fitness` — a `-` would read as a minus inside an
+  expression), and the SAME run reads it back from `$contact`: the platform refreshes `$contact`
+  after a primitive that changes it, so no `assign`-forward is needed. `home` greets a returning
+  member with that goal, through `$enum_label(…, "goal")`.
 
 ```bash
 octwin deploy --seed

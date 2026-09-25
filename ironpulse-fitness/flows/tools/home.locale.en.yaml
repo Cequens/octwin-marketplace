@@ -4,6 +4,7 @@ strings:
   header:              '💪 IronPulse'
   greeting:            'Welcome to IronPulse 💪 Ready for your next class?'
   upcoming:            '📅 You have {count} class(es) booked.'
+  your_goal:           '🎯 Your goal: {goal}'
   cta:                 'Pick'
   row_classes:         '🏋️ Class schedule'
   row_classes_d:       'Spinning · HIIT · yoga · boxing · weights'
