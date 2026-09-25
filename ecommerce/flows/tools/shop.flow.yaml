@@ -8,7 +8,7 @@ description: Search or browse the catalog. Pass the shopper's free-text need as 
 
 input:
   query:    { type: string, optional: true, describe: 'Free-text of what the shopper wants (e.g. "blue summer dress under 500").' }
-  category: { type: string, optional: true, describe: 'Category filter when the shopper names one.' }
+  category: { type: string, optional: true, describe: 'Category filter — only a category name the catalog itself uses. Leave it empty when unsure; `query` alone finds products in any language.' }
 
 entry:
   - else: true
@@ -22,25 +22,49 @@ steps:
       args: { query: '$input.query', category: '$input.category', limit: 8 }
       bind: results
       outputs:
+        ok:     [ { goto: show } ]
+        empty:  [ { goto: search_any } ]
+        failed: [ { goto: unavailable } ]
+
+  # `category` is a HARD filter, applied before the semantic ranking — so a category the catalog
+  # does not use (the model's translation or synonym: "أكواب ومجات" for `Home`) removes every
+  # product before the ranking can see one, and a search the query alone answers comes back
+  # empty. Retry once without it. A category that does exist still filters on the first try.
+  search_any:
+    - if: '$input.category == null'
+      then:
+        - goto: none
+    - do: product_search
+      args: { query: '$input.query', limit: 8 }
+      bind: results
+      outputs:
         ok:
-          # Journey: a catalog search returned results → browsing stage.
-          - track: { event: searched, timeline: true }
-          - render:
-              render_intent: carousel
-              body: '{$t("shop.found")}'
-              placeholder_url: 'https://placehold.co/600x600/png?text=Product'
-              items: '$results'
-              item_template:
-                image_url: '$item.image_url'
-                body: '$lines([$item.title, $item.price])'
-                buttons:
-                  - { title: '{$t("shop.btn_add")}',     on_select: { invoke: cart,    with: { action: add, product_id: '$item.retailer_id' } } }
-                  - { title: '{$t("shop.btn_details")}', on_select: { invoke: product, with: { product_id: '$item.retailer_id' } } }
-            memory_note: 'Showed {$length($results)} products for the search.'
-          - end: applied
-        empty:
-          - render: { render_intent: text_card, body: '{$t("shop.empty")}' }
-          - end: applied
-        failed:
-          - render: { render_intent: text_card, body: '{$t("shop.failed")}' }
-          - end: failed
+          - note: 'No product is in the category "{$input.category}"; showing the closest matches from the whole catalog instead.'
+          - goto: show
+        empty:  [ { goto: none } ]
+        failed: [ { goto: unavailable } ]
+
+  show:
+    # Journey: a catalog search returned results → browsing stage.
+    - track: { event: searched, timeline: true }
+    - render:
+        render_intent: carousel
+        body: '{$t("shop.found")}'
+        placeholder_url: 'https://placehold.co/600x600/png?text=Product'
+        items: '$results'
+        item_template:
+          image_url: '$item.image_url'
+          body: '$lines([$item.title, $item.price])'
+          buttons:
+            - { title: '{$t("shop.btn_add")}',     on_select: { invoke: cart,    with: { action: add, product_id: '$item.retailer_id' } } }
+            - { title: '{$t("shop.btn_details")}', on_select: { invoke: product, with: { product_id: '$item.retailer_id' } } }
+      memory_note: 'Showed {$length($results)} products for the search.'
+    - end: applied
+
+  none:
+    - render: { render_intent: text_card, body: '{$t("shop.empty")}' }
+    - end: applied
+
+  unavailable:
+    - render: { render_intent: text_card, body: '{$t("shop.failed")}' }
+    - end: failed
