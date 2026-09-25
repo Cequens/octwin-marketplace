@@ -132,7 +132,9 @@ steps:
     - assign:
         subtotal: '$sum($map($live, $item.fields.line_total.value / $item.fields.line_total.offset))'
         count:    '$sum($map($live, $item.fields.qty))'
-        body_lines: '$map($live, "🌯 " + $item.fields.qty + "× " + $item.fields.title + " — " + $format_money_field($item.fields.line_total, "EGP"))'
+        # Quantities through `$format_number`, so they take the pack's digits like the prices
+        # beside them (`default_settings.digits: native`) — a bare `+ $qty` stays Latin.
+        body_lines: '$map($live, "🌯 " + $format_number($item.fields.qty) + "× " + $item.fields.title + " — " + $format_money_field($item.fields.line_total, "EGP"))'
         minimum:  '$coalesce($config.delivery.minimum_order, 80)'
     - render:
         render_intent: detail_card
@@ -197,7 +199,7 @@ steps:
           - assign:
               order_subtotal: '$sum($map($live, $item.fields.line_total.value / $item.fields.line_total.offset))'
               order_count:    '$sum($map($live, $item.fields.qty))'
-              order_summary:  '$lines($map($live, $item.fields.qty + "× " + $item.fields.title), ", ")'
+              order_summary:  '$lines($map($live, $format_number($item.fields.qty) + "× " + $item.fields.title), ", ")'
               fee:            '$coalesce($config.delivery.fee, 25)'
           - assign:
               order_total: '$order_subtotal + $fee'
@@ -220,7 +222,10 @@ steps:
             dial_code: '20'
             label:    '$t("basket.label.phone")'
             describe: 'The number the driver rings on arrival.'
+          # `type: choice`: the list IS the answer set — a tap, or a typed "المعادي", lands on one
+          # of these values and nothing else.
           - field: area
+            type: choice
             label: '$t("basket.label.area")'
             options:
               header: basket.field_header.area
@@ -243,6 +248,7 @@ steps:
             label:      '$t("basket.label.pin")'
             skip_title: '$t("basket.skip_pin")'
           - field: payment_method
+            type: choice
             label: '$t("basket.label.payment")'
             options:
               header: basket.field_header.payment
@@ -251,6 +257,12 @@ steps:
                 - { value: cash_on_delivery, label: basket.pay.cash }
                 - { value: card_on_delivery, label: basket.pay.card }
                 - { value: wallet,           label: basket.pay.wallet }
+          # A yes/no: two buttons, or a typed "أيوه" / "no thanks". Stored as a real boolean.
+          - field: cutlery
+            type: boolean
+            label:     '$t("basket.label.cutlery")'
+            yes_title: '$t("basket.cutlery_yes")'
+            no_title:  '$t("basket.cutlery_no")'
         complete: [{ goto: pick_branch }]
 
   # The nearest branch that covers the customer's area fulfils the order. If the area
@@ -284,7 +296,8 @@ steps:
                     $t("basket.preview.to", { name: $state.customer_name }),
                     $t("basket.preview.address", { address: $state.address }),
                     $t("basket.preview.branch", { branch: $branch_label }),
-                    $t("basket.preview.payment", { payment: $enum_lookup($state.payment_method, { cash_on_delivery: $t("basket.pay.cash_plain"), card_on_delivery: $t("basket.pay.card_plain"), wallet: $t("basket.pay.wallet_plain") }, $state.payment_method) })
+                    $t("basket.preview.payment", { payment: $enum_lookup($state.payment_method, { cash_on_delivery: $t("basket.pay.cash_plain"), card_on_delivery: $t("basket.pay.card_plain"), wallet: $t("basket.pay.wallet_plain") }, $state.payment_method) }),
+                    $state.cutlery == true ? $t("basket.preview.cutlery_yes") : $t("basket.preview.cutlery_no")
                   ]), "\n")'
         header:        '{$t("basket.confirm_header")}'
         footer:        '{$t("basket.confirm_footer")}'
@@ -317,6 +330,7 @@ steps:
           branch:         '$branch.id'
           branch_label:   '$branch_label'
           payment_method: '$state.payment_method'
+          cutlery:        '$state.cutlery'
       bind: order
       outputs:
         ok:      [{ goto: placed }]

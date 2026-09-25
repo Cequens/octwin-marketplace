@@ -23,6 +23,9 @@ strings:
   label.pin:      'Delivery point on the map'
   skip_pin:       'The address is enough ⏭️'
   label.payment:  'Payment method'
+  label.cutlery:  '🍴 Shall we send cutlery and napkins?'
+  cutlery_yes:    '🍴 Yes, please'
+  cutlery_no:     '🌱 No, thanks'
 
   field_header.area:    '📍 Deliver to which area?'
   field_cta.area:       'Areas'
@@ -53,6 +56,8 @@ strings:
   preview.address:  '📍 Address: {address}'
   preview.branch:   '🏠 Branch: {branch}'
   preview.payment:  '💳 Payment: {payment}'
+  preview.cutlery_yes: '🍴 With cutlery'
+  preview.cutlery_no:  '🌱 No cutlery'
   branch_tbd:       'Nearest branch (customer service will pick it)'
 
   placed_header:    '✅ Your order is placed'

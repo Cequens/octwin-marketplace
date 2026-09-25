@@ -70,7 +70,9 @@ steps:
   show:
     - render:
         render_intent: carousel
-        body:  '{$t("menu.intro", { total: $page.total })}'
+        # `$format_number`, not the bare count: it takes the pack's digits (`digits: native`), so the
+        # count matches the Arabic-Indic prices on the cards below it.
+        body:  '{$t("menu.intro", { total: $format_number($page.total) })}'
         items: '$page.rows'
         item_template:
           image_url: '$coalesce($item.fields.photo, "")'

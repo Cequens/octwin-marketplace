@@ -10,7 +10,7 @@ mid-basket, the platform nudges them **on its own**, with no flow and no turn.
 |---|---|
 | 🌯 **Menu** | Food photography as a carousel, filtered by section or by the bestsellers segment. Only dishes the kitchen has marked available are ever offered. |
 | 🛒 **Basket** | Add / remove / clear. A second add of the same dish updates the quantity rather than stacking a line. |
-| ✅ **Checkout** | Name → area → address → payment, with the **delivery minimum enforced** and the delivery fee added before the customer confirms. The nearest branch covering their area is picked automatically. |
+| ✅ **Checkout** | Name → area → address → payment → cutlery, with the **delivery minimum enforced** and the delivery fee added before the customer confirms. The nearest branch covering their area is picked automatically. The customer may tap or simply type an answer ("المعادي", "no thanks"). |
 | 🛵 **Track** | Every order's stage with a plain-language "what happens next". |
 
 Send a voice note and the platform transcribes it — the order is read out of the transcript
@@ -51,6 +51,14 @@ Pure YAML — no code, no pack database.
   predicate is a field path, not a per-row expression.
 - `config:` in `manifest.yaml` holds the fee and minimum, so a branch manager changes a number
   rather than a flow.
+- `basket.flow.yaml`'s checkout uses the closed-set collect kinds: `area` and `payment_method` are
+  `type: choice` (the listed options ARE the answer set, so a typed answer lands on one of them or
+  is asked again), and `cutlery` is `type: boolean` (two buttons; stored as a real `true`/`false`).
+- `default_settings.digits: native` — every price and `$format_*` value is written in Arabic-Indic
+  digits in an Arabic conversation (`٤٥٫٠٠ ج.م.`), Latin in an English one. Quantities go through
+  `$format_number` so they match the prices beside them.
+- `messages.ar.yaml` + `messages.en.yaml` — the platform's own failure copy, in the customer's
+  language.
 
 ```bash
 octwin deploy --seed

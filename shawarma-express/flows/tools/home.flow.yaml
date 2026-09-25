@@ -41,8 +41,8 @@ steps:
         header: '{$t("home.header")}'
         body: '$lines($compact([
                  $coalesce($input.message, $t("home.greeting")),
-                 $in_basket > 0 ? $t("home.in_basket", { count: $in_basket }) : null,
-                 $live > 0 ? $t("home.live_order", { count: $live }) : null
+                 $in_basket > 0 ? $t("home.in_basket", { count: $format_number($in_basket) }) : null,
+                 $live > 0 ? $t("home.live_order", { count: $format_number($live) }) : null
                ]), "\n")'
         cta: '{$t("home.cta")}'
         items:

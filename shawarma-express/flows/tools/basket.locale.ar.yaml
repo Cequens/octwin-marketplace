@@ -23,6 +23,9 @@ strings:
   label.pin:      'موقع التوصيل على الخريطة'
   skip_pin:       'أكتفي بالعنوان ⏭️'
   label.payment:  'طريقة الدفع'
+  label.cutlery:  '🍴 نبعتلك شوك ومعالق ومناديل؟'
+  cutlery_yes:    '🍴 أيوه ابعت'
+  cutlery_no:     '🌱 مش محتاج'
 
   field_header.area:    '📍 التوصيل لأي منطقة؟'
   field_cta.area:       'المناطق'
@@ -53,6 +56,8 @@ strings:
   preview.address:  '📍 العنوان: {address}'
   preview.branch:   '🏠 الفرع: {branch}'
   preview.payment:  '💳 الدفع: {payment}'
+  preview.cutlery_yes: '🍴 معاه شوك ومعالق'
+  preview.cutlery_no:  '🌱 من غير شوك ومعالق'
   branch_tbd:       'أقرب فرع (خدمة العملاء تحدده)'
 
   placed_header:    '✅ أوردرك اتسجّل'

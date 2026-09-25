@@ -1,0 +1,17 @@
+# shawarma-express — platform-emitted envelope copy (English). The customer's language picks
+# between this file and `messages.ar.yaml`; a key left out here comes from the Arabic file.
+errors:
+  failed:
+    failure: { body: 'Something went wrong. Please try again.' }
+  unhandled_tool_error:
+    failure: { body: 'Something went wrong on our side. Please try again in a moment. 🙏' }
+
+agents:
+  counter:
+    agentDisabled:    'Ordering is paused for a moment. Please try again shortly. 🙏'
+    transientError:   'A temporary error occurred. Please try again in a moment. 🙏'
+    workflowExpired:  'That session has ended. Start again and I will pick it up with you.'
+    workflowError:    'Something went wrong while completing your order. Please try again.'
+    workflowDisabled: 'That feature is not switched on right now.'
+    toolDisabled:     'That feature is not switched on right now.'
+    directTapError:   'Something went wrong. Please try again.'

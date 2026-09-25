@@ -80,6 +80,7 @@ entities:
       branch:         { type: record, entity: branch, label: { en: 'Branch', ar: 'الفرع' } }
       branch_label:   { type: text, label: { en: 'Branch', ar: 'الفرع' } }
       payment_method: { type: select, options: [cash_on_delivery, card_on_delivery, wallet], label: { en: 'Payment', ar: 'الدفع' } }
+      cutlery:        { type: boolean, label: { en: 'Cutlery', ar: 'أدوات الأكل' } }
       notes:          { type: textarea, label: { en: 'Notes', ar: 'ملاحظات' } }
     list: [item_count, total, area]
     pipeline:
