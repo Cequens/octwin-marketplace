@@ -1,6 +1,7 @@
 flow_id: menu-file
 
 strings:
-  caption:  '📄 Our full menu — save it and order any time.'
+  caption_image: '📋 Our full menu — save the picture and order any time.'
+  caption_file:  '📋 Our full menu — save the file and order any time.'
   missing:  'The printed menu is not available right now, but the whole menu is right here in the chat.'
   btn_menu: '🍽️ Browse the menu'

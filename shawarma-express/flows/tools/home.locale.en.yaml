@@ -16,5 +16,5 @@ strings:
   row_track_d:     'Your orders and where they are'
   row_branches:    '📍 Our branches'
   row_branches_d:  'Addresses and directions on the map'
-  row_menu_file:   '📄 Menu as PDF'
-  row_menu_file_d: 'The full menu in a file to keep'
+  row_menu_file:   '📋 Full menu'
+  row_menu_file_d: 'The whole menu in one picture to keep'

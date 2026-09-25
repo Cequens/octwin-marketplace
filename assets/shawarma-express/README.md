@@ -10,8 +10,8 @@ restaurant's website for the demo. Nothing here is in the pack bundle.
 | File | What it is |
 |---|---|
 | `menu.html` | The source — one A4 page, Arabic first with English under each item |
-| `menu.pdf` | The PDF the demo connection points at (sent as a WhatsApp **document**) |
-| `menu.png` | The same page as an image (sent as a WhatsApp **photo** — point the connection here instead to try it) |
+| `menu.png` | The picture the pack's connection uses by DEFAULT (`base_url: { default }`) — sent as a WhatsApp **photo** |
+| `menu.pdf` | The same page as a PDF — point the connection here to send a **document** instead |
 
 Public addresses (the repo is public; GitHub serves them with a 5-minute cache):
 

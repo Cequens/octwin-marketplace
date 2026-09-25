@@ -1,12 +1,13 @@
-# menu-file — send the full printed menu as a file.
+# menu-file — send the full printed menu.
 #
 # The file lives with the restaurant, not in the pack: `integrations.yaml` declares a binary
-# operation, the operator pastes the file's address, and `integration_call` hands back the stored
-# file as a `MEDIA-` ref. A PDF goes out as a document (its name shown on the bubble); an image
-# menu goes out as a photo — a `detail_card` with `image_url` and no buttons.
+# operation whose address defaults to the demo's menu picture, the operator may replace it with
+# their own, and `integration_call` hands back the stored file as a `MEDIA-` ref. A picture goes
+# out as a photo — a `detail_card` with `image_url` and no buttons; a PDF as a document (its name
+# shown on the bubble).
 flow_id:     menu-file
 version:     1
-description: Send the full printed menu as a file. Call when the customer asks for the whole menu to keep, a menu PDF, a price list, or to download or save the menu.
+description: Send the full printed menu (a picture, or a PDF). Call when the customer asks for the whole menu at once, a menu picture or PDF, a price list, or to keep or save the menu.
 
 entry:
   - else: true
@@ -24,14 +25,14 @@ steps:
               - render:
                   render_intent: detail_card
                   image_url: '$file.media_ref'
-                  body: '{$t("menu-file.caption")}'
-                memory_note: 'Sent the full menu as an image.'
+                  body: '{$t("menu-file.caption_image")}'
+                memory_note: 'Sent the full menu as a picture.'
             else:
               - render:
                   render_intent: document_card
                   document_url: '$file.media_ref'
                   filename: '$file.filename'
-                  body: '{$t("menu-file.caption")}'
+                  body: '{$t("menu-file.caption_file")}'
                 memory_note: 'Sent the full menu as a file ({$file.filename}).'
           - end: applied
         # Not set up, not found, or the address serves something we cannot send: offer the

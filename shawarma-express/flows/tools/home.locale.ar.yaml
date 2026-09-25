@@ -16,5 +16,5 @@ strings:
   row_track_d:     'أوردراتك وحالتها'
   row_branches:    '📍 فروعنا'
   row_branches_d:  'العناوين والاتجاهات على الخريطة'
-  row_menu_file:   '📄 المنيو PDF'
-  row_menu_file_d: 'المنيو كامل في ملف تحفظه'
+  row_menu_file:   '📋 المنيو كامل'
+  row_menu_file_d: 'المنيو كله في صورة واحدة تحفظها'
