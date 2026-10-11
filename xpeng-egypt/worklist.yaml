@@ -73,8 +73,9 @@ work:
   # `handoff:` is the block only this entity may carry. Five minutes to accept before the
   # customer is returned to the AI Agent with an apology (and the ticket path); thirty quiet
   # minutes before an active chat is handed back. Both are tunable per project from
-  # Settings → Work. `whatsapp_signature` stays off: the web widget shows the operator's
-  # name as a chip, and on WhatsApp the join line already says a person is here.
+  # Settings → Work. `operator_attribution: business` (it replaced the deprecated
+  # `whatsapp_signature: false` in 4.7.0): the customer reads the business, not the operator's
+  # name — on WhatsApp the join line already says a person is here.
   #
   # The `first_response_within_hours: 0.25` is the same 15-minute promise a roadside ticket
   # makes — and it is kept by the same person, because the roadside flow opens the ticket
@@ -89,4 +90,4 @@ work:
     map:      { roadside: technical_service, charging: technical_service, sales: customer_care, other: customer_care }
     fallback: customer_care
     sla:      { resolve_within_hours: 2, first_response_within_hours: 0.25 }
-    handoff:  { accept_within_minutes: 5, idle_return_minutes: 30, whatsapp_signature: false, operator_dictation: true }
+    handoff:  { accept_within_minutes: 5, idle_return_minutes: 30, operator_attribution: business, operator_dictation: true }

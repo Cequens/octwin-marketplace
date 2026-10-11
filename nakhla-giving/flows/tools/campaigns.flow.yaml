@@ -48,8 +48,9 @@ steps:
         # "There are no live appeals" is an answer; a `failed` here is an authoring
         # fault (an entity that is not declared, a `where` that will not compile),
         # and telling a donor there is nothing to give to is the version of that
-        # least likely to be reported back to us. `[]` is the canonical handler:
-        # it renders the reason and ends.
+        # least likely to be reported back to us. `[]` is the canonical handler: the
+        # donor reads the pack's failure copy (`errors.failed`, else the platform's words),
+        # the reason goes on the operator's timeline, and the run ends.
         failed: []
 
   narrow:

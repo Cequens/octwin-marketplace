@@ -73,7 +73,7 @@ from the console's Live chat page and hands it back. The AI Agent is silent for 
 | how it starts | routed to | what the customer reads |
 |---|---|---|
 | "💬 Talk to a person" on the home / after-sales menus, or the assistant calling `talk-to-agent` | by `reason` — roadside / charging → Technical Service, sales / other → Customer Care | "We're connecting you to a person from our team…" |
-| a **roadside** ticket (`open-support`) — the ticket opens AND a person is requested in one turn | Technical Service | the ticket number, and that a person is joining |
+| a **roadside** ticket (`open-support`) — the ticket opens AND a person is requested in one turn | Technical Service | the ticket number, and that a person is joining — or, when no person can take the chat (a plan without Live chat), the ticket's 2-hour promise instead |
 | a supervisor pressing **Take over** on any open conversation | held by them | nothing until they write |
 
 Two clocks, both tunable per project from Settings → Work without a deploy: nobody accepts within

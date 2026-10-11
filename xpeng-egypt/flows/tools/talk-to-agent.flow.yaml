@@ -49,8 +49,8 @@ steps:
       memory_note: 'Handoff #{$handoff.handoff_number} opened for a person (reason {$coalesce($input.reason, "other")}). A person answers the customer until the conversation is handed back; you will be briefed then.'
     - end: applied
 
-  # The pack works the handoff entity, so this only fires on a platform fault. Offer the exit
-  # that always exists rather than a dead end.
+  # No person can take the chat: the project's plan has no Live chat (`feature_not_entitled`),
+  # or a platform fault. Offer the exit that always exists rather than a dead end.
   offer_ticket:
     - render:
         render_intent: detail_card
