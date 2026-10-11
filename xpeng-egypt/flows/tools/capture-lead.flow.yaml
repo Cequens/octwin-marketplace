@@ -138,7 +138,7 @@ steps:
         items:  '$concat($mr.rows, [{}])'
         item_template:
           title: '$item.fields.code != null ? $loc($item.fields.name) : $t("capture-lead.m_unsure")'
-          description: '$item.fields.code != null ? $t("capture-lead.m_from", { price: $format_number($item.fields.price_from) }) : $t("capture-lead.m_unsure_desc")'
+          description: '$item.fields.code != null ? $t("capture-lead.m_from", { price: $format_money($item.fields.price_from, "EGP") }) : $t("capture-lead.m_unsure_desc")'
           on_select: { resume: '$self', with: { interested_model: '$item.fields.code' } }
       memory_note: 'Asked which model the customer is interested in ({$length($mr.rows)} in the lineup, plus a "not sure yet" row).'
     - pause:

@@ -126,7 +126,7 @@ steps:
         cta:    '{$t("book.choose")}'
         items:  '$services.rows'
         item_template:
-          title: '{$item.title} — {$format_number($item.fields.price)} {$t("book.egp")}'
+          title: '{$item.title} — {$format_money($item.fields.price, "EGP")}'
           on_select:
             invoke: book
             with:
@@ -153,7 +153,8 @@ steps:
         cta:    '{$t("book.choose")}'
         items:  '$slots'
         item_template:
-          title: '{$item.local_date} · {$item.local_time}'
+          title: '{$format_date($item.local_date + "T" + $item.local_time, "time")}'
+          description: '{$format_date($item.local_date)}'
           on_select:
             invoke: book
             with:
@@ -221,7 +222,7 @@ steps:
           - assign: { hit: '$filter($fresh_slots, { slot_start: $state.slot_start })[0]' }
           - if: '$hit != null'
             then:
-              - assign: { state: '$merge($state, { slot_label: $hit.local_date + " · " + $hit.local_time })' }
+              - assign: { state: '$merge($state, { slot_label: $format_date($hit.local_date + "T" + $hit.local_time, "day_time") })' }
           - goto: confirm
         empty:  [{ goto: confirm }]
         failed: [{ goto: confirm }]
@@ -230,7 +231,7 @@ steps:
   confirm:
     - use: approve_apply
       with:
-        preview: '{$t("book.preview", { branch: $state.branch_name, pro: $state.pro_name, service: $state.service_name, price: $state.service_price, slot: $state.slot_label })}'
+        preview: '{$t("book.preview", { branch: $state.branch_name, pro: $state.pro_name, service: $state.service_name, price: $format_money($state.service_price, "EGP"), slot: $state.slot_label })}'
         apply:   do_book
         abort:   cancelled
         confirm_title: '{$t("book.confirm_btn")}'
@@ -279,7 +280,7 @@ steps:
     - render:
         render_intent: detail_card
         header: '{$t("book.done_header")}'
-        body:   '{$t("book.done_body", { ref: $booking.record_number, branch: $state.branch_name, pro: $state.pro_name, service: $state.service_name, slot: $state.slot_label, price: $state.service_price })}'
+        body:   '{$t("book.done_body", { ref: $booking.record_number, branch: $state.branch_name, pro: $state.pro_name, service: $state.service_name, slot: $state.slot_label, price: $format_money($state.service_price, "EGP") })}'
       memory_note: 'Booking confirmed ({$booking.record_number}).'
     - end: applied
 

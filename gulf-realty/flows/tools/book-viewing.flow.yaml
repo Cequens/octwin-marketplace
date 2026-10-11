@@ -74,7 +74,7 @@ steps:
                     - if: '$hit != null'
                       then:
                         - assign:
-                            state: '$merge($state, { slot_minutes: $hit.slot_minutes, slot_label: $lines($compact([$hit.local_date, $hit.local_time]), " — ") })'
+                            state: '$merge($state, { slot_minutes: $hit.slot_minutes, slot_label: $format_date($hit.local_date + "T" + $hit.local_time, "day_time") })'
                   empty:  []
                   failed: []
         progress: '$lines($compact([
@@ -130,7 +130,8 @@ steps:
               rows:   '$slots'
               map:
                 value: '$item.slot_start'
-                label: '$lines($compact([$item.local_date, $item.local_time]), " — ")'
+                label: '$format_date($item.local_date + "T" + $item.local_time, "time")'
+                description: '$format_date($item.local_date)'
           - field: party_size
             label: '$t("book-viewing.label.party")'
             options:

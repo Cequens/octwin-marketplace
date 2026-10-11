@@ -67,7 +67,7 @@ steps:
                     - if: '$hit != null'
                       then:
                         - assign:
-                            state: '$merge($state, { slot_minutes: $hit.slot_minutes, branch_id: $hit.meta.branch, slot_label: $lines($compact([$format_date($hit.local_date), $hit.local_time, $loc($hit.meta.branch_label)]), " — ") })'
+                            state: '$merge($state, { slot_minutes: $hit.slot_minutes, branch_id: $hit.meta.branch, slot_label: $lines($compact([$format_date($hit.local_date + "T" + $hit.local_time, "day_time"), $loc($hit.meta.branch_label)]), " — ") })'
                   empty:  []
                   failed: []
         progress: '$lines($compact([$t("book-appointment.progress.header"), $doctor_label != null ? $t("book-appointment.progress.doctor", { doctor: $doctor_label }) : null, $state.slot_label != null ? $t("book-appointment.progress.slot", { slot: $state.slot_label }) : null, $state.for_whom != null ? $t("book-appointment.progress.for_whom", { who: ($state.for_whom == "dependent" ? $coalesce($state.dependent_name, $t("book-appointment.for_whom.dependent")) : $t("book-appointment.for_whom.self")) }) : null]), "\n")'
@@ -110,7 +110,7 @@ steps:
               cta:    book-appointment.field_cta.slot
               fetch:  { do: slot_list, args: { resource_record_id: '$state.doctor_id' }, bind: slots }
               rows:   '$state.slot_day == null ? $slots : $filter($slots, { local_date: $state.slot_day })'
-              map:    { value: '$item.slot_start', label: '$format_date($item.local_date) + " " + $item.local_time', description: '$loc($item.meta.branch_label)' }
+              map:    { value: '$item.slot_start', label: '$format_date($item.local_date + "T" + $item.local_time, "time")', description: '$lines($compact([$format_date($item.local_date), $loc($item.meta.branch_label)]), " · ")' }
               page:   true
               narrow:
                 field: slot_day

@@ -168,7 +168,7 @@ steps:
         buttons:
           - { title: '{$t("estimate.btn_apply")}',    on_select: { invoke: apply, with: { product_id: '$state.product_id' } } }
           - { title: '{$t("estimate.btn_products")}', on_select: { invoke: products } }
-      memory_note: 'Gave an INDICATIVE instalment of {$monthly} SAR on {$p_label} (published rate {$p_rate}%). No eligibility opinion was given.'
+      memory_note: 'Gave an INDICATIVE instalment of {$format_money($monthly, "SAR")} on {$p_label} (published rate {$p_rate}%). No eligibility opinion was given.'
       data: { monthly: '$monthly' }
     - end: applied
 

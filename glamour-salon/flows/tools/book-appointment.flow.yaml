@@ -124,9 +124,10 @@ steps:
               rows:   '$slots'
               map:
                 value: '$item.slot_start'
-                label: '$lines($compact([$item.local_date, $item.local_time]), " — ")'
+                label: '$format_date($item.local_date + "T" + $item.local_time, "time")'
+                description: '$format_date($item.local_date)'
                 selection:
-                  slot_label: '$lines($compact([$item.local_date, $item.local_time]), " — ")'
+                  slot_label: '$format_date($item.local_date + "T" + $item.local_time, "day_time")'
           - field: notes
             required: false
             label:    '$t("book-appointment.label.notes")'

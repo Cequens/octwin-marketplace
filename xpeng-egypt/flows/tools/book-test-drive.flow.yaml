@@ -178,11 +178,12 @@ steps:
         cta:    '$t("book-test-drive.s_cta")'
         items:  '$coalesce($sl.slots, $sl.rows, $sl)'
         item_template:
-          # Title is the WHEN — the one thing a chooser scans. Detail goes to the description,
-          # which has 72 characters against a row title's 24.
-          title:       '$enum_label($item.dow, "dow") + " " + $item.local_date + " — " + $item.local_time'
-          description: '$format_number($item.slot_minutes) + " " + $t("book-test-drive.min_label") + " · " + $format_number($item.remaining) + " " + $t("book-test-drive.spots_label")'
-          on_select:   { resume: '$self', with: { slot_start: '$item.slot_start', slot_minutes: '$item.slot_minutes', slot_label: '{$item.local_date} — {$item.local_time}' } }
+          # The TIME is the title and the DAY leads the description, both in the customer's language:
+          # a full Arabic day and time ("الثلاثاء، 30 ديسمبر، 11:30 م") runs past a row title's 24
+          # characters, and the description has 72. A raw `2026-09-26 — 15:30` read backwards in Arabic.
+          title:       '$format_date($item.local_date + "T" + $item.local_time, "time")'
+          description: '$format_date($item.local_date) + " · " + $format_number($item.slot_minutes) + " " + $t("book-test-drive.min_label") + " · " + $format_number($item.remaining) + " " + $t("book-test-drive.spots_label")'
+          on_select:   { resume: '$self', with: { slot_start: '$item.slot_start', slot_minutes: '$item.slot_minutes', slot_label: '{$format_date($item.local_date + "T" + $item.local_time, "day_time")}' } }
       memory_note: 'Showed open test-drive slots for {$state.branch_name}.'
     - pause:
         on_resume:
@@ -246,10 +247,10 @@ steps:
     - render:
         render_intent: detail_card
         header: '{$t("book-test-drive.c_title")}'
-        body: "$lines([ '✅ ' + $t('book-test-drive.confirmed_line'), '', '🏢 ' + $state.branch_name, '📅 ' + $coalesce($state.slot_label, $state.slot_start), '🚗 ' + $coalesce($state.model_name, $state.model_code, $t('book-test-drive.any_model')), '👤 ' + $state.name, '', '🔔 ' + $t('book-test-drive.reminder_note') ])"
+        body: "$lines([ '✅ ' + $t('book-test-drive.confirmed_line'), '', '🏢 ' + $state.branch_name, '📅 ' + $coalesce($state.slot_label, $format_date($state.slot_start, 'day_time', null, 'Africa/Cairo')), '🚗 ' + $coalesce($state.model_name, $state.model_code, $t('book-test-drive.any_model')), '👤 ' + $state.name, '', '🔔 ' + $t('book-test-drive.reminder_note') ])"
         buttons:
           - { title: '{$t("xpeng-egypt.cta_browse")}', on_select: { invoke: browse-models } }
-      memory_note: 'Test drive booked at {$state.branch_name} for {$state.slot_start} ({$state.phone}).'
+      memory_note: 'Test drive booked at {$state.branch_name} for {$coalesce($state.slot_label, $format_date($state.slot_start, "day_time", null, "Africa/Cairo"))} ({$state.phone}).'
     # Purchase funnel: strongest pre-sale signal — completed the test_drive_booked goal.
     - track: { journey: purchase, event: booked_test_drive, metadata: { model: '$coalesce($state.model_code, "any")' } }
     - if: "$coalesce($state.branch_photo, '') != ''"

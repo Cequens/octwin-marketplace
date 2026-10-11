@@ -23,7 +23,7 @@ strings:
   m_header:       'Which model?'
   m_body:         'Pick the model you would like a quote on — our sales team will price it for you.'
   m_cta:          'Choose a model'
-  m_from:         'From {price} EGP'
+  m_from:         'From {price}'
   m_unsure:       "I'm not sure yet"
   m_unsure_desc:  'Let sales help me choose'
 

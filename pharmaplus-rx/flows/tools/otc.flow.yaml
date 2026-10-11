@@ -180,7 +180,7 @@ steps:
           - { title: '{$t("otc.btn_checkout")}', on_select: { invoke: otc, with: { action: checkout } } }
           - { title: '{$t("otc.btn_browse")}',   on_select: { invoke: otc } }
           - { title: '{$t("otc.btn_rx")}',       on_select: { invoke: prescription } }
-      memory_note: 'OTC basket subtotal {$subtotal} EGP plus a {$fee} EGP delivery fee. NOT ordered yet — the customer still has to complete checkout.'
+      memory_note: 'OTC basket subtotal {$format_money($subtotal, "EGP")} plus a {$format_money($fee, "EGP")} delivery fee. NOT ordered yet — the customer still has to complete checkout.'
     - end: applied
 
   empty_basket:
@@ -287,7 +287,7 @@ steps:
         apply:         place_order
         abort:         order_aborted
         on_other:      gather_delivery
-        memory_note:   'Order NOT placed — awaiting the customer''s ✅ on {$order_total} EGP.'
+        memory_note:   'Order NOT placed — awaiting the customer''s ✅ on {$format_money($order_total, "EGP")}.'
 
   place_order:
     - do: record_save
@@ -357,7 +357,7 @@ steps:
         buttons:
           - { title: '{$t("otc.btn_orders")}', on_select: { invoke: my-orders } }
           - { title: '{$t("otc.btn_browse")}', on_select: { invoke: otc } }
-      memory_note: 'Placed otc_order #{$order.record_number} ({$order_total} EGP) and opened dispensing case #{$disp.case_number}. Basket cleared.'
+      memory_note: 'Placed otc_order #{$order.record_number} ({$format_money($order_total, "EGP")}) and opened dispensing case #{$disp.case_number}. Basket cleared.'
       data: { order_number: '$order.record_number' }
     - end: applied
 

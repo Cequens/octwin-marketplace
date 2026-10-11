@@ -58,7 +58,7 @@ steps:
     - assign:
         stage_line: '$t("application-status.detail.stage", { stage: $enum_label($selected.stage, "stage", $selected.stage) })'
         hint_line:  '$enum_label($selected.stage, "stage_hint", "")'
-        opened_line: '$t("application-status.detail.updated", { when: $format_relative_date($selected.updated_at, $coalesce($conversation.lang, "ar")) })'
+        opened_line: '$t("application-status.detail.updated", { when: $format_relative_date($selected.updated_at) })'
     - render:
         render_intent: detail_card
         body: '$lines($compact([$t("application-status.detail.header", { ref: $selected.record_number }), $t("application-status.detail.name", { name: $selected.title }), $t("application-status.detail.region", { region: $enum_label($selected.fields.region, "region", "") }), $t("application-status.detail.vehicle", { vehicle: $enum_label($selected.fields.vehicle_type, "vehicle", "") }), $stage_line, $hint_line != "" ? $hint_line : null, $opened_line]), "\n")'

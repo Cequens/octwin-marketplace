@@ -148,7 +148,7 @@ steps:
           - { title: '{$t("basket.btn_checkout")}', on_select: { invoke: basket, with: { action: checkout } } }
           - { title: '{$t("basket.btn_menu")}',     on_select: { invoke: menu } }
           - { title: '{$t("basket.btn_clear")}',    on_select: { invoke: basket, with: { action: clear } } }
-      memory_note: 'Basket holds {$count} item(s), subtotal {$subtotal} EGP (minimum {$minimum}).'
+      memory_note: 'Basket holds {$count} item(s), subtotal {$format_money($subtotal, "EGP")} (minimum {$minimum}).'
       data: { count: '$count', subtotal: '$subtotal' }
     - end: applied
 
@@ -306,7 +306,7 @@ steps:
         apply:         place
         abort:         aborted
         on_other:      gather
-        memory_note:   'Order NOT placed — awaiting the customer''s ✅ on {$order_total} EGP.'
+        memory_note:   'Order NOT placed — awaiting the customer''s ✅ on {$format_money($order_total, "EGP")}.'
 
   place:
     - do: record_save
@@ -361,7 +361,7 @@ steps:
         buttons:
           - { title: '{$t("basket.btn_track")}', on_select: { invoke: my-orders } }
           - { title: '{$t("basket.btn_menu")}',  on_select: { invoke: menu } }
-      memory_note: 'Placed food_order #{$order.record_number} — {$order_count} item(s), {$order_total} EGP, {$branch_label}.'
+      memory_note: 'Placed food_order #{$order.record_number} — {$order_count} item(s), {$format_money($order_total, "EGP")}, {$branch_label}.'
       data: { order_number: '$order.record_number' }
     - end: applied
 

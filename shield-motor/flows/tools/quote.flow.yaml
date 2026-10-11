@@ -153,6 +153,6 @@ steps:
         buttons:
           - { title: '{$t("quote.btn_plans")}', on_select: { invoke: plans } }
           - { title: '{$t("quote.btn_home")}',  on_select: { invoke: home } }
-      memory_note: 'Gave an INDICATIVE premium of {$premium} AED on {$pl_label} (base {$base}, loading {$load_pct}%, NCD {$ncd_pct}%). Not an offer.'
+      memory_note: 'Gave an INDICATIVE premium of {$format_money($premium, "AED")} on {$pl_label} (base {$base}, loading {$load_pct}%, NCD {$ncd_pct}%). Not an offer.'
       data: { premium: '$premium' }
     - end: applied

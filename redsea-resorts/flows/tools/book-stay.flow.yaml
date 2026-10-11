@@ -86,11 +86,11 @@ steps:
               rows:   '$slots'
               map:
                 value:       '$item.slot_start'
-                label:       '$item.local_date'
+                label:       '$format_date($item.local_date)'
                 description: '$t("book-stay.rooms_left", { remaining: $item.remaining })'
                 selection:
                   slot_minutes: '$item.slot_minutes'
-                  slot_label:   '$item.local_date'
+                  slot_label:   '$format_date($item.local_date)'
           - field: nights_band
             label: '$t("book-stay.label.nights")'
             options:
@@ -180,7 +180,7 @@ steps:
         apply:         hold_room
         abort:         aborted
         on_other:      gather
-        memory_note:   'Stay NOT held yet — awaiting the guest''s ✅ on {$total} EGP.'
+        memory_note:   'Stay NOT held yet — awaiting the guest''s ✅ on {$format_money($total, "EGP")}.'
 
   hold_room:
     # The oversell guard. `full` here means the last room of this type went while the guest
@@ -247,7 +247,7 @@ steps:
         buttons:
           - { title: '{$t("book-stay.btn_mine")}',  on_select: { invoke: my-bookings } }
           - { title: '{$t("book-stay.btn_rooms")}', on_select: { invoke: rooms } }
-      memory_note: 'Held a room for {$state.nights_n} night(s) at {$total} EGP (deposit {$deposit}) — stage `held`, NOT confirmed until the deposit is received.'
+      memory_note: 'Held a room for {$state.nights_n} night(s) at {$format_money($total, "EGP")} (deposit {$deposit}) — stage `held`, NOT confirmed until the deposit is received.'
       data: { total: '$total', deposit: '$deposit' }
     - end: applied
 

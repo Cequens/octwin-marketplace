@@ -51,7 +51,7 @@ steps:
   detail:
     - assign:
         ref:          '$partial(case_ref, { n: $selected.case_number })'
-        opened_line:  '$t("ticket-status.detail.opened", { when: $format_relative_date($selected.created_at, $coalesce($conversation.lang, "ar")) })'
+        opened_line:  '$t("ticket-status.detail.opened", { when: $format_relative_date($selected.created_at) })'
         # `request_more_info` is a REQUEST that sets awaiting_customer, not a
         # resolution — its display is owned by `needed_line` (awaiting-only). Only
         # real outcomes (resolve/reject/approve_refund/unblock/…) show here, so a

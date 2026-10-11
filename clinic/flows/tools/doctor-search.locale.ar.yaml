@@ -8,7 +8,6 @@ strings:
 
   # Carousel card lines
   card.rating:    '⭐ {rating} ({count} تقييم)'
-  card.fee:       '💵 الكشف: {fee} جنيه'
   card.tpas:      '🩺 تأمين مقبول: {tpas}'
   card.no_tpas:   '🩺 بدون تأمين تعاقدي — الدفع نقدي'
 

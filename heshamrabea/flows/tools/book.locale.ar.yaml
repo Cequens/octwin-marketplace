@@ -2,7 +2,6 @@ flow_id: book
 
 strings:
   choose:          'اختر'
-  egp:             'ج.م'
 
   branch_header:   'اختر الفرع 📍'
   branch_body:     'في أي فرع تحب تحجز؟'
@@ -13,12 +12,12 @@ strings:
   slot_header:     'اختر الموعد 🗓️'
   slot_body:       'المواعيد المتاحة في الأيام الجاية:'
 
-  preview:         "تأكيد الحجز 📋\nالفرع: {branch}\nالحلاق: {pro}\nالخدمة: {service} ({price} ج.م)\nالموعد: {slot}\n\nنأكد الحجز؟"
+  preview:         "تأكيد الحجز 📋\nالفرع: {branch}\nالحلاق: {pro}\nالخدمة: {service} ({price})\nالموعد: {slot}\n\nنأكد الحجز؟"
   confirm_btn:     'تأكيد ✅'
   cancel_btn:      'إلغاء ❌'
 
   done_header:     'تم الحجز ✅'
-  done_body:       "تم تأكيد حجزك 🎉\nرقم الحجز: {ref}\nالفرع: {branch}\nالحلاق: {pro}\nالخدمة: {service}\nالموعد: {slot}\nالسعر: {price} ج.م\n\nمستنينك! لو حابب تعدّل أو تلغي كلّمنا على 01093333755."
+  done_body:       "تم تأكيد حجزك 🎉\nرقم الحجز: {ref}\nالفرع: {branch}\nالحلاق: {pro}\nالخدمة: {service}\nالموعد: {slot}\nالسعر: {price}\n\nمستنينك! لو حابب تعدّل أو تلغي كلّمنا على 01093333755."
   reminder:        'تذكير ⏰ عندك موعد بعد ساعتين في فرع {branch} مع {pro} ({slot}). مستنينك 💈'
 
   cancelled:       'تم إلغاء الحجز. تحت أمرك في أي وقت 🙏'

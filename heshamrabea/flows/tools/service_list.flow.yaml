@@ -42,7 +42,7 @@ steps:
         cta:    '{$t("service_list.book")}'
         items:  '$page.rows'
         item_template:
-          title:       '{$item.title} — {$format_number($item.fields.price)} {$t("service_list.egp")}'
+          title:       '{$item.title} — {$format_money($item.fields.price, "EGP")}'
           description: '{$t("service_list.tap_to_book")}'
           # Carry the chosen service: without it `book` started over and asked for the service again.
           on_select:   { invoke: book, with: { service_id: '$item.id' } }

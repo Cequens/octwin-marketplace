@@ -160,7 +160,7 @@ steps:
           - { title: '{$t("cart.btn_checkout")}', on_select: { invoke: cart, with: { action: checkout } } }
           - { title: '{$t("cart.btn_shop")}',     on_select: { invoke: shop } }
           - { title: '{$t("cart.btn_clear")}',    on_select: { invoke: cart, with: { action: clear } } }
-      memory_note: 'Cart holds {$count} item(s), total {$total} SAR.'
+      memory_note: 'Cart holds {$count} item(s), total {$format_money($total, "SAR")}.'
       data: { count: '$count', total: '$total' }
     - end: applied
 
@@ -264,7 +264,7 @@ steps:
         apply:         place_order
         abort:         aborted
         on_other:      gather
-        memory_note:   'Order NOT placed — awaiting the shopper''s ✅ on a {$order_total} SAR order.'
+        memory_note:   'Order NOT placed — awaiting the shopper''s ✅ on a {$format_money($order_total, "SAR")} order.'
 
   place_order:
     - do: record_save
@@ -335,7 +335,7 @@ steps:
         buttons:
           - { title: '{$t("cart.btn_orders")}', on_select: { invoke: orders } }
           - { title: '{$t("cart.btn_shop")}',   on_select: { invoke: shop } }
-      memory_note: 'Placed order #{$order.record_number} — {$order_count} item(s), {$order_total} SAR, {$state.payment_method}.'
+      memory_note: 'Placed order #{$order.record_number} — {$order_count} item(s), {$format_money($order_total, "SAR")}, {$state.payment_method}.'
       data: { order_number: '$order.record_number' }
     - end: applied
 

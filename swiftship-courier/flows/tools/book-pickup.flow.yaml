@@ -157,7 +157,7 @@ steps:
         apply:         save_request
         abort:         aborted
         on_other:      gather
-        memory_note:   'Pickup NOT booked yet — awaiting the customer''s ✅ on {$price} EGP.'
+        memory_note:   'Pickup NOT booked yet — awaiting the customer''s ✅ on {$format_money($price, "EGP")}.'
 
   confirm_unpriced:
     - assign: { price: null, eta: null }
@@ -215,7 +215,7 @@ steps:
                ]), "\n")'
         buttons:
           - { title: '{$t("book-pickup.btn_home")}', on_select: { invoke: home } }
-      memory_note: 'Saved pickup_request #{$req.record_number} at {$coalesce($price, 0)} EGP.'
+      memory_note: 'Saved pickup_request #{$req.record_number} at {$format_money($coalesce($price, 0), "EGP")}.'
     - end: applied
 
   aborted:
