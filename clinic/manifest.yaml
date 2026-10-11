@@ -10,7 +10,7 @@
 # keys are rejected. Required: id, version (string), description.
 
 id:          clinic
-version: '2.6.0'
+version: '2.7.0'
 description: 'Outpatient appointment reservation for clinics & hospital outpatient clinics — Arabic-first, WhatsApp + web.'
 
 # Marketplace presentation — how this pack appears in the console catalog a
@@ -42,11 +42,12 @@ widget:
 # doctors/branches are XRM reference records, appointments the `booking` XRM
 # system entity, availability/slots the platform scheduling engine, feedback the
 # surveys layer, identity the platform contact. `vision` stays for inbound
-# medical-document image intake. Bookable/searchable capability is declared in
+# medical-document image intake; `embedding` powers the doctor search's
+# `semantic:` half (a symptom finds the specialty — xrm.yaml). Bookable/searchable capability is declared in
 # the sibling xrm.yaml / scheduling.yaml / surveys.yaml.
 supported_channels: [whatsapp, web]
 supported_languages: [ar, en]
-required_adapters:  [messaging, vision]
+required_adapters:  [messaging, vision, embedding]
 # Default locale for platform-emitted copy + this pack's `$t()` lookups.
 default_settings:
   locale: ar
@@ -72,6 +73,18 @@ flows:
 #
 # It also only ever fired on an inbound MESSAGE, so a card photographed inside a native WhatsApp
 # form was never read at all.
+#
+# `voicenote` STAYS: the agent cannot hear, and the prompt fills `reason_ar` from the
+# transcript. It was deleted by accident alongside `image` (2.1.0), so a voice note
+# reached the agent with no text at all until 2.7.0 put it back.
+inbound_preprocessing:
+  voicenote:
+    mode: transcribe
+    ack: '🎤 وصلت الرسالة الصوتية، جاري تفريغها...'
+    prompt: 'Egyptian Arabic medical appointment voice note.'
+    note_template: |-
+      $transcript != null ? "🎤 رسالة صوتية ({$media_ref}): {$transcript}" : "🎤 رسالة صوتية ({$media_ref}) — تعذّر التفريغ"
+
 agents:
   - id:                reception
     display_name:      'Clinic Reception'

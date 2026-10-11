@@ -37,6 +37,9 @@ strings:
   field_cta.doctor:       'Doctors'
   field_header.slot:      '🗓️ Pick a time'
   field_cta.slot:         'Available times'
+  field_header.slot_day: '📅 Pick a day'
+  field_cta.slot_day:    'Days'
+  day_slots:             '{count} free times'
   field_header.for_whom:  '👤 Who is the visit for?'
   field_cta.for_whom:     'Pick'
 
@@ -60,3 +63,4 @@ strings:
   slot_taken: 'Sorry, that time has just been taken. Would you like to pick another one?'
   aborted:    'No problem, the booking is cancelled. Just tell me if you want to book again.'
   no_slots:   'Sorry, this doctor has no times available right now. Would you like to try another doctor, or shall I look again later?'
+  no_doctors: 'Sorry, there are no doctors to book with yet. Please try again later.'

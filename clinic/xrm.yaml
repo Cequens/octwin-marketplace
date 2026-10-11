@@ -14,14 +14,14 @@ entities:
     icon:        '📍'
     description: { en: 'A clinic location patients can be seen at', ar: 'فرع العيادة الذي يُستقبل فيه المرضى' }
     fields:
-      name:     { type: text, required: true, label: { en: 'Name', ar: 'الاسم' } }
-      name_en:  { type: text, label: { en: 'Name (EN)', ar: 'الاسم بالإنجليزية' } }
+      # One name in both languages. Render it with `$loc(...)` — the viewer's locale wins.
+      name:     { type: text, required: true, localized: true, label: { en: 'Name', ar: 'الاسم' } }
       address:  { type: textarea, label: { en: 'Address', ar: 'العنوان' } }
       phone:    { type: text, label: { en: 'Phone', ar: 'الهاتف' } }
       # IANA tz — drives local→UTC slot math (the scheduling engine reads it).
       timezone: { type: text, label: { en: 'Timezone', ar: 'المنطقة الزمنية' }, default: 'Africa/Cairo' }
     list: [address, phone]
-    search: { text: [name, name_en] }
+    search: { text: [name] }
 
   doctor:
     label: { en: 'Doctor', ar: 'طبيب' }
@@ -30,7 +30,8 @@ entities:
     fields:
       name:          { type: text, required: true, label: { en: 'Name', ar: 'الاسم' } }
       title:         { type: text, label: { en: 'Title', ar: 'اللقب' } }        # استشاري / أخصائي
-      specialty:     { type: text, label: { en: 'Specialty', ar: 'التخصص' } }   # جلدية / باطنة … (searchable)
+      # Localized, so an English "dermatology" and an Arabic "جلدية" both reach the same doctor.
+      specialty:     { type: text, localized: true, label: { en: 'Specialty', ar: 'التخصص' } }
       # A TRUE record ref — filters use it (`{ field: branch, op: eq }`) and
       # renders resolve it via `expand: [branch]` (the refs map). The old
       # `branch_id` text + `branch_label` display-snapshot pair was retired by
@@ -57,10 +58,12 @@ entities:
                                  where: { all: [{ field: survey_key, op: eq, value: visit_feedback }] } },
                        description: { en: 'How many responses the rating averages. A low count means the rating is not yet meaningful.', ar: 'عدد التقييمات التي بُني عليها المتوسط. العدد القليل يعني أن التقييم غير دال بعد.' } }
     list: [specialty, branch]
-    # Fuzzy Arabic search over the doctor name AND the specialty word — a typed
-    # "جلدية" returns dermatologists (generalizes the old doctor_search RPC).
-    # rank_by rating orders best-match-then-highest-rated.
-    search: { text: [name, specialty], rank_by: rating }
+    # `text:` is the fuzzy half — a typed name or specialty word, in either language
+    # ("جلدية", "dermatology"), spelling slips included. `semantic:` is the meaning half —
+    # a symptom ("skin rash", "طفح جلدي") shares no word with "Dermatology" and still
+    # reaches it through the specialty and the bio. rank_by rating orders
+    # best-match-then-highest-rated.
+    search: { text: [name, specialty], semantic: [specialty, bio], rank_by: rating }
 
   # ── Per-contact records (contact_id = the account holder) ────────────────
   dependent:
@@ -154,17 +157,17 @@ segments:
 demo:
   - entity: branch
     as: nasr
-    fields: { name: 'فرع مدينة نصر', name_en: 'Nasr City', address: '٢٢ شارع عباس العقاد، مدينة نصر، القاهرة', phone: '0226701234', timezone: 'Africa/Cairo' }
+    fields: { name: { en: 'Nasr City', ar: 'فرع مدينة نصر' }, address: '٢٢ شارع عباس العقاد، مدينة نصر، القاهرة', phone: '0226701234', timezone: 'Africa/Cairo' }
   - entity: branch
     as: maadi
-    fields: { name: 'فرع المعادي', name_en: 'Maadi', address: '٨ شارع ٩، المعادي، القاهرة', phone: '0225201234', timezone: 'Africa/Cairo' }
+    fields: { name: { en: 'Maadi', ar: 'فرع المعادي' }, address: '٨ شارع ٩، المعادي، القاهرة', phone: '0225201234', timezone: 'Africa/Cairo' }
   - entity: doctor
-    fields: { name: 'أحمد سمير', title: 'استشاري', specialty: 'جلدية', branch: '@nasr', timezone: 'Africa/Cairo', bio: 'استشاري الأمراض الجلدية والتجميل.', accepted_tpas: 'GlobeMed، Bupa', rating: 4.6, rating_count: 21, photo: 'asset:ahmed-samir.jpg' }
+    fields: { name: 'أحمد سمير', title: 'استشاري', specialty: { en: 'Dermatology', ar: 'جلدية' }, branch: '@nasr', timezone: 'Africa/Cairo', bio: 'استشاري الأمراض الجلدية والتجميل.', accepted_tpas: 'GlobeMed، Bupa', rating: 4.6, rating_count: 21, photo: 'asset:ahmed-samir.jpg' }
   - entity: doctor
-    fields: { name: 'منى خالد', title: 'أخصائي', specialty: 'أطفال', branch: '@nasr', timezone: 'Africa/Cairo', bio: 'أخصائية طب الأطفال وحديثي الولادة.', accepted_tpas: 'GlobeMed، MetLife', rating: 4.8, rating_count: 34, photo: 'asset:mona-khaled.jpg' }
+    fields: { name: 'منى خالد', title: 'أخصائي', specialty: { en: 'Pediatrics', ar: 'أطفال' }, branch: '@nasr', timezone: 'Africa/Cairo', bio: 'أخصائية طب الأطفال وحديثي الولادة.', accepted_tpas: 'GlobeMed، MetLife', rating: 4.8, rating_count: 34, photo: 'asset:mona-khaled.jpg' }
   - entity: doctor
-    fields: { name: 'هشام علي', title: 'استشاري', specialty: 'باطنة', branch: '@maadi', timezone: 'Africa/Cairo', bio: 'استشاري الباطنة العامة والجهاز الهضمي.', accepted_tpas: 'Bupa، NextCare', rating: 4.4, rating_count: 18, photo: 'asset:hesham-ali.jpg' }
+    fields: { name: 'هشام علي', title: 'استشاري', specialty: { en: 'Internal medicine', ar: 'باطنة' }, branch: '@maadi', timezone: 'Africa/Cairo', bio: 'استشاري الباطنة العامة والجهاز الهضمي.', accepted_tpas: 'Bupa، NextCare', rating: 4.4, rating_count: 18, photo: 'asset:hesham-ali.jpg' }
   - entity: doctor
-    fields: { name: 'سارة محمود', title: 'أخصائي', specialty: 'جلدية', branch: '@maadi', timezone: 'Africa/Cairo', bio: 'أخصائية الأمراض الجلدية والليزر.', accepted_tpas: 'GlobeMed', rating: 4.5, rating_count: 12, photo: 'asset:sara-mahmoud.jpg' }
+    fields: { name: 'سارة محمود', title: 'أخصائي', specialty: { en: 'Dermatology', ar: 'جلدية' }, branch: '@maadi', timezone: 'Africa/Cairo', bio: 'أخصائية الأمراض الجلدية والليزر.', accepted_tpas: 'GlobeMed', rating: 4.5, rating_count: 12, photo: 'asset:sara-mahmoud.jpg' }
   - entity: doctor
-    fields: { name: 'كريم عادل', title: 'استشاري', specialty: 'عظام', branch: '@nasr', timezone: 'Africa/Cairo', bio: 'استشاري جراحة العظام والمفاصل.', accepted_tpas: 'MetLife، NextCare', rating: 4.7, rating_count: 27, photo: 'asset:karim-adel.jpg' }
+    fields: { name: 'كريم عادل', title: 'استشاري', specialty: { en: 'Orthopedics', ar: 'عظام' }, branch: '@nasr', timezone: 'Africa/Cairo', bio: 'استشاري جراحة العظام والمفاصل.', accepted_tpas: 'MetLife، NextCare', rating: 4.7, rating_count: 27, photo: 'asset:karim-adel.jpg' }

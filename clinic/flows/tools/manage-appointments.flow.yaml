@@ -12,8 +12,8 @@ description: |-
 input:
   appointment_id: { type: string, optional: true, describe: 'Target booking record id from the patient''s appointment list — never typed. Omit it to show the list so the patient can pick.' }
   action:         { type: string, optional: true, describe: 'One of: confirm | reschedule | cancel | rate.' }
-  new_slot_start: { type: string, optional: true, describe: 'Internal — resume token from the reschedule slot picker.' }
-  slot_minutes:   { type: number, optional: true, integer: true, describe: 'Internal — slot length carried with new_slot_start.' }
+  new_slot_start: { type: string, optional: true, describe: 'Internal — the slot the reschedule picker chose. Never typed.' }
+  slot_minutes:   { type: number, optional: true, integer: true, describe: 'Internal — slot length; re-read from the chosen slot when absent.' }
   stars:          { type: number, optional: true, integer: true, min: 1, max: 5, describe: 'Internal — rating carried from the stars picker.' }
   comment:        { type: string, optional: true, describe: "The patient's own words about the visit, captured verbatim from their reply after they picked a star rating. Only for action=rate_comment." }
 
@@ -28,8 +28,6 @@ entry:
     goto: do_rate_comment
   - if: '$input.action == "rate"'
     goto: ask_rating
-  - if: '$input.action == "reschedule" && $input.new_slot_start != null'
-    goto: do_reschedule
   - if: '$input.action == "reschedule"'
     goto: start_reschedule
   - if: '$input.appointment_id != null'
@@ -282,37 +280,44 @@ steps:
       args: { entity: booking, record_id: '$input.appointment_id' }
       bind: appt
       outputs:
-        ok:        [{ goto: render_reschedule_slots }]
+        # Only `$state` survives the picker's pauses (a day tap, a page tap), so the
+        # doctor's id rides there rather than on the `$appt` bind.
+        ok:
+          - assign: { state: '$merge($state, { resource_id: $appt.fields.resource_id })' }
+          - goto: pick_new_slot
         not_found: [{ goto: not_found }]
         failed:    [{ end: failed }]
 
-  render_reschedule_slots:
-    - do: slot_list
-      args: { resource_record_id: '$appt.fields.resource_id' }
-      bind: slots
-      outputs:
-        ok:     [{ goto: show_reschedule_picker }]
-        empty:  [{ goto: no_slots }]
-        failed: [{ end: failed }]
-
-  show_reschedule_picker:
-    - render:
-        render_intent: list_picker
-        header: '{$t("manage-appointments.reschedule_header")}'
-        # Required — see the note on `rate_body` above. Without it WhatsApp
-        # refused the message and the reschedule picker never arrived.
-        body:   '{$t("manage-appointments.reschedule_body")}'
-        cta:    '{$t("manage-appointments.reschedule_cta")}'
-        items: '$slots'
-        item_template:
-          title: '$lines([$item.local_date, $item.local_time], " — ")'
-          on_select:
-            resume: '$self'
-            with: { new_slot_start: '$item.slot_start', slot_minutes: '$item.slot_minutes' }
-      memory_note: 'Reschedule picker for {$state.appointment_id}'
-    - pause:
-        on_resume:
-          - goto: do_reschedule
+  # The same picker as book-appointment's slot field. A week of slots is far more than
+  # one list holds (36 for one doctor; a channel shows 10 and cuts the rest where
+  # nobody can reach them), so `narrow:` asks for the DAY first — only when the slots
+  # do not fit — and `page:` pages a day that is still too long.
+  pick_new_slot:
+    - collect:
+        fields:
+          - field: new_slot_start
+            label: '$t("manage-appointments.label.slot")'
+            options:
+              header: manage-appointments.reschedule_header
+              # Required — see the note on `rate_body` above. Without it WhatsApp
+              # refused the message and the reschedule picker never arrived.
+              body:   manage-appointments.reschedule_body
+              cta:    manage-appointments.reschedule_cta
+              fetch:  { do: slot_list, args: { resource_record_id: '$state.resource_id' }, bind: slots }
+              rows:   '$state.slot_day == null ? $slots : $filter($slots, { local_date: $state.slot_day })'
+              map:    { value: '$item.slot_start', label: '$format_date($item.local_date) + " " + $item.local_time', description: '$loc($item.meta.branch_label)' }
+              page:   true
+              narrow:
+                field: slot_day
+                options:
+                  header: manage-appointments.reschedule_day_header
+                  body:   manage-appointments.reschedule_day_body
+                  cta:    manage-appointments.reschedule_day_cta
+                  rows:   '$unique($slots, "local_date")'
+                  map:    { value: '$item.local_date', label: '$format_date($item.local_date)', description: '$t("manage-appointments.day_slots", { count: $length($filter($slots, { local_date: $item.local_date })) })' }
+              # A fully-booked doctor is a normal answer — say it instead of failing.
+              on_empty: no_slots
+        complete: [{ goto: do_reschedule }]
 
   no_slots:
     - render:
@@ -320,17 +325,37 @@ steps:
         body: '{$t("manage-appointments.no_slots")}'
     - end: applied
 
+  # The tap carries only the slot's start (a row id is capped at 200 code points). Its
+  # length, label and branch are re-read here from the list the picker drew, so the
+  # booking's display snapshot moves WITH the slot. `slot_label` used to keep the OLD
+  # time after every reschedule, and "My appointments" showed it.
   do_reschedule:
+    - do: slot_list
+      args: { resource_record_id: '$state.resource_id' }
+      bind: chosen
+      outputs:
+        ok:     [{ goto: move_booking }]
+        empty:  [{ goto: reschedule_failed }]   # nothing free any more — the chosen time went too
+        failed: [{ end: failed }]
+
+  move_booking:
+    - assign: { hit: '$filter($chosen, { slot_start: $state.new_slot_start })[0]' }
+    - if: '$hit == null'
+      then: [{ goto: reschedule_failed }]     # taken since the picker was drawn
     - do: booking_reschedule
       args:
         record_id:      '$state.appointment_id'
-        new_slot_start: '$input.new_slot_start'
-        slot_minutes:   '$input.slot_minutes'
+        new_slot_start: '$state.new_slot_start'
+        slot_minutes:   '$coalesce($state.slot_minutes, $hit.slot_minutes)'
+        fields:
+          slot_label: '$lines($compact([$format_date($hit.local_date), $hit.local_time, $loc($hit.meta.branch_label)]), " — ")'
+          branch:     '$hit.meta.branch'
       bind: resched
       outputs:
         ok:           [{ goto: reschedule_done }]
         full:         [{ goto: reschedule_failed }]
         invalid_slot: [{ goto: reschedule_failed }]
+        invalid:      [{ end: failed }]   # a field the booking refused — ours, not the patient's
         failed:       [{ end: failed }]
 
   reschedule_done:

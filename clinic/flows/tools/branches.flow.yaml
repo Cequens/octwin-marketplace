@@ -36,7 +36,7 @@ steps:
         cta:    '{$t("branches.cta")}'
         items: '$branches.rows'
         item_template:
-          title:       '$item.fields.name'
+          title:       '$loc($item.fields.name)'
           description: '$lines($compact([$coalesce($item.fields.address, null), $item.fields.phone != null ? $t("branches.phone", { phone: $item.fields.phone }) : null]), " · ")'
           on_select:
             invoke: doctor-search

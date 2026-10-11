@@ -67,7 +67,7 @@ steps:
                     - if: '$hit != null'
                       then:
                         - assign:
-                            state: '$merge($state, { slot_minutes: $hit.slot_minutes, branch_id: $hit.meta.branch, slot_label: $lines($compact([$hit.local_date, $hit.local_time, $hit.meta.branch_label]), " — ") })'
+                            state: '$merge($state, { slot_minutes: $hit.slot_minutes, branch_id: $hit.meta.branch, slot_label: $lines($compact([$format_date($hit.local_date), $hit.local_time, $loc($hit.meta.branch_label)]), " — ") })'
                   empty:  []
                   failed: []
         progress: '$lines($compact([$t("book-appointment.progress.header"), $doctor_label != null ? $t("book-appointment.progress.doctor", { doctor: $doctor_label }) : null, $state.slot_label != null ? $t("book-appointment.progress.slot", { slot: $state.slot_label }) : null, $state.for_whom != null ? $t("book-appointment.progress.for_whom", { who: ($state.for_whom == "dependent" ? $coalesce($state.dependent_name, $t("book-appointment.for_whom.dependent")) : $t("book-appointment.for_whom.self")) }) : null]), "\n")'
@@ -87,22 +87,38 @@ steps:
               # No `selection:` — `doctor_id` is backfilled from `value` automatically, and
               # `before_each` re-reads the doctor's name into $doctor_label every iteration,
               # so shipping the name in the tap id too bought nothing.
-              map:    { value: '$item.id', label: '$item.fields.name', description: '$item.fields.specialty' }
+              map:    { value: '$item.id', label: '$item.fields.name', description: '$loc($item.fields.specialty)' }
               auto_resolve: true
+              # No doctors at all (a fresh install before the catalog is filled) is a NORMAL
+              # answer — say so instead of failing at the field.
+              on_empty: no_doctors
           # Slot picker — from the scheduling engine. A doctor may work different branches on
           # different days, so each slot carries its rule's branch on `meta` (branch_label for
-          # display, branch = the record id). The label folds the branch in
-          # ("2026-07-18 — 10:00 — فرع المعادي"); `slot_minutes` / `branch_id` / `slot_label`
-          # are re-read from the same row by `before_each` rather than ridden in the tap id,
-          # which is what kept that id under the 200-code-point cap.
+          # display, branch = the record id). A row reads "Sun, Oct 11 16:00" over its branch;
+          # `slot_minutes` / `branch_id` / `slot_label` are re-read from the same row by
+          # `before_each` rather than ridden in the tap id, which is what kept that id under
+          # the 200-code-point cap.
+          #
+          # A week of slots is far more than one list holds (36 for one doctor; a channel
+          # shows 10, and cuts the rest where nobody can reach them). So `narrow:` asks for
+          # the DAY first — only when the slots do not fit — and `rows:` keeps that day's
+          # slots. `page:` pages a day that is still too long (a 15-minute day has 16).
           - field: slot_start
             label: '$t("book-appointment.label.slot")'
             options:
               header: book-appointment.field_header.slot
               cta:    book-appointment.field_cta.slot
               fetch:  { do: slot_list, args: { resource_record_id: '$state.doctor_id' }, bind: slots }
-              rows:   '$slots'
-              map:    { value: '$item.slot_start', label: '$lines($compact([$item.local_date, $item.local_time, $item.meta.branch_label]), " — ")' }
+              rows:   '$state.slot_day == null ? $slots : $filter($slots, { local_date: $state.slot_day })'
+              map:    { value: '$item.slot_start', label: '$format_date($item.local_date) + " " + $item.local_time', description: '$loc($item.meta.branch_label)' }
+              page:   true
+              narrow:
+                field: slot_day
+                options:
+                  header: book-appointment.field_header.slot_day
+                  cta:    book-appointment.field_cta.slot_day
+                  rows:   '$unique($slots, "local_date")'
+                  map:    { value: '$item.local_date', label: '$format_date($item.local_date)', description: '$t("book-appointment.day_slots", { count: $length($filter($slots, { local_date: $item.local_date })) })' }
               # A fully-booked doctor is a NORMAL answer, not a fault — so say it
               # instead of dying. `fallback: text` is wrong here: this field holds a
               # slot_start the booking writes, and a typed time is not one.
@@ -219,6 +235,7 @@ steps:
         ok:           [{ goto: booked }]
         full:         [{ goto: slot_taken }]
         invalid_slot: [{ goto: slot_taken }]
+        invalid:      [{ end: failed }]   # a field the booking refused — ours, not the patient's
         failed:       [{ end: failed }]
 
   booked:
@@ -281,3 +298,7 @@ steps:
   # envelope, thread memory and analytics.
   no_slots:
     - end: { status: aborted, body: '{$t("book-appointment.no_slots")}' }
+
+  # Reached from the doctor picker's `on_empty:` — no doctor records exist yet.
+  no_doctors:
+    - end: { status: aborted, body: '{$t("book-appointment.no_doctors")}' }

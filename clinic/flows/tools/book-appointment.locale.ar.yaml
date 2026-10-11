@@ -34,6 +34,9 @@ strings:
   field_cta.doctor:       'الأطباء'
   field_header.slot:      '🗓️ اختر الموعد'
   field_cta.slot:         'المواعيد المتاحة'
+  field_header.slot_day: '📅 اختر اليوم'
+  field_cta.slot_day:    'الأيام'
+  day_slots:             '{count} مواعيد متاحة'
   field_header.for_whom:  '👤 الكشف لِمَن؟'
   field_cta.for_whom:     'اختر'
 
@@ -57,3 +60,4 @@ strings:
   slot_taken: 'للأسف الموعد ده اتحجز للتو. تحب تختار موعد تاني؟'
   aborted:    'تمام، ألغينا الحجز. لو حبيت تحجز تاني قولّي.'
   no_slots:   'معلش، مفيش مواعيد متاحة للدكتور ده حالياً. تحب تجرب دكتور تاني، ولا أشوفلك مواعيد بعدين؟'
+  no_doctors: 'معلش، مفيش أطباء متاحين للحجز لسه. جرّب تاني بعد شوية.'

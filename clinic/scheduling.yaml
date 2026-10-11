@@ -26,25 +26,26 @@ booking:
 # Each rule tags the BRANCH it runs at on `meta` — a doctor works different
 # branches on different days (e.g. منى خالد: Mon @ Nasr City, Sat @ Maadi). The
 # `@nasr`/`@maadi` aliases resolve to the seeded branch record ids at seed time;
-# `branch_label` is the display snapshot the slot picker shows.
+# `branch_label` is the display snapshot the slot picker shows — in both languages,
+# read with `$loc(...)` like the branch record's own localized `name`.
 demo:
   availability:
     - resource_match: { entity: doctor, field: name, value: 'أحمد سمير' }
       rules:
-        - { dow: 0, start: '16:00', end: '20:00', slot_minutes: 20, capacity: 1, meta: { branch: '@nasr',  branch_label: 'فرع مدينة نصر' } }
-        - { dow: 2, start: '16:00', end: '20:00', slot_minutes: 20, capacity: 1, meta: { branch: '@maadi', branch_label: 'فرع المعادي' } }
-        - { dow: 4, start: '16:00', end: '20:00', slot_minutes: 20, capacity: 1, meta: { branch: '@nasr',  branch_label: 'فرع مدينة نصر' } }
+        - { dow: 0, start: '16:00', end: '20:00', slot_minutes: 20, capacity: 1, meta: { branch: '@nasr',  branch_label: { en: 'Nasr City', ar: 'فرع مدينة نصر' } } }
+        - { dow: 2, start: '16:00', end: '20:00', slot_minutes: 20, capacity: 1, meta: { branch: '@maadi', branch_label: { en: 'Maadi', ar: 'فرع المعادي' } } }
+        - { dow: 4, start: '16:00', end: '20:00', slot_minutes: 20, capacity: 1, meta: { branch: '@nasr',  branch_label: { en: 'Nasr City', ar: 'فرع مدينة نصر' } } }
     - resource_match: { entity: doctor, field: name, value: 'منى خالد' }
       rules:
-        - { dow: 6, start: '10:00', end: '14:00', slot_minutes: 15, capacity: 2, meta: { branch: '@maadi', branch_label: 'فرع المعادي' } }
-        - { dow: 1, start: '10:00', end: '14:00', slot_minutes: 15, capacity: 2, meta: { branch: '@nasr',  branch_label: 'فرع مدينة نصر' } }
+        - { dow: 6, start: '10:00', end: '14:00', slot_minutes: 15, capacity: 2, meta: { branch: '@maadi', branch_label: { en: 'Maadi', ar: 'فرع المعادي' } } }
+        - { dow: 1, start: '10:00', end: '14:00', slot_minutes: 15, capacity: 2, meta: { branch: '@nasr',  branch_label: { en: 'Nasr City', ar: 'فرع مدينة نصر' } } }
     - resource_match: { entity: doctor, field: name, value: 'هشام علي' }
       rules:
-        - { dow: 0, start: '18:00', end: '22:00', slot_minutes: 30, capacity: 1, meta: { branch: '@maadi', branch_label: 'فرع المعادي' } }
-        - { dow: 3, start: '18:00', end: '22:00', slot_minutes: 30, capacity: 1, meta: { branch: '@maadi', branch_label: 'فرع المعادي' } }
+        - { dow: 0, start: '18:00', end: '22:00', slot_minutes: 30, capacity: 1, meta: { branch: '@maadi', branch_label: { en: 'Maadi', ar: 'فرع المعادي' } } }
+        - { dow: 3, start: '18:00', end: '22:00', slot_minutes: 30, capacity: 1, meta: { branch: '@maadi', branch_label: { en: 'Maadi', ar: 'فرع المعادي' } } }
     - resource_match: { entity: doctor, field: name, value: 'سارة محمود' }
       rules:
-        - { dow: 2, start: '12:00', end: '16:00', slot_minutes: 20, capacity: 1, meta: { branch: '@maadi', branch_label: 'فرع المعادي' } }
+        - { dow: 2, start: '12:00', end: '16:00', slot_minutes: 20, capacity: 1, meta: { branch: '@maadi', branch_label: { en: 'Maadi', ar: 'فرع المعادي' } } }
     - resource_match: { entity: doctor, field: name, value: 'كريم عادل' }
       rules:
-        - { dow: 4, start: '17:00', end: '21:00', slot_minutes: 20, capacity: 1, meta: { branch: '@nasr', branch_label: 'فرع مدينة نصر' } }
+        - { dow: 4, start: '17:00', end: '21:00', slot_minutes: 20, capacity: 1, meta: { branch: '@nasr', branch_label: { en: 'Nasr City', ar: 'فرع مدينة نصر' } } }

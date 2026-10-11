@@ -6,14 +6,14 @@
 flow_id:     doctor-search
 version:     1
 description: |-
-  Find a doctor and start a booking. Put ANY word the patient TYPES — a doctor
-  name OR a specialty (جلدية، باطنة، أطفال) OR a symptom — in `query` (matched
-  fuzzily against doctor names + specialties). `branch` takes a branch record id
+  Find a doctor and start a booking. Put ANY words the patient TYPES — a doctor
+  name OR a specialty (جلدية / dermatology) OR a symptom — in `query`, in the
+  patient's own language (matched by spelling AND meaning, Arabic or English). `branch` takes a branch record id
   (from a previous result), `tpa` an insurance name to filter by. Pass `doctor_id`
   to show one doctor's card (answers "does Dr X accept GlobeMed?").
 
 input:
-  query:     { type: string, optional: true, describe: 'Free text the patient typed: a doctor name OR a specialty word (e.g. "جلدية"=dermatology, "باطنة"=internal medicine) OR a symptom. ALL typed search terms go here — matched fuzzily (Arabic-aware) against doctor names AND specialties.' }
+  query:     { type: string, optional: true, describe: 'The patient''s own words, as typed: a doctor name, a specialty ("جلدية", "dermatology") or a symptom ("skin rash"). Do not translate or shorten — matched by spelling and by meaning, in Arabic or English.' }
   branch:    { type: string, optional: true, describe: 'A branch record id from a previous result — filters to that location. Never typed text.' }
   tpa:       { type: string, optional: true, describe: 'Insurance company name to filter by (e.g. GlobeMed, Bupa). Free text (a name, not an id).' }
   doctor_id: { type: string, optional: true, describe: 'A doctor record id from a previous doctor-search result — shows that one doctor''s detail card. Never a typed name (use `query`).' }
@@ -51,7 +51,7 @@ steps:
         item_template:
           image_url: '$coalesce($item.fields.photo, "")'
           # Branch name resolves from the expand refs map ($doc.refs) — no snapshot field.
-          body: '$lines($compact([$item.fields.name, $lines($compact([$coalesce($item.fields.title, null), $item.fields.specialty, $coalesce($doc.refs[$item.fields.branch].fields.name, null)]), " · "), $coalesce($item.fields.bio, null), $coalesce($item.fields.rating_count, 0) > 0 ? $t("doctor-search.card.rating", { rating: $item.fields.rating, count: $item.fields.rating_count }) : null, $item.fields.accepted_tpas != null ? $t("doctor-search.card.tpas", { tpas: $item.fields.accepted_tpas }) : $t("doctor-search.card.no_tpas")]), "\n")'
+          body: '$lines($compact([$item.fields.name, $lines($compact([$coalesce($item.fields.title, null), $loc($item.fields.specialty), $loc($doc.refs[$item.fields.branch].fields.name)]), " · "), $coalesce($item.fields.bio, null), $coalesce($item.fields.rating_count, 0) > 0 ? $t("doctor-search.card.rating", { rating: $item.fields.rating, count: $item.fields.rating_count }) : null, $item.fields.accepted_tpas != null ? $t("doctor-search.card.tpas", { tpas: $item.fields.accepted_tpas }) : $t("doctor-search.card.no_tpas")]), "\n")'
           buttons:
             - { title: '{$t("doctor-search.button.book")}', on_select: { invoke: book-appointment, with: { doctor_id: '$item.id' } } }
       memory_note: 'Doctor detail: {$doc.fields.name} (accepts: {$coalesce($doc.fields.accepted_tpas, "-")})'
@@ -92,7 +92,7 @@ steps:
         item_template:
           image_url: '$coalesce($item.fields.photo, "")'
           # Branch name resolves from the expand refs map ($ds.refs) — no snapshot field.
-          body: '$lines($compact([$item.fields.name, $lines($compact([$coalesce($item.fields.title, null), $item.fields.specialty, $coalesce($ds.refs[$item.fields.branch].fields.name, null)]), " · "), $coalesce($item.fields.rating_count, 0) > 0 ? $t("doctor-search.card.rating", { rating: $item.fields.rating, count: $item.fields.rating_count }) : null, $item.fields.accepted_tpas != null ? $t("doctor-search.card.tpas", { tpas: $item.fields.accepted_tpas }) : null]), "\n")'
+          body: '$lines($compact([$item.fields.name, $lines($compact([$coalesce($item.fields.title, null), $loc($item.fields.specialty), $loc($ds.refs[$item.fields.branch].fields.name)]), " · "), $coalesce($item.fields.rating_count, 0) > 0 ? $t("doctor-search.card.rating", { rating: $item.fields.rating, count: $item.fields.rating_count }) : null, $item.fields.accepted_tpas != null ? $t("doctor-search.card.tpas", { tpas: $item.fields.accepted_tpas }) : null]), "\n")'
           buttons:
             - { title: '{$t("doctor-search.button.book")}', on_select: { invoke: book-appointment, with: { doctor_id: '$item.id' } } }
       memory_note: 'Doctor search: {$length($ds.rows)} result(s)'
