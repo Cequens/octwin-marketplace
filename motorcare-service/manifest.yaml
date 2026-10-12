@@ -9,7 +9,7 @@
 # the customer never has to re-enter. No pack DB, no code — pure YAML.
 
 id:          motorcare-service
-version: 2.3.2
+version: 2.3.3
 description: 'Car service centre — service packages, AI damage triage from a photo, bay booking, and a workshop queue a foreman really works.'
 
 listing:
@@ -66,6 +66,13 @@ flows:
 # in `damage-check` — with different prompts, so nothing dedupes them. And the two paths would
 # diverge: chat would route on the agent's copy of a briefing while the native form routed on the
 # flow's own reading. One analysis, in the flow, is cheaper AND the same everywhere.
+#
+# Voice notes ARE transcribed, though: an untranscribed voice note is a message the agent cannot
+# read at all (an absent block means `passthrough` — no speech-to-text).
+inbound_preprocessing:
+  voicenote:
+    mode: transcribe
+    prompt: 'Arabic or English car-service voice note — the car, the problem, when it started.'
 
 agents:
   - id:                serviceadvisor

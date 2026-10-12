@@ -62,6 +62,7 @@ steps:
             when: '$state.room_id == null'
             label: '$t("book-stay.label.room")'
             options:
+              on_empty: nothing_to_pick   # an empty list is a normal answer — say so, do not fail
               header: book-stay.field_header.room
               cta:    book-stay.field_cta.room
               fetch:  { do: record_search, args: { entity: room_type, query: '', limit: 10 }, bind: rooms }
@@ -202,6 +203,7 @@ steps:
         full:         [{ goto: sold_out }]
         invalid_slot: [{ goto: sold_out }]
         failed:       [{ end: failed }]
+        invalid: []
 
   write_stay:
     - do: record_save
@@ -271,3 +273,8 @@ steps:
   # the envelope, thread memory and analytics.
   no_slots:
     - end: { status: aborted, body: '{$t("book-stay.no_slots")}' }
+
+  # Reached from a picker's `on_empty:` — the list came back empty (e.g. before the catalog is
+  # filled). `aborted`: nothing was done. The AI Agent says it, in the customer's language.
+  nothing_to_pick:
+    - end: { status: aborted, instructions: 'There is nothing to choose from for this right now — the list came back empty. Say so in one short line, in the customer''s language, and offer another way to help. Do NOT invent options.' }

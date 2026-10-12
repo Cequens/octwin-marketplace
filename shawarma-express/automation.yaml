@@ -17,10 +17,13 @@ jobs:
       where:
         all:
           - { field: qty, op: gte, value: 1 }
-          - { not: { updated_within_days: 1 } }
+          # 18 idle hours, not a day: a day is exactly past WhatsApp's 24-hour window.
+          - { not: { updated_within_days: 0.75 } }
       action:
         type: notify
-        message: 'لسه في أكل مستنيك في السلة 🌯 تحب نكمّل الأوردر؟'
+        message:
+          ar: 'لسه في أكل مستنيك في السلة 🌯 تحب نكمّل الأوردر؟'
+          en: 'Your food is still waiting in the basket 🌯 Shall we finish your order?'
         cooldown_hours: 48
 
   # An order still sitting at `placed` after a day is not a live order — move it to

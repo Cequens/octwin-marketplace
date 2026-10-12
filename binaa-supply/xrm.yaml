@@ -115,12 +115,18 @@ entities:
         # nothing: a console click and an inbound upsert produce the same event.
         shipped:
           - notify:
-              message: '🚚 طلبك {{ record.record_number }} ({{ record.fields.material_name }}) خرج للشحن. نتواصل معك عند وصول الشحنة للموقع.'
+              message:
+                ar: '🚚 طلبك {{ record.record_number }} ({{ record.fields.material_name }}) خرج للشحن. نتواصل معك عند وصول الشحنة للموقع.'
+                en: '🚚 Your order {{ record.record_number }} ({{ record.fields.material_name }}) is on its way. We will contact you when it reaches the site.'
+                ur: '🚚 آپ کا آرڈر {{ record.record_number }} ({{ record.fields.material_name }}) روانہ ہو گیا ہے۔ سامان سائٹ پر پہنچنے پر ہم آپ سے رابطہ کریں گے۔'
               cooldown_hours: 12
 
         delivered:
           - notify:
-              message: '✅ تم تسليم طلبك {{ record.record_number }}. شكراً لتعاملك مع بناء لمواد البناء.'
+              message:
+                ar: '✅ تم تسليم طلبك {{ record.record_number }}. شكراً لتعاملك مع بناء لمواد البناء.'
+                en: '✅ Your order {{ record.record_number }} has been delivered. Thank you for choosing Binaa Building Materials.'
+                ur: '✅ آپ کا آرڈر {{ record.record_number }} پہنچا دیا گیا ہے۔ بناء بلڈنگ میٹیریلز کا انتخاب کرنے کا شکریہ۔'
               cooldown_hours: 24
 
       # ── the sheet-side mirror ───────────────────────────────────────────────

@@ -32,6 +32,7 @@ steps:
             dial_code: '20'
             label: '$t("activate-app.f_phone")'
           - field: car_registration          # 📷 upload — folds a MEDIA- ref into $state.car_registration
+            required: true   # the flow's essential document — a customer without it says so, and the AI Agent takes it from there
             type: media
             media_kind: image
             label: '$t("activate-app.f_registration")'
@@ -53,6 +54,7 @@ steps:
                         state.model: '$reg.json.model'
                   failed: []   # unreadable is not a blocker — a human opens the photo either way
           - field: owner_id                   # 📷 upload — owner national ID photo
+            required: true   # the flow's essential document — a customer without it says so, and the AI Agent takes it from there
             type: media
             media_kind: image
             label: '$t("activate-app.f_id")'
@@ -94,7 +96,8 @@ steps:
       bind: c
       outputs:
         ok: [{ goto: attach_registration }]
-        # failed → throws → error-net
+        # failed → the pack's errors.failed message, in the customer's language (canonical handler)
+        failed:  []
 
   attach_registration:
     - do: case_attach
@@ -104,7 +107,8 @@ steps:
         caption:  '$t("activate-app.cap_registration")'
       outputs:
         ok: [{ goto: attach_id }]
-        # failed → throws → error-net
+        # failed → the pack's errors.failed message, in the customer's language (canonical handler)
+        failed:  []
 
   attach_id:
     - do: case_attach
@@ -114,7 +118,8 @@ steps:
         caption:  '$t("activate-app.cap_id")'
       outputs:
         ok: [{ goto: confirm }]
-        # failed → throws → error-net
+        # failed → the pack's errors.failed message, in the customer's language (canonical handler)
+        failed:  []
 
   confirm:
     - render:

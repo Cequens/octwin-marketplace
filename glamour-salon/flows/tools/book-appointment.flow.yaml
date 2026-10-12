@@ -83,6 +83,7 @@ steps:
             when: '$state.treatment_id == null'
             label: '$t("book-appointment.label.treatment")'
             options:
+              on_empty: nothing_to_pick   # an empty list is a normal answer — say so, do not fail
               header: book-appointment.field_header.treatment
               cta:    book-appointment.field_cta.treatment
               fetch:  { do: record_search, args: { entity: treatment, query: '', limit: 10 }, bind: trs }
@@ -99,6 +100,7 @@ steps:
             when: '$state.stylist_id == null'
             label: '$t("book-appointment.label.stylist")'
             options:
+              on_empty: nothing_to_pick   # an empty list is a normal answer — say so, do not fail
               header: book-appointment.field_header.stylist
               cta:    book-appointment.field_cta.stylist
               fetch:  { do: record_search, args: { entity: stylist, query: '', limit: 10, where: { all: [{ field: specialties, op: has, value: '$tr_category' }] } }, bind: sts }
@@ -185,6 +187,7 @@ steps:
         full:         [{ goto: slot_taken }]
         invalid_slot: [{ goto: slot_expired }]
         failed:       [{ end: failed }]
+        invalid: []
 
   remind:
     - if: '$length($coalesce($appt.reminders, [])) > 0'
@@ -239,3 +242,8 @@ steps:
   # the envelope, thread memory and analytics.
   no_slots:
     - end: { status: aborted, body: '{$t("book-appointment.no_slots")}' }
+
+  # Reached from a picker's `on_empty:` — the list came back empty (e.g. before the catalog is
+  # filled). `aborted`: nothing was done. The AI Agent says it, in the customer's language.
+  nothing_to_pick:
+    - end: { status: aborted, instructions: 'There is nothing to choose from for this right now — the list came back empty. Say so in one short line, in the customer''s language, and offer another way to help. Do NOT invent options.' }

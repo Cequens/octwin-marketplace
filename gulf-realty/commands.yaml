@@ -10,5 +10,8 @@
 
 - match:    '/clear'
   action:   close_conversation
-  reply: 'تم مسح المحادثة ✅ تقدر تبدأ من جديد.'
+  reply:
+    ar: 'تم مسح المحادثة ✅ تقدر تبدأ من جديد.'
+    en: 'Conversation cleared ✅ You can start fresh.'
+    ur: 'گفتگو صاف ہو گئی ✅ آپ نئے سرے سے شروع کر سکتے ہیں۔'
   source:   '/clear'

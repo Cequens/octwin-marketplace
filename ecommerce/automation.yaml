@@ -5,8 +5,9 @@
 # jobs read the platform `cart` system entity + its declared auto_transition.
 
 jobs:
-  # Nudge shoppers whose cart has sat `open` and idle for a day — one message per
-  # shopper per 48h window (cooldown), fanned out through reminders.
+  # Nudge shoppers whose cart has sat `open` and idle for 18 hours — inside WhatsApp's 24-hour
+  # window, where a free-form message still reaches them (a day is exactly past it). One message
+  # per shopper per 48h window (cooldown), fanned out through reminders.
   - key: cart_recovery_nudge
     kind: segment
     entity: cart
@@ -15,10 +16,12 @@ jobs:
       where:
         all:
           - { stage: open }
-          - { not: { updated_within_days: 1 } }
+          - { not: { updated_within_days: 0.75 } }
       action:
         type: notify
-        message: "You left items in your cart 🛒 — want to finish checking out?"
+        message:
+          en: 'You left items in your cart 🛒 — want to finish checking out?'
+          ar: 'تركت منتجات في سلتك 🛒 — تحب تكمل الطلب؟'
         cooldown_hours: 48
 
   # Abandon carts left `open` past the cart entity's 48h idle auto_transition —

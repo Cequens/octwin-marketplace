@@ -8,9 +8,13 @@
 # The sweep is entity-level, so this one job covers all four case types
 # (document_review 24h · finance_application 48h · sharia_question 48h ·
 # general_query 48h). It skips terminal-stage cases, alerts the responsible
-# operator through the ops inbox, relays `message` to the applicant ONCE per
-# breach (deduped on `sla_notified_at`), and mints the `sla_breach` record event
-# that `xrm.yaml`'s `on.sla_breach` hook turns into an underwriter task.
+# operator through the ops inbox, and mints the `sla_breach` record event that
+# `xrm.yaml`'s `on.sla_breach` hook turns into an underwriter task.
+#
+# The applicant's reassurance rides the FIRST-RESPONSE clock instead — a case nobody
+# has touched in 4 hours (`first_response_within_hours`, worklist.yaml). A breach comes
+# 24-48 hours in, past WhatsApp's 24-hour window, where a free-form message fails unless
+# the applicant wrote since; 4 hours in, it reaches them.
 #
 # `escalate_to:` routes the breached item to a queue. It took three rounds to land:
 # first omitted because the KB documented the target two incompatible ways, then kept
@@ -31,9 +35,13 @@ jobs:
   - key:              case_sla
     kind:             sla_sweep
     entity:           case
-    # An hour. The shortest SLA here is 24h, so a finer tick would just be a
-    # busier ticker for the same answer.
+    # An hour. The shortest clock here is the 4h first response, which an hourly
+    # tick reaches within the hour; a finer tick would just be a busier ticker.
     interval_seconds: 3600
     config:
       escalate_to: queue:credit_review
-      message: 'نعتذر عن التأخير 🙏 طلبك ما زال قيد المراجعة وتم رفعه لفريق الائتمان — بنتواصل معك قريباً.'
+      first_response:
+        escalate_to: queue:credit_review
+        message:
+          ar: 'استلمنا طلبك 🙏 وهو الآن مع فريق الائتمان للمراجعة — بنتواصل معك قريباً.'
+          en: 'We have your request 🙏 It is with our credit team for review — we will be in touch soon.'

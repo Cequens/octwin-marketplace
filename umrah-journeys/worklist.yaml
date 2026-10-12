@@ -6,10 +6,12 @@
 # merges the standard decision set (resolve / reject / request_more_info /
 # escalate) into every type, so only the CUSTOM decisions appear here.
 
+# Every queue is MANUAL on purpose: an item waits in its queue until a person picks it up.
+# Change a queue's `strategy` to `round_robin` or `load_balanced` to hand items out automatically.
 queues:
-  - { key: visa_ops,     name: 'Visa Operations' }
-  - { key: booking_ops,  name: 'Booking Desk' }
-  - { key: finance_ops,  name: 'Finance' }
+  - { key: visa_ops,     name: 'Visa Operations', assignment: { strategy: manual } }
+  - { key: booking_ops,  name: 'Booking Desk', assignment: { strategy: manual } }
+  - { key: finance_ops,  name: 'Finance', assignment: { strategy: manual } }
 
 work:
   case:
@@ -21,14 +23,26 @@ work:
         label:  { ar: 'تمت الموافقة على التأشيرة', en: 'Visa approved' }
         params: [{ name: visa_number, type: text, required: true, label: 'Visa number' }]
         relay:  true
+        relay_body:
+          ar: '🎉 تمت الموافقة على تأشيرتك! رقم التأشيرة: {visa_number} (طلب رقم {case_number}).'
+          en: '🎉 Your visa is approved! Visa number: {visa_number} (request #{case_number}).'
+          ur: '🎉 آپ کا ویزا منظور ہو گیا ہے! ویزا نمبر: {visa_number} (درخواست #{case_number})۔'
       docs_incomplete:
         label:  { ar: 'المستندات غير مكتملة', en: 'Documents incomplete' }
         params: [{ name: missing, type: text, required: true, label: 'What is missing' }]
         relay:  true
+        relay_body:
+          ar: '📄 مستنداتك غير مكتملة (طلب رقم {case_number}). الناقص: {missing}. أرسله هنا لو سمحت.'
+          en: '📄 Your documents are incomplete (request #{case_number}). Missing: {missing}. Please send it here.'
+          ur: '📄 آپ کے دستاویزات نامکمل ہیں (درخواست #{case_number})۔ باقی: {missing}۔ براہ کرم یہاں بھیج دیں۔'
       payment_confirmed:
         label:  { ar: 'تم تأكيد الدفع', en: 'Payment confirmed' }
         params: []
         relay:  true
+        relay_body:
+          ar: '✅ تم تأكيد الدفع لطلبك رقم {case_number}. شكراً لك!'
+          en: '✅ Your payment for request #{case_number} is confirmed. Thank you!'
+          ur: '✅ درخواست #{case_number} کی آپ کی ادائیگی کی تصدیق ہو گئی ہے۔ شکریہ!'
     types:
       visa_file:      { queue: visa_ops,    priority: high,   actions: [visa_approved, docs_incomplete], sla: { resolve_within_hours: 24 } }
       booking_change: { queue: booking_ops, priority: normal, sla: { resolve_within_hours: 12 } }

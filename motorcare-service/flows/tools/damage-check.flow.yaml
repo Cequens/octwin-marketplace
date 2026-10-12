@@ -89,6 +89,7 @@ steps:
           # the flow. Stored as an `image_list` on the job card, which the console renders
           # as a thumbnail grid the foreman can open.
           - field: damage_photo
+            required: true   # the flow's essential document — a customer without it says so, and the AI Agent takes it from there
             type:       media
             media_kind: image
             multiple:   true
@@ -163,6 +164,7 @@ steps:
       outputs:
         ok:     [{ goto: triaged }]
         failed: [{ goto: job_failed }]
+        invalid: []
 
   triaged:
     - render:

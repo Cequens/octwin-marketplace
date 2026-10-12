@@ -67,6 +67,7 @@ steps:
             when: '$state.package_id == null'
             label: '$t("book-package.label.package")'
             options:
+              on_empty: nothing_to_pick   # an empty list is a normal answer — say so, do not fail
               header: book-package.field_header.package
               cta:    book-package.field_cta.package
               fetch:  { do: record_list, args: { entity: package, all: true, limit: 20, sort_by: { field: price_pp, dir: asc } }, bind: pkgs }
@@ -251,3 +252,8 @@ steps:
   reserve_failed:
     - answer:
         instructions: 'The reservation could not be written. Say so plainly in one line and offer to try again. Do NOT claim a booking exists.'
+
+  # Reached from a picker's `on_empty:` — the list came back empty (e.g. before the catalog is
+  # filled). `aborted`: nothing was done. The AI Agent says it, in the customer's language.
+  nothing_to_pick:
+    - end: { status: aborted, instructions: 'There is nothing to choose from for this right now — the list came back empty. Say so in one short line, in the customer''s language, and offer another way to help. Do NOT invent options.' }

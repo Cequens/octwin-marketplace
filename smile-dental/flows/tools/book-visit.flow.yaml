@@ -111,6 +111,7 @@ steps:
             when: '$state.treatment_id == null'
             label: '$t("book-visit.label.treatment")'
             options:
+              on_empty: nothing_to_pick   # an empty list is a normal answer — say so, do not fail
               header: book-visit.field_header.treatment
               cta:    book-visit.field_cta.treatment
               fetch:  { do: record_list, args: { entity: treatment, all: true, limit: 20, sort_by: { field: price_from, dir: asc } }, bind: trs }
@@ -125,6 +126,7 @@ steps:
             when: '$state.dentist_id == null'
             label: '$t("book-visit.label.dentist")'
             options:
+              on_empty: nothing_to_pick   # an empty list is a normal answer — say so, do not fail
               header: book-visit.field_header.dentist
               cta:    book-visit.field_cta.dentist
               fetch:  { do: record_search, args: { entity: dentist, query: '', limit: 10 }, bind: dts }
@@ -210,6 +212,7 @@ steps:
         full:         [{ goto: slot_taken }]
         invalid_slot: [{ goto: slot_taken }]
         failed:       [{ end: failed }]
+        invalid: []
 
   remind:
     # T-24h and T-2h. The offsets are declared in scheduling.yaml; the absolute
@@ -272,3 +275,8 @@ steps:
   # the envelope, thread memory and analytics.
   no_slots:
     - end: { status: aborted, body: '{$t("book-visit.no_slots")}' }
+
+  # Reached from a picker's `on_empty:` — the list came back empty (e.g. before the catalog is
+  # filled). `aborted`: nothing was done. The AI Agent says it, in the customer's language.
+  nothing_to_pick:
+    - end: { status: aborted, instructions: 'There is nothing to choose from for this right now — the list came back empty. Say so in one short line, in the customer''s language, and offer another way to help. Do NOT invent options.' }

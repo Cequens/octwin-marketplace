@@ -89,6 +89,7 @@ steps:
             when: '$state.development_id == null'
             label: '$t("book-viewing.label.project")'
             options:
+              on_empty: nothing_to_pick   # an empty list is a normal answer — say so, do not fail
               header: book-viewing.field_header.project
               cta:    book-viewing.field_cta.project
               fetch:  { do: record_list, args: { entity: development, all: true, limit: 20 }, bind: devs }
@@ -104,6 +105,7 @@ steps:
             when: '$state.advisor_id == null'
             label: '$t("book-viewing.label.advisor")'
             options:
+              on_empty: nothing_to_pick   # an empty list is a normal answer — say so, do not fail
               header: book-viewing.field_header.advisor
               cta:    book-viewing.field_cta.advisor
               fetch:  { do: record_search, args: { entity: advisor, query: '' }, bind: advisors }
@@ -185,6 +187,7 @@ steps:
         full:         [{ goto: slot_taken }]
         invalid_slot: [{ goto: slot_taken }]
         failed:       [{ end: failed }]
+        invalid: []
 
   booked:
     # The lead moves to `viewing_booked` — this is the funnel step operators watch.
@@ -255,3 +258,8 @@ steps:
   # the envelope, thread memory and analytics.
   no_slots:
     - end: { status: aborted, body: '{$t("book-viewing.no_slots")}' }
+
+  # Reached from a picker's `on_empty:` — the list came back empty (e.g. before the catalog is
+  # filled). `aborted`: nothing was done. The AI Agent says it, in the customer's language.
+  nothing_to_pick:
+    - end: { status: aborted, instructions: 'There is nothing to choose from for this right now — the list came back empty. Say so in one short line, in the customer''s language, and offer another way to help. Do NOT invent options.' }

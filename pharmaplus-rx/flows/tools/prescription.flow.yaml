@@ -95,6 +95,7 @@ steps:
           # unprompted AND the agent relayed the ref. Now the engine asks, and adopts the next
           # inbound image into the field itself.
           - field: rx_photo
+            required: true   # the flow's essential document — a customer without it says so, and the AI Agent takes it from there
             type:       media
             media_kind: image
             label:      '$t("prescription.label.photo")'

@@ -43,7 +43,8 @@ steps:
       outputs:
         ok:    [{ goto: show }]
         empty: [{ goto: none }]
-        # failed → throws → error-net
+        # failed → the pack's errors.failed message, in the customer's language (canonical handler)
+        failed:  []
 
   show:
     - if: '$length($cases) == 0'      # defensive: treat an empty ok-payload like the empty port
@@ -87,7 +88,8 @@ steps:
       outputs:
         ok:    [{ goto: detail_render }]
         empty: [{ goto: none }]
-        # failed → throws → error-net
+        # failed → the pack's errors.failed message, in the customer's language (canonical handler)
+        failed:  []
 
   detail_render:
     - assign:
@@ -115,6 +117,7 @@ steps:
         gap_instructions: '$t("ticket-status.docs_gap")'
         fields:
           - field: doc                        # 📷 upload — folds a MEDIA- ref into $state.doc
+            required: true   # the flow's essential document — a customer without it says so, and the AI Agent takes it from there
             type: media
             media_kind: image
             label: '$t("ticket-status.f_doc")'

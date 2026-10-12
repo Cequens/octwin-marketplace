@@ -7,10 +7,16 @@
 
 - match:    '/clear'
   action:   close_conversation
-  reply: 'تم مسح المحادثة ✅ تقدر تبدأ من جديد — قول لي وش تحتاج.'
+  reply:
+    ar: 'تم مسح المحادثة ✅ تقدر تبدأ من جديد — قول لي وش تحتاج.'
+    en: 'Conversation cleared ✅ You can start fresh — tell me what you need.'
+    ur: 'گفتگو صاف ہو گئی ✅ آپ نئے سرے سے شروع کر سکتے ہیں — بتائیں آپ کو کیا چاہیے۔'
   source:   '/clear'
 
 - match:    '/help'
   action:   noop
-  reply: 'أنا مساعد دعم كيان/وصلني 🚗 أقدر أساعدك في شكاوى العملاء (خصم زائد، شكوى على سائق) أو طلبات الكباتن (تغيير مركبة، إيقاف حساب، أجرة غير مدفوعة). اكتب لي وش صار وأنا أكمل معك. لبدء محادثة جديدة أرسل /clear.'
+  reply:
+    ar: 'أنا مساعد دعم كيان/وصلني 🚗 أقدر أساعدك في شكاوى العملاء (خصم زائد، شكوى على سائق) أو طلبات الكباتن (تغيير مركبة، إيقاف حساب، أجرة غير مدفوعة). اكتب لي وش صار وأنا أكمل معك. لبدء محادثة جديدة أرسل /clear.'
+    en: 'I am the Kaiian/Wasalni support assistant 🚗 I can help with customer complaints (an extra charge, a complaint about a driver) or captain requests (changing a vehicle, pausing an account, an unpaid fare). Tell me what happened and I will take it from there. To start a new conversation, send /clear.'
+    ur: 'میں کیان/وصلنی کا سپورٹ اسسٹنٹ ہوں 🚗 میں صارفین کی شکایات (اضافی کٹوتی، ڈرائیور کی شکایت) یا کپتانوں کی درخواستوں (گاڑی کی تبدیلی، اکاؤنٹ معطل کرنا، غیر ادا شدہ کرایہ) میں مدد کر سکتا ہوں۔ مجھے بتائیں کیا ہوا، میں آگے سنبھال لوں گا۔ نئی گفتگو شروع کرنے کے لیے /clear بھیجیں۔'
   source:   '/help'

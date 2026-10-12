@@ -21,7 +21,8 @@ steps:
       outputs:
         ok:    [{ goto: show }]
         empty: [{ goto: none }]
-        # failed → throws → platform error-net composes an apology
+        # failed → the pack's errors.failed message, in the customer's language (canonical handler)
+        failed:  []
 
   show:
     - if: '$length($page.rows) == 0'    # all:true returns ok+[] for 0 rows, not the empty port

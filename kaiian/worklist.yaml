@@ -9,13 +9,15 @@
 # (Replaced the retired cases.yaml grammar — a case is now an XRM record worked
 # through this generic engine; queue/SLA/assignee live on xrm_records columns.)
 
+# Every queue is MANUAL on purpose: an item waits in its queue until a person picks it up.
+# Change a queue's `strategy` to `round_robin` or `load_balanced` to hand items out automatically.
 queues:
-  - { key: customer_ops, name: 'Customer Support' }
-  - { key: ops_central,  name: 'Central Region' }
-  - { key: ops_western,  name: 'Western Region' }
-  - { key: ops_eastern,  name: 'Eastern Region' }
-  - { key: ops_northern, name: 'Northern Region' }
-  - { key: ops_southern, name: 'Southern Region' }
+  - { key: customer_ops, name: 'Customer Support', assignment: { strategy: manual } }
+  - { key: ops_central,  name: 'Central Region', assignment: { strategy: manual } }
+  - { key: ops_western,  name: 'Western Region', assignment: { strategy: manual } }
+  - { key: ops_eastern,  name: 'Eastern Region', assignment: { strategy: manual } }
+  - { key: ops_northern, name: 'Northern Region', assignment: { strategy: manual } }
+  - { key: ops_southern, name: 'Southern Region', assignment: { strategy: manual } }
 
 work:
   case:
@@ -30,10 +32,18 @@ work:
         label:  { ar: 'الموافقة على استرداد المبلغ', en: 'Approve refund' }
         params: [{ name: amount, type: number, required: true, label: 'Refund amount (SAR)' }]
         relay:  true
+        relay_body:
+          ar: '✅ تمت الموافقة على استرداد {amount} ريال لطلبك رقم {case_number}. بيوصلك المبلغ خلال أيام العمل القادمة.'
+          en: '✅ A refund of {amount} SAR is approved for your request #{case_number}. You will receive it within the next few working days.'
+          ur: '✅ آپ کی درخواست #{case_number} کے لیے {amount} ریال کی واپسی منظور ہو گئی ہے۔ رقم اگلے چند کاروباری دنوں میں آپ کو مل جائے گی۔'
       unblock:
         label:  { ar: 'فك الحظر عن الحساب', en: 'Unblock account' }
         params: []
         relay:  true
+        relay_body:
+          ar: '✅ تم فك الحظر عن حسابك (طلب رقم {case_number}). تقدر تستخدم التطبيق الآن.'
+          en: '✅ Your account is unblocked (request #{case_number}). You can use the app again now.'
+          ur: '✅ آپ کا اکاؤنٹ بحال کر دیا گیا ہے (درخواست #{case_number})۔ اب آپ دوبارہ ایپ استعمال کر سکتے ہیں۔'
     types:
       # ── Customer track (no region) ──
       extra_charge:      { queue: customer_ops, priority: high, actions: [approve_refund], sla: { resolve_within_hours: 4 } }

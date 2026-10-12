@@ -9,11 +9,13 @@
 # 48 for routine work. `case_open`-style prose never sets that number; the queue config
 # does, and the flow reads it back so the promise the customer hears is the real one.
 
+# Every queue is MANUAL on purpose: an item waits in its queue until a person picks it up.
+# Change a queue's `strategy` to `round_robin` or `load_balanced` to hand items out automatically.
 queues:
-  - { key: crew_dubai,    name: 'Dubai Crew' }
-  - { key: crew_sharjah,  name: 'Sharjah Crew' }
-  - { key: crew_abudhabi, name: 'Abu Dhabi Crew' }
-  - { key: dispatch_desk, name: 'Dispatch Desk' }
+  - { key: crew_dubai,    name: 'Dubai Crew', assignment: { strategy: manual } }
+  - { key: crew_sharjah,  name: 'Sharjah Crew', assignment: { strategy: manual } }
+  - { key: crew_abudhabi, name: 'Abu Dhabi Crew', assignment: { strategy: manual } }
+  - { key: dispatch_desk, name: 'Dispatch Desk', assignment: { strategy: manual } }
 
 work:
   work_order:
@@ -23,18 +25,34 @@ work:
         label:  { ar: 'تم تعيين فني', en: 'Technician assigned' }
         params: [{ name: technician, type: text, required: true, label: 'Technician name' }, { name: eta, type: text, required: false, label: 'ETA' }]
         relay:  true
+        relay_body:
+          ar: 'تم تعيين الفني {technician} لطلبك رقم {case_number} 👷 هيتواصل معاك قبل الزيارة.'
+          en: 'Technician {technician} is assigned to your request #{case_number} 👷 They will contact you before the visit.'
+          ur: 'آپ کی درخواست #{case_number} کے لیے ٹیکنیشن {technician} مقرر کر دیا گیا ہے 👷 وہ وزٹ سے پہلے آپ سے رابطہ کریں گے۔'
       quote_sent:
         label:  { ar: 'تم إرسال عرض السعر', en: 'Quote sent' }
         params: [{ name: amount, type: number, required: true, label: 'Quote amount (AED)' }]
         relay:  true
+        relay_body:
+          ar: 'عرض السعر لطلبك رقم {case_number}: {amount} درهم 💬 رد هنا بالموافقة عشان نكمل.'
+          en: 'The quote for your request #{case_number} is {amount} AED 💬 Reply here to approve and we will go ahead.'
+          ur: 'آپ کی درخواست #{case_number} کا تخمینہ {amount} درہم ہے 💬 منظوری کے لیے یہاں جواب دیں تاکہ ہم کام شروع کریں۔'
       parts_needed:
         label:  { ar: 'مطلوب قطع غيار', en: 'Parts needed' }
         params: [{ name: eta_days, type: number, required: true, label: 'ETA (days)' }]
         relay:  true
+        relay_body:
+          ar: 'طلبك رقم {case_number} محتاج قطع غيار 🔧 متوقع توصل خلال {eta_days} يوم، وهنبلغك أول ما توصل.'
+          en: 'Your request #{case_number} needs parts 🔧 They should arrive within {eta_days} days, and we will let you know as soon as they do.'
+          ur: 'آپ کی درخواست #{case_number} کے لیے پرزے درکار ہیں 🔧 یہ {eta_days} دن میں پہنچنے کی توقع ہے، اور پہنچتے ہی ہم آپ کو بتائیں گے۔'
       job_done:
         label:  { ar: 'تم إنجاز العمل', en: 'Job complete' }
         params: []
         relay:  true
+        relay_body:
+          ar: '✅ تم إنجاز العمل في طلبك رقم {case_number}. شكراً لاختيارك HomeFix!'
+          en: '✅ The work on your request #{case_number} is done. Thank you for choosing HomeFix!'
+          ur: '✅ آپ کی درخواست #{case_number} کا کام مکمل ہو گیا ہے۔ HomeFix کا انتخاب کرنے کا شکریہ!'
     types:
       emergency: { route_by: emirate, map: { dubai: crew_dubai, sharjah: crew_sharjah, abu_dhabi: crew_abudhabi }, fallback: dispatch_desk, priority: urgent, actions: [technician_assigned, quote_sent, job_done],               sla: { resolve_within_hours: 4 } }
       soon:      { route_by: emirate, map: { dubai: crew_dubai, sharjah: crew_sharjah, abu_dhabi: crew_abudhabi }, fallback: dispatch_desk, priority: high,   actions: [technician_assigned, quote_sent, parts_needed, job_done], sla: { resolve_within_hours: 12 } }

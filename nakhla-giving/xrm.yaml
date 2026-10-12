@@ -123,12 +123,17 @@ entities:
           # text card rather than rendering a button to nowhere — so a missing link
           # costs the receipt, never the thank-you.
           - notify:
-              message: >-
-                🌱 وصلنا تبرّعك — جزاك الله خيراً.
-                المبلغ {{ record.fields.amount }} {{ record.fields.currency }} لصالح {{ record.fields.appeal_title }}.
-                رقم العملية {{ record.record_number }}.
+              message:
+                ar: >-
+                  🌱 وصلنا تبرّعك — جزاك الله خيراً.
+                  المبلغ {{ record.fields.amount }} {{ record.fields.currency }} لصالح {{ record.fields.appeal_title }}.
+                  رقم العملية {{ record.record_number }}.
+                en: >-
+                  🌱 We received your donation — thank you, may God reward you.
+                  {{ record.fields.amount }} {{ record.fields.currency }} for {{ record.fields.appeal_title }}.
+                  Reference {{ record.record_number }}.
               link:       '{{ record.fields.checkout_url }}'
-              link_label: '🧾 الإيصال'
+              link_label: '🧾 الإيصال · Receipt'
               cooldown_hours: 24
           - track: { event: donation_paid }
 
@@ -136,16 +141,24 @@ entities:
         # is the worst outcome a charity can have.
         failed:
           - notify:
-              message: >-
-                ما تمّت عملية الدفع لتبرّعك رقم {{ record.record_number }}.
-                ما انخصم أي مبلغ. تقدر تحاول مرة ثانية وقت ما يناسبك 🌿
+              message:
+                ar: >-
+                  ما تمّت عملية الدفع لتبرّعك رقم {{ record.record_number }}.
+                  ما انخصم أي مبلغ. تقدر تحاول مرة ثانية وقت ما يناسبك 🌿
+                en: >-
+                  The payment for your donation {{ record.record_number }} did not go through.
+                  Nothing was charged. You can try again whenever suits you 🌿
               cooldown_hours: 6
 
         refunded:
           - notify:
-              message: >-
-                تم استرجاع مبلغ تبرّعك رقم {{ record.record_number }} بالكامل.
-                إذا عندك أي استفسار تواصل معنا.
+              message:
+                ar: >-
+                  تم استرجاع مبلغ تبرّعك رقم {{ record.record_number }} بالكامل.
+                  إذا عندك أي استفسار تواصل معنا.
+                en: >-
+                  Your donation {{ record.record_number }} has been refunded in full.
+                  If you have any question, contact us.
               cooldown_hours: 24
 
 segments:

@@ -191,7 +191,8 @@ steps:
       outputs:
         ok:        [{ goto: set_value }]
         not_found: [{ goto: save }]
-        # failed → throws → error-net
+        # failed → the pack's errors.failed message, in the customer's language (canonical handler)
+        failed:  []
 
   set_value:
     - assign:
@@ -220,7 +221,8 @@ steps:
       outputs:
         ok:      [{ goto: route }]
         invalid: []          # agent-correctable → reason handed back to the agent
-        # failed → throws → error-net
+        # failed → the pack's errors.failed message, in the customer's language (canonical handler)
+        failed:  []
 
   # A save is an INSERT or an UPDATE and the two deserve different words, different
   # tasks, and sometimes a stage move. The flow used to run one path for both: a

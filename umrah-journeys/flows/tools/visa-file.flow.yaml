@@ -107,6 +107,7 @@ steps:
           # the engine adopts the first unconsumed inbound image into the field
           # deterministically — no reliance on the agent passing the ref.
           - field: passport_scan
+            required: true   # the flow's essential document — a customer without it says so, and the AI Agent takes it from there
             type:       media
             media_kind: image
             label:      '$t("visa-file.label.passport")'

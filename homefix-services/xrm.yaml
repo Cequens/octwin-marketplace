@@ -147,8 +147,14 @@ entities:
         completed:
           - survey:
               survey:  job_feedback
-              message: 'شكراً لاختيارك HomeFix 🛠️ إزاي كانت زيارة الفني؟'
-              cta:     'قيّم الزيارة'
+              message:
+                ar: 'شكراً لاختيارك HomeFix 🛠️ إزاي كانت زيارة الفني؟'
+                en: 'Thank you for choosing HomeFix 🛠️ How was the technician''s visit?'
+                ur: 'HomeFix کا انتخاب کرنے کا شکریہ 🛠️ ٹیکنیشن کا وزٹ کیسا رہا؟'
+              cta:
+                ar: 'قيّم الزيارة'
+                en: 'Rate the visit'
+                ur: 'وزٹ کی ریٹنگ دیں'
               invoke:  rate-job
               with:    { job_id: '{{ record.id }}', service_id: '{{ record.fields.service }}' }
               cooldown_hours: 168

@@ -129,6 +129,7 @@ steps:
             when: '$state.class_id == null'
             label: '$t("book-class.label.class")'
             options:
+              on_empty: nothing_to_pick   # an empty list is a normal answer — say so, do not fail
               header: book-class.field_header.class
               cta:    book-class.field_cta.class
               fetch:  { do: record_search, args: { entity: session_type, query: '', limit: 10 }, bind: cs }
@@ -145,6 +146,7 @@ steps:
             when: '$state.trainer_id == null'
             label: '$t("book-class.label.trainer")'
             options:
+              on_empty: nothing_to_pick   # an empty list is a normal answer — say so, do not fail
               header: book-class.field_header.trainer
               cta:    book-class.field_cta.trainer
               fetch:  { do: record_search, args: { entity: trainer, query: '', limit: 10, where: { all: [{ field: specialty, op: eq, value: '$class_discipline' }] } }, bind: ts }
@@ -225,6 +227,7 @@ steps:
         full:         [{ goto: class_full }]
         invalid_slot: [{ goto: class_full }]
         failed:       [{ end: failed }]
+        invalid: []
 
   after_booking:
     # A trial booking is a sales event — advance the enquiry so the club can measure
@@ -317,3 +320,8 @@ steps:
   # the envelope, thread memory and analytics.
   no_slots:
     - end: { status: aborted, body: '{$t("book-class.no_slots")}' }
+
+  # Reached from a picker's `on_empty:` — the list came back empty (e.g. before the catalog is
+  # filled). `aborted`: nothing was done. The AI Agent says it, in the customer's language.
+  nothing_to_pick:
+    - end: { status: aborted, instructions: 'There is nothing to choose from for this right now — the list came back empty. Say so in one short line, in the customer''s language, and offer another way to help. Do NOT invent options.' }

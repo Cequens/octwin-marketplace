@@ -14,13 +14,15 @@
 # Locale coverage (cases.<type> / status.<state> / decision.<action>) is enforced
 # at boot in BOTH directions against locale.<lang>.yaml — keep them in lockstep.
 
+# Every queue is MANUAL on purpose: an item waits in its queue until a person picks it up.
+# Change a queue's `strategy` to `round_robin` or `load_balanced` to hand items out automatically.
 queues:
-  - { key: technical_service, name: 'Technical Service' }   # car faults, charging, roadside
-  - { key: customer_care,     name: 'Customer Care' }        # owner activation, general issues
+  - { key: technical_service, name: 'Technical Service', assignment: { strategy: manual } }   # car faults, charging, roadside
+  - { key: customer_care,     name: 'Customer Care', assignment: { strategy: manual } }        # owner activation, general issues
   # Where a BREACHED case goes — see automation.yaml. Not a routing destination: no
   # case type opens here. It exists so an escalation has somewhere to go that a
   # supervisor watches; escalating into the case's own queue would move nothing.
-  - { key: escalations,       name: 'Escalations' }          # breached SLA, either clock
+  - { key: escalations,       name: 'Escalations', assignment: { strategy: manual } }          # breached SLA, either clock
 
 work:
   case:
@@ -32,9 +34,15 @@ work:
     actions:
       activate_account:                 # app-owner activation approved
         relay:    true
+        relay_body:
+          ar: '✅ تم تفعيل حسابك في تطبيق XPENG (طلب رقم {case_number}). تقدر تستخدمه دلوقتي.'
+          en: '✅ Your XPENG app account is activated (request #{case_number}). You can use it now.'
         to_stage: resolved
       dispatch_roadside:                # roadside team sent out
         relay:    true
+        relay_body:
+          ar: '🚨 فريق المساعدة على الطريق جاي لك (طلب رقم {case_number}). خليك في مكان آمن.'
+          en: '🚨 Our roadside team is on its way to you (request #{case_number}). Please stay somewhere safe.'
         to_stage: in_progress
         params:
           - { name: eta, label: 'ETA', type: text }

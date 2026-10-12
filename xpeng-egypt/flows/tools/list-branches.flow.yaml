@@ -92,7 +92,8 @@ steps:
       outputs:
         ok:    [{ goto: show }]
         empty: [{ goto: too_far }]
-        # failed → throws → error-net
+        # failed → the pack's errors.failed message, in the customer's language (canonical handler)
+        failed:  []
 
   load_all:
     - do: record_list
@@ -101,7 +102,8 @@ steps:
       outputs:
         ok:    [{ goto: show }]
         empty: [{ goto: none }]
-        # failed → throws → error-net
+        # failed → the pack's errors.failed message, in the customer's language (canonical handler)
+        failed:  []
 
   # ── One card set for BOTH modes ──
   # The distance line is present only when the rows were near-sorted, so the two

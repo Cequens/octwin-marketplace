@@ -6,12 +6,14 @@
 # human picking `compensation_approved` with an amount — which relays to the customer on
 # its own. The agent's job is to state the ticket number and the real SLA, nothing more.
 
+# Every queue is MANUAL on purpose: an item waits in its queue until a person picks it up.
+# Change a queue's `strategy` to `round_robin` or `load_balanced` to hand items out automatically.
 queues:
-  - { key: claims_desk,   name: 'Claims Desk' }
-  - { key: ops_cairo,     name: 'Cairo Operations' }
-  - { key: ops_alex,      name: 'Alexandria Operations' }
-  - { key: ops_delta,     name: 'Delta Operations' }
-  - { key: ops_upper,     name: 'Upper Egypt Operations' }
+  - { key: claims_desk,   name: 'Claims Desk', assignment: { strategy: manual } }
+  - { key: ops_cairo,     name: 'Cairo Operations', assignment: { strategy: manual } }
+  - { key: ops_alex,      name: 'Alexandria Operations', assignment: { strategy: manual } }
+  - { key: ops_delta,     name: 'Delta Operations', assignment: { strategy: manual } }
+  - { key: ops_upper,     name: 'Upper Egypt Operations', assignment: { strategy: manual } }
 
 work:
   case:
@@ -21,14 +23,23 @@ work:
         label:  { ar: 'تمت الموافقة على التعويض', en: 'Compensation approved' }
         params: [{ name: amount, type: number, required: true, label: 'Compensation (EGP)' }]
         relay:  true
+        relay_body:
+          ar: '✅ تمت الموافقة على تعويض بقيمة {amount} جنيه لطلبك رقم {case_number}.'
+          en: '✅ Compensation of {amount} EGP is approved for your request #{case_number}.'
       reschedule_delivery:
         label:  { ar: 'إعادة جدولة التسليم', en: 'Delivery rescheduled' }
         params: [{ name: date, type: text, required: true, label: 'New delivery date' }]
         relay:  true
+        relay_body:
+          ar: '📅 اتحدد موعد جديد لتوصيل شحنتك (طلب رقم {case_number}): {date}.'
+          en: '📅 Your delivery (request #{case_number}) is rescheduled to {date}.'
       returned_to_sender:
         label:  { ar: 'أُعيد للراسل', en: 'Returned to sender' }
         params: []
         relay:  true
+        relay_body:
+          ar: 'شحنتك (طلب رقم {case_number}) رجعت للراسل. لو عندك أي استفسار رد هنا.'
+          en: 'Your shipment (request #{case_number}) has been returned to the sender. Reply here if you have any question.'
     types:
       # Damage and loss are decided centrally — one policy, one desk.
       damaged_parcel:  { queue: claims_desk, priority: high,   actions: [compensation_approved, returned_to_sender], sla: { resolve_within_hours: 24 } }

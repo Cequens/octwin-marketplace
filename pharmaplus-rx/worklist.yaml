@@ -7,10 +7,12 @@
 # Prescription review carries the shortest SLA in this pack because a patient waiting on
 # medicine is not waiting on a convenience.
 
+# Every queue is MANUAL on purpose: an item waits in its queue until a person picks it up.
+# Change a queue's `strategy` to `round_robin` or `load_balanced` to hand items out automatically.
 queues:
-  - { key: pharmacist_review, name: 'Pharmacist Review' }
-  - { key: dispensing,        name: 'Dispensing & Delivery' }
-  - { key: insurance_desk,    name: 'Insurance Desk' }
+  - { key: pharmacist_review, name: 'Pharmacist Review', assignment: { strategy: manual } }
+  - { key: dispensing,        name: 'Dispensing & Delivery', assignment: { strategy: manual } }
+  - { key: insurance_desk,    name: 'Insurance Desk', assignment: { strategy: manual } }
 
 work:
   case:
@@ -20,22 +22,37 @@ work:
         label:  { ar: 'تمت مراجعة الروشتة والموافقة على الصرف', en: 'Approved for dispensing' }
         params: [{ name: total, type: number, required: false, label: 'Total (EGP)' }]
         relay:  true
+        relay_body:
+          ar: '✅ الصيدلي راجع الروشتة (طلب رقم {case_number}) ووافق على صرفها. هنجهز طلبك دلوقتي.'
+          en: '✅ The pharmacist has reviewed your prescription (request #{case_number}) and approved it. We are preparing your order now.'
       needs_clarification:
         label:  { ar: 'الروشتة تحتاج توضيحاً', en: 'Prescription needs clarification' }
         params: [{ name: question, type: text, required: true, label: 'What is unclear' }]
         relay:  true
+        relay_body:
+          ar: '❓ الصيدلي محتاج توضيح بخصوص الروشتة (طلب رقم {case_number}): {question} — رد هنا لو سمحت.'
+          en: '❓ The pharmacist needs a clarification about your prescription (request #{case_number}): {question} — please reply here.'
       item_unavailable:
         label:  { ar: 'الدواء غير متوفر', en: 'Item unavailable' }
         params: [{ name: item, type: text, required: true, label: 'Which item' }, { name: eta_days, type: number, required: false, label: 'ETA (days)' }]
         relay:  true
+        relay_body:
+          ar: 'نعتذر، {item} غير متوفر حالياً (طلب رقم {case_number}). الصيدلي هيتواصل معاك بالبديل المتاح.'
+          en: 'Sorry — {item} is not available right now (request #{case_number}). The pharmacist will contact you about an alternative.'
       refer_to_prescriber:
         label:  { ar: 'يُراجع الطبيب المعالج', en: 'Refer back to prescriber' }
         params: [{ name: reason, type: text, required: true, label: 'Reason' }]
         relay:  true
+        relay_body:
+          ar: 'الروشتة (طلب رقم {case_number}) محتاجة مراجعة من الطبيب المعالج: {reason}. تواصل مع طبيبك وبعدين ابعتها لنا من جديد.'
+          en: 'Your prescription (request #{case_number}) needs a check by your doctor: {reason}. Please contact your doctor, then send it to us again.'
       order_dispatched:
         label:  { ar: 'الطلب في الطريق', en: 'Order dispatched' }
         params: [{ name: eta, type: text, required: false, label: 'ETA' }]
         relay:  true
+        relay_body:
+          ar: '🚚 طلبك رقم {case_number} خرج للتوصيل.'
+          en: '🚚 Your order #{case_number} is out for delivery.'
     types:
       # A shelf order is not a clinical decision, but it IS work someone must do — pack it
       # and deliver it. Routed to `dispensing` (a queue this pack declared and, until the

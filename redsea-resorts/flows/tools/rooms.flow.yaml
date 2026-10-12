@@ -42,6 +42,7 @@ steps:
       outputs:
         ok:    [{ goto: dest_ids }]
         empty: [{ goto: load_all }]      # unknown destination → show everything, never nothing
+        failed:  []
 
   dest_ids:
     - if: '$length($dest.rows) == 0'     # all:true returns ok+[] for 0 rows, not the empty port

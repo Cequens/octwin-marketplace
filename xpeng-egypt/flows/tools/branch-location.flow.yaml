@@ -24,6 +24,7 @@ steps:
       outputs:
         ok:        [{ goto: check_pin }]
         not_found: [{ goto: unknown }]
+        failed:  []
 
   check_pin:
     # A showroom without coordinates cannot be pinned. Fall back to the address

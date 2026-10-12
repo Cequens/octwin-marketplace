@@ -100,6 +100,7 @@ steps:
             when: '$state.product_id == null'
             label: '$t("apply.label.product")'
             options:
+              on_empty: nothing_to_pick   # an empty list is a normal answer — say so, do not fail
               header: apply.field_header.product
               cta:    apply.field_cta.product
               fetch:  { do: record_list, args: { entity: finance_product, all: true, limit: 10 }, bind: prods }
@@ -239,3 +240,8 @@ steps:
   save_failed:
     - answer:
         instructions: 'The application could not be saved. Say so plainly in one line and give the branch line. Do NOT claim an application exists.'
+
+  # Reached from a picker's `on_empty:` — the list came back empty (e.g. before the catalog is
+  # filled). `aborted`: nothing was done. The AI Agent says it, in the customer's language.
+  nothing_to_pick:
+    - end: { status: aborted, instructions: 'There is nothing to choose from for this right now — the list came back empty. Say so in one short line, in the customer''s language, and offer another way to help. Do NOT invent options.' }

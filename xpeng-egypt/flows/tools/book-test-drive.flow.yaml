@@ -32,7 +32,8 @@ steps:
           outputs:
             ok:        [{ goto: seed_branch }]
             not_found: [{ goto: ask_branch }]
-            # failed → throws → error-net
+            # failed → the pack's errors.failed message, in the customer's language (canonical handler)
+            failed:  []
     - goto: ask_branch
 
   seed_branch:
@@ -95,6 +96,7 @@ steps:
       outputs:
         ok:    [{ goto: show_branches }]
         empty: [{ goto: no_branches }]
+        failed:  []
 
   load_branches_all:
     - do: record_list
@@ -103,6 +105,7 @@ steps:
       outputs:
         ok:    [{ goto: show_branches }]
         empty: [{ goto: no_branches }]
+        failed:  []
 
   show_branches:
     - if: '$length($br.rows) == 0'      # all:true returns ok+[] for 0 rows, not the empty port
@@ -136,6 +139,7 @@ steps:
       outputs:
         ok:    [{ goto: show_models }]
         empty: [{ goto: load_slots }]
+        failed:  []
 
   show_models:
     - if: '$length($mr.rows) == 0'
@@ -162,6 +166,7 @@ steps:
       outputs:
         ok:    [{ goto: show_slots }]
         empty: [{ goto: no_slots }]
+        failed:  []
 
   show_slots:
     - if: "$length($coalesce($sl.slots, $sl.rows, $sl)) == 0"
@@ -224,7 +229,9 @@ steps:
         ok:           [{ goto: reminders }]
         full:         [{ goto: slot_taken }]
         invalid_slot: [{ goto: slot_taken }]
-        # failed → throws → error-net
+        # failed → the pack's errors.failed message, in the customer's language (canonical handler)
+        failed:  []
+        invalid: []
 
   # Best-effort reminders (24h + 2h before). Detached: never blocks confirmation.
   reminders:

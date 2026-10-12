@@ -6,10 +6,16 @@
 
 - match:  '/clear'
   action: close_conversation
-  reply:  'تمام، بدينا من جديد. كيف نخدمك؟'
+  reply:
+    ar: 'تمام، بدينا من جديد. كيف نخدمك؟'
+    en: 'Done — a fresh start. How can we help?'
+    ur: 'ٹھیک ہے، نئے سرے سے شروع کرتے ہیں۔ ہم آپ کی کیا خدمت کریں؟'
   source: '/clear'
 
 - match:  '/جديد'
   action: close_conversation
-  reply:  'تمام، بدينا من جديد. كيف نخدمك؟'
+  reply:
+    ar: 'تمام، بدينا من جديد. كيف نخدمك؟'
+    en: 'Done — a fresh start. How can we help?'
+    ur: 'ٹھیک ہے، نئے سرے سے شروع کرتے ہیں۔ ہم آپ کی کیا خدمت کریں؟'
   source: '/clear'

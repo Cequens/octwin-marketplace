@@ -84,7 +84,8 @@ steps:
       bind: c
       outputs:
         ok: [{ goto: confirm }]
-        # failed → throws → error-net
+        # failed → the pack's errors.failed message, in the customer's language (canonical handler)
+        failed:  []
 
   confirm:
     - if: '$state.type == "roadside_assistance"'

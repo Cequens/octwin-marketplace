@@ -4,10 +4,12 @@
 # relays to the customer by itself. There is deliberately no "approve" the bot can reach:
 # the flow can open a review and report its status, and that is the entire surface.
 
+# Every queue is MANUAL on purpose: an item waits in its queue until a person picks it up.
+# Change a queue's `strategy` to `round_robin` or `load_balanced` to hand items out automatically.
 queues:
-  - { key: credit_review,  name: 'Credit Review' }
-  - { key: docs_desk,      name: 'Documents Desk' }
-  - { key: sharia_desk,    name: 'Sharia Compliance' }
+  - { key: credit_review,  name: 'Credit Review', assignment: { strategy: manual } }
+  - { key: docs_desk,      name: 'Documents Desk', assignment: { strategy: manual } }
+  - { key: sharia_desk,    name: 'Sharia Compliance', assignment: { strategy: manual } }
 
 work:
   case:
@@ -17,16 +19,25 @@ work:
         label:  { ar: 'موافقة مبدئية', en: 'Pre-approved' }
         params: [{ name: amount, type: number, required: true, label: 'Approved amount (SAR)' }, { name: valid_days, type: number, required: false, label: 'Offer valid (days)' }]
         relay:  true
+        relay_body:
+          ar: '🎉 تمت الموافقة المبدئية على طلبك رقم {case_number} بمبلغ {amount} ريال. فريق الائتمان بيتواصل معك لإكمال الإجراءات.'
+          en: '🎉 Your request #{case_number} is pre-approved for {amount} SAR. Our credit team will contact you to complete the next steps.'
       declined:
         label:  { ar: 'لم تتم الموافقة', en: 'Declined' }
         params: [{ name: reason, type: text, required: true, label: 'Reason (customer-safe wording)' }]
         relay:  true
+        relay_body:
+          ar: 'نعتذر، لم تتم الموافقة على طلبك رقم {case_number}. السبب: {reason}. إذا عندك أي استفسار تواصل معنا.'
+          en: 'We are sorry — your request #{case_number} was not approved. Reason: {reason}. If you have any question, contact us.'
       docs_required:
         label:  { ar: 'مطلوب مستندات', en: 'Documents required' }
         params: [{ name: documents, type: text, required: true, label: 'Which documents' }]
         relay:  true
+        relay_body:
+          ar: '📄 نحتاج بعض المستندات لإكمال طلبك رقم {case_number}: {documents}. أرسلها هنا متى ما كانت جاهزة.'
+          en: '📄 We need a few documents to complete your request #{case_number}: {documents}. Send them here when they are ready.'
     types:
-      finance_application: { queue: credit_review, priority: high,   actions: [pre_approved, declined, docs_required], sla: { resolve_within_hours: 48 } }
-      document_review:     { queue: docs_desk,     priority: normal, actions: [docs_required],                         sla: { resolve_within_hours: 24 } }
-      sharia_question:     { queue: sharia_desk,   priority: normal,                                                   sla: { resolve_within_hours: 48 } }
-      general_query:       { queue: credit_review, priority: low,                                                      sla: { resolve_within_hours: 48 } }
+      finance_application: { queue: credit_review, priority: high,   actions: [pre_approved, declined, docs_required], sla: { resolve_within_hours: 48, first_response_within_hours: 4 } }
+      document_review:     { queue: docs_desk,     priority: normal, actions: [docs_required],                         sla: { resolve_within_hours: 24, first_response_within_hours: 4 } }
+      sharia_question:     { queue: sharia_desk,   priority: normal,                                                   sla: { resolve_within_hours: 48, first_response_within_hours: 4 } }
+      general_query:       { queue: credit_review, priority: low,                                                      sla: { resolve_within_hours: 48, first_response_within_hours: 4 } }

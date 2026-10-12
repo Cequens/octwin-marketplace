@@ -63,6 +63,7 @@ steps:
             when: '$state.product_id == null'
             label: '$t("estimate.label.product")'
             options:
+              on_empty: nothing_to_pick   # an empty list is a normal answer — say so, do not fail
               header: estimate.field_header.product
               cta:    estimate.field_cta.product
               fetch:  { do: record_list, args: { entity: finance_product, all: true, limit: 10, sort_by: { field: profit_rate_pct, dir: asc } }, bind: prods }
@@ -181,3 +182,8 @@ steps:
     - answer:
         data: { max_years: '$p_max_years', product: '$p_label' }
         instructions: 'The term they want exceeds this product''s published maximum. State the maximum in one line and offer a shorter term or another product. Do NOT quote an instalment.'
+
+  # Reached from a picker's `on_empty:` — the list came back empty (e.g. before the catalog is
+  # filled). `aborted`: nothing was done. The AI Agent says it, in the customer's language.
+  nothing_to_pick:
+    - end: { status: aborted, instructions: 'There is nothing to choose from for this right now — the list came back empty. Say so in one short line, in the customer''s language, and offer another way to help. Do NOT invent options.' }

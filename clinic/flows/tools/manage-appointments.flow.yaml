@@ -357,6 +357,7 @@ steps:
         invalid_slot: [{ goto: reschedule_failed }]
         invalid:      [{ end: failed }]   # a field the booking refused — ours, not the patient's
         failed:       [{ end: failed }]
+        not_movable: [{ end: { status: aborted, instructions: 'This booking can no longer be moved — it is already completed, cancelled or in the past. Say so in one short line, in the customer''s language, and offer to book a new time.' } }]
 
   reschedule_done:
     # Same record id → same dedupe keys: revoke the old reminders, re-schedule new

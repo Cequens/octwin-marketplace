@@ -5,10 +5,14 @@
 
 - match:  '/clear'
   action: close_conversation
-  reply:  'تمام، بدينا من جديد. كيف نقدر نساعدك؟'
+  reply:
+    ar: 'تمام، بدينا من جديد. كيف نقدر نساعدك؟'
+    en: 'Done — a fresh start. How can we help you?'
   source: '/clear'
 
 - match:  '/جديد'
   action: close_conversation
-  reply:  'تمام، بدينا من جديد. كيف نقدر نساعدك؟'
+  reply:
+    ar: 'تمام، بدينا من جديد. كيف نقدر نساعدك؟'
+    en: 'Done — a fresh start. How can we help you?'
   source: '/clear'

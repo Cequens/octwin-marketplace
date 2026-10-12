@@ -32,7 +32,8 @@ steps:
       outputs:
         ok:        [{ goto: show }]
         not_found: [{ goto: unknown }]
-        # failed → throws → error-net
+        # failed → the pack's errors.failed message, in the customer's language (canonical handler)
+        failed:  []
 
   show:
     # ONE swipeable message: the specs in the carousel BODY, the hero + every

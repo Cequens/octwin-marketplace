@@ -40,7 +40,11 @@ jobs:
     interval_seconds: 300
     config:
       escalate_to: queue:escalations
-      message: 'نعتذر عن التأخير 🙏 حالتك أخدت وقت أطول من المتوقع وتم تحويلها للإدارة — إحنا شغالين عليها وهنرجع لك في أقرب وقت.'
+      message:
+        ar: 'نعتذر عن التأخير 🙏 حالتك أخدت وقت أطول من المتوقع وتم تحويلها للإدارة — إحنا شغالين عليها وهنرجع لك في أقرب وقت.'
+        en: 'Sorry for the wait 🙏 Your case has taken longer than expected and has been passed to management — we are working on it and will get back to you shortly.'
       first_response:
         escalate_to: queue:escalations
-        message: 'آسفين إننا ما رددنا عليك لحد الآن 🙏 طلبك وصلنا فعلاً وتم تنبيه الفريق — حد من فريقنا هيتواصل معاك حالاً.'
+        message:
+          ar: 'آسفين إننا ما رددنا عليك لحد الآن 🙏 طلبك وصلنا فعلاً وتم تنبيه الفريق — حد من فريقنا هيتواصل معاك حالاً.'
+          en: 'Sorry we have not replied yet 🙏 Your request has reached us and the team has been alerted — someone from our team will contact you right away.'

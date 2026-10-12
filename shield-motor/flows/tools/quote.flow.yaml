@@ -54,6 +54,7 @@ steps:
             when: '$state.plan_id == null'
             label: '$t("quote.label.plan")'
             options:
+              on_empty: nothing_to_pick   # an empty list is a normal answer — say so, do not fail
               header: quote.field_header.plan
               cta:    quote.field_cta.plan
               fetch:  { do: record_list, args: { entity: plan, all: true, limit: 10, sort_by: { field: base_rate_pct, dir: asc } }, bind: plans }
@@ -156,3 +157,8 @@ steps:
       memory_note: 'Gave an INDICATIVE premium of {$format_money($premium, "AED")} on {$pl_label} (base {$base}, loading {$load_pct}%, NCD {$ncd_pct}%). Not an offer.'
       data: { premium: '$premium' }
     - end: applied
+
+  # Reached from a picker's `on_empty:` — the list came back empty (e.g. before the catalog is
+  # filled). `aborted`: nothing was done. The AI Agent says it, in the customer's language.
+  nothing_to_pick:
+    - end: { status: aborted, instructions: 'There is nothing to choose from for this right now — the list came back empty. Say so in one short line, in the customer''s language, and offer another way to help. Do NOT invent options.' }

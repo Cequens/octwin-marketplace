@@ -88,6 +88,7 @@ steps:
             when: '$state.package_id == null'
             label: '$t("book-service.label.package")'
             options:
+              on_empty: nothing_to_pick   # an empty list is a normal answer — say so, do not fail
               header: book-service.field_header.package
               cta:    book-service.field_cta.package
               fetch:  { do: record_list, args: { entity: service_package, all: true, limit: 20, sort_by: { field: price_from, dir: asc } }, bind: pkgs }
@@ -104,6 +105,7 @@ steps:
             when: '$state.bay_id == null'
             label: '$t("book-service.label.bay")'
             options:
+              on_empty: nothing_to_pick   # an empty list is a normal answer — say so, do not fail
               header: book-service.field_header.bay
               cta:    book-service.field_cta.bay
               fetch:  { do: record_list, args: { entity: bay, all: true, limit: 10, where: { all: [{ field: work_area, op: eq, value: '$area' }] } }, bind: bays }
@@ -175,6 +177,7 @@ steps:
         full:         [{ goto: slot_taken }]
         invalid_slot: [{ goto: slot_taken }]
         failed:       [{ end: failed }]
+        invalid: []
 
   save_car:
     - do: record_save
@@ -208,6 +211,7 @@ steps:
         ok:     [{ goto: remind }]
         # The slot is real even if the job card failed — say so honestly.
         failed: [{ goto: booked_no_job }]
+        invalid: []
 
   remind:
     - if: '$length($coalesce($slot.reminders, [])) > 0'
@@ -267,3 +271,8 @@ steps:
   # the envelope, thread memory and analytics.
   no_slots:
     - end: { status: aborted, body: '{$t("book-service.no_slots")}' }
+
+  # Reached from a picker's `on_empty:` — the list came back empty (e.g. before the catalog is
+  # filled). `aborted`: nothing was done. The AI Agent says it, in the customer's language.
+  nothing_to_pick:
+    - end: { status: aborted, instructions: 'There is nothing to choose from for this right now — the list came back empty. Say so in one short line, in the customer''s language, and offer another way to help. Do NOT invent options.' }

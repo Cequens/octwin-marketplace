@@ -9,11 +9,13 @@
 # `map`, so a body-shop job never lands in the diagnostics bay. `fallback` catches a
 # job whose area was never set, so nothing strands unrouted.
 
+# Every queue is MANUAL on purpose: an item waits in its queue until a person picks it up.
+# Change a queue's `strategy` to `round_robin` or `load_balanced` to hand items out automatically.
 queues:
-  - { key: mechanical_bay, name: 'Mechanical Bay' }
-  - { key: body_shop,      name: 'Body Shop' }
-  - { key: diagnostics,    name: 'Diagnostics' }
-  - { key: service_desk,   name: 'Service Desk' }
+  - { key: mechanical_bay, name: 'Mechanical Bay', assignment: { strategy: manual } }
+  - { key: body_shop,      name: 'Body Shop', assignment: { strategy: manual } }
+  - { key: diagnostics,    name: 'Diagnostics', assignment: { strategy: manual } }
+  - { key: service_desk,   name: 'Service Desk', assignment: { strategy: manual } }
 
 work:
   repair_job:
@@ -23,14 +25,23 @@ work:
         label:  { ar: 'عرض السعر جاهز', en: 'Quote ready' }
         params: [{ name: amount, type: number, required: true, label: 'Quote amount (AED)' }]
         relay:  true
+        relay_body:
+          ar: 'عرض السعر لإصلاح سيارتك (رقم {case_number}) جاهز: {amount} درهم 💬 رد هنا بالموافقة عشان نبدأ.'
+          en: 'The quote for your car (job #{case_number}) is ready: {amount} AED 💬 Reply here to approve and we will start.'
       parts_ordered:
         label:  { ar: 'تم طلب قطع الغيار', en: 'Parts ordered' }
         params: [{ name: eta_days, type: number, required: true, label: 'ETA (days)' }]
         relay:  true
+        relay_body:
+          ar: 'طلبنا قطع الغيار لسيارتك (رقم {case_number}) 🔧 متوقع توصل خلال {eta_days} يوم.'
+          en: 'We have ordered the parts for your car (job #{case_number}) 🔧 They should arrive within {eta_days} days.'
       ready_for_collection:
         label:  { ar: 'السيارة جاهزة للاستلام', en: 'Ready for collection' }
         params: []
         relay:  true
+        relay_body:
+          ar: '🚗 سيارتك جاهزة للاستلام (رقم {case_number}). نشوفك في الورشة!'
+          en: '🚗 Your car is ready for collection (job #{case_number}). See you at the workshop!'
       declined_by_customer:
         label:  { ar: 'العميل رفض العرض', en: 'Declined by customer' }
         params: [{ name: reason, type: text, required: false, label: 'Reason' }]

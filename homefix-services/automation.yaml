@@ -36,4 +36,7 @@ jobs:
     interval_seconds: 900
     config:
       escalate_to: queue:dispatch_desk
-      message: 'نعتذر عن التأخير 🙏 طلبك تجاوز الوقت المتوقع وتم تنبيه فريق الإرسال — بنرجع لك في أقرب وقت.'
+      message:
+        ar: 'نعتذر عن التأخير 🙏 طلبك تجاوز الوقت المتوقع وتم تنبيه فريق الإرسال — بنرجع لك في أقرب وقت.'
+        en: 'Sorry for the wait 🙏 Your request has taken longer than expected and our dispatch team has been alerted — we will get back to you shortly.'
+        ur: 'تاخیر کے لیے معذرت 🙏 آپ کی درخواست میں متوقع وقت سے زیادہ لگ گیا ہے اور ڈسپیچ ٹیم کو اطلاع دے دی گئی ہے — ہم جلد آپ سے رابطہ کریں گے۔'

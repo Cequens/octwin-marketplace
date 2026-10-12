@@ -8,11 +8,13 @@
 # A total loss or an injury routes to a senior queue with the shortest SLA, because those
 # are the claims where a delay costs the customer most.
 
+# Every queue is MANUAL on purpose: an item waits in its queue until a person picks it up.
+# Change a queue's `strategy` to `round_robin` or `load_balanced` to hand items out automatically.
 queues:
-  - { key: fnol_desk,       name: 'FNOL Desk' }
-  - { key: claims_assessor, name: 'Claims Assessors' }
-  - { key: major_claims,    name: 'Major & Injury Claims' }
-  - { key: underwriting,    name: 'Underwriting' }
+  - { key: fnol_desk,       name: 'FNOL Desk', assignment: { strategy: manual } }
+  - { key: claims_assessor, name: 'Claims Assessors', assignment: { strategy: manual } }
+  - { key: major_claims,    name: 'Major & Injury Claims', assignment: { strategy: manual } }
+  - { key: underwriting,    name: 'Underwriting', assignment: { strategy: manual } }
 
 work:
   case:
@@ -22,18 +24,30 @@ work:
         label:  { ar: 'تم تعيين مُقيِّم', en: 'Assessor assigned' }
         params: [{ name: assessor, type: text, required: true, label: 'Assessor name' }, { name: visit, type: text, required: false, label: 'Inspection appointment' }]
         relay:  true
+        relay_body:
+          ar: 'تم تعيين المُقيِّم {assessor} لمطالبتك رقم {case_number} 🔍 بيتواصل معك لتحديد موعد المعاينة.'
+          en: 'Assessor {assessor} is assigned to your claim #{case_number} 🔍 They will contact you to arrange the inspection.'
       documents_required:
         label:  { ar: 'مطلوب مستندات', en: 'Documents required' }
         params: [{ name: documents, type: text, required: true, label: 'Which documents' }]
         relay:  true
+        relay_body:
+          ar: '📄 نحتاج مستندات لإكمال مطالبتك رقم {case_number}: {documents}. أرسلها هنا متى ما كانت جاهزة.'
+          en: '📄 We need documents to complete your claim #{case_number}: {documents}. Send them here when they are ready.'
       settlement_offered:
         label:  { ar: 'عرض تسوية', en: 'Settlement offered' }
         params: [{ name: amount, type: number, required: true, label: 'Amount (AED)' }, { name: basis, type: text, required: false, label: 'Basis' }]
         relay:  true
+        relay_body:
+          ar: '💬 عرض تسوية لمطالبتك رقم {case_number}: {amount} درهم. رد هنا بالموافقة أو بأي استفسار.'
+          en: '💬 A settlement offer for your claim #{case_number}: {amount} AED. Reply here to accept, or with any question.'
       claim_declined:
         label:  { ar: 'المطالبة غير مشمولة', en: 'Claim declined' }
         params: [{ name: reason, type: text, required: true, label: 'Reason (customer-safe wording)' }]
         relay:  true
+        relay_body:
+          ar: 'نعتذر، مطالبتك رقم {case_number} غير مشمولة بالتغطية. السبب: {reason}. إذا عندك أي استفسار تواصل معنا.'
+          en: 'We are sorry — your claim #{case_number} is not covered. Reason: {reason}. If you have any question, contact us.'
     types:
       own_damage:      { queue: claims_assessor, priority: high,   actions: [assessor_assigned, documents_required, settlement_offered, claim_declined], sla: { resolve_within_hours: 8 } }
       third_party:     { queue: claims_assessor, priority: high,   actions: [assessor_assigned, documents_required, settlement_offered, claim_declined], sla: { resolve_within_hours: 8 } }

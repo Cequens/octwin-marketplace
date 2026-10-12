@@ -111,6 +111,7 @@ steps:
             when: '$state.service_id == null'
             label: '$t("request-visit.label.service")'
             options:
+              on_empty: nothing_to_pick   # an empty list is a normal answer — say so, do not fail
               header: request-visit.field_header.service
               cta:    request-visit.field_cta.service
               fetch:  { do: record_search, args: { entity: trade_service, query: '', limit: 10 }, bind: svcs }
@@ -145,6 +146,7 @@ steps:
           - field: property_id
             label: '$t("request-visit.label.property")'
             options:
+              on_empty: nothing_to_pick   # an empty list is a normal answer — say so, do not fail
               header: request-visit.field_header.property
               cta:    request-visit.field_cta.property
               fetch:  { do: record_list, args: { entity: property, limit: 9 }, bind: props }
@@ -230,6 +232,7 @@ steps:
       outputs:
         ok:        [{ goto: adopt_existing }]
         not_found: [{ goto: create_property }]   # deleted between turns → fall back to creating one
+        failed:  []
 
   adopt_existing:
     - assign:
@@ -326,6 +329,7 @@ steps:
       outputs:
         ok:     [{ goto: dispatched }]
         failed: [{ goto: raise_failed }]
+        invalid: []
 
   dispatched:
     - assign:
@@ -353,3 +357,8 @@ steps:
   raise_failed:
     - answer:
         instructions: 'The work order could not be raised. Say so plainly in one line and give the customer the dispatch line to call. Do NOT claim a technician is coming.'
+
+  # Reached from a picker's `on_empty:` — the list came back empty (e.g. before the catalog is
+  # filled). `aborted`: nothing was done. The AI Agent says it, in the customer's language.
+  nothing_to_pick:
+    - end: { status: aborted, instructions: 'There is nothing to choose from for this right now — the list came back empty. Say so in one short line, in the customer''s language, and offer another way to help. Do NOT invent options.' }

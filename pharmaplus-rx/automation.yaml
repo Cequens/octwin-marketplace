@@ -37,4 +37,6 @@ jobs:
     interval_seconds: 300
     config:
       escalate_to: queue:pharmacist_review
-      message: 'نعتذر عن التأخير 🙏 الصيدلي بيراجع طلبك دلوقتي وهنتواصل معاك حالاً.'
+      message:
+        ar: 'نعتذر عن التأخير 🙏 الصيدلي بيراجع طلبك دلوقتي وهنتواصل معاك حالاً.'
+        en: 'Sorry for the wait 🙏 The pharmacist is reviewing your request now and will contact you right away.'

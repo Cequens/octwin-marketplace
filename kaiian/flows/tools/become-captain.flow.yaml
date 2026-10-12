@@ -65,6 +65,7 @@ steps:
           # this same turn. The engine synthesizes a 📷 gap + folds the ref the
           # applicant sends into $state.license_photo (agent-protocol §Media).
           - field: license_photo
+            required: true   # the flow's essential document — a customer without it says so, and the AI Agent takes it from there
             type:       media
             media_kind: image
             label:      '$t("become-captain.label.license_photo")'
