@@ -109,10 +109,11 @@ entities:
       # one declared line, and it does not care that a gateway caused the move.
       enter:
         paid:
-          # The thank-you carries the RECEIPT as a tappable button (`link` +
-          # `link_label` → a `cta_url` render), not a URL pasted into the body —
-          # a bare link in Arabic body text is reordered and wrapped mid-token by
-          # the bidi algorithm, which is how a receipt arrives looking corrupted.
+          # The thank-you carries the RECEIPT as a tappable button (a `cta_url`
+          # render), not a URL pasted into the body — a bare link in Arabic body
+          # text is reordered and wrapped mid-token by the bidi algorithm, which is
+          # how a receipt arrives looking corrupted. (It was the deprecated
+          # `link` / `link_label` pair until 0.10.4.)
           #
           # The URL is the invoice's own page: Moyasar exposes no receipt endpoint
           # (every documented path 404s), and after payment the checkout page
@@ -123,17 +124,19 @@ entities:
           # text card rather than rendering a button to nowhere — so a missing link
           # costs the receipt, never the thank-you.
           - notify:
-              message:
-                ar: >-
-                  🌱 وصلنا تبرّعك — جزاك الله خيراً.
-                  المبلغ {{ record.fields.amount }} {{ record.fields.currency }} لصالح {{ record.fields.appeal_title }}.
-                  رقم العملية {{ record.record_number }}.
-                en: >-
-                  🌱 We received your donation — thank you, may God reward you.
-                  {{ record.fields.amount }} {{ record.fields.currency }} for {{ record.fields.appeal_title }}.
-                  Reference {{ record.record_number }}.
-              link:       '{{ record.fields.checkout_url }}'
-              link_label: '🧾 الإيصال · Receipt'
+              render:
+                render_intent: cta_url
+                body:
+                  ar: >-
+                    🌱 وصلنا تبرّعك — جزاك الله خيراً.
+                    المبلغ {{ record.fields.amount }} {{ record.fields.currency }} لصالح {{ record.fields.appeal_title }}.
+                    رقم العملية {{ record.record_number }}.
+                  en: >-
+                    🌱 We received your donation — thank you, may God reward you.
+                    {{ record.fields.amount }} {{ record.fields.currency }} for {{ record.fields.appeal_title }}.
+                    Reference {{ record.record_number }}.
+                label: { ar: '🧾 الإيصال', en: '🧾 Receipt' }
+                url:   '{{ record.fields.checkout_url }}'
               cooldown_hours: 24
           - track: { event: donation_paid }
 
