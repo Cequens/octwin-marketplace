@@ -34,7 +34,7 @@ steps:
   load_structure:
     - do: record_list
       args:
-        entity:  product
+        entity:  finance_product
         all:     true
         limit:   10
         where:   { all: [{ field: structure, op: eq, value: '$input.structure' }] }
