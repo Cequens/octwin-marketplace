@@ -30,5 +30,4 @@ strings:
   confirmed_line:  'حجزنا لك تجربة القيادة بنجاح!'
   any_model:       'حسب اختيارك في الفرع'
   reminder_note:   'هنفكّرك قبل الموعد بـ ٢٤ ساعة وبساعتين.'
-  reminder:        'تذكير: عندك تجربة قيادة XPENG في فرع {branch} قريبًا. مستنينك! 🚗'
   photo_caption:   'فرع {branch} — مستنينك 👇'

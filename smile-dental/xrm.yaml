@@ -61,9 +61,11 @@ entities:
     fields:
       treatment:       { type: record, entity: treatment, label: { en: 'Treatment', ar: 'الإجراء' } }
       dentist:         { type: record, entity: dentist, label: { en: 'Dentist', ar: 'الطبيب' } }
+      # The treatment and dentist names as booked (no join at read time). NOT the time:
+      # a copy of it went stale on every move made outside the chat — the time is read
+      # from `slot_start` where it is shown.
       treatment_label: { type: text, label: { en: 'Treatment', ar: 'الإجراء' } }
       dentist_label:   { type: text, label: { en: 'Dentist', ar: 'الطبيب' } }
-      slot_label:      { type: text, label: { en: 'Slot', ar: 'الموعد' } }
       complaint:       { type: textarea, label: { en: 'Complaint', ar: 'الشكوى' } }
       insurer:         { type: text, label: { en: 'Insurer', ar: 'شركة التأمين' } }
       member_id:       { type: text, label: { en: 'Member id', ar: 'رقم العضوية' } }

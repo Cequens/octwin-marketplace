@@ -13,9 +13,6 @@ strings:
   status.checked_in: 'Checked in'
   status.completed:  'Completed'
   status.cancelled:  'Cancelled'
-  # The system pipeline has this stage even though no flow moves a booking to it —
-  # without the key an operator-side reschedule renders the raw `rescheduled` token.
-  status.rescheduled: 'Rescheduled'
   status.no_show:    'Did not attend'
 
   stage.enquiry:        'Enquiry'

@@ -2,7 +2,8 @@
 # XRM record modules (no pack DB). A `collect:` node gathers doctor → slot →
 # for-whom (self/dependent) → reason → insurance, prepends a running progress
 # card, then `use: approve_apply` confirms and `booking_reserve` writes the
-# `booking` XRM record + schedules the T-24h/T-2h reminders. Pure YAML.
+# `booking` XRM record — its T-24h/T-2h reminders are declared in scheduling.yaml,
+# so the platform writes, moves and cancels them with the booking. Pure YAML.
 
 flow_id:     book-appointment
 version:     1
@@ -229,7 +230,6 @@ steps:
           dependent:     '$dependent_id'
           branch:        '$state.branch_id'
           doctor_label:  '$doctor_label'
-          slot_label:    '$state.slot_label'
       bind: appt
       outputs:
         ok:           [{ goto: booked }]
@@ -242,40 +242,8 @@ steps:
     # Journey: the appointment was reserved → booked stage + appointment_booked
     # goal (the conversion). Reached only via booking_reserve ok, never full/invalid.
     - track: { event: appointment_booked, timeline: true }
-    # Reminders — T-24h + T-2h (from the scheduling reminder offsets), each with
-    # Confirm/Reschedule/Cancel taps; dedupe by appointment + reminder key.
-    - if: '$length($coalesce($appt.reminders, [])) > 0'
-      then:
-        - do: schedule_notify
-          args:
-            to: { contact_id: '$contact.id' }
-            send_at: '$appt.reminders[0].send_at'
-            dedupe_key: 'clinic:appt:{$appt.record_id}:{$appt.reminders[0].key}'
-            memory_note: 'Appointment reminder ({$appt.reminders[0].key})'
-            intent:
-              render_intent: detail_card
-              body: '{$t("book-appointment.reminder.body", { doctor: $coalesce($doctor_label, ""), slot: $coalesce($state.slot_label, "") })}'
-              buttons:
-                - { title: '{$t("book-appointment.reminder.confirm")}',    on_select: { invoke: manage-appointments, with: { action: confirm,    appointment_id: '$appt.record_id' } } }
-                - { title: '{$t("book-appointment.reminder.reschedule")}', on_select: { invoke: manage-appointments, with: { action: reschedule, appointment_id: '$appt.record_id' } } }
-                - { title: '{$t("book-appointment.reminder.cancel")}',     on_select: { invoke: manage-appointments, with: { action: cancel,     appointment_id: '$appt.record_id' } } }
-          detach: true
-    - if: '$length($coalesce($appt.reminders, [])) > 1'
-      then:
-        - do: schedule_notify
-          args:
-            to: { contact_id: '$contact.id' }
-            send_at: '$appt.reminders[1].send_at'
-            dedupe_key: 'clinic:appt:{$appt.record_id}:{$appt.reminders[1].key}'
-            memory_note: 'Appointment reminder ({$appt.reminders[1].key})'
-            intent:
-              render_intent: detail_card
-              body: '{$t("book-appointment.reminder.body", { doctor: $coalesce($doctor_label, ""), slot: $coalesce($state.slot_label, "") })}'
-              buttons:
-                - { title: '{$t("book-appointment.reminder.confirm")}',    on_select: { invoke: manage-appointments, with: { action: confirm,    appointment_id: '$appt.record_id' } } }
-                - { title: '{$t("book-appointment.reminder.reschedule")}', on_select: { invoke: manage-appointments, with: { action: reschedule, appointment_id: '$appt.record_id' } } }
-                - { title: '{$t("book-appointment.reminder.cancel")}',     on_select: { invoke: manage-appointments, with: { action: cancel,     appointment_id: '$appt.record_id' } } }
-          detach: true
+    # The reminders (T-24h + T-2h) are declared in scheduling.yaml — the platform writes
+    # them with the booking and moves or cancels them with it, from every door.
     - render:
         render_intent: text_card
         body: '{$t("book-appointment.success", { doctor: $coalesce($doctor_label, ""), slot: $coalesce($state.slot_label, "") })}'

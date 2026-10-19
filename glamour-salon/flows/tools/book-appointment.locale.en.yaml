@@ -40,6 +40,4 @@ strings:
   slot_taken:    '⚠️ Sorry, that time has just been booked. Pick another one from the available times and we will lock it in for you.'
   slot_expired:  '⚠️ That time is no longer long enough for this service. Please pick another from the available times.'
   aborted:       'The booking is cancelled. We are here whenever you need us 💐'
-  reminder.body: '⏰ A reminder of your {treatment} appointment — {slot}. We look forward to seeing you 💐'
-  reminder.mine: '🗓️ My appointments'
   no_slots:   'Sorry, this stylist has no times available right now. Would you like to try another stylist, or shall I look again later?'

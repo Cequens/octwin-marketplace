@@ -48,4 +48,3 @@ strings:
   no_slots:          'This doctor has no times available soon. Please try later.'
   rescheduled:       '🔄 Your appointment has been moved. We will remind you before the new time.'
   reschedule_failed: 'Sorry, we could not move the appointment (was the new time just taken?). Try another one.'
-  reminder_text:     '⏰ A reminder of your upcoming appointment at the clinic.'

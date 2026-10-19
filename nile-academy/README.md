@@ -24,7 +24,7 @@ causes it:
 | Journey | What happens |
 |---|---|
 | 📚 **Programmes** | Carousel with the annual fee and **remaining seats**; a full programme is visibly full. |
-| 🏫 **Book a tour** | Campus → a tour slot with its real remaining places (a tour takes a group, so slots have capacity) → ✅, with a day-before reminder. |
+| 🏫 **Book a tour** | Campus → a tour slot with its real remaining places (a tour takes a group, so slots have capacity) → ✅, with a day-before and a 2-hour reminder that follow the tour if it is moved or cancelled. |
 | 📝 **Apply** | Programme (only ones with a seat are offered) → student → year → guardian details. |
 
 Send a birth certificate or a report card and the platform reads it — the student's name and

@@ -218,7 +218,6 @@ steps:
           session_type:  '$state.class_id'
           class_label:   '$class_label'
           trainer_label: '$trainer_label'
-          slot_label:    '$state.slot_label'
           is_trial:      '$coalesce($state.is_trial, false)'
       bind: seat
       outputs:
@@ -247,45 +246,11 @@ steps:
             ok:      []
             invalid: []
             failed:  []
-    - goto: remind
+    - goto: booked
 
-  remind:
-    # T-24h and T-2h. The offsets are declared in scheduling.yaml; the absolute
-    # send_at comes back from the reservation, and dedupe_key makes a re-run safe.
-    # Each block is guarded on ITS OWN index — the old single block tested
-    # `> 0` and then read `[1]`, so a one-reminder resource passed the guard and
-    # passed a null send_at, and t24 was never armed at all.
-    #
-    # `my-schedule`'s cancel_done revokes these two keys verbatim — the suffix comes
-    # from the declaration (`t24`, `t2`), so both sides must move together.
-    - if: '$length($coalesce($seat.reminders, [])) > 0'
-      then:
-        - do: schedule_notify
-          args:
-            to:          { contact_id: '$contact.id' }
-            send_at:     '$seat.reminders[0].send_at'
-            dedupe_key:  'ironpulse:class:{$seat.record_id}:{$seat.reminders[0].key}'
-            memory_note: 'Class reminder ({$seat.reminders[0].key})'
-            intent:
-              render_intent: detail_card
-              body: '{$t("book-class.reminder.body", { class: $coalesce($class_label, ""), slot: $coalesce($state.slot_label, "") })}'
-              buttons:
-                - { title: '{$t("book-class.reminder.mine")}', on_select: { invoke: my-schedule } }
-          detach: true
-    - if: '$length($coalesce($seat.reminders, [])) > 1'
-      then:
-        - do: schedule_notify
-          args:
-            to:          { contact_id: '$contact.id' }
-            send_at:     '$seat.reminders[1].send_at'
-            dedupe_key:  'ironpulse:class:{$seat.record_id}:{$seat.reminders[1].key}'
-            memory_note: 'Class reminder ({$seat.reminders[1].key})'
-            intent:
-              render_intent: detail_card
-              body: '{$t("book-class.reminder.body", { class: $coalesce($class_label, ""), slot: $coalesce($state.slot_label, "") })}'
-              buttons:
-                - { title: '{$t("book-class.reminder.mine")}', on_select: { invoke: my-schedule } }
-          detach: true
+  booked:
+    # The reminders (T-24h + T-2h) are declared in scheduling.yaml — the platform writes
+    # them with the booking and moves or cancels them with it, from every door.
     - render:
         render_intent: detail_card
         header: '{$t("book-class.done_header")}'

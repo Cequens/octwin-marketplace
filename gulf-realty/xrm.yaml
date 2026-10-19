@@ -107,8 +107,10 @@ entities:
       viewing_secured: { label: { en: 'Viewing booked', ar: 'حجز معاينة' }, stage: viewing_booked }
       unit_reserved:   { label: { en: 'Unit reserved', ar: 'حجز وحدة' },  stage: reserved, terminal: true }
 
-  # The site viewing IS the platform booking entity, widened with the two
-  # display snapshots the confirmation card reads back.
+  # The site viewing IS the platform booking entity, widened with the advisor's
+  # name as booked (no cross-record join at read time). NOT the time: a copy of the
+  # time went stale on every move made outside the chat — the time is read from
+  # `slot_start` where it is shown.
   booking:
     extends: system
     label: { en: 'Site viewing', ar: 'معاينة' }
@@ -117,7 +119,6 @@ entities:
     fields:
       development:   { type: record, entity: development, label: { en: 'Development', ar: 'المشروع' } }
       advisor_label: { type: text, label: { en: 'Advisor', ar: 'المستشار' } }
-      slot_label:    { type: text, label: { en: 'Slot', ar: 'الموعد' } }
       party_size:    { type: number, label: { en: 'Party size', ar: 'عدد الحضور' } }
 
 segments:

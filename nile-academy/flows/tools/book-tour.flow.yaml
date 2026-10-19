@@ -40,7 +40,8 @@ steps:
                   # The address was declared AND seeded from the start, and no
                   # flow read it — a family was booked onto a campus visit and
                   # never told the street. Carried through to the confirmation
-                  # and the T-24h reminder below.
+                  # card below. (The reminders, declared in scheduling.yaml, name
+                  # the campus and the time only — the address is not on the booking.)
                   - assign: { campus_label: '$cmp.fields.name', campus_address: '$cmp.fields.address' }
         progress: '$lines($compact([
                      $t("book-tour.progress.header"),
@@ -121,7 +122,6 @@ steps:
         slot_minutes:       '$state.slot_minutes'
         fields:
           campus_label:  '$coalesce($campus_label, $state.campus_label)'
-          slot_label:    '$state.slot_label'
           guardian_name: '$state.guardian_name'
           party_size:    '$state.party_size'
       bind: tour
@@ -135,10 +135,10 @@ steps:
   # Advance the guardian's EXISTING application if they have one, else create the enquiry
   # so the tour is still attributable. Either way exactly one record reaches `tour_booked`.
   #
-  # The place is ALREADY HELD by `reserve_place` above, so no bookkeeping outcome here may
-  # cost the guardian their confirmation card or their reminder. Every port continues to
-  # `fire_milestone` for that reason — an empty port body would synthesise a canonical
-  # terminal (`ok: []` → `end: applied`) and end the flow right here.
+  # The place is ALREADY HELD by `reserve_place` above (and its reminders written with it),
+  # so no bookkeeping outcome here may cost the guardian their confirmation card. Every
+  # port continues to `fire_milestone` for that reason — an empty port body would
+  # synthesise a canonical terminal (`ok: []` → `end: applied`) and end the flow right here.
   advance_funnel:
     - if: '$state.application_id != null'
       then:
@@ -181,26 +181,11 @@ steps:
         - do: record_milestone
           args: { record_id: '$app.record_id', milestone: tour_booked }
           detach: true
-    - goto: remind
+    - goto: show_booked
 
-  remind:
-    - if: '$length($coalesce($tour.reminders, [])) > 0'
-      then:
-        - do: schedule_notify
-          args:
-            to:          { contact_id: '$contact.id' }
-            send_at:     '$tour.reminders[0].send_at'
-            dedupe_key:  'nile:tour:{$tour.record_id}:t24'
-            memory_note: 'Campus tour reminder (t24)'
-            intent:
-              render_intent: detail_card
-              body: '$lines($compact([
-                       $t("book-tour.reminder.body", { campus: $coalesce($campus_label, ""), slot: $coalesce($state.slot_label, "") }),
-                       $campus_address != null ? $t("book-tour.done_address", { address: $campus_address }) : null
-                     ]), "\n")'
-              buttons:
-                - { title: '{$t("book-tour.reminder.progs")}', on_select: { invoke: programmes } }
-          detach: true
+  show_booked:
+    # The reminders (T-24h + T-2h) are declared in scheduling.yaml — the platform writes
+    # them with the booking and moves or cancels them with it, from every door.
     - render:
         render_intent: detail_card
         header: '{$t("book-tour.done_header")}'

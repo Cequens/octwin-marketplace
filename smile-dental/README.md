@@ -50,13 +50,14 @@ patient's next message without creating two responses.
 Pure YAML — no code, no pack database.
 
 - `scheduling.yaml` — dentists as bookable resources, single-capacity chairs, T-24h/T-2h
-  reminder offsets, and seeded demo availability.
+  reminders declared with their words (so the platform sends, moves and cancels them with the
+  booking), and seeded demo availability.
 - `surveys.yaml` — one questionnaire, `subject: booking`, `score: stars`.
 - `xrm.yaml` — `booking` and `survey_response` both widened via `extends: system` (adding
   fields only), and `dentist.rating` documented as a rollup target rather than a hand-typed field.
 - `flows/tools/my-visits.flow.yaml` — the rating loop, with the whole chain commented.
 - `flows/tools/book-visit.flow.yaml` — `collect:` with fetched pickers → `approve_apply` →
-  `booking_reserve` → `schedule_notify`. Note the `not_found` guard that drops a stale dentist id
+  `booking_reserve`. Note the `not_found` guard that drops a stale dentist id
   so the picker re-engages rather than calling `slot_list` on a dead resource.
 
 ```bash

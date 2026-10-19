@@ -10,11 +10,33 @@ timezone: Africa/Cairo
 resources:
   doctor:
     slot:      { default_minutes: 20, window_days: 7 }
-    # Reminder offsets before slot_start (seconds). book-appointment computes the
-    # absolute send_at from these and hands each to schedule_notify.
+    # Reminders before slot_start (seconds). Each declares its card, so the PLATFORM
+    # sends it, writes it again for the new time on every move, and cancels it when
+    # the appointment ends — whoever moves or cancels it (the chat, reception in the
+    # console). The buttons open manage-appointments on THIS appointment.
     reminders:
-      - { key: t24, seconds: 86400 }
-      - { key: t2,  seconds: 7200 }
+      - key: t24
+        seconds: 86400
+        render:
+          render_intent: detail_card
+          body:
+            en: '⏰ A reminder of your appointment with {{ resource }} on {{ time }}. What would you like to do?'
+            ar: '⏰ تذكير بموعدك مع {{ resource }} يوم {{ time }}. تحب تعمل إيه؟'
+          buttons:
+            - { title: { en: 'Confirm ✅', ar: 'تأكيد ✅' },               on_select: { invoke: manage-appointments, with: { action: confirm,    appointment_id: '{{ record.id }}' } } }
+            - { title: { en: 'Change the time 🔄', ar: 'تغيير الموعد 🔄' }, on_select: { invoke: manage-appointments, with: { action: reschedule, appointment_id: '{{ record.id }}' } } }
+            - { title: { en: 'Cancel ❌', ar: 'إلغاء ❌' },                on_select: { invoke: manage-appointments, with: { action: cancel,     appointment_id: '{{ record.id }}' } } }
+      - key: t2
+        seconds: 7200
+        render:
+          render_intent: detail_card
+          body:
+            en: '⏰ A reminder of your appointment with {{ resource }} on {{ time }}. What would you like to do?'
+            ar: '⏰ تذكير بموعدك مع {{ resource }} يوم {{ time }}. تحب تعمل إيه؟'
+          buttons:
+            - { title: { en: 'Confirm ✅', ar: 'تأكيد ✅' },               on_select: { invoke: manage-appointments, with: { action: confirm,    appointment_id: '{{ record.id }}' } } }
+            - { title: { en: 'Change the time 🔄', ar: 'تغيير الموعد 🔄' }, on_select: { invoke: manage-appointments, with: { action: reschedule, appointment_id: '{{ record.id }}' } } }
+            - { title: { en: 'Cancel ❌', ar: 'إلغاء ❌' },                on_select: { invoke: manage-appointments, with: { action: cancel,     appointment_id: '{{ record.id }}' } } }
 
 booking:
   entity: booking

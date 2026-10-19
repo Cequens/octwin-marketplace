@@ -69,7 +69,10 @@ entities:
       damage_photo:    { type: image_list, label: { en: 'Damage photos', ar: 'صور الضرر' } }
       package:         { type: record, entity: service_package, label: { en: 'Package', ar: 'الباقة' } }
       package_label:   { type: text, label: { en: 'Package', ar: 'الباقة' } }
-      slot_label:      { type: text, label: { en: 'Slot', ar: 'الموعد' } }
+      # The bay booking this job came in on — its page shows the time, which is right after
+      # any move. (A copy of the time used to sit here and went stale on every move made
+      # outside the chat.)
+      booking:         { type: record, entity: booking, label: { en: 'Bay slot', ar: 'موعد المنصة' } }
       quoted_amount:   { type: money, label: { en: 'Quote', ar: 'عرض السعر' }, currency: AED }
     list: [job_type, plate, work_area]
     pipeline:
@@ -121,11 +124,13 @@ entities:
     label: { en: 'Bay slot', ar: 'موعد المنصة' }
     icon:        '🔧'
     description: { en: 'A workshop bay reserved for a vehicle for the length of the job', ar: 'خانة ورشة محجوزة لمركبة طوال مدة العمل' }
+    # Snapshots as booked (no cross-record join at read time). NOT the time: a copy of
+    # the time went stale on every move made outside the chat — the time is read from
+    # `slot_start` where it is shown.
     fields:
       bay_label:     { type: text, label: { en: 'Bay', ar: 'المنصة' } }
       package_label: { type: text, label: { en: 'Package', ar: 'الباقة' } }
       plate:         { type: text, label: { en: 'Plate', ar: 'رقم اللوحة' } }
-      slot_label:    { type: text, label: { en: 'Slot', ar: 'الموعد' } }
       contact_phone: { type: text, label: { en: 'Contact phone', ar: 'هاتف التواصل' } }
 
 segments:

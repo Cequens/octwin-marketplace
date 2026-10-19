@@ -1,4 +1,6 @@
-# book-visit — treatment → dentist → real slot → confirm → reserve → reminders.
+# book-visit — treatment → dentist → real slot → confirm → reserve. The T-24h/T-2h
+# reminders are declared in scheduling.yaml, so the platform writes, moves and
+# cancels them with the booking.
 #
 # The slot picker is fed by the scheduling engine, which returns STRUCTURED rows
 # only (no locale strings in SQL) — the human label is composed here. Reservation is
@@ -201,50 +203,21 @@ steps:
           dentist:         '$state.dentist_id'
           treatment_label: '$treat_label'
           dentist_label:   '$dent_label'
-          slot_label:      '$state.slot_label'
           complaint:       '$state.complaint'
           insurer:         '$state.insurer'
           member_id:       '$state.member_id'
           valid_until:     '$state.valid_until'
       bind: visit
       outputs:
-        ok:           [{ goto: remind }]
+        ok:           [{ goto: booked }]
         full:         [{ goto: slot_taken }]
         invalid_slot: [{ goto: slot_taken }]
         failed:       [{ end: failed }]
         invalid: []
 
-  remind:
-    # T-24h and T-2h. The offsets are declared in scheduling.yaml; the absolute
-    # send_at comes back from the reservation, and dedupe_key makes a re-run safe.
-    - if: '$length($coalesce($visit.reminders, [])) > 0'
-      then:
-        - do: schedule_notify
-          args:
-            to:          { contact_id: '$contact.id' }
-            send_at:     '$visit.reminders[0].send_at'
-            dedupe_key:  'smile-dental:visit:{$visit.record_id}:{$visit.reminders[0].key}'
-            memory_note: 'Appointment reminder ({$visit.reminders[0].key})'
-            intent:
-              render_intent: detail_card
-              body: '{$t("book-visit.reminder.body", { dentist: $coalesce($dent_label, ""), slot: $coalesce($state.slot_label, "") })}'
-              buttons:
-                - { title: '{$t("book-visit.reminder.mine")}', on_select: { invoke: my-visits } }
-          detach: true
-    - if: '$length($coalesce($visit.reminders, [])) > 1'
-      then:
-        - do: schedule_notify
-          args:
-            to:          { contact_id: '$contact.id' }
-            send_at:     '$visit.reminders[1].send_at'
-            dedupe_key:  'smile-dental:visit:{$visit.record_id}:{$visit.reminders[1].key}'
-            memory_note: 'Appointment reminder ({$visit.reminders[1].key})'
-            intent:
-              render_intent: detail_card
-              body: '{$t("book-visit.reminder.body", { dentist: $coalesce($dent_label, ""), slot: $coalesce($state.slot_label, "") })}'
-              buttons:
-                - { title: '{$t("book-visit.reminder.mine")}', on_select: { invoke: my-visits } }
-          detach: true
+  booked:
+    # The reminders (T-24h + T-2h) are declared in scheduling.yaml — the platform writes
+    # them with the booking and moves or cancels them with it, from every door.
     - render:
         render_intent: detail_card
         header: '{$t("book-visit.done_header")}'

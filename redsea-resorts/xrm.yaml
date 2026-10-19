@@ -49,8 +49,11 @@ entities:
       guest_name:     { type: text, label: { en: 'Guest', ar: 'اسم الضيف' } }
       resort_label:   { type: text, label: { en: 'Resort', ar: 'المنتجع' } }
       room_label:     { type: text, label: { en: 'Room', ar: 'الغرفة' } }
-      check_in_label: { type: text, label: { en: 'Check-in', ar: 'تاريخ الوصول' } }
-      nights:         { type: number, label: { en: 'Nights', ar: 'عدد الليالي' }, sortable: true }
+      # The room night this stay holds. The arrival is read from ITS `slot_start`
+      # (my-bookings expands it) — never stored here as text, which went stale on
+      # every move made outside the chat.
+      booking:        { type: record, entity: booking, label: { en: 'Room night', ar: 'ليلة الغرفة' } }
+      nights:        { type: number, label: { en: 'Nights', ar: 'عدد الليالي' }, sortable: true }
       adults:         { type: number, label: { en: 'Adults', ar: 'بالغون' } }
       children:       { type: number, label: { en: 'Children', ar: 'أطفال' } }
       board:          { type: select, options: [bb, hb, ai], label: { en: 'Board', ar: 'نظام الإقامة' } }
@@ -96,9 +99,11 @@ entities:
     icon:        '🛏️'
     description: { en: 'A room night held by the scheduling engine against a stay', ar: 'ليلة غرفة يحجزها محرك المواعيد ضمن إقامة' }
     fields:
+      # Snapshot names (no cross-record join at read time). NOT the arrival: a copy of
+      # the date went stale on every move made outside the chat — it is read from
+      # `slot_start` where it is shown.
       room_label:   { type: text, label: { en: 'Room', ar: 'الغرفة' } }
       resort_label: { type: text, label: { en: 'Resort', ar: 'المنتجع' } }
-      slot_label:   { type: text, label: { en: 'Arrival', ar: 'الوصول' } }
       guest_name:   { type: text, label: { en: 'Guest', ar: 'الضيف' } }
 
 segments:

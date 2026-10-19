@@ -25,8 +25,18 @@ timezone: Africa/Cairo
 resources:
   room_type:
     slot: { default_minutes: 1440, window_days: 60 }
+    # Reminders before the arrival slot (seconds). Each declares its words, so the PLATFORM
+    # sends it, writes it again for the new date on every move, and cancels it when the stay's
+    # room night ends — whoever moves or cancels it (the chat, the front desk in the console).
+    # 48 hours ahead is outside WhatsApp's 24-hour window unless the guest wrote in the day
+    # before, so on WhatsApp it often does not arrive (guide:craft-outreach).
     reminders:
-      - { key: t48, seconds: 172800 }
+      - key: t48
+        seconds: 172800
+        message:
+          ar: '⏰ تذكير بإقامتك: 🏨 {{ record.fields.resort_label }} — 🛏️ {{ resource }} — 📆 الوصول: {{ date }}. هل تحتاج إلى تغيير أي شيء؟ راسلنا هنا. 🌊'
+          en: '⏰ A reminder of your stay: 🏨 {{ record.fields.resort_label }} — 🛏️ {{ resource }} — 📆 Arrival: {{ date }}. Need to change anything? Just message us here. 🌊'
+          es: '⏰ Un recordatorio de tu estancia: 🏨 {{ record.fields.resort_label }} — 🛏️ {{ resource }} — 📆 Llegada: {{ date }}. ¿Necesitas cambiar algo? Escríbenos por aquí. 🌊'
 
 booking:
   entity: booking

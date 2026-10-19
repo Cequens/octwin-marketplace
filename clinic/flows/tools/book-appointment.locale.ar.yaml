@@ -51,10 +51,6 @@ strings:
   approve_footer:     'راجع التفاصيل واضغط تأكيد.'
 
   # Reminder card (delivered T-24h / T-2h)
-  reminder.body:        '⏰ تذكير بموعدك مع {doctor} يوم {slot}. تحب تعمل إيه؟'
-  reminder.confirm:     'تأكيد ✅'
-  reminder.reschedule:  'تغيير الموعد 🔄'
-  reminder.cancel:      'إلغاء ❌'
 
   success:    '✅ تم تأكيد حجزك مع {doctor} يوم {slot}. هنفكّرك قبل الموعد.'
   slot_taken: 'للأسف الموعد ده اتحجز للتو. تحب تختار موعد تاني؟'

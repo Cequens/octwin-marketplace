@@ -72,7 +72,7 @@ steps:
         item_template:
           title:       '{$t("my-visits.row_title", { ref: $item.record_number })}'
           description: '$lines($compact([
-                          $item.fields.slot_label,
+                          $format_date($item.fields.slot_start, "day_time", null, "Asia/Dubai"),
                           $item.fields.dentist_label,
                           $enum_lookup($item.stage, { requested: $t("my-visits.st.requested"), confirmed: $t("my-visits.st.confirmed"), checked_in: $t("my-visits.st.checked_in"), completed: $t("my-visits.st.completed"), cancelled: $t("my-visits.st.cancelled"), no_show: $t("my-visits.st.no_show") }, $item.stage)
                         ]), " · ")'
@@ -157,7 +157,7 @@ steps:
     - render:
         render_intent: list_picker
         header: '{$t("my-visits.rate_header")}'
-        body:   '{$t("my-visits.rate_body", { dentist: $coalesce($v.fields.dentist_label, "-"), slot: $coalesce($v.fields.slot_label, "-") })}'
+        body:   '{$t("my-visits.rate_body", { dentist: $coalesce($v.fields.dentist_label, "-"), slot: $format_date($v.fields.slot_start, "day_time", null, "Asia/Dubai") })}'
         cta:    '{$t("my-visits.rate_cta")}'
         items:
           - { title: '{$t("my-visits.stars5")}', on_select: { invoke: my-visits, with: { action: rate, visit_id: '$input.visit_id', stars: 5 } } }

@@ -206,8 +206,6 @@ steps:
             type: name
             label: '$t("book-test-drive.f_name")'
           # ONE TAP on WhatsApp's native "Share Contact Info", normalised to +E164.
-          # Also fixes the reminder `dedupe_key` below, which interpolates this value:
-          # a retyped number produced a second key and a duplicate reminder.
           - field: phone
             type: phone
             dial_code: '20'
@@ -226,30 +224,15 @@ steps:
           customer_phone:   '$state.phone'
       bind: booking
       outputs:
-        ok:           [{ goto: reminders }]
+        ok:           [{ goto: confirm }]
         full:         [{ goto: slot_taken }]
         invalid_slot: [{ goto: slot_taken }]
         # failed → the pack's errors.failed message, in the customer's language (canonical handler)
         failed:  []
         invalid: []
 
-  # Best-effort reminders (24h + 2h before). Detached: never blocks confirmation.
-  reminders:
-    - foreach:
-        in: '$coalesce($booking.reminders, [])'
-        as: r
-        body:
-          - do: schedule_notify
-            detach: true
-            args:
-              to:         { contact_id: '$contact.id' }
-              send_at:    '$r.send_at'
-              dedupe_key: '{$state.phone}-{$r.key}'
-              intent:
-                render_intent: text_card
-                body: '{$t("book-test-drive.reminder", { branch: $state.branch_name })}'
-    - goto: confirm
-
+  # The reminders (24h + 2h before) are declared in scheduling.yaml — the platform writes
+  # them with the booking and moves or cancels them with it, from every door.
   confirm:
     - render:
         render_intent: detail_card

@@ -173,7 +173,6 @@ steps:
           stylist:         '$state.stylist_id'
           treatment_label: '$coalesce($tr_label, $state.tr_label)'
           stylist_label:   '$coalesce($st_label, $state.st_label)'
-          slot_label:      '$state.slot_label'
           notes:           '$state.notes'
       bind: appt
       # Two DIFFERENT failures, so two messages. `full` is a genuine race — another client
@@ -183,27 +182,15 @@ steps:
       # They shared one string until 2026-08-08, which told a client her time was "taken"
       # when in truth it had never been bookable for that treatment.
       outputs:
-        ok:           [{ goto: remind }]
+        ok:           [{ goto: booked }]
         full:         [{ goto: slot_taken }]
         invalid_slot: [{ goto: slot_expired }]
         failed:       [{ end: failed }]
         invalid: []
 
-  remind:
-    - if: '$length($coalesce($appt.reminders, [])) > 0'
-      then:
-        - do: schedule_notify
-          args:
-            to:          { contact_id: '$contact.id' }
-            send_at:     '$appt.reminders[0].send_at'
-            dedupe_key:  'glamour:appt:{$appt.record_id}:t24'
-            memory_note: 'Appointment reminder (t24)'
-            intent:
-              render_intent: detail_card
-              body: '{$t("book-appointment.reminder.body", { treatment: $coalesce($tr_label, ""), slot: $coalesce($state.slot_label, "") })}'
-              buttons:
-                - { title: '{$t("book-appointment.reminder.mine")}', on_select: { invoke: my-visits } }
-          detach: true
+  booked:
+    # The reminders (T-24h + T-2h) are declared in scheduling.yaml — the platform writes
+    # them with the booking and moves or cancels them with it, from every door.
     - render:
         render_intent: detail_card
         header: '{$t("book-appointment.done_header")}'

@@ -22,8 +22,10 @@ steps:
     - do: record_list
       # `active_only` defaults to TRUE, which drops every record in a terminal stage —
       # for `booking` that is completed/cancelled/no_show. This flow is the buyer's
-      # history, so a viewing they already attended has to keep showing.
-      args: { entity: booking, limit: 10, active_only: false, sort_by: { field: slot_label, dir: asc } }
+      # history, so a viewing they already attended has to keep showing. Sorted — and
+      # shown below — by the booking's own `slot_start`, never a stored copy of the
+      # time, which kept the OLD time after any move made outside the chat.
+      args: { entity: booking, limit: 10, active_only: false, sort_by: { field: slot_start, dir: asc } }
       bind: viewings
       outputs:
         ok:     [{ goto: load_leads }]
@@ -44,7 +46,7 @@ steps:
   show:
     # Scalar per-row mappers — `$item` is bound per row and the result is a string.
     - assign:
-        viewing_lines: '$map($coalesce($viewings.rows, []), $lines($compact(["🗓️ " + $item.record_number, $item.fields.slot_label, $item.fields.advisor_label, $enum_lookup($item.stage, { requested: $t("my-requests.stage.requested"), confirmed: $t("my-requests.stage.confirmed"), checked_in: $t("my-requests.stage.checked_in"), completed: $t("my-requests.stage.completed"), cancelled: $t("my-requests.stage.cancelled") }, $item.stage)]), " · "))'
+        viewing_lines: '$map($coalesce($viewings.rows, []), $lines($compact(["🗓️ " + $item.record_number, $format_date($item.fields.slot_start, "day_time", null, "Asia/Dubai"), $item.fields.advisor_label, $enum_lookup($item.stage, { requested: $t("my-requests.stage.requested"), confirmed: $t("my-requests.stage.confirmed"), checked_in: $t("my-requests.stage.checked_in"), completed: $t("my-requests.stage.completed"), cancelled: $t("my-requests.stage.cancelled") }, $item.stage)]), " · "))'
         lead_lines:    '$map($coalesce($leads.rows, []), $lines($compact(["📄 " + $item.record_number, $enum_lookup($item.stage, { new: $t("my-requests.lead.new"), qualified: $t("my-requests.lead.qualified"), viewing_booked: $t("my-requests.lead.viewing_booked"), offer_made: $t("my-requests.lead.offer_made"), reserved: $t("my-requests.lead.reserved"), lost: $t("my-requests.lead.lost") }, $item.stage)]), " · "))'
     - assign:
         n_viewings: '$length($coalesce($viewings.rows, []))'

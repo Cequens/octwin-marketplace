@@ -30,5 +30,4 @@ strings:
   confirmed_line: 'Your test drive is booked!'
   any_model:      'To choose at the showroom'
   reminder_note:  "We'll remind you 24 hours and 2 hours before."
-  reminder:       'Reminder: your XPENG test drive at {branch} is coming up soon. See you there! 🚗'
   photo_caption:  '{branch} — see you there 👇'

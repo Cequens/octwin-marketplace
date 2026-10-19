@@ -18,7 +18,6 @@ strings:
 
   done_header:     'Booked ✅'
   done_body:       "Your booking is confirmed 🎉\nBooking number: {ref}\nBranch: {branch}\nBarber: {pro}\nService: {service}\nTime: {slot}\nPrice: {price}\n\nSee you soon! To change or cancel, call us on 01093333755."
-  reminder:        'Reminder ⏰ You have an appointment in two hours at {branch} with {pro} ({slot}). See you soon 💈'
 
   cancelled:       'Your booking is cancelled. Happy to help any time 🙏'
   slot_taken:      'Sorry, that time has just been taken 🙏 Try another time, or call us on 01093333755.'

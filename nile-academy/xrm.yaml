@@ -99,9 +99,11 @@ entities:
     label: { en: 'Campus tour', ar: 'زيارة المقر' }
     icon:        '🏫'
     description: { en: 'A family guided campus visit', ar: 'زيارة موجهة للحرم المدرسي لأسرة' }
+    # Snapshots as booked (no cross-record join at read time). NOT the time: a copy of
+    # the time went stale on every move made outside the chat — the time is read from
+    # `slot_start` where it is shown.
     fields:
       campus_label:  { type: text, label: { en: 'Campus', ar: 'المقر' } }
-      slot_label:    { type: text, label: { en: 'Slot', ar: 'الموعد' } }
       guardian_name: { type: text, label: { en: 'Guardian', ar: 'ولي الأمر' } }
       party_size:    { type: number, label: { en: 'Party size', ar: 'عدد الحضور' } }
 

@@ -59,7 +59,7 @@ steps:
         item_template:
           title:       '{$t("my-visits.row_title", { ref: $item.record_number })}'
           description: '$lines($compact([
-                          $item.fields.slot_label,
+                          $format_date($item.fields.slot_start, "day_time", null, "Asia/Riyadh"),
                           $item.fields.stylist_label,
                           $enum_label($item.stage, "status", $item.stage)
                         ]), " · ")'

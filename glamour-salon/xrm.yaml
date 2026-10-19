@@ -62,9 +62,11 @@ entities:
     fields:
       treatment:       { type: record, entity: treatment, label: { en: 'Treatment', ar: 'الخدمة' } }
       stylist:         { type: record, entity: stylist, label: { en: 'Stylist', ar: 'الأخصائية' } }
+      # The treatment and stylist names as booked (no join at read time). NOT the time:
+      # a copy of it went stale on every move made outside the chat — the time is read
+      # from `slot_start` where it is shown.
       treatment_label: { type: text, label: { en: 'Treatment', ar: 'الخدمة' } }
       stylist_label:   { type: text, label: { en: 'Stylist', ar: 'الأخصائية' } }
-      slot_label:      { type: text, label: { en: 'Slot', ar: 'الموعد' } }
       notes:           { type: textarea, label: { en: 'Notes', ar: 'ملاحظات' } }
 
   survey_response:

@@ -110,9 +110,11 @@ entities:
     description: { en: 'A member seat in a class session — trial or paid', ar: 'مقعد عضو في حصة — تجريبية أو مدفوعة' }
     fields:
       session_type:  { type: record, entity: session_type, label: { en: 'Class', ar: 'الحصة' } }
+      # The class and trainer names as booked (no join at read time). NOT the time:
+      # a copy of it went stale on every move made outside the chat — the time is read
+      # from `slot_start` where it is shown.
       class_label:   { type: text, label: { en: 'Class', ar: 'الحصة' } }
       trainer_label: { type: text, label: { en: 'Trainer', ar: 'المدرب' } }
-      slot_label:    { type: text, label: { en: 'Slot', ar: 'الموعد' } }
       is_trial:      { type: boolean, label: { en: 'Trial session', ar: 'حصة تجريبية' } }
 
 segments:

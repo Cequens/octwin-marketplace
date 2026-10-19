@@ -47,6 +47,4 @@ strings:
   btn_treatments:    '🦷 Treatments'
   slot_taken:        '⚠️ Sorry, that time was booked moments ago. Pick another one and we will carry on.'
   aborted:           'The booking is cancelled. We are here whenever you need us 🦷'
-  reminder.body:     '⏰ A reminder of your appointment with {dentist} — {slot}.'
-  reminder.mine:     '📋 My appointments'
   no_slots:   'Sorry, this dentist has no times available right now. Would you like to try another dentist, or shall I look again later?'

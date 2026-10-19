@@ -1,7 +1,8 @@
 # book-viewing — the committing journey. `collect:` gathers advisor → slot →
 # party size, `approve_apply` shows a preview and waits for ✅, then
 # `booking_reserve` claims the seat race-free and writes the booking record.
-# The lead is advanced to `viewing_booked` and two reminders are scheduled.
+# The lead is advanced to `viewing_booked`. The T-24h / T-2h reminders are declared
+# in scheduling.yaml, so the platform writes, moves and cancels them with the booking.
 
 flow_id:     book-viewing
 version:     1
@@ -61,8 +62,9 @@ steps:
           # id (slot_start, backfilled by the engine) and re-read the label here instead.
           # See the platform KB, craft-flows "Bind identifiers, not labels". Guarded on
           # slot_label so this costs ONE slot_list for the whole run, and `$merge($state, …)`
-          # carries it through the approve_apply suspend into commit / the lead note /
-          # the reminders / the success card.
+          # carries it through the approve_apply suspend into the preview / the lead note /
+          # the success card. It is never stored on the booking — a stored copy of the time
+          # goes stale on any move made outside this flow; a list reads `slot_start`.
           - if: '$state.slot_start != null && $state.slot_label == null'
             then:
               - do: slot_list
@@ -179,7 +181,6 @@ steps:
         fields:
           development:   '$state.development_id'
           advisor_label: '$advisor_label'
-          slot_label:    '$state.slot_label'
           party_size:    '$state.party_size'
       bind: viewing
       outputs:
@@ -201,41 +202,13 @@ steps:
           notes:       '$t("book-viewing.lead_note", { slot: $coalesce($state.slot_label, "-"), advisor: $coalesce($advisor_label, "-") })'
       bind: lead
       outputs:
-        ok:      [{ goto: remind }]
-        invalid: [{ goto: remind }]
-        failed:  [{ goto: remind }]
+        ok:      [{ goto: show_booked }]
+        invalid: [{ goto: show_booked }]
+        failed:  [{ goto: show_booked }]
 
-  remind:
-    # T-24h and T-2h — the offsets come from scheduling.yaml, the absolute send_at
-    # from booking_reserve. dedupe_key makes a re-run harmless.
-    - if: '$length($coalesce($viewing.reminders, [])) > 0'
-      then:
-        - do: schedule_notify
-          args:
-            to:          { contact_id: '$contact.id' }
-            send_at:     '$viewing.reminders[0].send_at'
-            dedupe_key:  'gulf-realty:viewing:{$viewing.record_id}:{$viewing.reminders[0].key}'
-            memory_note: 'Site-viewing reminder ({$viewing.reminders[0].key})'
-            intent:
-              render_intent: detail_card
-              body: '{$t("book-viewing.reminder.body", { project: $coalesce($dev_label, ""), slot: $coalesce($state.slot_label, "") })}'
-              buttons:
-                - { title: '{$t("book-viewing.reminder.mine")}', on_select: { invoke: my-requests } }
-          detach: true
-    - if: '$length($coalesce($viewing.reminders, [])) > 1'
-      then:
-        - do: schedule_notify
-          args:
-            to:          { contact_id: '$contact.id' }
-            send_at:     '$viewing.reminders[1].send_at'
-            dedupe_key:  'gulf-realty:viewing:{$viewing.record_id}:{$viewing.reminders[1].key}'
-            memory_note: 'Site-viewing reminder ({$viewing.reminders[1].key})'
-            intent:
-              render_intent: detail_card
-              body: '{$t("book-viewing.reminder.body", { project: $coalesce($dev_label, ""), slot: $coalesce($state.slot_label, "") })}'
-              buttons:
-                - { title: '{$t("book-viewing.reminder.mine")}', on_select: { invoke: my-requests } }
-          detach: true
+  show_booked:
+    # The reminders (T-24h + T-2h) are declared in scheduling.yaml — the platform writes
+    # them with the booking and moves or cancels them with it, from every door.
     - render:
         render_intent: text_card
         body: '{$t("book-viewing.success", { advisor: $coalesce($advisor_label, ""), slot: $coalesce($state.slot_label, ""), ref: $viewing.record_number })}'

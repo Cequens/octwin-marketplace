@@ -169,7 +169,6 @@ steps:
           bay_label:     '$bay_label'
           package_label: '$pkg_label'
           plate:         '$state.plate'
-          slot_label:    '$state.slot_label'
           contact_phone: '$state.contact_phone'
       bind: slot
       outputs:
@@ -205,29 +204,17 @@ steps:
           complaint:     '$state.complaint'
           package:       '$state.package_id'
           package_label: '$pkg_label'
-          slot_label:    '$state.slot_label'
+          booking:       '$slot.record_id'   # the bay booking — its page shows the time
       bind: job
       outputs:
-        ok:     [{ goto: remind }]
+        ok:     [{ goto: show_booked }]
         # The slot is real even if the job card failed — say so honestly.
         failed: [{ goto: booked_no_job }]
         invalid: []
 
-  remind:
-    - if: '$length($coalesce($slot.reminders, [])) > 0'
-      then:
-        - do: schedule_notify
-          args:
-            to:          { contact_id: '$contact.id' }
-            send_at:     '$slot.reminders[0].send_at'
-            dedupe_key:  'motorcare:slot:{$slot.record_id}:{$slot.reminders[0].key}'
-            memory_note: 'Service reminder ({$slot.reminders[0].key})'
-            intent:
-              render_intent: detail_card
-              body: '{$t("book-service.reminder.body", { slot: $coalesce($state.slot_label, ""), bay: $coalesce($bay_label, "") })}'
-              buttons:
-                - { title: '{$t("book-service.reminder.garage")}', on_select: { invoke: my-garage } }
-          detach: true
+  show_booked:
+    # The reminders (T-24h + T-2h) are declared in scheduling.yaml — the platform writes
+    # them with the booking and moves or cancels them with it, from every door.
     - render:
         render_intent: detail_card
         header: '{$t("book-service.done_header")}'

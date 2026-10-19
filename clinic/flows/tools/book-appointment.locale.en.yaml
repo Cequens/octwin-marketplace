@@ -54,10 +54,6 @@ strings:
   approve_footer:     'Check the details and tap confirm.'
 
   # Reminder card (delivered T-24h / T-2h)
-  reminder.body:        '⏰ A reminder of your appointment with {doctor} on {slot}. What would you like to do?'
-  reminder.confirm:     'Confirm ✅'
-  reminder.reschedule:  'Change the time 🔄'
-  reminder.cancel:      'Cancel ❌'
 
   success:    '✅ Your appointment with {doctor} on {slot} is confirmed. We will remind you before it.'
   slot_taken: 'Sorry, that time has just been taken. Would you like to pick another one?'

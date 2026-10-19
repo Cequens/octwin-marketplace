@@ -50,7 +50,7 @@ steps:
           # the list carries past bookings, so it must never read as "all cancellable".
           description: '$lines($compact([
                           $item.fields.class_label,
-                          $item.fields.slot_label,
+                          $format_date($item.fields.slot_start, "day_time", null, "Asia/Dubai"),
                           $enum_label($item.stage, "status", $item.stage)
                         ]), " · ")'
           on_select:   { invoke: my-schedule, with: { action: cancel, booking_id: '$item.id' } }
@@ -85,7 +85,7 @@ steps:
         preview: '$lines($compact([
                     $t("my-schedule.cancel_confirm.body"),
                     $t("my-schedule.detail.class", { class: $coalesce($bk.fields.class_label, "-") }),
-                    $t("my-schedule.detail.slot",  { slot:  $coalesce($bk.fields.slot_label, "-") })
+                    $t("my-schedule.detail.slot",  { slot:  $format_date($bk.fields.slot_start, "day_time", null, "Asia/Dubai") })
                   ]), "\n")'
         header:        '{$t("my-schedule.cancel_confirm.header")}'
         confirm_title: '{$t("my-schedule.cancel_confirm.yes")}'
@@ -108,14 +108,7 @@ steps:
         failed:          [{ goto: unavailable }]
 
   cancel_done:
-    # Revoke both pending reminders, or the member is reminded about a class they
-    # cancelled. The keys are the ones book-class armed, suffix and all.
-    - do: cancel_scheduled
-      args: { dedupe_key: 'ironpulse:class:{$state.booking_id}:t24' }
-      detach: true
-    - do: cancel_scheduled
-      args: { dedupe_key: 'ironpulse:class:{$state.booking_id}:t2' }
-      detach: true
+    # Its reminders were cancelled with it — they are declared in scheduling.yaml.
     - render:
         render_intent: detail_card
         header: '{$t("my-schedule.cancel_header")}'
@@ -133,7 +126,7 @@ steps:
         body:   '$lines($compact([
                    $t("my-schedule.already_body", { status: $enum_label($bk.stage, "status", $bk.stage) }),
                    $t("my-schedule.detail.class", { class: $coalesce($bk.fields.class_label, "-") }),
-                   $t("my-schedule.detail.slot",  { slot:  $coalesce($bk.fields.slot_label, "-") })
+                   $t("my-schedule.detail.slot",  { slot:  $format_date($bk.fields.slot_start, "day_time", null, "Asia/Dubai") })
                  ]), "\n")'
         buttons:
           - { title: '{$t("my-schedule.btn_book")}', on_select: { invoke: book-class } }

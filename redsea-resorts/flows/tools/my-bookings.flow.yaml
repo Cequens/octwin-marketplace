@@ -20,7 +20,9 @@ entry:
 steps:
   load:
     - do: record_list
-      args: { entity: stay, limit: 10, active_only: false, sort: created_at }
+      # `expand: [booking]` brings each stay's room night, so the arrival is read from
+      # its `slot_start` — the date a move in the console changes too.
+      args: { entity: stay, limit: 10, active_only: false, sort: created_at, expand: [booking] }
       bind: page
       outputs:
         ok:     [{ goto: show }]
@@ -33,7 +35,7 @@ steps:
                         "🧾 #" + $item.record_number,
                         $item.fields.resort_label,
                         $item.fields.room_label,
-                        $item.fields.check_in_label,
+                        $item.fields.booking != null ? $format_date($page.refs[$item.fields.booking].fields.slot_start, "day", null, "Africa/Cairo") : null,
                         $format_money_field($item.fields.total, "EGP"),
                         $enum_label($item.stage, "stage", $item.stage)
                       ]), " · "))'

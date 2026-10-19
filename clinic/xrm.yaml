@@ -120,9 +120,10 @@ entities:
       # different days, so it's the branch of the CHOSEN slot (from the rule's
       # meta), not the doctor's home branch. Nullable (single-branch doctors).
       branch:        { type: record, entity: branch, label: { en: 'Branch', ar: 'الفرع' } }
-      # snapshot labels (no cross-record join needed at read time)
+      # The doctor's name as booked (no cross-record join at read time). NOT the time:
+      # a copy of the time went stale on every move made outside the chat — the
+      # time is read from `slot_start` where it is shown.
       doctor_label:  { type: text, label: { en: 'Doctor', ar: 'الطبيب' } }
-      slot_label:    { type: text, label: { en: 'Slot', ar: 'الموعد' } }
 
   # ── The visit rating (extends the platform system entity) ────────────────
   # `doctor` is the ROLLUP DIMENSION — the `via:` of `doctor.rating`'s declaration above.

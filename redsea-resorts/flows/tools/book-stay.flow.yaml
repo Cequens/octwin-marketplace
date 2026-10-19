@@ -195,7 +195,6 @@ steps:
         fields:
           room_label:   '$coalesce($room_label, $state.room_label)'
           resort_label: '$coalesce($resort_label, $state.resort_label)'
-          slot_label:   '$state.slot_label'
           guest_name:   '$state.guest_name'
       bind: night
       outputs:
@@ -214,7 +213,10 @@ steps:
           guest_name:     '$state.guest_name'
           resort_label:   '$coalesce($resort_label, $state.resort_label)'
           room_label:     '$coalesce($room_label, $state.room_label)'
-          check_in_label: '$state.slot_label'
+          # The room night this stay holds — my-bookings reads the arrival from ITS
+          # `slot_start`. The date is never copied as text: a copy kept the OLD date
+          # after a move made outside this flow (the console's Move).
+          booking:        '$night.record_id'
           nights:         '$state.nights_n'
           adults:         '$state.adults_n'
           children:       '$state.children_n'

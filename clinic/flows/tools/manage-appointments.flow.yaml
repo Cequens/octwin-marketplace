@@ -54,7 +54,7 @@ steps:
         cta:    '{$t("manage-appointments.list_cta")}'
         items: '$appts.rows'
         item_template:
-          title:       '{$coalesce($item.fields.doctor_label, "-")} — {$coalesce($item.fields.slot_label, "-")}'
+          title:       '{$coalesce($item.fields.doctor_label, "-")} — {$format_date($item.fields.slot_start, "day_time", null, "Africa/Cairo")}'
           description: '$in($item.stage, ["completed", "cancelled", "no_show"]) ? $t("manage-appointments.past") : $t("manage-appointments.upcoming")'
           on_select:
             invoke: manage-appointments
@@ -81,7 +81,7 @@ steps:
   render_detail:
     - render:
         render_intent: detail_card
-        body: '$lines($compact([$t("manage-appointments.detail.doctor", { doctor: $coalesce($appt.fields.doctor_label, "-") }), $t("manage-appointments.detail.slot", { slot: $coalesce($appt.fields.slot_label, "-") }), $appt.fields.for_whom == "dependent" ? $t("manage-appointments.detail.for_whom", { who: $coalesce($appt.fields.dependent, "-") }) : null]), "\n")'
+        body: '$lines($compact([$t("manage-appointments.detail.doctor", { doctor: $coalesce($appt.fields.doctor_label, "-") }), $t("manage-appointments.detail.slot", { slot: $format_date($appt.fields.slot_start, "day_time", null, "Africa/Cairo") }), $appt.fields.for_whom == "dependent" ? $t("manage-appointments.detail.for_whom", { who: $coalesce($appt.fields.dependent, "-") }) : null]), "\n")'
         buttons:
           - { title: '{$t("manage-appointments.button.reschedule")}', on_select: { invoke: manage-appointments, with: { action: reschedule, appointment_id: '$appt.id' } } }
           - { title: '{$t("manage-appointments.button.cancel")}',     on_select: { invoke: manage-appointments, with: { action: cancel,     appointment_id: '$appt.id' } } }
@@ -114,7 +114,7 @@ steps:
       memory_note: 'Confirmed appointment {$input.appointment_id}'
     - end: applied
 
-  # ── Cancel — confirm first, then release the seat + revoke both reminders ──
+  # ── Cancel — confirm first, then release the seat (its reminders go with it) ──
   do_cancel:
     - do: record_get
       args: { entity: booking, record_id: '$input.appointment_id' }
@@ -127,7 +127,7 @@ steps:
   confirm_cancel:
     - use: approve_apply
       with:
-        preview: '$lines($compact([$t("manage-appointments.cancel_confirm.body"), $t("manage-appointments.detail.doctor", { doctor: $coalesce($appt.fields.doctor_label, "-") }), $t("manage-appointments.detail.slot", { slot: $coalesce($appt.fields.slot_label, "-") })]), "\n")'
+        preview: '$lines($compact([$t("manage-appointments.cancel_confirm.body"), $t("manage-appointments.detail.doctor", { doctor: $coalesce($appt.fields.doctor_label, "-") }), $t("manage-appointments.detail.slot", { slot: $format_date($appt.fields.slot_start, "day_time", null, "Africa/Cairo") })]), "\n")'
         header:  '{$t("manage-appointments.cancel_confirm.header")}'
         confirm_title: '{$t("manage-appointments.cancel_confirm.yes")}'
         cancel_title:  '{$t("manage-appointments.cancel_confirm.keep")}'
@@ -147,13 +147,7 @@ steps:
         failed:          [{ end: failed }]
 
   cancel_done:
-    # Revoke both pending reminders (flips them to 'cancelled' → never delivered).
-    - do: cancel_scheduled
-      args: { dedupe_key: 'clinic:appt:{$state.appointment_id}:t24' }
-      detach: true
-    - do: cancel_scheduled
-      args: { dedupe_key: 'clinic:appt:{$state.appointment_id}:t2' }
-      detach: true
+    # Its reminders were cancelled with it — they are declared in scheduling.yaml.
     - render:
         render_intent: text_card
         body: '{$t("manage-appointments.cancelled")}'
@@ -274,7 +268,7 @@ steps:
       memory_note: 'No rating on {$input.appointment_id} yet — comment not saved'
     - end: applied
 
-  # ── Reschedule (slot picker → swap reminders) ─────────────────────────────
+  # ── Reschedule (slot picker → the reminders follow by themselves) ─────────────────────────────
   start_reschedule:
     - do: record_get
       args: { entity: booking, record_id: '$input.appointment_id' }
@@ -326,9 +320,9 @@ steps:
     - end: applied
 
   # The tap carries only the slot's start (a row id is capped at 200 code points). Its
-  # length, label and branch are re-read here from the list the picker drew, so the
-  # booking's display snapshot moves WITH the slot. `slot_label` used to keep the OLD
-  # time after every reschedule, and "My appointments" showed it.
+  # length and branch are re-read here from the list the picker drew. The time is never
+  # stored as text: a `slot_label` copy kept the OLD time after every move made outside
+  # this flow, and "My appointments" showed it — it reads `slot_start` now.
   do_reschedule:
     - do: slot_list
       args: { resource_record_id: '$state.resource_id' }
@@ -348,7 +342,6 @@ steps:
         new_slot_start: '$state.new_slot_start'
         slot_minutes:   '$coalesce($state.slot_minutes, $hit.slot_minutes)'
         fields:
-          slot_label: '$lines($compact([$format_date($hit.local_date + "T" + $hit.local_time, "day_time"), $loc($hit.meta.branch_label)]), " — ")'
           branch:     '$hit.meta.branch'
       bind: resched
       outputs:
@@ -360,32 +353,7 @@ steps:
         not_movable: [{ end: { status: aborted, instructions: 'This booking can no longer be moved — it is already completed, cancelled or in the past. Say so in one short line, in the customer''s language, and offer to book a new time.' } }]
 
   reschedule_done:
-    # Same record id → same dedupe keys: revoke the old reminders, re-schedule new
-    # send_at instants under the same keys.
-    - do: cancel_scheduled
-      args: { dedupe_key: 'clinic:appt:{$state.appointment_id}:t24' }
-      detach: true
-    - do: cancel_scheduled
-      args: { dedupe_key: 'clinic:appt:{$state.appointment_id}:t2' }
-      detach: true
-    - if: '$length($coalesce($resched.reminders, [])) > 0'
-      then:
-        - do: schedule_notify
-          args:
-            to: { contact_id: '$contact.id' }
-            send_at: '$resched.reminders[0].send_at'
-            dedupe_key: 'clinic:appt:{$resched.record_id}:{$resched.reminders[0].key}'
-            intent: { render_intent: text_card, body: '{$t("manage-appointments.reminder_text")}' }
-          detach: true
-    - if: '$length($coalesce($resched.reminders, [])) > 1'
-      then:
-        - do: schedule_notify
-          args:
-            to: { contact_id: '$contact.id' }
-            send_at: '$resched.reminders[1].send_at'
-            dedupe_key: 'clinic:appt:{$resched.record_id}:{$resched.reminders[1].key}'
-            intent: { render_intent: text_card, body: '{$t("manage-appointments.reminder_text")}' }
-          detach: true
+    # Its reminders moved with it, the new time in their words (scheduling.yaml).
     - render:
         render_intent: text_card
         body: '{$t("manage-appointments.rescheduled")}'

@@ -41,6 +41,4 @@ strings:
   full:           '⚠️ This tour filled up moments ago. Pick another time and we will book it for you.'
   aborted:        'The booking is cancelled. We are here whenever you need us 🎓'
   enquiry_note:   'Enquiry with a booked visit to {campus} — {slot}.'
-  reminder.body:  '⏰ A reminder of your visit to {campus} — {slot}. We look forward to seeing you!'
-  reminder.progs: '📚 Programmes'
   no_slots:   'Sorry, this campus has no tour times available right now. Would you like to try another campus, or shall I look again later?'

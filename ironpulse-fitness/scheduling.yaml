@@ -15,9 +15,29 @@ timezone: Asia/Dubai
 resources:
   trainer:
     slot: { default_minutes: 45, window_days: 14 }
+    # Reminders before slot_start (seconds). Each declares its card, so the PLATFORM
+    # sends it, writes it again for the new time on every move, and cancels it when
+    # the booking ends — whoever moves or cancels it (the chat, the front desk in the
+    # console). The button opens the member's own classes.
     reminders:
-      - { key: t24, seconds: 86400 }
-      - { key: t2,  seconds: 7200 }
+      - key: t24
+        seconds: 86400
+        render:
+          render_intent: detail_card
+          body:
+            en: '⏰ Reminder: {{ record.fields.class_label }} — {{ time }}. Do not forget your kit and water!'
+            ar: '⏰ تذكير: حصة {{ record.fields.class_label }} — {{ time }}. لا تنسَ ملابس التمرين والماء!'
+          buttons:
+            - { title: { en: '🗓️ My classes', ar: '🗓️ حصصي' }, on_select: { invoke: my-schedule } }
+      - key: t2
+        seconds: 7200
+        render:
+          render_intent: detail_card
+          body:
+            en: '⏰ Reminder: {{ record.fields.class_label }} — {{ time }}. Do not forget your kit and water!'
+            ar: '⏰ تذكير: حصة {{ record.fields.class_label }} — {{ time }}. لا تنسَ ملابس التمرين والماء!'
+          buttons:
+            - { title: { en: '🗓️ My classes', ar: '🗓️ حصصي' }, on_select: { invoke: my-schedule } }
 
 booking:
   entity: booking

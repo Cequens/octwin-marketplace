@@ -45,6 +45,4 @@ strings:
   no_coach_body:   'There is no trainer on the {class} schedule at the moment, so we cannot confirm a place in it. Pick another class, or ask reception to let you know when times open up.'
   aborted:        'The booking is cancelled. We are here whenever you need us 💪'
   trial_note:     'Trial class: {class} — {slot}.'
-  reminder.body:  '⏰ Reminder: {class} — {slot}. Do not forget your kit and water!'
-  reminder.mine:  '🗓️ My classes'
   no_slots:   'Sorry, this trainer has no classes available right now. Would you like to try another trainer, or shall I look again later?'

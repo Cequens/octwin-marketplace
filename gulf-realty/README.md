@@ -37,11 +37,12 @@ Everything is in the console: **Records** for developments / unit types / adviso
 Pure YAML — no code, no pack database.
 
 - `xrm.yaml` — the catalog (`development`, `unit_type`, `advisor`), the `buyer_lead` pipeline with
-  milestones, and the `booking` system entity widened with two display snapshots.
-- `scheduling.yaml` — makes `advisor` a bookable resource, 60-minute slots, T-24h/T-2h reminders,
+  milestones, and the `booking` system entity widened with the advisor's name as booked.
+- `scheduling.yaml` — makes `advisor` a bookable resource, 60-minute slots, T-24h/T-2h reminders
+  declared with their words (the platform sends, moves and cancels them with the booking),
   plus seeded demo availability.
 - `flows/tools/*.flow.yaml` — six flows. The two worth reading are `book-viewing` (a `collect:`
-  with fetched pickers → `approve_apply` → `booking_reserve` → `schedule_notify`) and
+  with fetched pickers → `approve_apply` → `booking_reserve`) and
   `mortgage-estimate` (every numeric input arrives through a picker `selection:`, so the arithmetic
   never touches free text).
 - `manifest.yaml` — `inbound_preprocessing` turns on document vision and voice-note transcription
