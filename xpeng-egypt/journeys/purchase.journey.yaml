@@ -34,7 +34,7 @@ stages:
 goals:
   - { id: lead_captured,     stage: intent,     label: { en: 'Lead captured',     ar: 'تم تسجيل العميل' } }
   - { id: test_drive_booked, stage: evaluating, label: { en: 'Test drive booked', ar: 'تم حجز تجربة قيادة' } }
-  # Terminal conversion — value pulled per-lead from expected_value by the on_enter hook.
+  # Terminal conversion — value pulled per-lead from expected_value by the lead_enter_won rule (automation.yaml).
   - { id: deal_won,                             label: { en: 'Deal won',          ar: 'تم البيع' } }
 
 events:

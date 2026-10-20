@@ -38,9 +38,10 @@ Pure YAML — no code, no pack database.
 
 - `xrm.yaml` — the catalog (`development`, `unit_type`, `advisor`), the `buyer_lead` pipeline with
   milestones, and the `booking` system entity widened with the advisor's name as booked.
-- `scheduling.yaml` — makes `advisor` a bookable resource, 60-minute slots, T-24h/T-2h reminders
-  declared with their words (the platform sends, moves and cancels them with the booking),
-  plus seeded demo availability.
+- `scheduling.yaml` — makes `advisor` a bookable resource, 60-minute slots, plus seeded demo
+  availability.
+- `automation.yaml` — the T-24h/T-2h reminders, `remind:` rules with their words (the platform
+  sends, moves and stops them with the booking).
 - `flows/tools/*.flow.yaml` — six flows. The two worth reading are `book-viewing` (a `collect:`
   with fetched pickers → `approve_apply` → `booking_reserve`) and
   `mortgage-estimate` (every numeric input arrives through a picker `selection:`, so the arithmetic

@@ -1,8 +1,8 @@
 # book-viewing — the committing journey. `collect:` gathers advisor → slot →
 # party size, `approve_apply` shows a preview and waits for ✅, then
 # `booking_reserve` claims the seat race-free and writes the booking record.
-# The lead is advanced to `viewing_booked`. The T-24h / T-2h reminders are declared
-# in scheduling.yaml, so the platform writes, moves and cancels them with the booking.
+# The lead is advanced to `viewing_booked`. The T-24h / T-2h reminders are `remind:`
+# rules in automation.yaml, so the platform sends, moves and stops them with the booking.
 
 flow_id:     book-viewing
 version:     1
@@ -207,8 +207,8 @@ steps:
         failed:  [{ goto: show_booked }]
 
   show_booked:
-    # The reminders (T-24h + T-2h) are declared in scheduling.yaml — the platform writes
-    # them with the booking and moves or cancels them with it, from every door.
+    # The reminders (T-24h + T-2h) are `remind:` rules in automation.yaml — the platform sends
+    # them, and moves or stops them with the booking, from every door.
     - render:
         render_intent: text_card
         body: '{$t("book-viewing.success", { advisor: $coalesce($advisor_label, ""), slot: $coalesce($state.slot_label, ""), ref: $viewing.record_number })}'

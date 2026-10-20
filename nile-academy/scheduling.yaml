@@ -7,29 +7,7 @@ timezone: Africa/Cairo
 resources:
   campus:
     slot: { default_minutes: 60, window_days: 21 }
-    # Reminders before slot_start (seconds) — a day-before and a 2-hour one. Each
-    # declares its card, so the PLATFORM sends it, writes it again for the new time on
-    # every move, and cancels it when the tour ends — whoever moves or cancels it (the
-    # chat, admissions in the console). The button opens programmes.
-    reminders:
-      - key: t24
-        seconds: 86400
-        render:
-          render_intent: detail_card
-          body:
-            en: '⏰ A reminder of your visit to {{ resource }} — {{ time }}. We look forward to seeing you!'
-            ar: '⏰ تذكير بزيارة {{ resource }} — {{ time }}. في انتظارك!'
-          buttons:
-            - { title: { en: '📚 Programmes', ar: '📚 البرامج' }, on_select: { invoke: programmes } }
-      - key: t2
-        seconds: 7200
-        render:
-          render_intent: detail_card
-          body:
-            en: '⏰ A reminder of your visit to {{ resource }} — {{ time }}. We look forward to seeing you!'
-            ar: '⏰ تذكير بزيارة {{ resource }} — {{ time }}. في انتظارك!'
-          buttons:
-            - { title: { en: '📚 Programmes', ar: '📚 البرامج' }, on_select: { invoke: programmes } }
+    # Its reminders are rules — automation.yaml (`remind:`).
 
 booking:
   entity: booking

@@ -1,17 +1,17 @@
-# Standing automation jobs for Kaiian/Waslini.
+# What Kaiian/Waslini does by itself — rules (guide: craft-automation; every change, time and action: rules-guide).
 #
-# ONE job, and it is the alarm on the SLA that `worklist.yaml` already promises.
+# ONE rule, and it is the alarm on the SLA that `worklist.yaml` already promises.
 # Without it the `sla: { resolve_within_hours: … }` on every case type is a number
 # in a file: the deadline is stamped on the record at enrolment (`sla_due_at`) and
 # then nothing ever looks at it again.
 #
-# The sweep is entity-level, not type-level — it consumes whatever `sla_due_at`
-# the per-type config stamped, so this single job covers all five case types
+# The clock is entity-level, not type-level — it reads whatever `sla_due_at`
+# the per-type config stamped, so this single rule covers all five case types
 # (extra_charge 4h · unpaid_fare 4h · account_block 8h · general_complaint 24h ·
 # vehicle_change 24h). It skips cases already in a terminal stage, alerts the
 # responsible operator through the ops inbox, relays `message` to the customer
-# ONCE per breach (deduped on `sla_notified_at`), and mints the `sla_breach`
-# record event that `xrm.yaml`'s `on.sla_breach` hook reacts to.
+# ONCE per breach (deduped on `sla_notified_at`), and then puts a due-dated task
+# on the case — the operator-side consequence.
 #
 # `escalate_to:` routes the breached item to a queue. It took three rounds to land:
 # first omitted because the KB documented the target two incompatible ways, then kept
@@ -28,16 +28,20 @@
 # work inbox, and the ops-inbox alert still goes to the previous assignee — so a breach on
 # an UNASSIGNED item escalates silently. The customer reassurance below is unaffected.
 
-jobs:
-  - key:              case_sla
-    kind:             sla_sweep
-    entity:           case
-    # A quarter of an hour. The shortest SLA here is 4h, so this bounds the
-    # detection lag at ~6% of the promise.
-    interval_seconds: 900
-    config:
-      escalate_to: queue:customer_ops
-      message:
-        ar: 'نعتذر عن التأخير 🙏 طلبك تجاوز الوقت المتوقع وتم رفعه لفريق مختص — بنرجع لك في أقرب وقت.'
-        en: 'Sorry for the wait 🙏 Your request has taken longer than expected and has been passed to a specialist team — we will get back to you shortly.'
-        ur: 'تاخیر کے لیے معذرت 🙏 آپ کی درخواست میں متوقع وقت سے زیادہ لگ گیا ہے اور اسے ماہر ٹیم کو بھیج دیا گیا ہے — ہم جلد آپ سے رابطہ کریں گے۔'
+rules:
+  # The resolution clock ran out. After the breach, a due-dated job on a human's list,
+  # so the breach is worked, not just announced.
+  - key: case_sla
+    for: case
+    at: clock resolution
+    do:
+      - breach:
+          escalate_to: queue:customer_ops
+          message:
+            ar: 'نعتذر عن التأخير 🙏 طلبك تجاوز الوقت المتوقع وتم رفعه لفريق مختص — بنرجع لك في أقرب وقت.'
+            en: 'Sorry for the wait 🙏 Your request has taken longer than expected and has been passed to a specialist team — we will get back to you shortly.'
+            ur: 'تاخیر کے لیے معذرت 🙏 آپ کی درخواست میں متوقع وقت سے زیادہ لگ گیا ہے اور اسے ماہر ٹیم کو بھیج دیا گیا ہے — ہم جلد آپ سے رابطہ کریں گے۔'
+      - open_task:
+          title:        '⏰ تجاوز المهلة — حالة {{ record.record_number }}'
+          body:         'النوع: {{ record.fields.case_type }} · الأولوية: {{ record.fields.priority }}. راجع الحالة وبلّغ العميل.'
+          due_in_hours: 1

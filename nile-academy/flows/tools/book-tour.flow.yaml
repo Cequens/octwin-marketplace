@@ -40,7 +40,7 @@ steps:
                   # The address was declared AND seeded from the start, and no
                   # flow read it — a family was booked onto a campus visit and
                   # never told the street. Carried through to the confirmation
-                  # card below. (The reminders, declared in scheduling.yaml, name
+                  # card below. (The reminders, `remind:` rules in automation.yaml, name
                   # the campus and the time only — the address is not on the booking.)
                   - assign: { campus_label: '$cmp.fields.name', campus_address: '$cmp.fields.address' }
         progress: '$lines($compact([
@@ -184,8 +184,8 @@ steps:
     - goto: show_booked
 
   show_booked:
-    # The reminders (T-24h + T-2h) are declared in scheduling.yaml — the platform writes
-    # them with the booking and moves or cancels them with it, from every door.
+    # The reminders (T-24h + T-2h) are `remind:` rules in automation.yaml — the platform sends
+    # them, and moves or stops them with the booking, from every door.
     - render:
         render_intent: detail_card
         header: '{$t("book-tour.done_header")}'

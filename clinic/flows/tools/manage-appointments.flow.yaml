@@ -147,7 +147,7 @@ steps:
         failed:          [{ end: failed }]
 
   cancel_done:
-    # Its reminders were cancelled with it — they are declared in scheduling.yaml.
+    # Its reminders stop with it — they are `remind:` rules in automation.yaml.
     - render:
         render_intent: text_card
         body: '{$t("manage-appointments.cancelled")}'

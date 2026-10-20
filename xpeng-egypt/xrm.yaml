@@ -138,15 +138,9 @@ entities:
       qualified: { en: 'Qualified', ar: 'مؤهل' }
       won:       { en: 'Won', ar: 'تم البيع' }
       lost:      { en: 'Lost', ar: 'مغلق' }
-    # Reaction hooks (reactions-guide `on:` grammar). Off-channel funnel bridge:
-    # when a rep marks the lead `won` (however it happens — console, a flow's
-    # record_stage, or an automation transition), complete the purchase journey's
-    # terminal goal, valued per-lead from expected_value. Each hook is a LIST of
-    # single-verb directives. Do NOT also emit this goal from a flow.
-    on:
-      enter:
-        won:
-          - track: { journey: purchase, goal_reached: deal_won, value_field: expected_value }
+    # Off-channel funnel bridge: when a rep marks the lead `won`, the purchase
+    # journey's terminal goal is completed by the `lead_enter_won` rule in
+    # automation.yaml. Do NOT also emit this goal from a flow.
 
   # ──────────────────────── test-drive bookings (system entity) ──
   booking:

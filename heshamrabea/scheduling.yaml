@@ -9,15 +9,7 @@ resources:
     slot:
       default_minutes: 30
       window_days: 7
-    # Reminders before slot_start (seconds). Each declares its words, so the PLATFORM sends
-    # it, writes it again for the new time on every move, and cancels it when the booking
-    # ends — whoever moves or cancels it (the chat, the shop in the console).
-    reminders:
-      - key: t_2h                      # remind the customer 2 hours before
-        seconds: 7200
-        message:
-          ar: 'تذكير ⏰ عندك موعد بعد ساعتين في فرع {{ record.fields.branch_name }} مع {{ resource }} ({{ time }}). مستنينك 💈'
-          en: 'Reminder ⏰ You have an appointment in two hours at {{ record.fields.branch_name }} with {{ resource }} ({{ time }}). See you soon 💈'
+    # Its reminder is a rule — automation.yaml (`remind:`).
 
 booking:
   entity: booking

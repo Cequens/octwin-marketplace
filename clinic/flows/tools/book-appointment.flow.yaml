@@ -2,8 +2,8 @@
 # XRM record modules (no pack DB). A `collect:` node gathers doctor → slot →
 # for-whom (self/dependent) → reason → insurance, prepends a running progress
 # card, then `use: approve_apply` confirms and `booking_reserve` writes the
-# `booking` XRM record — its T-24h/T-2h reminders are declared in scheduling.yaml,
-# so the platform writes, moves and cancels them with the booking. Pure YAML.
+# `booking` XRM record — its T-24h/T-2h reminders are `remind:` rules in automation.yaml,
+# so the platform sends, moves and stops them with the booking. Pure YAML.
 
 flow_id:     book-appointment
 version:     1
@@ -242,8 +242,8 @@ steps:
     # Journey: the appointment was reserved → booked stage + appointment_booked
     # goal (the conversion). Reached only via booking_reserve ok, never full/invalid.
     - track: { event: appointment_booked, timeline: true }
-    # The reminders (T-24h + T-2h) are declared in scheduling.yaml — the platform writes
-    # them with the booking and moves or cancels them with it, from every door.
+    # The reminders (T-24h + T-2h) are `remind:` rules in automation.yaml — the platform sends
+    # them, and moves or stops them with the booking, from every door.
     - render:
         render_intent: text_card
         body: '{$t("book-appointment.success", { doctor: $coalesce($doctor_label, ""), slot: $coalesce($state.slot_label, "") })}'

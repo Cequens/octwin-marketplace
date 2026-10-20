@@ -7,29 +7,7 @@ timezone: Asia/Dubai
 resources:
   bay:
     slot: { default_minutes: 60, window_days: 14 }
-    # Reminders before slot_start (seconds). Each declares its card, so the PLATFORM
-    # sends it, writes it again for the new time on every move, and cancels it when
-    # the booking ends — whoever moves or cancels it (the chat, the service desk in
-    # the console). The button opens my-garage.
-    reminders:
-      - key: t24
-        seconds: 86400
-        render:
-          render_intent: detail_card
-          body:
-            en: '⏰ A reminder of your car service appointment — {{ time }} at {{ resource }}.'
-            ar: '⏰ تذكير بموعد صيانة سيارتك — {{ time }} في {{ resource }}.'
-          buttons:
-            - { title: { en: '🚗 My cars', ar: '🚗 سياراتي' }, on_select: { invoke: my-garage } }
-      - key: t2
-        seconds: 7200
-        render:
-          render_intent: detail_card
-          body:
-            en: '⏰ A reminder of your car service appointment — {{ time }} at {{ resource }}.'
-            ar: '⏰ تذكير بموعد صيانة سيارتك — {{ time }} في {{ resource }}.'
-          buttons:
-            - { title: { en: '🚗 My cars', ar: '🚗 سياراتي' }, on_select: { invoke: my-garage } }
+    # Its reminders are rules — automation.yaml (`remind:`).
 
 booking:
   entity: booking

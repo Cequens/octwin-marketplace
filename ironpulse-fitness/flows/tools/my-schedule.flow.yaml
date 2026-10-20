@@ -108,7 +108,7 @@ steps:
         failed:          [{ goto: unavailable }]
 
   cancel_done:
-    # Its reminders were cancelled with it — they are declared in scheduling.yaml.
+    # Its reminders stop with it — they are `remind:` rules in automation.yaml.
     - render:
         render_intent: detail_card
         header: '{$t("my-schedule.cancel_header")}'

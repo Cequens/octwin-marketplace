@@ -1,0 +1,70 @@
+# What Nakhla does by itself — rules (guide: craft-automation; every change, time and action: rules-guide).
+rules:
+  # ── the receipt ─────────────────────────────────────────────────────────
+  # The webhook moves the record to `paid`, and THIS fires. It is the ordinary
+  # notify verb — the entire customer-facing half of a payment integration is
+  # one declared line, and it does not care that a gateway caused the move.
+  - key: donation_enter_paid
+    for: donation
+    on: { enter: paid }
+    do:
+      # The thank-you carries the RECEIPT as a tappable button (a `cta_url`
+      # render), not a URL pasted into the body — a bare link in Arabic body
+      # text is reordered and wrapped mid-token by the bidi algorithm, which is
+      # how a receipt arrives looking corrupted. (It was the deprecated
+      # `link` / `link_label` pair until 0.10.4.)
+      #
+      # The URL is the invoice's own page: Moyasar exposes no receipt endpoint
+      # (every documented path 404s), and after payment the checkout page
+      # renders the paid invoice, which IS the receipt. It is already stored on
+      # the record by `stamp_link`.
+      #
+      # If `checkout_url` is somehow empty, the platform degrades to the plain
+      # text card rather than rendering a button to nowhere — so a missing link
+      # costs the receipt, never the thank-you.
+      - notify:
+          render:
+            render_intent: cta_url
+            body:
+              ar: >-
+                🌱 وصلنا تبرّعك — جزاك الله خيراً.
+                المبلغ {{ record.fields.amount }} {{ record.fields.currency }} لصالح {{ record.fields.appeal_title }}.
+                رقم العملية {{ record.record_number }}.
+              en: >-
+                🌱 We received your donation — thank you, may God reward you.
+                {{ record.fields.amount }} {{ record.fields.currency }} for {{ record.fields.appeal_title }}.
+                Reference {{ record.record_number }}.
+            label: { ar: '🧾 الإيصال', en: '🧾 Receipt' }
+            url:   '{{ record.fields.checkout_url }}'
+          cooldown_hours: 24
+      - track: { event: donation_paid }
+
+  # A failed card is not silence. A donor who thinks they gave and did not
+  # is the worst outcome a charity can have.
+  - key: donation_enter_failed
+    for: donation
+    on: { enter: failed }
+    do:
+      - notify:
+          message:
+            ar: >-
+              ما تمّت عملية الدفع لتبرّعك رقم {{ record.record_number }}.
+              ما انخصم أي مبلغ. تقدر تحاول مرة ثانية وقت ما يناسبك 🌿
+            en: >-
+              The payment for your donation {{ record.record_number }} did not go through.
+              Nothing was charged. You can try again whenever suits you 🌿
+          cooldown_hours: 6
+
+  - key: donation_enter_refunded
+    for: donation
+    on: { enter: refunded }
+    do:
+      - notify:
+          message:
+            ar: >-
+              تم استرجاع مبلغ تبرّعك رقم {{ record.record_number }} بالكامل.
+              إذا عندك أي استفسار تواصل معنا.
+            en: >-
+              Your donation {{ record.record_number }} has been refunded in full.
+              If you have any question, contact us.
+          cooldown_hours: 24

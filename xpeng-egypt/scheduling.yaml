@@ -2,8 +2,8 @@
 #
 # A test-drive booking is the platform `booking` XRM system entity (extended in
 # xrm.yaml). slot_list expands the availability below into free slots; the flow
-# reserves one with booking_reserve. The reminders below declare their words, so
-# the platform sends them — the flow schedules nothing.
+# reserves one with booking_reserve. The reminders are `remind:` rules in
+# automation.yaml, so the platform sends them — the flow schedules nothing.
 
 timezone: Africa/Cairo
 
@@ -12,20 +12,7 @@ resources:
     slot:
       default_minutes:  45      # fallback for booking_reserve's slot_minutes ARG
       window_days:      14      # offer slots up to 2 weeks out
-    # Reminders before slot_start (seconds). Each declares its words, so the PLATFORM
-    # sends it, writes it again for the new time on every move, and cancels it when the
-    # test drive ends — whoever moves or cancels it (the chat, the showroom in the console).
-    reminders:
-      - key: t24h                       # 24h before
-        seconds: 86400
-        message:
-          ar: 'تذكير: عندك تجربة قيادة XPENG في فرع {{ resource }} قريبًا ({{ time }}). مستنينك! 🚗'
-          en: 'Reminder: your XPENG test drive at {{ resource }} is coming up soon ({{ time }}). See you there! 🚗'
-      - key: t2h                        # 2h before
-        seconds: 7200
-        message:
-          ar: 'تذكير: عندك تجربة قيادة XPENG في فرع {{ resource }} قريبًا ({{ time }}). مستنينك! 🚗'
-          en: 'Reminder: your XPENG test drive at {{ resource }} is coming up soon ({{ time }}). See you there! 🚗'
+    # Its reminders are rules — automation.yaml (`remind:`).
 
 booking:
   entity: booking

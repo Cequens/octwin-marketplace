@@ -24,29 +24,7 @@ timezone: Asia/Riyadh
 resources:
   stylist:
     slot: { default_minutes: 90, window_days: 21 }
-    # Reminders before slot_start (seconds). Each declares its card, so the PLATFORM
-    # sends it, writes it again for the new time on every move, and cancels it when
-    # the appointment ends — whoever moves or cancels it (the chat, reception in the
-    # console). The button opens the client's own appointments.
-    reminders:
-      - key: t24
-        seconds: 86400
-        render:
-          render_intent: detail_card
-          body:
-            en: '⏰ A reminder of your {{ record.fields.treatment_label }} appointment — {{ time }}. We look forward to seeing you 💐'
-            ar: '⏰ تذكير بموعد {{ record.fields.treatment_label }} — {{ time }}. نتشرف بحضورك 💐'
-          buttons:
-            - { title: { en: '🗓️ My appointments', ar: '🗓️ مواعيدي' }, on_select: { invoke: my-visits } }
-      - key: t2
-        seconds: 7200
-        render:
-          render_intent: detail_card
-          body:
-            en: '⏰ A reminder of your {{ record.fields.treatment_label }} appointment — {{ time }}. We look forward to seeing you 💐'
-            ar: '⏰ تذكير بموعد {{ record.fields.treatment_label }} — {{ time }}. نتشرف بحضورك 💐'
-          buttons:
-            - { title: { en: '🗓️ My appointments', ar: '🗓️ مواعيدي' }, on_select: { invoke: my-visits } }
+    # Its reminders are rules — automation.yaml (`remind:`).
 
 booking:
   entity: booking

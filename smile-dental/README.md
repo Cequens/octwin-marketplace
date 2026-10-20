@@ -40,7 +40,7 @@ patient's next message without creating two responses.
 - **A race-free diary.** Availability, capacity and slot expansion are the platform scheduling
   engine's; reservation is a single conditional upsert, so two patients tapping the same slot
   cannot both win.
-- **Reminders that reduce no-shows**, scheduled from the offsets in `scheduling.yaml`.
+- **Reminders that reduce no-shows**, sent by the `remind:` rules in `automation.yaml`.
 - **Feedback that steers demand** to the dentists patients actually rate highly.
 - **A clinical boundary the bot cannot cross** — see the prompt: no diagnosis, no urgency
   assessment, no price from memory.
@@ -49,9 +49,10 @@ patient's next message without creating two responses.
 
 Pure YAML — no code, no pack database.
 
-- `scheduling.yaml` — dentists as bookable resources, single-capacity chairs, T-24h/T-2h
-  reminders declared with their words (so the platform sends, moves and cancels them with the
-  booking), and seeded demo availability.
+- `scheduling.yaml` — dentists as bookable resources, single-capacity chairs, and seeded demo
+  availability.
+- `automation.yaml` — the T-24h/T-2h reminders, `remind:` rules with their words (so the
+  platform sends, moves and stops them with the booking).
 - `surveys.yaml` — one questionnaire, `subject: booking`, `score: stars`.
 - `xrm.yaml` — `booking` and `survey_response` both widened via `extends: system` (adding
   fields only), and `dentist.rating` documented as a rollup target rather than a hand-typed field.

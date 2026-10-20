@@ -1,16 +1,15 @@
-# Standing automation jobs for PharmaPlus.
+# What PharmaPlus does by itself — rules (guide: craft-automation; every change, time and action: rules-guide).
 #
 # This pack says the SLA OUT LOUD — `otc.locale.ar.yaml` tells the patient
-# «بتتواصل معاك خلال {hours} ساعة كحد أقصى». Until this job existed nothing
+# «بتتواصل معاك خلال {hours} ساعة كحد أقصى». Until this alarm existed nothing
 # measured the number the patient was given: `sla_due_at` was stamped at
 # enrolment and never read.
 #
-# The sweep is entity-level, so this one job covers all five case types
+# The clock is the entity's, so this one rule covers all five case types
 # (prescription_review 2h · otc_order 6h · repeat_request 6h · insurance_query 24h
 # · general_query 24h). It skips terminal-stage cases, alerts the responsible
 # operator through the ops inbox, relays `message` to the patient ONCE per breach
-# (deduped on `sla_notified_at`), and mints the `sla_breach` record event that
-# `xrm.yaml`'s `on.sla_breach` hook turns into a pharmacist task.
+# (deduped on `sla_notified_at`), and then puts a pharmacist task on the case.
 #
 # `escalate_to:` routes the breached item to a queue. It took three rounds to land:
 # first omitted because the KB documented the target two incompatible ways, then kept
@@ -27,16 +26,19 @@
 # work inbox, and the ops-inbox alert still goes to the previous assignee — so a breach on
 # an UNASSIGNED item escalates silently. The customer reassurance below is unaffected.
 
-jobs:
-  - key:              case_sla
-    kind:             sla_sweep
-    entity:           case
-    # Five minutes. The prescription-review SLA is 2h — the shortest in the repo,
-    # and the one the patient was quoted — so the detection lag has to be small
-    # against it. Floor is 60.
-    interval_seconds: 300
-    config:
-      escalate_to: queue:pharmacist_review
-      message:
-        ar: 'نعتذر عن التأخير 🙏 الصيدلي بيراجع طلبك دلوقتي وهنتواصل معاك حالاً.'
-        en: 'Sorry for the wait 🙏 The pharmacist is reviewing your request now and will contact you right away.'
+rules:
+  # The resolution clock ran out. After the breach, a due-dated job on a pharmacist's
+  # list, so the breach is worked, not just announced.
+  - key: case_sla
+    for: case
+    at: clock resolution
+    do:
+      - breach:
+          escalate_to: queue:pharmacist_review
+          message:
+            ar: 'نعتذر عن التأخير 🙏 الصيدلي بيراجع طلبك دلوقتي وهنتواصل معاك حالاً.'
+            en: 'Sorry for the wait 🙏 The pharmacist is reviewing your request now and will contact you right away.'
+      - open_task:
+          title:        '⏰ تجاوز المهلة — حالة {{ record.record_number }}'
+          body:         'النوع: {{ record.fields.case_type }} · الأولوية: {{ record.fields.priority }}. راجع الطلب وتواصل مع المريض.'
+          due_in_hours: 1

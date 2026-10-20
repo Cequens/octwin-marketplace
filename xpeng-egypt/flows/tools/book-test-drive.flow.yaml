@@ -231,8 +231,8 @@ steps:
         failed:  []
         invalid: []
 
-  # The reminders (24h + 2h before) are declared in scheduling.yaml — the platform writes
-  # them with the booking and moves or cancels them with it, from every door.
+  # The reminders (24h + 2h before) are `remind:` rules in automation.yaml — the platform sends
+  # them, and moves or stops them with the booking, from every door.
   confirm:
     - render:
         render_intent: detail_card

@@ -1,0 +1,32 @@
+# What the club does by itself — rules (guide: craft-automation; every change, time and action: rules-guide).
+rules:
+  # The class's reminders, a day and two hours before. They follow the booking: moved, they move; cancelled or
+  # finished, they stop — whoever does it (the chat, the front desk in the console). The button opens the
+  # member's own classes.
+  - key: class_day_before
+    for: booking
+    at: slot_start - 24h
+    do:
+      - remind:
+          resource_type: trainer
+          render:
+            render_intent: detail_card
+            body:
+              en: '⏰ Reminder: {{ record.fields.class_label }} — {{ record.fields.slot_start }}. Do not forget your kit and water!'
+              ar: '⏰ تذكير: حصة {{ record.fields.class_label }} — {{ record.fields.slot_start }}. لا تنسَ ملابس التمرين والماء!'
+            buttons:
+              - { title: { en: '🗓️ My classes', ar: '🗓️ حصصي' }, on_select: { invoke: my-schedule } }
+
+  - key: class_two_hours_before
+    for: booking
+    at: slot_start - 2h
+    do:
+      - remind:
+          resource_type: trainer
+          render:
+            render_intent: detail_card
+            body:
+              en: '⏰ Reminder: {{ record.fields.class_label }} — {{ record.fields.slot_start }}. Do not forget your kit and water!'
+              ar: '⏰ تذكير: حصة {{ record.fields.class_label }} — {{ record.fields.slot_start }}. لا تنسَ ملابس التمرين والماء!'
+            buttons:
+              - { title: { en: '🗓️ My classes', ar: '🗓️ حصصي' }, on_select: { invoke: my-schedule } }

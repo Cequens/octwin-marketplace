@@ -6,7 +6,7 @@
 # whole point of the pack is that it works with the system they already use.
 #
 #  • site  — where a contractor wants materials delivered.
-#  • quote — the RFQ pipeline. Its `on:` hooks are seams 3 and 4 of the demo.
+#  • quote — the RFQ pipeline. Its rules (automation.yaml) are seams 3 and 4 of the demo.
 
 entities:
 
@@ -87,73 +87,6 @@ entities:
     milestones:
       rfq_filed: { label: { en: 'RFQ filed', ar: 'تم استلام الطلب' } }
       order_won: { label: { en: 'Won', ar: 'تم الاعتماد' } }
-
-    on:
-      # ── seam 3 · the observer push ──────────────────────────────────────────
-      # Both hook SHAPES are exercised: `create:` is a bare directive list,
-      # `enter:` is a stage-keyed map.
-      #
-      # These are QUEUED, not called on the turn. A customer filing an RFQ must not
-      # wait on Slack, and the alert must survive a 503 — which the reactions seam,
-      # being fire-and-forget, could not guarantee on its own.
-      create:
-        - push:
-            operation: slack_post_rfq
-            input:
-              text: '🧱 New RFQ {{ record.record_number }} — {{ record.fields.material_name }} ×{{ record.fields.qty }} {{ record.fields.unit }} for {{ record.fields.customer_name }}. Sheet: {{ record.fields.sheet_range }}'
-      enter:
-        won:
-          - push:
-              operation: slack_post_sales
-              input:
-                text: '🏆 Won {{ record.record_number }} — {{ record.fields.material_name }} ×{{ record.fields.qty }} · {{ record.fields.total }} SAR · {{ record.fields.customer_name }}'
-
-        # ── the customer notification ─────────────────────────────────────────
-        # Ops moves the quote to `shipped` in the console, and THIS fires — the
-        # ordinary notify verb, one declared line. It does not care what caused
-        # the move, which is exactly why deleting the sheet-side webhook cost
-        # nothing: a console click and an inbound upsert produce the same event.
-        shipped:
-          - notify:
-              message:
-                ar: '🚚 طلبك {{ record.record_number }} ({{ record.fields.material_name }}) خرج للشحن. نتواصل معك عند وصول الشحنة للموقع.'
-                en: '🚚 Your order {{ record.record_number }} ({{ record.fields.material_name }}) is on its way. We will contact you when it reaches the site.'
-                ur: '🚚 آپ کا آرڈر {{ record.record_number }} ({{ record.fields.material_name }}) روانہ ہو گیا ہے۔ سامان سائٹ پر پہنچنے پر ہم آپ سے رابطہ کریں گے۔'
-              cooldown_hours: 12
-
-        delivered:
-          - notify:
-              message:
-                ar: '✅ تم تسليم طلبك {{ record.record_number }}. شكراً لتعاملك مع بناء لمواد البناء.'
-                en: '✅ Your order {{ record.record_number }} has been delivered. Thank you for choosing Binaa Building Materials.'
-                ur: '✅ آپ کا آرڈر {{ record.record_number }} پہنچا دیا گیا ہے۔ بناء بلڈنگ میٹیریلز کا انتخاب کرنے کا شکریہ۔'
-              cooldown_hours: 24
-
-      # ── the sheet-side mirror ───────────────────────────────────────────────
-      # ANY move, appended to `Status log` — so the workbook still shows status
-      # even though nobody types it there any more. `stage_change` rather than six
-      # `enter:` entries: a stage added later would silently miss the mirror.
-      #
-      # It fires ALONGSIDE the `enter:` hooks above, not instead of them, and for
-      # EVERY source — a console click, a flow's record_save, an automation sweep.
-      # Queued, so a spreadsheet write can never delay the customer's message; if
-      # it fails it dead-letters visibly and the stage move still stands.
-      stage_change:
-        # TWO writes on purpose. The log is the durable record — append-only, no
-        # row index, survives a sort. The cell is the one the sales desk reads
-        # without being taught a formula. If they ever disagree, the log is right.
-        - push:
-            operation: sheets_append_status
-            input:
-              ref:  '{{ record.record_number }}'
-              from: '{{ event.from }}'
-              to:   '{{ event.to }}'
-              by:   '{{ event.actor }}'
-        - push:
-            operation: sheets_update_status
-            input:
-              row:    '{{ record.fields.sheet_row }}'
-              status: '{{ event.to }}'
 
 segments:
   open_rfqs:

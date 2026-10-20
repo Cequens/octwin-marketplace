@@ -283,9 +283,9 @@ operations:
 
   # TWO operations rather than one taking `channel` as an argument, because the
   # channel is CONNECTION CONFIG, not per-call data. An operation body can read
-  # `{{ conn.* }}`; a `push:` hook's `input:` is rendered at enqueue time from the
-  # record alone and cannot. Putting the channel here also means a `push:` hook
-  # names WHICH DESK it is telling, which reads better in xrm.yaml.
+  # `{{ conn.* }}`; a `push:` action's `input:` is rendered at enqueue time from the
+  # record alone and cannot. Putting the channel here also means a `push:` rule
+  # names WHICH DESK it is telling, which reads better in automation.yaml.
   slack_post_rfq:
     connection: slack
     describe:   'Tell the RFQ desk. Queued only.'

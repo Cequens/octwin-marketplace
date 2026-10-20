@@ -1,0 +1,32 @@
+# What the academy does by itself — rules (guide: craft-automation; every change, time and action: rules-guide).
+rules:
+  # The campus tour's reminders — a day-before and a 2-hour one. They follow the tour: moved, they move;
+  # cancelled or finished, they stop — whoever does it (the chat, admissions in the console). The button
+  # opens programmes.
+  - key: tour_day_before
+    for: booking
+    at: slot_start - 24h
+    do:
+      - remind:
+          resource_type: campus
+          render:
+            render_intent: detail_card
+            body:
+              en: '⏰ A reminder of your visit to {{ resource.title }} — {{ record.fields.slot_start }}. We look forward to seeing you!'
+              ar: '⏰ تذكير بزيارة {{ resource.title }} — {{ record.fields.slot_start }}. في انتظارك!'
+            buttons:
+              - { title: { en: '📚 Programmes', ar: '📚 البرامج' }, on_select: { invoke: programmes } }
+
+  - key: tour_two_hours_before
+    for: booking
+    at: slot_start - 2h
+    do:
+      - remind:
+          resource_type: campus
+          render:
+            render_intent: detail_card
+            body:
+              en: '⏰ A reminder of your visit to {{ resource.title }} — {{ record.fields.slot_start }}. We look forward to seeing you!'
+              ar: '⏰ تذكير بزيارة {{ resource.title }} — {{ record.fields.slot_start }}. في انتظارك!'
+            buttons:
+              - { title: { en: '📚 Programmes', ar: '📚 البرامج' }, on_select: { invoke: programmes } }

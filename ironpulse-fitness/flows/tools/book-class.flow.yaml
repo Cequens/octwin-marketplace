@@ -249,8 +249,8 @@ steps:
     - goto: booked
 
   booked:
-    # The reminders (T-24h + T-2h) are declared in scheduling.yaml — the platform writes
-    # them with the booking and moves or cancels them with it, from every door.
+    # The reminders (T-24h + T-2h) are `remind:` rules in automation.yaml — the platform sends
+    # them, and moves or stops them with the booking, from every door.
     - render:
         render_intent: detail_card
         header: '{$t("book-class.done_header")}'

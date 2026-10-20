@@ -1,0 +1,34 @@
+# What the brokerage does by itself — rules (guide: craft-automation; every change, time and action: rules-guide).
+rules:
+  # The viewing's reminders — a buyer gets a day-before and a 2-hour one. They follow the viewing: moved, they
+  # move; cancelled or finished, they stop — whoever does it (the chat, an advisor in the console). The button
+  # opens my-requests.
+  - key: viewing_day_before
+    for: booking
+    at: slot_start - 24h
+    do:
+      - remind:
+          resource_type: advisor
+          render:
+            render_intent: detail_card
+            body:
+              en: '⏰ Reminder: your viewing with {{ resource.title }} — {{ record.fields.slot_start }}.'
+              ar: '⏰ تذكير: معاينتك مع {{ resource.title }} — {{ record.fields.slot_start }}.'
+              ur: '⏰ یاد دہانی: {{ resource.title }} کے ساتھ آپ کی ملاقات — {{ record.fields.slot_start }}۔'
+            buttons:
+              - { title: { en: '📁 My requests', ar: '📁 طلباتي', ur: '📁 میری درخواستیں' }, on_select: { invoke: my-requests } }
+
+  - key: viewing_two_hours_before
+    for: booking
+    at: slot_start - 2h
+    do:
+      - remind:
+          resource_type: advisor
+          render:
+            render_intent: detail_card
+            body:
+              en: '⏰ Reminder: your viewing with {{ resource.title }} — {{ record.fields.slot_start }}.'
+              ar: '⏰ تذكير: معاينتك مع {{ resource.title }} — {{ record.fields.slot_start }}.'
+              ur: '⏰ یاد دہانی: {{ resource.title }} کے ساتھ آپ کی ملاقات — {{ record.fields.slot_start }}۔'
+            buttons:
+              - { title: { en: '📁 My requests', ar: '📁 طلباتي', ur: '📁 میری درخواستیں' }, on_select: { invoke: my-requests } }

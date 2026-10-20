@@ -1,15 +1,16 @@
-# Standing automation jobs for MotorCare.
+# What MotorCare does by itself — rules (guide: craft-automation; every change, time and action: rules-guide).
 #
 # The alarm on the workshop SLA `worklist.yaml` promises. A breakdown carries a
-# four-hour clock and `urgent` priority, and until this job existed nothing looked
+# four-hour clock and `urgent` priority, and until this alarm existed nothing looked
 # at either: `sla_due_at` was stamped when the job card enrolled and never read.
 #
-# The sweep is entity-level, so this one job covers all four job types
+# The clock is entity-level, so this one rule covers all four job types
 # (breakdown 4h · diagnostic_check 8h · periodic_service 24h · body_repair 48h).
-# It skips job cards already collected or cancelled, alerts the responsible
-# operator through the ops inbox, relays `message` to the customer ONCE per breach
-# (deduped on `sla_notified_at`), and mints the `sla_breach` record event that
-# `xrm.yaml`'s `on.sla_breach` hook turns into a service-desk task.
+# It skips job cards already collected or cancelled. Its `breach:` alerts the
+# responsible operator through the ops inbox and relays `message` to the customer
+# ONCE per breach (deduped on `sla_notified_at`); then its `open_task` puts a
+# due-dated job on the service desk's list, so the breach is worked, not just
+# announced.
 #
 # `escalate_to:` routes the breached item to a queue. It took three rounds to land:
 # first omitted because the KB documented the target two incompatible ways, then kept
@@ -22,19 +23,53 @@
 # `service_desk` is already the routing `fallback:` — a breached card leaves the bay and
 # lands with the service desk.
 #
-# Know the limit: routing a queue notifies nobody new. The item appears in that queue's
-# work inbox, and the ops-inbox alert still goes to the previous assignee — so a breach on
-# an UNASSIGNED item escalates silently. The customer reassurance below is unaffected.
+# Know the limit: routing a queue assigns nobody new (every queue here is `manual`). The
+# item appears in that queue's work inbox; the ops-inbox alert goes to whoever held it, or,
+# when nobody did, to the service desk's people. The customer reassurance is unaffected.
+#
+# The bay booking's reminders, a day and two hours before. They follow the booking: moved,
+# they move; cancelled or finished, they stop — whoever does it (the chat, the service desk
+# in the console). The button opens my-garage.
 
-jobs:
-  - key:              repair_job_sla
-    kind:             sla_sweep
-    entity:           repair_job
-    # A quarter of an hour, bounding the detection lag at ~6% of the four-hour
-    # breakdown promise.
-    interval_seconds: 900
-    config:
-      escalate_to: queue:service_desk
-      message:
-        ar: 'نعتذر عن التأخير 🙏 بطاقة سيارتك تجاوزت الوقت المتوقع وتم تنبيه مدير الورشة — بنرجع لك في أقرب وقت.'
-        en: 'Sorry for the wait 🙏 The work on your car has taken longer than expected and the workshop manager has been alerted — we will get back to you shortly.'
+rules:
+  - key: repair_job_sla
+    for: repair_job
+    at: clock resolution
+    do:
+      - breach:
+          escalate_to: queue:service_desk
+          message:
+            ar: 'نعتذر عن التأخير 🙏 بطاقة سيارتك تجاوزت الوقت المتوقع وتم تنبيه مدير الورشة — بنرجع لك في أقرب وقت.'
+            en: 'Sorry for the wait 🙏 The work on your car has taken longer than expected and the workshop manager has been alerted — we will get back to you shortly.'
+      - open_task:
+          title:        '⏰ تجاوز المهلة — بطاقة {{ record.record_number }}'
+          body:         'نوع العمل: {{ record.fields.job_type }} · القسم: {{ record.fields.work_area }}. راجع البطاقة وبلّغ العميل.'
+          due_in_hours: 1
+
+  - key: service_day_before
+    for: booking
+    at: slot_start - 24h
+    do:
+      - remind:
+          resource_type: bay
+          render:
+            render_intent: detail_card
+            body:
+              en: '⏰ A reminder of your car service appointment — {{ record.fields.slot_start }} at {{ resource.title }}.'
+              ar: '⏰ تذكير بموعد صيانة سيارتك — {{ record.fields.slot_start }} في {{ resource.title }}.'
+            buttons:
+              - { title: { en: '🚗 My cars', ar: '🚗 سياراتي' }, on_select: { invoke: my-garage } }
+
+  - key: service_two_hours_before
+    for: booking
+    at: slot_start - 2h
+    do:
+      - remind:
+          resource_type: bay
+          render:
+            render_intent: detail_card
+            body:
+              en: '⏰ A reminder of your car service appointment — {{ record.fields.slot_start }} at {{ resource.title }}.'
+              ar: '⏰ تذكير بموعد صيانة سيارتك — {{ record.fields.slot_start }} في {{ resource.title }}.'
+            buttons:
+              - { title: { en: '🚗 My cars', ar: '🚗 سياراتي' }, on_select: { invoke: my-garage } }

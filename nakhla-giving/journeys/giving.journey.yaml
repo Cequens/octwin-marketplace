@@ -8,8 +8,8 @@
 # separate a donor who never came back from one who is mid-payment.
 #
 # Every stage below is reachable by a declared event. `intending` comes from the
-# `track_event` in `donate`'s `send_link`, `donor` from the `track:` on the
-# donation entity's `enter: paid` hook — i.e. from the WEBHOOK, not from a flow,
+# `track_event` in `donate`'s `send_link`, `donor` from the `track:` in the
+# `donation_enter_paid` rule (automation.yaml) — i.e. from the WEBHOOK, not from a flow,
 # which is the whole point: the funnel advances when the money moves, not when
 # the bot says something.
 

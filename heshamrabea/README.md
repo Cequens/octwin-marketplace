@@ -17,8 +17,8 @@ Arabic. It answers questions and takes appointments.
 
 - `xrm.yaml` — `branch`, `professional` (the bookable resource), `service`, and an extended
   `booking` system entity. Demo data seeds 16 branches, 32 barbers, 23 services.
-- `scheduling.yaml` — makes each `professional` bookable, 10:00–23:30 daily, 30-min slots,
-  a 2-hour reminder.
+- `scheduling.yaml` — makes each `professional` bookable, 10:00–23:30 daily, 30-min slots.
+- `automation.yaml` — the 2-hour reminder, a `remind:` rule.
 
 ## ⚠️ Placeholder data to replace
 

@@ -1,0 +1,16 @@
+# What the resorts do by themselves — rules (guide: craft-automation; every change, time and action: rules-guide).
+rules:
+  # The stay's reminder, two days before the arrival slot. It follows the stay: moved, it moves to the new date;
+  # cancelled or finished, it stops — whoever does it (the chat, the front desk in the console).
+  # 48 hours ahead is outside WhatsApp's 24-hour window unless the guest wrote in the day
+  # before, so on WhatsApp it often does not arrive (guide:craft-outreach).
+  - key: stay_two_days_before
+    for: booking
+    at: slot_start - 48h
+    do:
+      - remind:
+          resource_type: room_type
+          message:
+            ar: '⏰ تذكير بإقامتك: 🏨 {{ record.fields.resort_label }} — 🛏️ {{ resource.title }} — 📆 الوصول: {{ record.fields.slot_start.date }}. هل تحتاج إلى تغيير أي شيء؟ راسلنا هنا. 🌊'
+            en: '⏰ A reminder of your stay: 🏨 {{ record.fields.resort_label }} — 🛏️ {{ resource.title }} — 📆 Arrival: {{ record.fields.slot_start.date }}. Need to change anything? Just message us here. 🌊'
+            es: '⏰ Un recordatorio de tu estancia: 🏨 {{ record.fields.resort_label }} — 🛏️ {{ resource.title }} — 📆 Llegada: {{ record.fields.slot_start.date }}. ¿Necesitas cambiar algo? Escríbenos por aquí. 🌊'

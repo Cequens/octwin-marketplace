@@ -39,7 +39,7 @@ browsing → considering → intent → evaluating → (deal_won)
   `model-details` → `capture-lead` → `book-test-drive`), completing the `lead_captured` and
   `test_drive_booked` goals.
 - **The terminal `deal_won`** fires **off-channel**: when a rep marks the `lead` record
-  `won`, the `lead` pipeline's `on_enter` hook completes the goal, valued per-lead from
+  `won`, the `lead_enter_won` rule (`on: { enter: won }`) completes the goal, valued per-lead from
   `expected_value` (seeded from the interested model's price at capture time). Real
   cost-per-acquisition / chat-sourced revenue, no double bookkeeping.
 
@@ -62,7 +62,8 @@ customer — it stops when an operator relays a message, so it measures whether 
 picked the ticket up. *Resolve* is time to a finished outcome. Breaching either one routes
 the ticket to the **Escalations** queue and sends the customer a different apology, since
 "nobody has replied to you yet" and "this is taking longer than we said" are not the same
-failure. The alarm is `automation.yaml`, which sweeps every 5 minutes — without it the
+failure. The alarm is two rules in `automation.yaml` (`at: clock first_response` and
+`at: clock resolution`), each firing when its deadline passes — without them the
 targets above are stamped and never read, which is how this pack shipped until v2.9.0.
 
 ### Live handoff — a person holds the conversation
@@ -93,7 +94,7 @@ flows/tools/*.flow.yaml        # the 11 capabilities (+ .locale.ar/.en.yaml stri
 xrm.yaml                       # records: model · branch · lead · booking (+ demo seed data)
 scheduling.yaml                # bookable test-drive slots
 worklist.yaml                  # after-sales casework (queues, types, both SLA clocks) + the live handoff block
-automation.yaml                # the SLA alarm: sweeps both clocks, escalates a breach
+automation.yaml                # rules: the SLA alarm on both clocks, the `won` goal, the test-drive reminders
 journeys/purchase.journey.yaml # the sales funnel (stages · goals · events)
 commands.yaml · messages.*     # slash commands + platform messages
 ```

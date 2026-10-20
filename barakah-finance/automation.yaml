@@ -1,15 +1,14 @@
-# Standing automation jobs for Barakah Finance.
+# What Barakah Finance does by itself — rules (guide: craft-automation; every change, time and action: rules-guide).
 #
 # The alarm on the credit-review SLA `worklist.yaml` promises. An applicant
 # waiting on a financing decision is the least likely customer in this repo to
 # chase it, which is exactly why the deadline needs a machine watching it:
-# `sla_due_at` was stamped at enrolment and, before this job, never read.
+# `sla_due_at` was stamped at enrolment and, before this alarm, never read.
 #
-# The sweep is entity-level, so this one job covers all four case types
+# The clock is the entity's, so one rule per clock covers all four case types
 # (document_review 24h · finance_application 48h · sharia_question 48h ·
 # general_query 48h). It skips terminal-stage cases, alerts the responsible
-# operator through the ops inbox, and mints the `sla_breach` record event that
-# `xrm.yaml`'s `on.sla_breach` hook turns into an underwriter task.
+# operator through the ops inbox, and then puts an underwriter task on the case.
 #
 # The applicant's reassurance rides the FIRST-RESPONSE clock instead — a case nobody
 # has touched in 4 hours (`first_response_within_hours`, worklist.yaml). A breach comes
@@ -31,17 +30,29 @@
 # work inbox, and the ops-inbox alert still goes to the previous assignee — so a breach on
 # an UNASSIGNED item escalates silently. The customer reassurance below is unaffected.
 
-jobs:
-  - key:              case_sla
-    kind:             sla_sweep
-    entity:           case
-    # An hour. The shortest clock here is the 4h first response, which an hourly
-    # tick reaches within the hour; a finer tick would just be a busier ticker.
-    interval_seconds: 3600
-    config:
-      escalate_to: queue:credit_review
-      first_response:
-        escalate_to: queue:credit_review
-        message:
-          ar: 'استلمنا طلبك 🙏 وهو الآن مع فريق الائتمان للمراجعة — بنتواصل معك قريباً.'
-          en: 'We have your request 🙏 It is with our credit team for review — we will be in touch soon.'
+rules:
+  # The resolution clock ran out. After the breach, a due-dated job on an underwriter's
+  # list, so the breach is worked, not just announced.
+  - key: case_sla
+    for: case
+    at: clock resolution
+    do:
+      - breach:
+          escalate_to: queue:credit_review
+      - open_task:
+          title:        '⏰ تجاوز المهلة — حالة {{ record.record_number }}'
+          body:         'النوع: {{ record.fields.case_type }} · الأولوية: {{ record.fields.priority }}. راجع الطلب وتواصل مع العميل.'
+          # 48h SLAs move at a different tempo than a 4h dispatch board — a
+          # one-hour due date on an underwriting task would just be noise.
+          due_in_hours: 4
+
+  # Nobody touched the case in 4 hours: route it to the desk and reassure the applicant.
+  - key: case_first_response
+    for: case
+    at: clock first_response
+    do:
+      - breach:
+          escalate_to: queue:credit_review
+          message:
+            ar: 'استلمنا طلبك 🙏 وهو الآن مع فريق الائتمان للمراجعة — بنتواصل معك قريباً.'
+            en: 'We have your request 🙏 It is with our credit team for review — we will be in touch soon.'

@@ -17,8 +17,8 @@ Script to deploy**:
 |---|---|---|---|
 | 1 | **Flow fetch** | `flows/tools/price-list.flow.yaml` | A customer asks a price → the bot reads the **live** Prices tab and renders a picker. Edit a price in the sheet, ask again, the new price appears — no redeploy. |
 | 2 | **Flow push** | `flows/tools/request-quote.flow.yaml` | An RFQ is confirmed → an xrm `quote` is saved (minting `record_number`) → that number is appended as a new row in the Quotes tab. |
-| 3 | **Observer push** | `xrm.yaml` `on: create` / `on: enter.won` | Slack hears about it, through a **durable queue** rather than on the turn. |
-| 4 | **Mirror** | `xrm.yaml` `on: stage_change` | Ops moves the quote in the console → the customer gets a WhatsApp message **and** the move is appended to the sheet's `Status log`. |
+| 3 | **Observer push** | `automation.yaml` rules `on: created` / `on: { enter: won }` | Slack hears about it, through a **durable queue** rather than on the turn. |
+| 4 | **Mirror** | `automation.yaml` rule `on: stage_change` | Ops moves the quote in the console → the customer gets a WhatsApp message **and** the move is appended to the sheet's `Status log`. |
 
 Seam 4 is the point of the whole pack: **the customer notification is one declared
 line of ordinary `notify:`**. Nothing was built for it. Any stage change travels
@@ -37,8 +37,8 @@ spreadsheet write, and both have to survive a 503. That is why `slack_post_*` an
 
 There are two `slack_post_*` rather than one taking a `channel` argument, because
 the channel is **connection config, not per-call data**: an operation body can read
-`{{ conn.* }}`, whereas a `push:` hook's `input:` is rendered from the record alone.
-It also reads better — a hook names *which desk* it is telling.
+`{{ conn.* }}`, whereas a `push:` action's `input:` is rendered from the record alone.
+It also reads better — a rule names *which desk* it is telling.
 
 ### Why the price list is not an xrm entity
 

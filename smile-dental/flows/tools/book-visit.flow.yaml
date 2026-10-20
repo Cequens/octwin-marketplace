@@ -1,6 +1,6 @@
 # book-visit — treatment → dentist → real slot → confirm → reserve. The T-24h/T-2h
-# reminders are declared in scheduling.yaml, so the platform writes, moves and
-# cancels them with the booking.
+# reminders are `remind:` rules in automation.yaml, so the platform sends, moves and
+# stops them with the booking.
 #
 # The slot picker is fed by the scheduling engine, which returns STRUCTURED rows
 # only (no locale strings in SQL) — the human label is composed here. Reservation is
@@ -216,8 +216,8 @@ steps:
         invalid: []
 
   booked:
-    # The reminders (T-24h + T-2h) are declared in scheduling.yaml — the platform writes
-    # them with the booking and moves or cancels them with it, from every door.
+    # The reminders (T-24h + T-2h) are `remind:` rules in automation.yaml — the platform sends
+    # them, and moves or stops them with the booking, from every door.
     - render:
         render_intent: detail_card
         header: '{$t("book-visit.done_header")}'

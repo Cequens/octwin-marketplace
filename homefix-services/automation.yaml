@@ -1,16 +1,15 @@
-# Standing automation jobs for HomeFix.
+# What HomeFix does by itself — rules (guide: craft-automation; every change, time and action: rules-guide).
 #
 # The alarm on the dispatch SLA `worklist.yaml` promises. The four-hour emergency
 # is the one that matters: a burst pipe whose work order sits unworked past the
-# deadline produced no signal at all before this job existed — `sla_due_at` was
+# deadline produced no signal at all before this alarm existed — `sla_due_at` was
 # stamped at enrolment and never read again.
 #
-# The sweep is entity-level, so this one job covers all three urgency types
+# The clock is the entity's, so this one rule covers all three urgency types
 # (emergency 4h · soon 12h · routine 48h). It skips work orders already completed
 # or cancelled, alerts the responsible operator through the ops inbox, relays
 # `message` to the customer ONCE per breach (deduped on `sla_notified_at`), and
-# mints the `sla_breach` record event that `xrm.yaml`'s `on.sla_breach` hook turns
-# into a dispatch-desk task.
+# then puts a dispatch-desk task on the work order.
 #
 # `escalate_to:` routes the breached item to a queue. It took three rounds to land:
 # first omitted because the KB documented the target two incompatible ways, then kept
@@ -27,16 +26,49 @@
 # work inbox, and the ops-inbox alert still goes to the previous assignee — so a breach on
 # an UNASSIGNED item escalates silently. The customer reassurance below is unaffected.
 
-jobs:
-  - key:              work_order_sla
-    kind:             sla_sweep
-    entity:           work_order
-    # A quarter of an hour, bounding the detection lag at ~6% of the four-hour
-    # emergency promise.
-    interval_seconds: 900
-    config:
-      escalate_to: queue:dispatch_desk
-      message:
-        ar: 'نعتذر عن التأخير 🙏 طلبك تجاوز الوقت المتوقع وتم تنبيه فريق الإرسال — بنرجع لك في أقرب وقت.'
-        en: 'Sorry for the wait 🙏 Your request has taken longer than expected and our dispatch team has been alerted — we will get back to you shortly.'
-        ur: 'تاخیر کے لیے معذرت 🙏 آپ کی درخواست میں متوقع وقت سے زیادہ لگ گیا ہے اور ڈسپیچ ٹیم کو اطلاع دے دی گئی ہے — ہم جلد آپ سے رابطہ کریں گے۔'
+rules:
+  # The resolution clock ran out. After the breach, the operator half of the SLA: a
+  # due-dated job on a human's list, so the breach is worked, not just announced.
+  - key: work_order_sla
+    for: work_order
+    at: clock resolution
+    do:
+      - breach:
+          escalate_to: queue:dispatch_desk
+          message:
+            ar: 'نعتذر عن التأخير 🙏 طلبك تجاوز الوقت المتوقع وتم تنبيه فريق الإرسال — بنرجع لك في أقرب وقت.'
+            en: 'Sorry for the wait 🙏 Your request has taken longer than expected and our dispatch team has been alerted — we will get back to you shortly.'
+            ur: 'تاخیر کے لیے معذرت 🙏 آپ کی درخواست میں متوقع وقت سے زیادہ لگ گیا ہے اور ڈسپیچ ٹیم کو اطلاع دے دی گئی ہے — ہم جلد آپ سے رابطہ کریں گے۔'
+      - open_task:
+          title:        '⏰ تجاوز المهلة — أمر عمل {{ record.record_number }}'
+          body:         'الاستعجال: {{ record.fields.urgency }} · الإمارة: {{ record.fields.emirate }}. راجع الإسناد وبلّغ العميل.'
+          due_in_hours: 1
+
+  # Ask the moment the job is DONE, without waiting for the customer to come back.
+  #
+  # The ⭐ button on `my-requests` only reaches someone who opens the bot again, and most
+  # people never do. This asks from the record itself: an operator marks the job completed
+  # at 11pm and the question goes out — the same five ⭐ rows `rate-job` renders, because
+  # both come from surveys.yaml and there is only one copy. The tap invokes `rate-job` with
+  # both ids and the star, exactly as the in-conversation ask does.
+  #
+  # `cooldown_hours: 168` so a re-completed job cannot re-ask within the week. Note the
+  # 24-hour WhatsApp window: this reaches a customer who messaged recently, which after a
+  # just-finished job is the normal case.
+  - key: work_order_enter_completed
+    for: work_order
+    on: { enter: completed }
+    do:
+      - survey:
+          survey:  job_feedback
+          message:
+            ar: 'شكراً لاختيارك HomeFix 🛠️ إزاي كانت زيارة الفني؟'
+            en: 'Thank you for choosing HomeFix 🛠️ How was the technician''s visit?'
+            ur: 'HomeFix کا انتخاب کرنے کا شکریہ 🛠️ ٹیکنیشن کا وزٹ کیسا رہا؟'
+          cta:
+            ar: 'قيّم الزيارة'
+            en: 'Rate the visit'
+            ur: 'وزٹ کی ریٹنگ دیں'
+          invoke:  rate-job
+          with:    { job_id: '{{ record.id }}', service_id: '{{ record.fields.service }}' }
+          cooldown_hours: 168

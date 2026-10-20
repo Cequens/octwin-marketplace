@@ -7,31 +7,7 @@ timezone: Asia/Dubai
 resources:
   advisor:
     slot: { default_minutes: 60, window_days: 10 }
-    # Reminders before slot_start (seconds) — a buyer gets a day-before and a 2-hour
-    # one. Each declares its card, so the PLATFORM sends it, writes it again for the
-    # new time on every move, and cancels it when the viewing ends — whoever moves or
-    # cancels it (the chat, an advisor in the console). The button opens my-requests.
-    reminders:
-      - key: t24
-        seconds: 86400
-        render:
-          render_intent: detail_card
-          body:
-            en: '⏰ Reminder: your viewing with {{ resource }} — {{ time }}.'
-            ar: '⏰ تذكير: معاينتك مع {{ resource }} — {{ time }}.'
-            ur: '⏰ یاد دہانی: {{ resource }} کے ساتھ آپ کی ملاقات — {{ time }}۔'
-          buttons:
-            - { title: { en: '📁 My requests', ar: '📁 طلباتي', ur: '📁 میری درخواستیں' }, on_select: { invoke: my-requests } }
-      - key: t2
-        seconds: 7200
-        render:
-          render_intent: detail_card
-          body:
-            en: '⏰ Reminder: your viewing with {{ resource }} — {{ time }}.'
-            ar: '⏰ تذكير: معاينتك مع {{ resource }} — {{ time }}.'
-            ur: '⏰ یاد دہانی: {{ resource }} کے ساتھ آپ کی ملاقات — {{ time }}۔'
-          buttons:
-            - { title: { en: '📁 My requests', ar: '📁 طلباتي', ur: '📁 میری درخواستیں' }, on_select: { invoke: my-requests } }
+    # Its reminders are rules — automation.yaml (`remind:`).
 
 booking:
   entity: booking

@@ -20,15 +20,14 @@ instead of being dictated twice.
 
 ## The automation (the part with no conversation in it)
 
-`automation.yaml` declares two standing jobs that run on the platform ticker:
+`automation.yaml` declares two rules that run by themselves:
 
 - **`basket_nudge`** — a basket idle for a day gets one message, and at most one more every 48
-  hours. The `cooldown_hours` is the whole point: without it a segment job would message the
-  same customer on every tick.
+  hours. The `limit: per_contact` is the whole point: without it an audience rule would message
+  the same customer every time its timetable comes.
 - **`stale_order_sweep`** — an order nobody moved out of `placed` within a day transitions to
-  `cancelled`, so the kitchen board and the funnel stay honest. The rule itself lives on the
-  entity (`auto_transition` in `xrm.yaml`), not duplicated in the job — the data owns its own
-  staleness policy.
+  `cancelled`, so the kitchen board and the funnel stay honest — one rule: `at: idle 24h`,
+  `while: { stage: placed }`, `move: cancelled`.
 
 ## What the restaurant gets
 
@@ -44,10 +43,9 @@ instead of being dictated twice.
 
 Pure YAML — no code, no pack database.
 
-- `automation.yaml` — the two jobs above; `interval_seconds` has a 60s floor.
-- `xrm.yaml` — note `auto_transition` on the `food_order` pipeline (what `stale_records` reads)
-  and the `bestsellers` **segment**, which `menu` calls by name so the kitchen can redefine
-  "popular" without a deploy.
+- `automation.yaml` — the two rules above; a duration runs from one minute to 366 days.
+- `xrm.yaml` — note the `bestsellers` **segment**, which `menu` calls by name so the kitchen
+  can redefine "popular" without a deploy.
 - `flows/tools/basket.flow.yaml` — the minimum-order gate is an `answer` (a business rule stated
   warmly), not an error card; `$filter_gte` is used rather than `$filter` because `$filter`'s
   predicate is a field path, not a per-row expression.

@@ -1,6 +1,6 @@
 # Appointment booking journey:
-#   branch → barber → service → time slot → confirm → reserve. The 2-hour reminder is
-#   declared in scheduling.yaml, so the platform writes, moves and cancels it with the booking.
+#   branch → barber → service → time slot → confirm → reserve. The 2-hour reminder is a
+#   `remind:` rule in automation.yaml, so the platform sends, moves and stops it with the booking.
 # Each picker row RE-INVOKES this flow with the running selection carried in `with:`
 # (threaded forward via $input). `entry` routes to the next stage by which fields are
 # present. The only suspend is the confirm card (approve_apply). This invoke-chain is
@@ -269,8 +269,8 @@ steps:
         failed:       [{ end: failed }]
         invalid: []
   booked:
-    # The 2-hour reminder is declared in scheduling.yaml — the platform writes it with the
-    # booking and moves or cancels it with it, from every door.
+    # The 2-hour reminder is a `remind:` rule in automation.yaml — the platform sends it, and
+    # moves or stops it with the booking, from every door.
     - render:
         render_intent: detail_card
         header: '{$t("book.done_header")}'

@@ -1,0 +1,32 @@
+# What the clinic does by itself — rules (guide: craft-automation; every change, time and action: rules-guide).
+rules:
+  # The visit's reminders, a day and two hours before. They follow the visit: moved, they move; cancelled or
+  # finished, they stop — whoever does it (the chat, reception in the console). The button opens the
+  # patient's own appointments.
+  - key: visit_day_before
+    for: booking
+    at: slot_start - 24h
+    do:
+      - remind:
+          resource_type: dentist
+          render:
+            render_intent: detail_card
+            body:
+              en: '⏰ A reminder of your appointment with {{ resource.title }} — {{ record.fields.slot_start }}.'
+              ar: '⏰ تذكير بموعدك مع {{ resource.title }} — {{ record.fields.slot_start }}.'
+            buttons:
+              - { title: { en: '📋 My appointments', ar: '📋 مواعيدي' }, on_select: { invoke: my-visits } }
+
+  - key: visit_two_hours_before
+    for: booking
+    at: slot_start - 2h
+    do:
+      - remind:
+          resource_type: dentist
+          render:
+            render_intent: detail_card
+            body:
+              en: '⏰ A reminder of your appointment with {{ resource.title }} — {{ record.fields.slot_start }}.'
+              ar: '⏰ تذكير بموعدك مع {{ resource.title }} — {{ record.fields.slot_start }}.'
+            buttons:
+              - { title: { en: '📋 My appointments', ar: '📋 مواعيدي' }, on_select: { invoke: my-visits } }
