@@ -1,0 +1,28 @@
+# clinic — platform-emitted envelope copy (English).
+#
+# The English twin of messages.ar.yaml: every messages.<lang>.yaml loads, and the platform picks
+# the customer's language. This pack speaks English (locale.en.yaml), so an English customer must
+# read these lines in English — without this file they fell back to the platform's generic
+# English words, and before platform 2026-10-29 to this pack's ARABIC ones.
+#   • errors:  copy the PLATFORM emits on failure paths (tool throw, workflow plumbing).
+#              Schema: the `messages` declaration in the platform KB
+#              (.octwin/platform-kb/declarations/messages.json).
+#   • agents:  per-agent loop copy, keyed by the manifest agent id. Merged over the platform's
+#              defaults at turn start.
+
+errors:
+  failed:
+    failure: { body: 'Sorry, something unexpected went wrong. Please try again.' }
+  unhandled_tool_error:
+    failure: { body: 'Sorry, something unexpected went wrong. Please try again in a moment. 🙏' }
+
+# Per-agent envelope copy — keyed by manifest agent id (`reception`).
+agents:
+  reception:
+    agentDisabled:    'Our smart assistant is unavailable for now. Please try again later. 🙏'
+    transientError:   'Sorry, a temporary error occurred. Please try again in a moment. 🙏'
+    workflowExpired:  'Sorry, the session ended. Please start again.'
+    workflowError:    'Sorry, something went wrong while finishing that. Please try again.'
+    workflowDisabled: 'This feature is not turned on right now.'
+    toolDisabled:     'This feature is not turned on right now.'
+    directTapError:   'Sorry, something went wrong. Please try again.'

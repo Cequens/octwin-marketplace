@@ -1,7 +1,7 @@
 # clinic — platform-emitted envelope copy (Arabic).
 #
-# Two blocks, both auto-loaded from this file by its name (the lang suffix is
-# matched against default_settings.locale):
+# Two blocks. Every messages.<lang>.yaml loads and the platform picks the customer's
+# language; the English twin is messages.en.yaml:
 #   • errors:  copy the PLATFORM emits on failure paths (tool throw, workflow
 #              plumbing). Optional, but worth having so users never sit in
 #              silence. Schema: the `messages` declaration in the platform KB
