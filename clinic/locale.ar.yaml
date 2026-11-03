@@ -10,4 +10,4 @@
 pack_id: clinic
 strings:
   # Shared footer under every option-picker (the collect field_prompt_render).
-  field_picker_footer: 'اختر من القائمة، أو اكتب لو محتاج حاجة تانية.'
+  field_picker_footer: 'اختر من القائمة، أو اكتب اختيارك.'

@@ -13,7 +13,7 @@ description: |-
   to show one doctor's card (answers "does Dr X accept GlobeMed?").
 
 input:
-  query:     { type: string, optional: true, describe: 'The patient''s own words, as typed: a doctor name, a specialty ("جلدية", "dermatology") or a symptom ("skin rash"). Do not translate or shorten — matched by spelling and by meaning, in Arabic or English.' }
+  query:     { type: string, optional: true, describe: 'The patient''s own words: a doctor''s name without the title ("Mona", not "Dr. Mona"), a specialty ("جلدية", "dermatology") or a symptom ("skin rash"). Do not translate — matched by spelling and by meaning, in Arabic or English.' }
   branch:    { type: string, optional: true, describe: 'A branch record id from a previous result — filters to that location. Never typed text.' }
   tpa:       { type: string, optional: true, describe: 'Insurance company name to filter by (e.g. GlobeMed, Bupa). Free text (a name, not an id).' }
   doctor_id: { type: string, optional: true, describe: 'A doctor record id from a previous doctor-search result — shows that one doctor''s detail card. Never a typed name (use `query`).' }
@@ -95,7 +95,8 @@ steps:
           body: '$lines($compact([$item.fields.name, $lines($compact([$coalesce($item.fields.title, null), $loc($item.fields.specialty), $loc($ds.refs[$item.fields.branch].fields.name)]), " · "), $coalesce($item.fields.rating_count, 0) > 0 ? $t("doctor-search.card.rating", { rating: $item.fields.rating, count: $item.fields.rating_count }) : null, $item.fields.accepted_tpas != null ? $t("doctor-search.card.tpas", { tpas: $item.fields.accepted_tpas }) : null]), "\n")'
           buttons:
             - { title: '{$t("doctor-search.button.book")}', on_select: { invoke: book-appointment, with: { doctor_id: '$item.id' } } }
-      memory_note: 'Doctor search: {$length($ds.rows)} result(s)'
+      # Names AND ids, so the agent can book the doctor the patient just saw without searching again.
+      memory_note: 'Doctor search showed: {$join_with($map($map($ds.rows, { s: $item.fields.name + " (doctor_id " + $item.id + ")" }), "s"), ", ")}'
     - end: applied
 
   no_results:

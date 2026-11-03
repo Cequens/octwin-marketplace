@@ -72,7 +72,7 @@ steps:
                   empty:  []
                   failed: []
         progress: '$lines($compact([$t("book-appointment.progress.header"), $doctor_label != null ? $t("book-appointment.progress.doctor", { doctor: $doctor_label }) : null, $state.slot_label != null ? $t("book-appointment.progress.slot", { slot: $state.slot_label }) : null, $state.for_whom != null ? $t("book-appointment.progress.for_whom", { who: ($state.for_whom == "dependent" ? $coalesce($state.dependent_name, $t("book-appointment.for_whom.dependent")) : $t("book-appointment.for_whom.self")) }) : null]), "\n")'
-        gap_instructions: 'Ask the patient for the next missing detail ({$collect_field}), one at a time, in Egyptian Arabic. Re-call book-appointment once they answer. Do NOT give medical advice.'
+        gap_instructions: 'Ask the patient for the next missing detail ({$collect_field}), one at a time, in the patient''s language. Re-call book-appointment once they answer. Do NOT give medical advice.'
         fields:
           # Doctor picker — only when no doctor was pre-chosen. Browses top doctors
           # (record_search with an empty query → ranked by rating); the selection
@@ -126,6 +126,7 @@ steps:
               on_empty: no_slots
           # Who the visit is for.
           - field: for_whom
+            type: choice
             label: '$t("book-appointment.label.for_whom")'
             options:
               header: book-appointment.field_header.for_whom
@@ -265,7 +266,13 @@ steps:
   # `aborted`, not `applied` — nothing was booked, and the terminal drives the
   # envelope, thread memory and analytics.
   no_slots:
-    - end: { status: aborted, body: '{$t("book-appointment.no_slots")}' }
+    - render:
+        render_intent: detail_card
+        body: '{$t("book-appointment.no_slots")}'
+        buttons:
+          - { title: '{$t("book-appointment.button.other_doctor")}', on_select: { invoke: book-appointment } }
+      memory_note: 'Booking — the chosen doctor has no free times'
+    - end: aborted
 
   # Reached from the doctor picker's `on_empty:` — no doctor records exist yet.
   no_doctors:

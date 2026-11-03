@@ -58,5 +58,6 @@ strings:
   success:    '✅ Your appointment with {doctor} on {slot} is confirmed. We will remind you before it.'
   slot_taken: 'Sorry, that time has just been taken. Would you like to pick another one?'
   aborted:    'No problem, the booking is cancelled. Just tell me if you want to book again.'
-  no_slots:   'Sorry, this doctor has no times available right now. Would you like to try another doctor, or shall I look again later?'
+  no_slots:   'Sorry, this doctor has no times available right now.'
+  button.other_doctor: '🔁 Another doctor'
   no_doctors: 'Sorry, there are no doctors to book with yet. Please try again later.'

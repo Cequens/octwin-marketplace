@@ -14,4 +14,4 @@
 pack_id: clinic
 strings:
   # Shared footer under every option-picker (the collect field_prompt_render).
-  field_picker_footer: 'Pick from the list, or type if you need something else.'
+  field_picker_footer: 'Pick from the list, or type your choice.'
