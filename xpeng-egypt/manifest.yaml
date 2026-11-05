@@ -72,7 +72,6 @@ inbound_preprocessing:
 agents:
   - id:                assistant
     display_name:      'XPeng Egypt Assistant'
-    default_model:     'openrouter/anthropic/claude-sonnet-4-5'
     tools:
       - home
       - browse-models

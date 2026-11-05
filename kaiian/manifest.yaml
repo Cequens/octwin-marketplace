@@ -75,7 +75,6 @@ flows:
 agents:
   - id:                support
     display_name:      'Kaiian Support'
-    default_model:     'openrouter/google/gemini-3.1-flash-lite-preview'
     include_platform_protocol: true
     tools:
       - home
@@ -93,5 +92,3 @@ agents:
     # the <working_memory_data> envelope into user-visible replies. Session
     # identity (name/lang/phone) reaches the model via the platform's
     # first-turn [ctx: …] header instead; tools read it from requestContext.
-    default_memory:
-      lastMessages: 20

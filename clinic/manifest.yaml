@@ -88,9 +88,6 @@ inbound_preprocessing:
 agents:
   - id:                reception
     display_name:      'Clinic Reception'
-    # `openrouter/` prefix routes via OpenRouter. Operators override the
-    # model per-project from the console.
-    default_model:     'openrouter/google/gemini-3.1-flash-lite-preview'
     # Flow tools this agent can call (subset of `flows:` above).
     tools:
       - clinic-home

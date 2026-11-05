@@ -77,7 +77,6 @@ inbound_preprocessing:
 agents:
   - id:                dispatcher
     display_name:      'HomeFix Dispatch'
-    default_model:     'openrouter/google/gemini-3.1-flash-lite-preview'
     tools:
       - home
       - services

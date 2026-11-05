@@ -77,7 +77,6 @@ inbound_preprocessing:
 agents:
   - id:                serviceadvisor
     display_name:      'MotorCare Service Advisor'
-    default_model:     'openrouter/google/gemini-3.1-flash-lite-preview'
     tools:
       - home
       - services

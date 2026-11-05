@@ -70,7 +70,6 @@ inbound_preprocessing:
 agents:
   - id:                advisor
     display_name:      'Shield Motor Advisor'
-    default_model:     'openrouter/google/gemini-3.1-flash-lite-preview'
     tools:
       - home
       - plans

@@ -102,7 +102,6 @@ inbound_preprocessing:
 agents:
   - id:                pilgrimage
     display_name:      'Umrah Journeys Advisor'
-    default_model:     'openrouter/google/gemini-3.1-flash-lite-preview'
     tools:
       - home
       - packages

@@ -60,7 +60,6 @@ inbound_preprocessing:
 agents:
   - id:                assistant
     display_name:      'مساعد مصر الرقمية'
-    default_model:     'openrouter/anthropic/claude-sonnet-4-5'
     tools:
       - home
       - services
@@ -73,5 +72,3 @@ agents:
     include_platform_protocol: true
     instructions:
       - file: prompts/identity.md
-    default_memory:
-      lastMessages: 10

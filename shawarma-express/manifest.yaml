@@ -74,7 +74,6 @@ inbound_preprocessing:
 agents:
   - id:                counter
     display_name:      'Shawarma Express'
-    default_model:     'openrouter/google/gemini-3.1-flash-lite-preview'
     tools:
       - home
       - menu

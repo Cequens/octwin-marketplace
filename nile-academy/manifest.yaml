@@ -68,7 +68,6 @@ inbound_preprocessing:
 agents:
   - id:                admissions
     display_name:      'Nile Academy Admissions'
-    default_model:     'openrouter/google/gemini-3.1-flash-lite-preview'
     tools:
       - home
       - programmes

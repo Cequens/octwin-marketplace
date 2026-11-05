@@ -73,7 +73,6 @@ inbound_preprocessing:
 agents:
   - id:                boutique
     display_name:      'Oud Atelier Concierge'
-    default_model:     'openrouter/google/gemini-3.1-flash-lite-preview'
     tools:
       - home
       - shop

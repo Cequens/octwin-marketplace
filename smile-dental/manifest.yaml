@@ -72,7 +72,6 @@ inbound_preprocessing:
 agents:
   - id:                reception
     display_name:      'Smile Dental Reception'
-    default_model:     'openrouter/google/gemini-3.1-flash-lite-preview'
     tools:
       - home
       - treatments

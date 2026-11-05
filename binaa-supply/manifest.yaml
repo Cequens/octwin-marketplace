@@ -77,7 +77,6 @@ inbound_preprocessing:
 agents:
   - id:                desk
     display_name:      'بناء لمواد البناء'
-    default_model:     'openrouter/google/gemini-3.1-flash-lite-preview'
     include_platform_protocol: true
     tools:
       - home
