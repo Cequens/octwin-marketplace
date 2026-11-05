@@ -85,6 +85,9 @@ steps:
               # is wrong here — this field holds the arrival slot the stay writes.
               on_empty: no_slots
               rows:   '$slots'
+              # PAGED: a booking window holds far more slots than a list message shows (10); unpaged, the
+              # rest were dropped with no "More" row (found 2026-11-05 on gulf-realty's identical picker).
+              page:   true
               map:
                 value:       '$item.slot_start'
                 label:       '$format_date($item.local_date)'

@@ -125,7 +125,19 @@ steps:
               # A fully-booked bay is a normal answer, not a fault. `fallback: text`
               # is wrong here — this field holds the slot the booking writes.
               on_empty: no_slots
-              rows:   '$slots'
+              rows:   '$state.slot_day == null ? $slots : $filter($slots, { local_date: $state.slot_day })'
+              # PAGED: a booking window holds far more slots than a list message shows (10); unpaged, the
+              # rest were dropped with no "More" row (found 2026-11-05 on gulf-realty's identical picker).
+              page:   true
+              # DAY FIRST, the clinic's pattern (KB booking guide): `narrow:` asks for the day only when the
+              # slots do not fit one list, and `rows:` keeps that day's slots; `page:` pages a day still too long.
+              narrow:
+                field: slot_day
+                options:
+                  header: book-service.field_header.slot_day
+                  cta:    book-service.field_cta.slot_day
+                  rows:   '$unique($slots, "local_date")'
+                  map:    { value: '$item.local_date', label: '$format_date($item.local_date)', description: '$t("book-service.day_slots", { count: $length($filter($slots, { local_date: $item.local_date })) })' }
               map:
                 value: '$item.slot_start'
                 label: '$format_date($item.local_date + "T" + $item.local_time, "time")'

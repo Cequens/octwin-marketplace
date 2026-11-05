@@ -16,6 +16,9 @@ strings:
   field_cta.trainer:    'المدربون'
   field_header.slot:    '🕐 المواعيد المتاحة'
   field_cta.slot:       'المواعيد'
+  field_header.slot_day: '📅 اختر اليوم'
+  field_cta.slot_day:    'الأيام'
+  day_slots:             '{count} مواعيد متاحة'
   seats_left:           'متبقٍ {remaining} مقعد'
   duration:             '{mins} دقيقة'
 

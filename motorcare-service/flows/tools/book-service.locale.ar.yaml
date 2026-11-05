@@ -19,6 +19,9 @@ strings:
   field_cta.bay:        'المنصات'
   field_header.slot:    '🕐 المواعيد المتاحة'
   field_cta.slot:       'المواعيد'
+  field_header.slot_day: '📅 اختر اليوم'
+  field_cta.slot_day:    'الأيام'
+  day_slots:             '{count} مواعيد متاحة'
 
   preview.header:   '📋 تأكيد الموعد'
   preview.package:  '🔧 الباقة: {package}'

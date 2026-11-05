@@ -49,6 +49,8 @@ strings:
   preview.insurance:  'التأمين: {tpa}'
   approve_header:     'تأكيد الحجز'
   approve_footer:     'راجع التفاصيل واضغط تأكيد.'
+  confirm_title:      'تأكيد الحجز ✅'
+  cancel_title:       'إلغاء ❌'
 
   # Reminder card (delivered T-24h / T-2h)
 

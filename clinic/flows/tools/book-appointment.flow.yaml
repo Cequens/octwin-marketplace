@@ -158,8 +158,8 @@ steps:
         preview:       '$preview_body'
         header:        '{$t("book-appointment.approve_header")}'
         footer:        '{$t("book-appointment.approve_footer")}'
-        confirm_title: 'تأكيد الحجز ✅'
-        cancel_title:  'إلغاء ❌'
+        confirm_title: '{$t("book-appointment.confirm_title")}'
+        cancel_title:  '{$t("book-appointment.cancel_title")}'
         apply:         read_card
         abort:         aborted
         on_other:      collect_fields

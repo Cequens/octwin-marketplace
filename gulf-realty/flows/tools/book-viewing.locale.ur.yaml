@@ -18,6 +18,9 @@ strings:
   field_cta.advisor:    'مشیر'
   field_header.slot:    '🕐 دستیاب اوقات'
   field_cta.slot:       'اوقات'
+  field_header.slot_day: '📅 دن چنیں'
+  field_cta.slot_day:    'دن'
+  day_slots:             '{count} خالی اوقات'
   field_header.party:   '👥 کتنے افراد آ رہے ہیں؟'
   field_cta.party:      'منتخب کریں'
 

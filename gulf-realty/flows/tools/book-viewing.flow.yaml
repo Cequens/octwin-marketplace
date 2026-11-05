@@ -131,7 +131,19 @@ steps:
               # A fully-booked advisor is a normal answer, not a fault. `fallback: text`
               # is wrong here — this field holds the slot the viewing writes.
               on_empty: no_slots
-              rows:   '$slots'
+              rows:   '$state.slot_day == null ? $slots : $filter($slots, { local_date: $state.slot_day })'
+              # PAGED: an advisor has 30+ open slots over ten days, and a list message shows ten.
+              # Without this the rest were dropped with no "More" row (walked 2026-11-05: 34 → 10).
+              page:   true
+              # DAY FIRST, the clinic's pattern (KB booking guide): `narrow:` asks for the day only when the
+              # slots do not fit one list, and `rows:` keeps that day's slots; `page:` pages a day still too long.
+              narrow:
+                field: slot_day
+                options:
+                  header: book-viewing.field_header.slot_day
+                  cta:    book-viewing.field_cta.slot_day
+                  rows:   '$unique($slots, "local_date")'
+                  map:    { value: '$item.local_date', label: '$format_date($item.local_date)', description: '$t("book-viewing.day_slots", { count: $length($filter($slots, { local_date: $item.local_date })) })' }
               map:
                 value: '$item.slot_start'
                 label: '$format_date($item.local_date + "T" + $item.local_time, "time")'

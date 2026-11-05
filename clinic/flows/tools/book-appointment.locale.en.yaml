@@ -52,6 +52,8 @@ strings:
   preview.insurance:  'Insurance: {tpa}'
   approve_header:     'Confirm the booking'
   approve_footer:     'Check the details and tap confirm.'
+  confirm_title:      'Confirm booking ✅'
+  cancel_title:       'Cancel ❌'
 
   # Reminder card (delivered T-24h / T-2h)
 

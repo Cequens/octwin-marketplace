@@ -27,6 +27,9 @@ strings:
   field_cta.dentist:      'Dentists'
   field_header.slot:      '🕐 Available times'
   field_cta.slot:         'Times'
+  field_header.slot_day: '📅 Pick a day'
+  field_cta.slot_day:    'Days'
+  day_slots:             '{count} free times'
 
   preview.header:    '📋 Confirm the appointment'
   preview.treatment: '🦷 Treatment: {treatment}'

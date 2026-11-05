@@ -16,6 +16,9 @@ strings:
   field_cta.trainer:    'Trainers'
   field_header.slot:    '🕐 Available times'
   field_cta.slot:       'Times'
+  field_header.slot_day: '📅 Pick a day'
+  field_cta.slot_day:    'Days'
+  day_slots:             '{count} free times'
   seats_left:           '{remaining} place(s) left'
   duration:             '{mins} minutes'
 
