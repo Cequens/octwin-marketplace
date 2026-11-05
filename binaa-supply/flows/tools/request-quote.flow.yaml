@@ -90,6 +90,7 @@ steps:
             label:    '$t("request-quote.label.material")'
             describe: 'The material to be quoted.'
           - field: qty
+            type:     number
             label:    '$t("request-quote.label.qty")'
             describe: 'How many units — bags, tonnes, m² or pieces.'
           # FREE TEXT, deliberately not a picker over the `site` entity.

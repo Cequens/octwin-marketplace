@@ -138,6 +138,7 @@ steps:
           # values — and an amount must stay a number. Presets are offered as taps
           # on the home card instead, which bind `amount` directly.
           - field: amount
+            type:  number
             label: '$t("donate.f_amount")'
             validate:
               when:  '$state.amount != null && $state.amount <= 0'

@@ -143,6 +143,7 @@ steps:
             label:    '$t("mortgage-estimate.label.name")'
             describe: "The buyer's full name."
           - field: monthly_income
+            type:     number
             required: false
             label:    '$t("mortgage-estimate.label.income")'
             describe: 'Monthly income — may be pre-filled from a salary certificate photo.'

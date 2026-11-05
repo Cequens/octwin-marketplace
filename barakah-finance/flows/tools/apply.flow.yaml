@@ -136,9 +136,11 @@ steps:
                 - { value: madinah, label: apply.city.madinah }
                 - { value: khobar,  label: apply.city.khobar }
           - field: monthly_income
+            type:     number
             label:    '$t("apply.label.income")'
             describe: 'Monthly income in SAR. Take the figure from the salary certificate when one was sent.'
           - field: existing_obligations
+            type:     number
             required: false
             label:    '$t("apply.label.obligations")'
             describe: 'Total monthly instalments the applicant already pays, if they say.'
