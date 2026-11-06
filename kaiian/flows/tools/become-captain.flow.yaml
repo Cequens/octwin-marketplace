@@ -56,7 +56,7 @@ steps:
         # Running preview prepended to every prompt (collected so far — includes
         # anything the license OCR prefilled, so the applicant sees what we read).
         progress: '$lines($compact([$t("become-captain.progress.header"), $state.name != null ? $t("become-captain.progress.name", { name: $state.name }) : null, $state.mobile != null ? $t("become-captain.progress.mobile", { mobile: $state.mobile }) : null, $state.region != null ? $t("become-captain.progress.region", { region: $enum_label($state.region, "region", "") }) : null, $state.vehicle_type != null ? $t("become-captain.progress.vehicle", { vehicle: $enum_label($state.vehicle_type, "vehicle", "") }) : null, $state.id_number != null ? $t("become-captain.progress.license", { license: $state.id_number }) : null, $state.license_photo != null ? $t("become-captain.progress.license_photo") : null]), "\n")'
-        gap_instructions: 'Ask the applicant for the next detail ({$collect_field_label}), one short question at a time, in friendly Saudi white dialect. Re-call become-captain once they answer.'
+        gap_instructions: 'Ask the applicant for the next detail ({$collect_field_label}), one short question at a time, in the language the customer writes in (friendly Saudi white dialect when they write Arabic). Re-call become-captain once they answer.'
         fields:
           # Driving-license PHOTO FIRST — the one document we need anyway. Its
           # `on_collect` hook OCRs the image the instant it lands (media_get →

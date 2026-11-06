@@ -1,7 +1,7 @@
 flow_id: browse-projects
 
 strings:
-  intro:        '🏙️ لدينا {total} مشروع متاح — اسحب لاستعراضها:'
+  intro:        '🏙️ المشاريع المتاحة ({total}) — اسحب لاستعراضها:'
   by:           '🏗️ المطوّر: {developer}'
   handover:     '🔑 التسليم: {handover}'
   from:         '💰 يبدأ من {price}'

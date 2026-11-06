@@ -12,7 +12,7 @@ description: |-
 input:
   action:    { type: enum, enum: [add, view, remove, clear, checkout], optional: true, describe: 'add | view | remove | clear | checkout (default view).' }
   dish_code: { type: string, optional: true, describe: 'The dish code — required for add / remove. Comes from a menu card, never typed.' }
-  qty:       { type: number, optional: true, describe: 'Quantity for add (default 1).' }
+  qty:       { type: number, optional: true, describe: 'For add: how many of this dish the basket should HOLD (sets the line, default 1) — "make it 2" is qty 2.' }
 
 entry:
   - else: true
@@ -208,7 +208,7 @@ steps:
                      $t("basket.progress.subtotal", { subtotal: $format_money($order_subtotal, "EGP") }),
                      $state.area != null ? $t("basket.progress.area") : null
                    ]), "\n")'
-        gap_instructions: 'Ask the customer for the next delivery detail ({$collect_field}) in one short line, in Egyptian Arabic. Re-call basket with action=checkout once they answer.'
+        gap_instructions: 'Ask the customer for the next delivery detail ({$collect_field}) in one short line, in the language the customer writes in (Egyptian dialect when they write Arabic). Re-call basket with action=checkout once they answer.'
         fields:
           # CONFIRMS the WhatsApp profile name — one tap instead of typing.
           - field: customer_name

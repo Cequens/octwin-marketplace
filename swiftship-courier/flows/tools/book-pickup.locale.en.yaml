@@ -7,7 +7,7 @@ strings:
   label.weight:     'Parcel weight'
   label.address:    'Collection address — street, building and floor'
   label.pin:        'Collection point on the map'
-  skip_pin:         'The address is enough ⏭️'
+  skip_pin:         'Address is enough ⏭️'
   label.recipient:  "Recipient's name"
   label.phone:      "Recipient's mobile"
   label.window:     'Collection time'
@@ -52,7 +52,7 @@ strings:
   preview.no_rate:  'ℹ️ There is no published price for this route — our team will price it and contact you before collection.'
   approve_header:   '🚚 Review the request'
   approve_footer:   'Tap confirm to file the collection request.'
-  confirm_title:    'Confirm the request ✅'
+  confirm_title:    'Confirm request ✅'
   cancel_title:     'Cancel ❌'
 
   done_header:    '✅ Your collection request is filed'

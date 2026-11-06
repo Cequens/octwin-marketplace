@@ -31,7 +31,7 @@ strings:
   preview.plan:       '🎫 Membership you are interested in: {plan}'
   approve_header:     '📅 Review the booking'
   approve_footer:     'Tap confirm to hold your place.'
-  confirm_title:      'Confirm the booking ✅'
+  confirm_title:      'Confirm booking ✅'
   cancel_title:       'Cancel ❌'
 
   done_header:    '✅ Your place is booked'

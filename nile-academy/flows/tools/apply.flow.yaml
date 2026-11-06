@@ -96,7 +96,7 @@ steps:
                      $prog_label != null ? $t("apply.progress.programme", { programme: $prog_label }) : null,
                      $state.student_name != null ? $t("apply.progress.student", { student: $state.student_name }) : null
                    ]), "\n")'
-        gap_instructions: 'Ask the guardian for the next detail ({$collect_field}) in one short line, in Egyptian Arabic. Re-call apply once they answer. NEVER comment on whether the student will be accepted.'
+        gap_instructions: 'Ask the guardian for the next detail ({$collect_field}) in one short line, in the language the customer writes in (Egyptian dialect when they write Arabic). Re-call apply once they answer. NEVER comment on whether the student will be accepted.'
         fields:
           - field: programme_id
             when: '$state.programme_id == null'
@@ -113,7 +113,7 @@ steps:
                 value:       '$item.id'
                 label:       '$item.fields.name'
                 description: '$format_money_field($item.fields.annual_fee, "EGP")'
-                selection:   { prog_label: '$item.fields.name' }
+                selection:   { prog_label: '$item.fields.name', prog_stage: '$item.fields.stage_level' }
               auto_resolve: true
           - field: student_name
             label:    '$t("apply.label.student")'
@@ -123,14 +123,24 @@ steps:
             options:
               header: apply.field_header.entry_year
               cta:    apply.field_cta.entry_year
-              items:
-                - { value: kg1, label: apply.year.kg1 }
-                - { value: kg2, label: apply.year.kg2 }
-                - { value: y1,  label: apply.year.y1 }
-                - { value: y3,  label: apply.year.y3 }
-                - { value: y5,  label: apply.year.y5 }
-                - { value: y7,  label: apply.year.y7 }
-                - { value: y9,  label: apply.year.y9 }
+              # Only the years the chosen programme's stage teaches. A fixed list offered an IB
+              # SECONDARY applicant "Kindergarten 1" (walked on WhatsApp 2026-11-06). A programme
+              # that arrived without its stage (a tap from the programmes card) keeps the whole list.
+              rows: '$filter([
+                       { v: "kg1", s: "kg",          l: $t("apply.year.kg1") },
+                       { v: "kg2", s: "kg",          l: $t("apply.year.kg2") },
+                       { v: "y1",  s: "primary",     l: $t("apply.year.y1") },
+                       { v: "y3",  s: "primary",     l: $t("apply.year.y3") },
+                       { v: "y5",  s: "primary",     l: $t("apply.year.y5") },
+                       { v: "y7",  s: "preparatory", l: $t("apply.year.y7") },
+                       { v: "y9",  s: "preparatory", l: $t("apply.year.y9") },
+                       { v: "y10", s: "secondary",   l: $t("apply.year.y10") },
+                       { v: "y11", s: "secondary",   l: $t("apply.year.y11") },
+                       { v: "y12", s: "secondary",   l: $t("apply.year.y12") }
+                     ], $state.prog_stage == null || $item.s == $state.prog_stage)'
+              map: { value: '$item.v', label: '$item.l' }
+              auto_resolve: true
+              on_empty: nothing_to_pick   # unreachable (an unknown stage keeps every year) — the platform asks every held list
           - field: guardian_name
             label:    '$t("apply.label.guardian")'
             describe: "The guardian's full name."
@@ -208,6 +218,6 @@ steps:
         instructions: 'The application could not be saved. Say so plainly in one line and give the admissions office number. Do NOT claim an application exists.'
 
   # Reached from a picker's `on_empty:` — the list came back empty (e.g. before the catalog is
-  # filled). `aborted`: nothing was done. The AI Agent says it, in the customer's language.
+  # filled). `aborted`: nothing was done. The AI Agent says it, in the language the customer writes in.
   nothing_to_pick:
     - end: { status: aborted, instructions: 'There is nothing to choose from for this right now — the list came back empty. Say so in one short line, in the customer''s language, and offer another way to help. Do NOT invent options.' }

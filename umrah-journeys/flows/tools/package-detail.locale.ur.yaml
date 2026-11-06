@@ -8,7 +8,7 @@ strings:
   transport: '🚌 {transport}'
   includes:  '✅ {includes}'
   price:     '💰 فی کس قیمت: {price}'
-  footer:    'قیمتیں ڈبل کمرے میں فی کس ہیں اور کمرے کی قسم کے مطابق بدلتی ہیں۔'
+  footer:    'قیمتیں ڈبل کمرے میں فی کس ہیں؛ دوسرے کمروں میں مختلف۔'
   btn_book:  '📝 یہ پیکج بک کریں'
   btn_ask:   '💬 سوال پوچھیں'
   btn_back:  '↩️ دیگر پیکجز'

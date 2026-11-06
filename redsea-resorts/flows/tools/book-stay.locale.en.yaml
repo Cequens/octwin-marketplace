@@ -57,7 +57,7 @@ strings:
   preview.note:     'ℹ️ The booking is provisional until the deposit arrives, and prices come from the resort’s current tariff.'
   approve_header:   '📅 Confirm the booking'
   approve_footer:   'Tap confirm to hold the room provisionally in your name.'
-  confirm_title:    'Confirm the booking ✅'
+  confirm_title:    'Confirm booking ✅'
   cancel_title:     'Cancel ❌'
 
   done_header:   '✅ Your room is held'
@@ -65,7 +65,7 @@ strings:
   done_stay:     '🏨 {resort} — 🛏️ {room} — 📆 {arrival} ({nights} nights)'
   done_total:    '💰 Total: {total}'
   done_deposit:  '💳 Deposit required: {deposit}'
-  done_footer:   'The booking becomes confirmed once the deposit arrives — we will send you the payment details.'
+  done_footer:   'Confirmed once the deposit arrives — payment details follow.'
   btn_mine:      '🧾 My bookings'
   btn_rooms:     '🛏️ Other rooms'
   sold_out:      '⚠️ Sorry, the last room of this type on that date went moments ago. Pick another date and we will book you in.'

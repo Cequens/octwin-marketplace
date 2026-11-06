@@ -9,7 +9,7 @@ strings:
 
   row_report_title: 'مسئلہ رپورٹ کریں'
   row_report_desc:  'زائد کٹوتی، ڈرائیور کی شکایت، یا کیپٹن کا مسئلہ'
-  row_status_title: 'میری درخواستوں کی صورتحال'
+  row_status_title: 'درخواستوں کی صورتحال'
   row_status_desc:  'پہلے سے کھولی گئی درخواست دیکھیں'
 
   memory_note: 'کیان سپورٹ کا مینو دکھایا (کھلی درخواستیں: {count})۔'

@@ -148,8 +148,8 @@ steps:
             label: '$t("donate.f_donor")'
 
         gap_instructions: >-
-          Ask for the one missing detail in a single short, warm line of Saudi
-          Arabic. Never re-ask for something already answered, never pressure, and
+          Ask for the one missing detail in a single short, warm line, in the language the customer writes in
+          (Saudi dialect when they write Arabic). Never re-ask for something already answered, never pressure, and
           never guess an amount — if the donor is vague, ask.
         complete: [{ goto: check_resolved }]
 
@@ -182,7 +182,7 @@ steps:
     - answer:
         instructions: >-
           There are no campaigns open for donations right now. Say so in ONE short,
-          warm line of Saudi Arabic and offer to let them know when the next one
+          warm line, in the language the customer writes in (Saudi dialect when they write Arabic) and offer to let them know when the next one
           opens. Do NOT invent a campaign and do NOT take an amount.
 
   confirm:
@@ -343,10 +343,10 @@ steps:
   cancelled:
     - answer:
         instructions: >-
-          The donor cancelled before paying. Acknowledge warmly in ONE short line
-          of Saudi Arabic, with no pressure and no follow-up question.
+          The donor cancelled before paying. Acknowledge warmly in ONE short line, in the language
+          the customer writes in (Saudi dialect when they write Arabic), with no pressure and no follow-up question.
 
   # Reached from a picker's `on_empty:` — the list came back empty (e.g. before the catalog is
-  # filled). `aborted`: nothing was done. The AI Agent says it, in the customer's language.
+  # filled). `aborted`: nothing was done. The AI Agent says it, in the language the customer writes in.
   nothing_to_pick:
     - end: { status: aborted, instructions: 'There is nothing to choose from for this right now — the list came back empty. Say so in one short line, in the customer''s language, and offer another way to help. Do NOT invent options.' }

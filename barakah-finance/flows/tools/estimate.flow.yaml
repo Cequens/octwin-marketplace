@@ -57,7 +57,7 @@ steps:
                       p_min_down:  '$prod.fields.min_down_pct'
                       p_max_years: '$prod.fields.max_years'
                       p_structure: '$prod.fields.structure'
-        gap_instructions: 'Ask for the next detail ({$collect_field}) in one short line, in Arabic. Re-call estimate once they answer. NEVER quote a rate or an instalment yourself, and never comment on whether they will qualify.'
+        gap_instructions: 'Ask for the next detail ({$collect_field}) in one short line, in the language the customer writes in. Re-call estimate once they answer. NEVER quote a rate or an instalment yourself, and never comment on whether they will qualify.'
         fields:
           - field: product_id
             when: '$state.product_id == null'
@@ -184,6 +184,6 @@ steps:
         instructions: 'The term they want exceeds this product''s published maximum. State the maximum in one line and offer a shorter term or another product. Do NOT quote an instalment.'
 
   # Reached from a picker's `on_empty:` — the list came back empty (e.g. before the catalog is
-  # filled). `aborted`: nothing was done. The AI Agent says it, in the customer's language.
+  # filled). `aborted`: nothing was done. The AI Agent says it, in the language the customer writes in.
   nothing_to_pick:
     - end: { status: aborted, instructions: 'There is nothing to choose from for this right now — the list came back empty. Say so in one short line, in the customer''s language, and offer another way to help. Do NOT invent options.' }

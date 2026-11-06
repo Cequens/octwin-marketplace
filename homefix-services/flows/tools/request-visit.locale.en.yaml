@@ -32,7 +32,7 @@ strings:
   label.fault:    'Describe the problem'
   label.photo:    'A photo of the problem (optional)'
   skip:           'Skip ⏭️'
-  skip_pin:       'The address is enough ⏭️'
+  skip_pin:       'Address is enough ⏭️'
 
   field_header.service: '🔧 Which service do you need?'
   field_cta.service:    'Services'
@@ -69,7 +69,7 @@ strings:
   preview.note:      'ℹ️ This is the call-out fee only — the cost of the repair is set after the technician inspects it, and reaches you as a quote.'
   approve_header:    '🛠️ Review the request'
   approve_footer:    'Tap confirm to send the request to your area team.'
-  confirm_title:     'Confirm the request ✅'
+  confirm_title:     'Confirm request ✅'
   cancel_title:      'Cancel ❌'
 
   done_header:  '✅ Your request has been sent'

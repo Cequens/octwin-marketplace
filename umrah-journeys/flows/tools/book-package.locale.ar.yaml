@@ -61,6 +61,7 @@ strings:
   preview.travellers: '👥 عدد المسافرين: {count}'
   preview.room:       '🛏️ الغرفة: {room}'
   preview.city:       '✈️ المغادرة من: {city}'
+  preview.month:      '🗓️ شهر السفر: {month}'
   preview.total:      '💰 الإجمالي التقديري: {total}'
   preview.note:       'ℹ️ السعر تقديري ويُثبَّت بعد تأكيد التوافر من الفندق والناقل.'
   approve_header:     '📝 مراجعة الحجز'

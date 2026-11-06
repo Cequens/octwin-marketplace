@@ -6,7 +6,7 @@ strings:
   mode_all:    '🏢 All showrooms'
 
   label.pin:   'Your location'
-  skip:        'Show all showrooms ⏭️'
+  skip:        'All showrooms ⏭️'
 
   intro:       'Here are the XPENG showrooms in Egypt 👇 Tap "Directions" to get there, or book a test drive.'
   intro_near:  'Here are the XPENG showrooms closest to you 👇 nearest first.'

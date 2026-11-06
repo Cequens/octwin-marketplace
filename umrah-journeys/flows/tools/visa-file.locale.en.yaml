@@ -14,9 +14,9 @@ strings:
   status_note:       'ℹ️ The status is updated by the visa team, and we tell you about any decision straight away.'
   btn_upload:        '📎 Upload a document'
   btn_query:         '💬 Ask our team'
-  btn_trip:          '🧾 My booking details'
+  btn_trip:          '🧾 My booking'
   btn_status:        '📂 My file status'
-  btn_more:          '📎 Upload another passport'
+  btn_more:          '📎 Another passport'
   btn_home:          '🏠 Main menu'
 
   label.name:        "Traveller's name"

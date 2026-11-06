@@ -163,8 +163,8 @@ steps:
     - answer:
         data: { asked_for: '$coalesce($input.material, $input.sku, $input.category)' }
         instructions: >-
-          Nothing in the live price sheet matched. Say so in ONE short line of Saudi
-          Arabic, name what they asked for, and offer the nearest section (أسمنت /
+          Nothing in the live price sheet matched. Say so in ONE short line, in the language the customer writes in
+          (Saudi dialect when they write Arabic), name what they asked for, and offer the nearest section (أسمنت /
           حديد / بلوك / رمل / سيراميك / سباكة). Never invent or estimate a price.
 
   # `denied` means the OPERATOR has not finished setup — the Google authorization

@@ -22,7 +22,7 @@ strings:
   preview.no_price:    '💰 قیمت سیلز منظور کر کے آپ کو بھیجے گی۔'
   preview.site:        '📍 ترسیل: {site}'
   preview.name:        '👤 بنام: {name}'
-  btn_confirm:         '✅ درخواست کی تصدیق کریں'
+  btn_confirm:         '✅ تصدیق کریں'
   btn_cancel:          '❌ منسوخ'
 
   filed_header:        '✅ آپ کی درخواست درج ہو گئی'

@@ -27,7 +27,7 @@ strings:
   progress.region:      '• Region: {region}'
 
   approve_header:       'Please review your request before we submit it 👇'
-  approve_confirm:      'Confirm & open ticket ✅'
+  approve_confirm:      'Open the ticket ✅'
   approve_cancel:       'Cancel ❌'
   preview.header:       'Request details:'
   preview.issue:        '• Type: {issue}'

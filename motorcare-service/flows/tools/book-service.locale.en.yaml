@@ -31,7 +31,7 @@ strings:
   preview.note:     'ℹ️ Prices start from the figure shown; the final price comes after the inspection.'
   approve_header:   '🗓️ Review the appointment'
   approve_footer:   'Tap confirm to lock in the time and open a job card.'
-  confirm_title:    'Confirm the appointment ✅'
+  confirm_title:    'Confirm booking ✅'
   cancel_title:     'Cancel ❌'
 
   done_header:      '✅ Your appointment is booked'

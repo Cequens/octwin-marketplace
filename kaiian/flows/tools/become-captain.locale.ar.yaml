@@ -20,7 +20,7 @@ strings:
   label.vehicle_registration_photo: 'أرسل صورة استمارة المركبة (اختياري)'
   skip_vehicle_registration_photo:  'تخطّي — بدون استمارة'
   label.vehicle_photo:  'أرسل صورة لمركبتك (اختياري)'
-  skip_vehicle_photo:   'تخطّي — بدون صورة مركبة'
+  skip_vehicle_photo:   'بدون صورة مركبة ⏭️'
   field_header.region:  'في أي منطقة راح تشتغل؟'
   field_cta.region:     'اختر المنطقة'
   field_header.vehicle: 'وش نوع مركبتك؟'

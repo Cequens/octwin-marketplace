@@ -15,8 +15,12 @@ strings:
 
   cancel_header: '✅ Appointment cancelled'
   cancel_body:   'Your appointment is cancelled and the time is free for someone else. We are here if you would like a new one.'
-  btn_rebook:    '🗓️ Book a new appointment'
+  btn_rebook:    '🗓️ Book again'
   btn_mine:      '📋 My appointments'
+
+  visit_header:     '🗓️ Appointment #{ref}'
+  visit_body:       'With {dentist} — {slot}. We will remind you the day before.'
+  btn_cancel_visit: '❌ Cancel it'
 
   rate_header:   '⭐ Rate your visit'
   rate_body:     'How was your visit with {dentist} — {slot}?'
@@ -29,5 +33,5 @@ strings:
 
   thanks_header:  '🙏 Thank you for your rating'
   thanks_body:    'We saved your rating ({stars} out of 5) and it genuinely affects how our dentists are ranked.'
-  thanks_footer:  'If you would like to add a note about the visit, send it now and we will attach it to your rating.'
+  thanks_footer:  'Send a note now and we will add it to your rating.'
   comment_thanks: '🙏 Your note arrived and has been added to your rating — thank you for your time.'

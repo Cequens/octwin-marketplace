@@ -15,8 +15,12 @@ strings:
 
   cancel_header: '✅ تم إلغاء الموعد'
   cancel_body:   'أُلغي موعدك وأصبح الوقت متاحاً لغيرك. تحت أمرك لو أردت موعداً جديداً.'
-  btn_rebook:    '🗓️ احجز موعداً جديداً'
+  btn_rebook:    '🗓️ موعد جديد'
   btn_mine:      '📋 مواعيدي'
+
+  visit_header:     '🗓️ الموعد رقم {ref}'
+  visit_body:       'مع {dentist} — {slot}. سنذكّرك قبله بيوم.'
+  btn_cancel_visit: '❌ إلغاء الموعد'
 
   rate_header:   '⭐ قيّم زيارتك'
   rate_body:     'كيف كانت زيارتك مع {dentist} — {slot}؟'

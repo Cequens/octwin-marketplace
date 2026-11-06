@@ -4,6 +4,6 @@ strings:
   header:        '🚗 Your cars'
   cars_header:   '— Vehicles —'
   jobs_header:   '— Job cards —'
-  btn_check:     '📸 Check a problem from a photo'
-  btn_book:      '🗓️ Book an appointment'
+  btn_check:     '📸 Photo check'
+  btn_book:      '🗓️ Book a visit'
   btn_services:  '🔧 Service packages'

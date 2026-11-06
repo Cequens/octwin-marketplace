@@ -168,31 +168,95 @@ steps:
         empty: [{ goto: no_slots }]
         failed:  []
 
+  # Two weeks of a showroom's times is far more than a list's 10 rows: rendered whole, every time
+  # after the first ten was out of reach (walked on WhatsApp 2026-11-06). So the DAY comes first
+  # when the window does not fit one list, and a day that still does not fit is PAGED with a "More"
+  # row — the two steps a `collect` picker's `narrow:` + `page:` give, built here on the flow's own
+  # pause/resume. Each row leaves out the keys it does not carry (an absent value is left out of a
+  # tap; a `null` would be sent).
   show_slots:
     - if: "$length($coalesce($sl.slots, $sl.rows, $sl)) == 0"
       goto: no_slots
+    - assign:
+        all_slots: '$coalesce($sl.slots, $sl.rows, $sl)'
+    - if: '$state.slot_day == null && $length($all_slots) > $caps.list.maxRows'
+      goto: show_days
+    - assign:
+        day_slots: '$state.slot_day == null ? $all_slots : $filter($all_slots, { local_date: $state.slot_day })'
+    - assign:
+        paged:     '$length($day_slots) > $caps.list.maxRows'
+        at:        '$coalesce($state.slot_page, 0) < $length($day_slots) ? $coalesce($state.slot_page, 0) : 0'
+    - assign:
+        pg:        '$paginate($day_slots, $at, $caps.list.maxRows - 1)'
+    - assign:
+        rows: '$concat(
+                 $map($paged ? $pg.page : $day_slots, {
+                   t: $format_date($item.local_date + "T" + $item.local_time, "time"),
+                   d: $format_date($item.local_date) + " · " + $format_number($item.slot_minutes) + " " + $t("book-test-drive.min_label") + " · " + $format_number($item.remaining) + " " + $t("book-test-drive.spots_label"),
+                   s: $item.slot_start, m: $item.slot_minutes,
+                   l: $format_date($item.local_date + "T" + $item.local_time, "day_time")
+                 }),
+                 $paged ? [$pg.has_more ? { t: $t("book-test-drive.more_times"), d: $t("book-test-drive.more_desc"), p: $pg.next_offset } : { t: $t("book-test-drive.first_times"), d: $t("book-test-drive.first_desc"), p: 0 }] : []
+               )'
     - render:
         # A LIST, not a carousel. A time slot has no picture, and Meta requires a header image
         # on EVERY carousel card — it accepted this send, returned a wamid and dropped the
-        # message, so no WhatsApp customer ever saw the slots. A list is also the honest shape
-        # for "pick one of these times": 10 rows against a carousel's 10 cards, one tap each,
-        # and the branch name belongs in the body rather than repeated on every card.
+        # message, so no WhatsApp customer ever saw the slots.
         render_intent: list_picker
         header: '$t("book-test-drive.s_header")'
         body:   '$t("book-test-drive.s_body", { branch: $state.branch_name })'
         cta:    '$t("book-test-drive.s_cta")'
-        items:  '$coalesce($sl.slots, $sl.rows, $sl)'
+        items:  '$rows'
         item_template:
           # The TIME is the title and the DAY leads the description, both in the customer's language:
-          # a full Arabic day and time ("الثلاثاء، 30 ديسمبر، 11:30 م") runs past a row title's 24
-          # characters, and the description has 72. A raw `2026-09-26 — 15:30` read backwards in Arabic.
-          title:       '$format_date($item.local_date + "T" + $item.local_time, "time")'
-          description: '$format_date($item.local_date) + " · " + $format_number($item.slot_minutes) + " " + $t("book-test-drive.min_label") + " · " + $format_number($item.remaining) + " " + $t("book-test-drive.spots_label")'
-          on_select:   { resume: '$self', with: { slot_start: '$item.slot_start', slot_minutes: '$item.slot_minutes', slot_label: '{$format_date($item.local_date + "T" + $item.local_time, "day_time")}' } }
+          # a full Arabic day and time runs past a row title's 24 characters, and the description has 72.
+          title:       '$item.t'
+          description: '$item.d'
+          on_select:   { resume: '$self', with: { slot_start: '$item.s', slot_minutes: '$item.m', slot_label: '$item.l', slot_page: '$item.p' } }
       memory_note: 'Showed open test-drive slots for {$state.branch_name}.'
     - pause:
         on_resume:
+          # A "More" row carries no slot — show the next page.
+          - if: '$state.slot_start == null'
+            goto: show_slots
           - goto: ask_contact
+
+  # The days are paged too: two weeks of a showroom open six or seven days a week is 12–14 days,
+  # past a list's 10 rows.
+  show_days:
+    - assign:
+        days:     '$unique($all_slots, "local_date")'
+    - assign:
+        dpaged:   '$length($days) > $caps.list.maxRows'
+        dat:      '$coalesce($state.day_page, 0) < $length($days) ? $coalesce($state.day_page, 0) : 0'
+    - assign:
+        dpg:      '$paginate($days, $dat, $caps.list.maxRows - 1)'
+    - assign:
+        day_rows: '$concat(
+                     $map($dpaged ? $dpg.page : $days, {
+                       t: $format_date($item.local_date),
+                       d: $t("book-test-drive.day_slots", { count: $length($filter($all_slots, { local_date: $item.local_date })) }),
+                       v: $item.local_date
+                     }),
+                     $dpaged ? [$dpg.has_more ? { t: $t("book-test-drive.more_days"), d: $t("book-test-drive.more_days_desc"), dp: $dpg.next_offset } : { t: $t("book-test-drive.first_times"), d: $t("book-test-drive.first_days_desc"), dp: 0 }] : []
+                   )'
+    - render:
+        render_intent: list_picker
+        header: '$t("book-test-drive.d_header")'
+        body:   '$t("book-test-drive.d_body", { branch: $state.branch_name })'
+        cta:    '$t("book-test-drive.d_cta")'
+        items:  '$day_rows'
+        item_template:
+          title:       '$item.t'
+          description: '$item.d'
+          on_select:   { resume: '$self', with: { slot_day: '$item.v', day_page: '$item.dp' } }
+      memory_note: 'Showed the days with open test-drive slots at {$state.branch_name}.'
+    - pause:
+        on_resume:
+          # A "More days" row carries no day — show the next page of days.
+          - if: '$state.slot_day == null'
+            goto: show_days
+          - goto: show_slots
 
   # ── 3) Contact details (free-text collect) ──
   ask_contact:

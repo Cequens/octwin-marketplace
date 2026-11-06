@@ -13,4 +13,4 @@ strings:
   # Application picker (two or more — rare, dedupe keeps it to one)
   list.header: 'Your applications 🚗'
   list.body:   'You have {count} applications on file — pick one to see its status:'
-  list.cta:    'Choose an application'
+  list.cta:    'Choose application'

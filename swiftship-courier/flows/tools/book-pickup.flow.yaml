@@ -27,7 +27,7 @@ steps:
           # The weight band maps to the rate card's `up_to_kg` ceiling — a real number,
           # so the lookup never depends on parsing free text.
           kg_ceiling: '$enum_lookup($state.weight_band, { under_1: 1, under_5: 5, under_20: 20, over_20: 50 }, 5)'
-        gap_instructions: 'Ask the customer for the next detail ({$collect_field}) in one short line, in Egyptian Arabic. Re-call book-pickup once they answer. NEVER quote a price yourself — the tool prices it.'
+        gap_instructions: 'Ask the customer for the next detail ({$collect_field}) in one short line, in the language the customer writes in (Egyptian dialect when they write Arabic). Re-call book-pickup once they answer. NEVER quote a price yourself — the tool prices it.'
         fields:
           - field: service
             label: '$t("book-pickup.label.service")'

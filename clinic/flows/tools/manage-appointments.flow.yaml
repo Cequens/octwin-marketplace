@@ -277,7 +277,9 @@ steps:
         # Only `$state` survives the picker's pauses (a day tap, a page tap), so the
         # doctor's id rides there rather than on the `$appt` bind.
         ok:
-          - assign: { state: '$merge($state, { resource_id: $appt.fields.resource_id })' }
+          # …and the appointment's own time, which the new-time list leaves out: "moving" to it
+          # was accepted and announced as moved (walked on WhatsApp 2026-11-06).
+          - assign: { state: '$merge($state, { resource_id: $appt.fields.resource_id, from_slot: $format_date($appt.fields.slot_start, "day_time", null, "Africa/Cairo") })' }
           - goto: pick_new_slot
         not_found: [{ goto: not_found }]
         failed:    [{ end: failed }]
@@ -298,7 +300,7 @@ steps:
               body:   manage-appointments.reschedule_body
               cta:    manage-appointments.reschedule_cta
               fetch:  { do: slot_list, args: { resource_record_id: '$state.resource_id' }, bind: slots }
-              rows:   '$state.slot_day == null ? $slots : $filter($slots, { local_date: $state.slot_day })'
+              rows:   '$filter(($state.slot_day == null ? $slots : $filter($slots, { local_date: $state.slot_day })), $format_date($item.slot_start, "day_time", null, "Africa/Cairo") != $state.from_slot)'
               map:    { value: '$item.slot_start', label: '$format_date($item.local_date + "T" + $item.local_time, "time")', description: '$lines($compact([$format_date($item.local_date), $loc($item.meta.branch_label)]), " · ")' }
               page:   true
               narrow:

@@ -17,7 +17,7 @@ description: |-
 input:
   action:     { type: enum, enum: [add, view, remove, clear, checkout], optional: true, describe: 'add | view | remove | clear | checkout (default view).' }
   product_id: { type: string, optional: true, describe: 'The fragrance SKU — required for add / remove. Comes from a card, never typed.' }
-  qty:        { type: number, optional: true, describe: 'Quantity for add (default 1).' }
+  qty:        { type: number, optional: true, describe: 'For add: how many of this item the basket should HOLD (sets the line, default 1) — "make it 2" is qty 2.' }
 
 entry:
   - else: true
@@ -254,7 +254,9 @@ steps:
                     $order_summary,
                     $t("cart.preview.total", { total: $format_money($order_total, "SAR") }),
                     $t("cart.preview.to", { recipient: $state.recipient }),
+                    $t("cart.preview.city", { city: $enum_lookup($state.city, { riyadh: $t("cart.city.riyadh"), jeddah: $t("cart.city.jeddah"), dammam: $t("cart.city.dammam"), makkah: $t("cart.city.makkah"), madinah: $t("cart.city.madinah"), abha: $t("cart.city.abha") }, $state.city) }),
                     $t("cart.preview.address", { address: $state.address }),
+                    $state.contact_phone != null ? $t("cart.preview.phone", { phone: $state.contact_phone }) : null,
                     $t("cart.preview.payment", { payment: $enum_lookup($state.payment_method, { cash_on_delivery: $t("cart.payment.cash_plain"), bank_transfer: $t("cart.payment.transfer_plain") }, $state.payment_method) })
                   ]), "\n")'
         header:        '{$t("cart.confirm_header")}'

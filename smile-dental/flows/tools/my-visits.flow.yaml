@@ -22,9 +22,9 @@ description: |-
 input:
   action:
     type:     enum
-    enum:     [list, cancel, rate, comment]
+    enum:     [list, manage, cancel, rate, comment]
     optional: true
-    describe: 'list (default) | cancel | rate | comment.'
+    describe: 'list (default) | manage | cancel | rate | comment.'
   visit_id:
     type:     string
     optional: true
@@ -48,6 +48,7 @@ steps:
         key: '$coalesce($input.action, "list")'
         cases:
           list:    [{ goto: load }]
+          manage:  [{ goto: load_visit }]
           cancel:  [{ goto: do_cancel }]
           rate:    [{ goto: do_rate }]
           comment: [{ goto: do_comment }]
@@ -76,7 +77,10 @@ steps:
                           $item.fields.dentist_label,
                           $enum_lookup($item.stage, { requested: $t("my-visits.st.requested"), confirmed: $t("my-visits.st.confirmed"), checked_in: $t("my-visits.st.checked_in"), completed: $t("my-visits.st.completed"), cancelled: $t("my-visits.st.cancelled"), no_show: $t("my-visits.st.no_show") }, $item.stage)
                         ]), " · ")'
-          on_select:   { invoke: my-visits, with: { action: rate, visit_id: '$item.id' } }
+          # A visit still AHEAD opens its card (cancel, or leave it); only one that has happened is
+          # rated. Every row used to open the rating — "How was your visit … Sat, Nov 7?" for a visit
+          # booked a minute earlier (walked on WhatsApp 2026-11-06). Both instants are ISO UTC.
+          on_select:   { invoke: my-visits, with: { action: '$item.fields.slot_start > $now && $item.stage != "cancelled" ? "manage" : "rate"', visit_id: '$item.id' } }
       memory_note: 'Showed {$length($page.rows)} visit(s).'
     - end: applied
 
@@ -85,6 +89,26 @@ steps:
         instructions: 'This patient has no appointment yet. Say so warmly in one line and offer to show the treatments or book a visit.'
 
   # ── cancel ───────────────────────────────────────────────────────────────
+  load_visit:
+    - do: record_get
+      args: { entity: booking, record_id: '$input.visit_id' }
+      bind: v
+      outputs:
+        ok:        [{ goto: show_visit }]
+        not_found: [{ goto: none }]
+        failed:    [{ goto: unavailable }]
+
+  show_visit:
+    - render:
+        render_intent: detail_card
+        header: '{$t("my-visits.visit_header", { ref: $v.record_number })}'
+        body:   '{$t("my-visits.visit_body", { dentist: $coalesce($v.fields.dentist_label, "-"), slot: $format_date($v.fields.slot_start, "day_time", null, "Asia/Dubai") })}'
+        buttons:
+          - { title: '{$t("my-visits.btn_cancel_visit")}', on_select: { invoke: my-visits, with: { action: cancel, visit_id: '$input.visit_id' } } }
+          - { title: '{$t("my-visits.btn_mine")}',         on_select: { invoke: my-visits } }
+      memory_note: 'Showed upcoming appointment {$input.visit_id} with its cancel option.'
+    - end: applied
+
   do_cancel:
     - do: booking_cancel
       args: { record_id: '$input.visit_id' }

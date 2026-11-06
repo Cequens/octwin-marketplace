@@ -1,7 +1,7 @@
 flow_id: browse-projects
 
 strings:
-  intro:        '🏙️ ہمارے پاس {total} منصوبے دستیاب ہیں — دیکھنے کے لیے سلائیڈ کریں:'
+  intro:        '🏙️ دستیاب منصوبے ({total}) — دیکھنے کے لیے سلائیڈ کریں:'
   by:           '🏗️ ڈویلپر: {developer}'
   handover:     '🔑 حوالگی: {handover}'
   from:         '💰 {price} سے'

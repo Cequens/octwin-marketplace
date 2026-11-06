@@ -1,7 +1,7 @@
 flow_id: otc
 
 strings:
-  intro:           '🛒 عندنا {total} منتج متاح بدون روشتة — اسحب واختار:'
+  intro:           '🛒 متاح بدون روشتة ({total}) — اسحب واختار:'
   btn_add:         '🛒 ضيف للسلة'
   btn_basket:      '🧾 سلتي'
   btn_browse:      '🛒 تصفّح الرف'

@@ -82,8 +82,8 @@ steps:
         derive:
           line_total: '$coalesce($state.unit_price, 0) * $coalesce($state.qty, 0)'
         gap_instructions: >-
-          Ask for the next RFQ detail ({$collect_field}) in ONE short line of Saudi
-          Arabic. Re-call request-quote with the answer.
+          Ask for the next RFQ detail ({$collect_field}) in ONE short line, in the language the customer writes in
+          (Saudi dialect when they write Arabic). Re-call request-quote with the answer.
         fields:
           # Already satisfied when seed_from_price ran, so silently skipped.
           - field: material
@@ -283,6 +283,6 @@ steps:
   save_failed:
     - answer:
         instructions: >-
-          The RFQ could not be saved. Say so plainly in one line of Saudi Arabic and
+          The RFQ could not be saved. Say so plainly in one line, in the language the customer writes in (Saudi dialect when they write Arabic) and
           offer to try again. Do NOT claim a quote was filed and do NOT invent a
           reference number.

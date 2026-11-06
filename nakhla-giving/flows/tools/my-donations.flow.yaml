@@ -157,5 +157,5 @@ steps:
   none:
     - answer:
         instructions: >-
-          The donor has no donations yet. Say so in ONE short warm line of Saudi
-          Arabic and offer to show the live campaigns. No pressure.
+          The donor has no donations yet. Say so in ONE short warm line, in the language the customer writes in
+          (Saudi dialect when they write Arabic) and offer to show the live campaigns. No pressure.

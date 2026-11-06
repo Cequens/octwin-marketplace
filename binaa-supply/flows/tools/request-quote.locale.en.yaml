@@ -5,7 +5,7 @@ strings:
   label.qty:           'Quantity'
   label.site:          'Delivery site'
   label.pin:           'Location on the map'
-  skip_pin:            'The name is enough ⏭️'
+  skip_pin:            'Name is enough ⏭️'
   label.name:          'Customer name'
   unit_generic:        'unit'
 
@@ -22,7 +22,7 @@ strings:
   preview.no_price:    '💰 Sales will approve the price and send it to you.'
   preview.site:        '📍 Delivery: {site}'
   preview.name:        '👤 In the name of: {name}'
-  btn_confirm:         '✅ Confirm the request'
+  btn_confirm:         '✅ Confirm request'
   btn_cancel:          '❌ Cancel'
 
   filed_header:        '✅ Your request is filed'

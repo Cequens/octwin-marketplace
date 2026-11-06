@@ -48,7 +48,7 @@ steps:
                       pl_agency: '$pl.fields.agency_repair'
                       pl_min:    '$pl.fields.min_premium.value / $pl.fields.min_premium.offset'
                       pl_excess: '$pl.fields.excess.value / $pl.fields.excess.offset'
-        gap_instructions: 'Ask for the next detail ({$collect_field}) in one short line, in Arabic. Re-call quote once they answer. NEVER state a premium, a loading or a discount yourself.'
+        gap_instructions: 'Ask for the next detail ({$collect_field}) in one short line, in the language the customer writes in. Re-call quote once they answer. NEVER state a premium, a loading or a discount yourself.'
         fields:
           - field: plan_id
             when: '$state.plan_id == null'
@@ -159,6 +159,6 @@ steps:
     - end: applied
 
   # Reached from a picker's `on_empty:` — the list came back empty (e.g. before the catalog is
-  # filled). `aborted`: nothing was done. The AI Agent says it, in the customer's language.
+  # filled). `aborted`: nothing was done. The AI Agent says it, in the language the customer writes in.
   nothing_to_pick:
     - end: { status: aborted, instructions: 'There is nothing to choose from for this right now — the list came back empty. Say so in one short line, in the customer''s language, and offer another way to help. Do NOT invent options.' }

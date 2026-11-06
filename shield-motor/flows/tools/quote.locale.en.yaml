@@ -40,6 +40,6 @@ strings:
   line.excess:     '💠 Excess payable on a claim: {excess}'
   line.agency:     '🔧 Agency repair included'
   disclaimer:      'ℹ️ An estimate worked out from the published pricing factors — it is not a binding offer.'
-  footer:          'The final premium is issued by underwriting after they review the ownership papers and the driving licence.'
+  footer:          'Underwriting sets the final premium after checking papers.'
   btn_plans:       '📋 Other plans'
   btn_home:        '🏠 Main menu'

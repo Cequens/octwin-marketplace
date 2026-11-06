@@ -13,13 +13,13 @@ strings:
   pick_cta:        'Choose a campaign'
 
   stale_appeal:    'It looks like this campaign has closed or is not available at the moment 🌿 Would you like to see the open campaigns?'
-  btn_appeals:     '📋 Available campaigns'
+  btn_appeals:     '📋 Campaigns'
 
   confirm_header:  '📝 Review your donation'
   preview_appeal:  '🌱 Campaign: {appeal}'
   preview_amount:  '💰 Amount: {amount}'
   preview_donor:   '👤 In the name of: {donor}'
-  btn_confirm:     '✅ Confirm and issue the payment link'
+  btn_confirm:     '✅ Get payment link'
   btn_cancel:      '❌ Cancel'
 
   # `ready_link` (a raw {url} line) and `btn_mine` were REMOVED with the switch to
@@ -29,7 +29,7 @@ strings:
   ready_header:    '🔒 Your payment link is ready'
   ready_amount:    '💰 {amount} towards {appeal}'
   ready_note:      'ℹ️ Payment happens on the payment gateway’s own page — we never ask you for card details here.'
-  ready_footer:    'Your receipt arrives here as soon as the payment goes through'
+  ready_footer:    'Your receipt arrives here once the payment goes through'
   btn_pay:         '🔒 Pay now'
 
   no_link_header:  '⏳ We have recorded your donation'

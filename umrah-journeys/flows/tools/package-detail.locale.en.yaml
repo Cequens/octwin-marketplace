@@ -8,7 +8,7 @@ strings:
   transport: '🚌 {transport}'
   includes:  '✅ {includes}'
   price:     '💰 Price per person: {price}'
-  footer:    'Prices are per person in a double room and vary with the room type.'
+  footer:    'Prices are per person in a double room; other rooms vary.'
   btn_book:  '📝 Book this package'
   btn_ask:   '💬 Ask a question'
   btn_back:  '↩️ Other packages'

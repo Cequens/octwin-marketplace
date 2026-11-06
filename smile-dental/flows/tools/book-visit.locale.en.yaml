@@ -39,7 +39,7 @@ strings:
   preview.insurer:   '🪪 Insurance: {insurer}'
   approve_header:    '🗓️ Review the appointment'
   approve_footer:    'Tap confirm to lock in the time.'
-  confirm_title:     'Confirm the appointment ✅'
+  confirm_title:     'Confirm booking ✅'
   cancel_title:      'Cancel ❌'
 
   done_header:       '✅ Your appointment is confirmed'

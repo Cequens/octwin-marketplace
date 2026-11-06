@@ -7,7 +7,7 @@ strings:
   cta:               'Pick'
   row_products:      '📋 Products and terms'
   row_products_d:    'Murabaha · Ijara · diminishing Musharaka'
-  row_estimate:      '🧮 Work out an estimated instalment'
+  row_estimate:      '🧮 Estimate instalment'
   row_estimate_d:    'From the published rates only'
   row_apply:         '📝 Apply for finance'
   row_apply_d:       'We collect the details and pass them to the finance committee'

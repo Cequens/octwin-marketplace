@@ -5,4 +5,4 @@ strings:
   from:       '💰 From {price}'
   duration:   '⏱️ About {min} minutes'
   btn_book:   '🗓️ Book'
-  btn_check:  '📸 Check from a photo'
+  btn_check:  '📸 Photo check'

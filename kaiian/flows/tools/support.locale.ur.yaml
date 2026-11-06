@@ -6,7 +6,7 @@ strings:
   label.description:   'مسئلے کی تفصیل'
   label.extra_details: 'اضافی تفصیلات'
   label.evidence_photo: 'ثبوت کے طور پر تصویر بھیجیں (اسکرین شاٹ / رسید / تصویر — اختیاری)'
-  skip_evidence:        'چھوڑ دیں — کوئی تصویر نہیں'
+  skip_evidence:        'کوئی تصویر نہیں ⏭️'
   label.region:        'آپریٹنگ علاقہ'
 
   # issue_type picker (labels from pack-level kaiian.cases.<value> via $enum_label)
@@ -31,7 +31,7 @@ strings:
 
   # Review-before-open card
   approve_header:       'بھیجنے سے پہلے اپنی درخواست کی تفصیلات دیکھ لیں 👇'
-  approve_confirm:      'تصدیق کریں اور درخواست کھولیں ✅'
+  approve_confirm:      'درخواست کھولیں ✅'
   approve_cancel:       'منسوخ ❌'
   preview.header:       'درخواست کی تفصیلات:'
   preview.issue:        '• قسم: {issue}'

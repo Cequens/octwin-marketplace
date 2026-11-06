@@ -42,7 +42,7 @@ steps:
         # Running preview prepended to every prompt (collected so far). Region
         # line appears only once a region is set (captain track).
         progress: '$lines($compact([$t("support.progress.header"), $state.issue_type != null ? $t("support.progress.issue", { issue: $enum_label($state.issue_type, "cases", "") }) : null, $state.mobile != null ? $t("support.progress.mobile", { mobile: $state.mobile }) : null, $state.description != null ? $t("support.progress.description", { description: $state.description }) : null, $state.region != null ? $t("support.progress.region", { region: $enum_label($state.region, "region", "") }) : null]), "\n")'
-        gap_instructions: 'Ask the user for the next detail ({$collect_field_label}), one short question at a time, in friendly Saudi white dialect. Re-call support once they answer.'
+        gap_instructions: 'Ask the user for the next detail ({$collect_field_label}), one short question at a time, in the language the customer writes in (friendly Saudi white dialect when they write Arabic). Re-call support once they answer.'
         fields:
           # Sectioned picker — passenger issues vs captain issues. The agent
           # usually pre-fills issue_type; else the user picks from the two groups.

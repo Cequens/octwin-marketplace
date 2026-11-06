@@ -19,7 +19,7 @@ strings:
   preview_appeal:  '🌱 الحملة: {appeal}'
   preview_amount:  '💰 المبلغ: {amount}'
   preview_donor:   '👤 باسم: {donor}'
-  btn_confirm:     '✅ أكّد وأصدر رابط الدفع'
+  btn_confirm:     '✅ أصدر رابط الدفع'
   btn_cancel:      '❌ إلغاء'
 
   # `ready_link` (a raw {url} line) and `btn_mine` were REMOVED with the switch to

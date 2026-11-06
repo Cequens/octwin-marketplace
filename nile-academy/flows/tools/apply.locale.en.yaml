@@ -33,6 +33,9 @@ strings:
   year.y5:   'Year 5'
   year.y7:   'Year 7'
   year.y9:   'Year 9'
+  year.y10:  'Year 10'
+  year.y11:  'Year 11'
+  year.y12:  'Year 12'
 
   created_header:      '✅ Your application has been created'
   created_ref:         '🧾 Application number: #{ref}'

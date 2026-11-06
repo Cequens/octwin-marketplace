@@ -61,7 +61,7 @@ steps:
                                 $state.travel_month != null ? $t("book-package.progress.month") : null
                               ]), "\n")'
         progress: '$progress_card'
-        gap_instructions: 'Ask the pilgrim for the next missing detail ({$collect_field}), one at a time, in Arabic. Re-call book-package once they answer. Never promise a visa outcome.'
+        gap_instructions: 'Ask the pilgrim for the next missing detail ({$collect_field}), one at a time, in the language the customer writes in. Re-call book-package once they answer. Never promise a visa outcome.'
         fields:
           - field: package_id
             when: '$state.package_id == null'
@@ -143,6 +143,7 @@ steps:
                     $t("book-package.preview.travellers", { count: $n }),
                     $t("book-package.preview.room", { room: $enum_lookup($state.room_type, { double: $t("book-package.room.double_plain"), triple: $t("book-package.room.triple_plain"), quad: $t("book-package.room.quad_plain") }, $state.room_type) }),
                     $t("book-package.preview.city", { city: $enum_lookup($state.departure_city, { riyadh: $t("book-package.city.riyadh_plain"), jeddah: $t("book-package.city.jeddah_plain"), cairo: $t("book-package.city.cairo_plain"), dubai: $t("book-package.city.dubai_plain"), casablanca: $t("book-package.city.casablanca_plain"), jakarta: $t("book-package.city.jakarta_plain") }, $state.departure_city) }),
+                    $state.travel_month != null ? $t("book-package.preview.month", { month: $enum_lookup($state.travel_month, { rajab: $t("book-package.month.rajab"), shaaban: $t("book-package.month.shaaban"), ramadan: $t("book-package.month.ramadan"), shawwal: $t("book-package.month.shawwal"), dhul_qadah: $t("book-package.month.dhul_qadah"), dhul_hijjah: $t("book-package.month.dhul_hijjah") }, $state.travel_month) }) : null,
                     $t("book-package.preview.total", { total: $format_money($total, $pkg_currency) }),
                     $t("book-package.preview.note")
                   ]), "\n")'
@@ -254,6 +255,6 @@ steps:
         instructions: 'The reservation could not be written. Say so plainly in one line and offer to try again. Do NOT claim a booking exists.'
 
   # Reached from a picker's `on_empty:` — the list came back empty (e.g. before the catalog is
-  # filled). `aborted`: nothing was done. The AI Agent says it, in the customer's language.
+  # filled). `aborted`: nothing was done. The AI Agent says it, in the language the customer writes in.
   nothing_to_pick:
     - end: { status: aborted, instructions: 'There is nothing to choose from for this right now — the list came back empty. Say so in one short line, in the customer''s language, and offer another way to help. Do NOT invent options.' }

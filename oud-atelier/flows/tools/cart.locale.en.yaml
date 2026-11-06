@@ -20,7 +20,7 @@ strings:
   label.city:      'City'
   label.address:   'Address — district, street and building'
   label.pin:       'Delivery point on the map'
-  skip_pin:        'The address is enough ⏭️'
+  skip_pin:        'Address is enough ⏭️'
   label.payment:   'Payment method'
   label.phone: 'A number to call about the order'
 
@@ -46,7 +46,9 @@ strings:
   preview.header:  '🧾 Your order summary:'
   preview.total:   '💰 Total: {total}'
   preview.to:      '👤 Recipient: {recipient}'
+  preview.city:    '🏙️ City: {city}'
   preview.address: '📍 Address: {address}'
+  preview.phone:   '📞 Phone: {phone}'
   preview.payment: '💳 Payment: {payment}'
 
   placed_header:   '✅ Your order is placed'

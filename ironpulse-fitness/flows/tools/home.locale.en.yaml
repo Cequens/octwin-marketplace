@@ -10,7 +10,7 @@ strings:
   row_classes_d:       'Spinning · HIIT · yoga · boxing · weights'
   row_book:            '📅 Book a class'
   row_book_d:          'Pick the class, the trainer and the time'
-  row_membership:      '🎫 Memberships and prices'
+  row_membership:      '🎫 Memberships & prices'
   row_membership_d:    'Monthly, yearly and class-pass options'
   row_schedule:        '🗓️ My classes'
   row_schedule_d:      'Your upcoming classes, and cancelling a booking'

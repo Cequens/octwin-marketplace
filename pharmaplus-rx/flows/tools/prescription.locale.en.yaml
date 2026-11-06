@@ -14,17 +14,17 @@ strings:
     Never substitute a medicine you think was intended.
   status_header:    '🧾 Your prescriptions'
   status_note:      "ℹ️ The pharmacist's decision reaches you here in the chat as soon as the review is done."
-  btn_new:          '📄 Send a prescription'
+  btn_new:          '📄 Send prescription'
   btn_home:         '🏠 Main menu'
-  btn_status:       '🧾 My prescription status'
-  btn_otc:          '🛒 Products without a prescription'
+  btn_status:       '🧾 Check status'
+  btn_otc:          '🛒 Non-prescription'
 
   label.photo:      'A photo of the whole prescription, clear and complete'
   label.patient:    "Patient's name"
   label.area:       'Delivery area'
   label.address:    'Address — street, building and flat'
   label.pin:        'Delivery point on the map'
-  skip_pin:         'The address is enough ⏭️'
+  skip_pin:         'Address is enough ⏭️'
   label.phone:      'Mobile number'
 
   field_header.area: '📍 Deliver to which area?'
@@ -43,5 +43,5 @@ strings:
   done_ref:         '🧾 Order number: #{ref}'
   done_case:        '👨‍⚕️ Review number: #{ref} — the pharmacist replies within {hours} hours'
   done_no_advice:   'ℹ️ We cannot comment on the medicine or the dose — the pharmacist is the one who reviews and decides, and their decision reaches you here.'
-  done_footer:      'If anything on the prescription needs clarifying, the pharmacist will ask you through this chat.'
+  done_footer:      'The pharmacist will ask here if anything needs clarifying.'
   done_no_case:     '⚠️ Your order is saved, but we could not send it to the pharmacist automatically — call the branch and we will follow it up right away.'

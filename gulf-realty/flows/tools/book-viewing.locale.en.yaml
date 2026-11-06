@@ -35,7 +35,7 @@ strings:
   preview.party:    '👥 People coming: {party}'
   approve_header:   '🗓️ Review the booking'
   approve_footer:   'Tap confirm to complete the booking.'
-  confirm_title:    'Confirm the booking ✅'
+  confirm_title:    'Confirm booking ✅'
   cancel_title:     'Cancel ❌'
 
   lead_note:        'Viewing booked for {slot} with {advisor}.'

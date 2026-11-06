@@ -224,7 +224,7 @@ steps:
                      $t("otc.progress.total", { total: $format_money($order_total, "EGP") }),
                      $state.delivery_area != null ? $t("otc.progress.area") : null
                    ]), "\n")'
-        gap_instructions: 'Ask the customer for the next delivery detail ({$collect_field}) in one short line, in Egyptian Arabic. Re-call otc with action=checkout once they answer. Say nothing clinical about any product.'
+        gap_instructions: 'Ask the customer for the next delivery detail ({$collect_field}) in one short line, in the language the customer writes in (Egyptian dialect when they write Arabic). Re-call otc with action=checkout once they answer. Say nothing clinical about any product.'
         fields:
           - field: patient_name
             label:    '$t("otc.label.name")'

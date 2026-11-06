@@ -129,7 +129,7 @@ steps:
                   - assign:
                       region:     '$shp.fields.region'
                       ship_stage: '$shp.stage'
-        gap_instructions: 'Ask the customer for the next detail ({$collect_field}) in one short line, in Egyptian Arabic. Re-call claim once they answer. NEVER promise compensation or a delivery date.'
+        gap_instructions: 'Ask the customer for the next detail ({$collect_field}) in one short line, in the language the customer writes in (Egyptian dialect when they write Arabic). Re-call claim once they answer. NEVER promise compensation or a delivery date.'
         fields:
           - field: tracking_number
             label:    '$t("claim.label.tracking")'

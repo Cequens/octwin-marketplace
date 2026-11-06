@@ -12,7 +12,7 @@ strings:
     Never estimate a repair cost and never state whether the car is safe to drive.
   status_header:  '🧾 Your claims'
   status_note:    'ℹ️ The assessor’s decision reaches you here in the chat — we only show what is on record.'
-  btn_new:        '🚨 Report an accident'
+  btn_new:        '🚨 Report accident'
   btn_home:       '🏠 Main menu'
   btn_status:     '🧾 My claim status'
 
@@ -23,7 +23,7 @@ strings:
   label.when:        'When it happened'
   label.location:    'Where it happened'
   label.pin:         'Location of the accident on the map'
-  skip_pin:          'The description is enough ⏭️'
+  skip_pin:          'Description only ⏭️'
   label.description: 'Describe what happened'
   label.police:      'Police report number'
   label.phone: 'A number for the inspection officer to call'

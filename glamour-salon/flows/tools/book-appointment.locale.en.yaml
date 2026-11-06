@@ -29,7 +29,7 @@ strings:
   preview.notes:      '📝 Notes: {notes}'
   approve_header:     '📅 Review your appointment'
   approve_footer:     'Tap confirm to lock in the time.'
-  confirm_title:      'Confirm the appointment ✅'
+  confirm_title:      'Confirm booking ✅'
   cancel_title:       'Cancel ❌'
 
   done_header:   '✅ Your appointment is confirmed'

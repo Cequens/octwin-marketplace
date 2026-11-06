@@ -46,7 +46,9 @@ strings:
   preview.header:  '🧾 ملخص طلبك:'
   preview.total:   '💰 الإجمالي: {total}'
   preview.to:      '👤 المستلم: {recipient}'
+  preview.city:    '🏙️ المدينة: {city}'
   preview.address: '📍 العنوان: {address}'
+  preview.phone:   '📞 الجوال: {phone}'
   preview.payment: '💳 الدفع: {payment}'
 
   placed_header:   '✅ تم تسجيل طلبك'

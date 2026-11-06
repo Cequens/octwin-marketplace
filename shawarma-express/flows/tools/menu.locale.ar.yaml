@@ -1,6 +1,6 @@
 flow_id: menu
 
 strings:
-  intro:       '🌯 عندنا {total} صنف متاح — اسحب واختار:'
+  intro:       '🌯 في المنيو ({total}) — اسحب واختار:'
   btn_add:     '🛒 ضيف للسلة'
   btn_basket:  '🧾 سلتي'

@@ -5,7 +5,7 @@ strings:
   greeting:        'Bienvenido 🌊 Reservamos tu estancia junto al mar en minutos.'
   live:            '🧾 Tienes {count} reserva(s) activa(s).'
   cta:             'Elige'
-  row_rooms:       '🛏️ Habitaciones y precios'
+  row_rooms:       '🛏️ Cuartos y precios'
   row_rooms_d:     'El Gouna · Hurgada · Marsa Alam'
   row_sea:         '🌅 Vista al mar'
   row_sea_d:       'Solo las habitaciones frente al mar'

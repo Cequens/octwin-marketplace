@@ -5,7 +5,7 @@ strings:
   greeting:      'Welcome to Nakhla Giving — your donation reaches the beneficiary directly.'
   pending:       '⏳ You have {count} donation(s) waiting for payment.'
   footer:        'A licensed charity · instant receipt on WhatsApp'
-  cta:           'How would you like to give?'
+  cta:           'Ways to give'
 
   row_appeals:   '📋 Available campaigns'
   row_appeals_d: 'See where your donations go'

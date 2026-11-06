@@ -7,5 +7,5 @@ strings:
   recipient:    '👤 Recipient: {recipient}'
   cod:          '💵 To collect on delivery: {amount}'
   footer:       'The status comes live from the shipping system.'
-  btn_problem:  '⚠️ There is a problem'
+  btn_problem:  '⚠️ Report a problem'
   btn_pickup:   '🚚 Book a collection'

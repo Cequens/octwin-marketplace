@@ -27,6 +27,11 @@ input:
   pro_id:        { type: string, optional: true, describe: 'Chosen barber record id.' }
   service_id:    { type: string, optional: true, describe: 'Chosen service record id.' }
   slot_start:    { type: string, optional: true, describe: 'Chosen slot start (ISO).' }
+  slot_day:      { type: string, optional: true, describe: 'Internal — the day picked before the times (YYYY-MM-DD). Comes from a tap, never typed.' }
+  slot_page:     { type: number, optional: true, describe: 'Internal — where the times list is paged to. Comes from a tap, never typed.' }
+  br_page:       { type: number, optional: true, describe: 'Internal — where the branches list is paged to. Comes from a tap, never typed.' }
+  pro_page:      { type: number, optional: true, describe: 'Internal — where the barbers list is paged to. Comes from a tap, never typed.' }
+  svc_page:      { type: number, optional: true, describe: 'Internal — where the services list is paged to. Comes from a tap, never typed.' }
 
 entry:
   - if:   '$input.slot_start != null'
@@ -51,18 +56,30 @@ steps:
         ok:     [{ goto: pick_branch }]
         empty:  [{ goto: none_branch }]
         failed: [{ end: failed }]
+  # PAGED like the times (see `pick_slot`): 16 branches in the demo, and the last six could not be
+  # booked at (walked 2026-11-06).
   pick_branch:
+    - assign:
+        paged: '$length($branches.rows) > $caps.list.maxRows'
+        at:    '$coalesce($input.br_page, 0) < $length($branches.rows) ? $coalesce($input.br_page, 0) : 0'
+    - assign:
+        pg:    '$paginate($branches.rows, $at, $caps.list.maxRows - 1)'
+    - assign:
+        rows:  '$concat(
+                  $map($paged ? $pg.page : $branches.rows, { t: $item.title, d: $item.fields.phone, code: $item.fields.code }),
+                  $paged ? [$pg.has_more ? { t: $t("book.more_rows"), d: $t("book.more_rows_desc"), bp: $pg.next_offset } : { t: $t("book.first_times"), d: $t("book.first_rows_desc"), bp: 0 }] : []
+                )'
     - render:
         render_intent: list_picker
         header: '{$t("book.branch_header")}'
         body:   '{$t("book.branch_body")}'
         cta:    '{$t("book.choose")}'
-        items:  '$branches.rows'
+        items:  '$rows'
         item_template:
-          title:       '{$item.title}'
-          description: '{$item.fields.phone}'
+          title:       '$item.t'
+          description: '$item.d'
           # `service_id` is absent unless the journey began at `service_list`; an absent value drops out of the tap.
-          on_select:   { invoke: book, with: { branch_code: '$item.fields.code', service_id: '$input.service_id' } }
+          on_select:   { invoke: book, with: { branch_code: '$item.code', service_id: '$input.service_id', br_page: '$item.bp' } }
       memory_note: 'Offered branches to book at.'
     - end: applied
 
@@ -91,22 +108,35 @@ steps:
         ok:     [{ goto: pick_pro }]
         empty:  [{ goto: none_pro }]
         failed: [{ end: failed }]
+  # PAGED like the times (see `pick_slot`): a branch's barbers ran past a list's 10 rows (16 in
+  # the demo, walked 2026-11-06) and the rest could not be booked.
   pick_pro:
+    - assign:
+        paged: '$length($pros.rows) > $caps.list.maxRows'
+        at:    '$coalesce($input.pro_page, 0) < $length($pros.rows) ? $coalesce($input.pro_page, 0) : 0'
+    - assign:
+        pg:    '$paginate($pros.rows, $at, $caps.list.maxRows - 1)'
+    - assign:
+        rows:  '$concat(
+                  $map($paged ? $pg.page : $pros.rows, { t: $item.title, d: $item.fields.role, id: $item.id }),
+                  $paged ? [$pg.has_more ? { t: $t("book.more_rows"), d: $t("book.more_rows_desc"), pp: $pg.next_offset } : { t: $t("book.first_times"), d: $t("book.first_rows_desc"), pp: 0 }] : []
+                )'
     - render:
         render_intent: list_picker
         header: '{$t("book.pro_header")}'
         body:   '{$t("book.pro_body", { branch: $coalesce($branch.fields.name, $pros.rows[0].fields.branch_name, "") })}'
         cta:    '{$t("book.choose")}'
-        items:  '$pros.rows'
+        items:  '$rows'
         item_template:
-          title:       '{$item.title}'
-          description: '{$item.fields.role}'
+          title:       '$item.t'
+          description: '$item.d'
           on_select:
             invoke: book
             with:
               branch_code: '$input.branch_code'
               pro_id:      '$item.id'
               service_id:  '$input.service_id'
+              pro_page:    '$item.pp'
       memory_note: 'Offered barbers.'
     - end: applied
 
@@ -119,21 +149,34 @@ steps:
         ok:     [{ goto: pick_service }]
         empty:  [{ goto: none_service }]
         failed: [{ end: failed }]
+  # PAGED too: the service menu is 23 rows in the demo, and everything after the tenth was out of reach.
   pick_service:
+    - assign:
+        paged: '$length($services.rows) > $caps.list.maxRows'
+        at:    '$coalesce($input.svc_page, 0) < $length($services.rows) ? $coalesce($input.svc_page, 0) : 0'
+    - assign:
+        pg:    '$paginate($services.rows, $at, $caps.list.maxRows - 1)'
+    - assign:
+        rows:  '$concat(
+                  $map($paged ? $pg.page : $services.rows, { t: $item.title + " — " + $format_money($item.fields.price, "EGP"), id: $item.id }),
+                  $paged ? [$pg.has_more ? { t: $t("book.more_rows"), d: $t("book.more_rows_desc"), sp: $pg.next_offset } : { t: $t("book.first_times"), d: $t("book.first_rows_desc"), sp: 0 }] : []
+                )'
     - render:
         render_intent: list_picker
         header: '{$t("book.service_header")}'
         body:   '{$t("book.service_body")}'
         cta:    '{$t("book.choose")}'
-        items:  '$services.rows'
+        items:  '$rows'
         item_template:
-          title: '{$item.title} — {$format_money($item.fields.price, "EGP")}'
+          title:       '$item.t'
+          description: '$item.d'
           on_select:
             invoke: book
             with:
               branch_code: '$input.branch_code'
               pro_id:      '$input.pro_id'
               service_id:  '$item.id'
+              svc_page:    '$item.sp'
       memory_note: 'Offered services.'
     - end: applied
 
@@ -146,24 +189,67 @@ steps:
         ok:     [{ goto: pick_slot }]
         empty:  [{ goto: none_slot }]
         failed: [{ end: failed }]
+  # A week of a barber's times is ~190 slots and a list shows 10: rendered whole, everything after
+  # the first ten was out of reach (walked on WhatsApp 2026-11-06). So the DAY comes first when the
+  # week does not fit one list, and a day that still does not fit is PAGED with a "More" row —
+  # the same two steps a `collect` picker's `narrow:` + `page:` give, built here because this flow
+  # is an invoke-chain (each pick re-invokes it; a mid-chain suspend would lose `$input`).
+  # Every row leaves out the keys it does not carry (an absent value is left out of a tap id; a
+  # `null` would be sent, and an optional input refuses it).
   pick_slot:
+    - if: '$input.slot_day == null && $length($slots) > $caps.list.maxRows'
+      goto: pick_day
+    - assign:
+        day_slots: '$input.slot_day == null ? $slots : $filter($slots, { local_date: $input.slot_day })'
+    - assign:
+        paged:     '$length($day_slots) > $caps.list.maxRows'
+        at:        '$coalesce($input.slot_page, 0) < $length($day_slots) ? $coalesce($input.slot_page, 0) : 0'
+    - assign:
+        pg:        '$paginate($day_slots, $at, $caps.list.maxRows - 1)'
+    - assign:
+        rows: '$concat(
+                 $map($paged ? $pg.page : $day_slots, { t: $format_date($item.local_date + "T" + $item.local_time, "time"), d: $format_date($item.local_date), s: $item.slot_start }),
+                 $paged ? [$pg.has_more ? { t: $t("book.more_times"), d: $t("book.more_desc"), p: $pg.next_offset } : { t: $t("book.first_times"), d: $t("book.first_desc"), p: 0 }] : []
+               )'
     - render:
         render_intent: list_picker
         header: '{$t("book.slot_header")}'
         body:   '{$t("book.slot_body")}'
         cta:    '{$t("book.choose")}'
-        items:  '$slots'
+        items:  '$rows'
         item_template:
-          title: '{$format_date($item.local_date + "T" + $item.local_time, "time")}'
-          description: '{$format_date($item.local_date)}'
+          title:       '$item.t'
+          description: '$item.d'
           on_select:
             invoke: book
             with:
               branch_code: '$input.branch_code'
               pro_id:      '$input.pro_id'
               service_id:  '$input.service_id'
-              slot_start:  '$item.slot_start'
+              slot_day:    '$input.slot_day'
+              slot_start:  '$item.s'
+              slot_page:   '$item.p'
       memory_note: 'Offered time slots.'
+    - end: applied
+
+  pick_day:
+    - render:
+        render_intent: list_picker
+        header: '{$t("book.day_header")}'
+        body:   '{$t("book.day_body")}'
+        cta:    '{$t("book.day_cta")}'
+        items:  '$unique($slots, "local_date")'
+        item_template:
+          title:       '$format_date($item.local_date)'
+          description: '$t("book.day_slots", { count: $length($filter($slots, { local_date: $item.local_date })) })'
+          on_select:
+            invoke: book
+            with:
+              branch_code: '$input.branch_code'
+              pro_id:      '$input.pro_id'
+              service_id:  '$input.service_id'
+              slot_day:    '$item.local_date'
+      memory_note: 'Offered the days with free times.'
     - end: applied
 
   # 4b) Hydrate — the four labels the tap chain no longer carries, re-read once here from

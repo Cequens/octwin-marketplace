@@ -41,6 +41,6 @@ strings:
   line.rate:       '📈 Published profit rate: {rate}%'
   line.monthly:    '📌 Estimated monthly instalment: {amount}'
   disclaimer:      'ℹ️ An estimate for guidance only, worked out from the published rate — it is not an offer and not an approval.'
-  footer:          'The decision and the final amount come from the finance committee after the application is studied.'
+  footer:          'The finance committee sets the final amount.'
   btn_apply:       '📝 Apply'
   btn_products:    '📋 Other products'

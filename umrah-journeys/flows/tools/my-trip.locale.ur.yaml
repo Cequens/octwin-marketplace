@@ -4,7 +4,7 @@ strings:
   header:        '🧾 آپ کی بکنگ'
   pax_suffix:    ' مسافر'
   btn_visa:      '📂 ویزا کی صورتحال'
-  btn_upload:    '📎 دستاویز اپ لوڈ کریں'
+  btn_upload:    '📎 دستاویز بھیجیں'
   btn_packages:  '🕋 پیکجز'
 
   # The zero branch — no booking yet.

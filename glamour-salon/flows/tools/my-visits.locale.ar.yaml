@@ -8,8 +8,12 @@ strings:
 
   cancel_header:  '✅ تم إلغاء الموعد'
   cancel_body:    'أُلغي موعدك وأصبح الوقت متاحاً لعميلة أخرى. تحت أمرك لو أردت موعداً جديداً.'
-  btn_rebook:     '📅 احجزي موعداً جديداً'
+  btn_rebook:     '📅 موعد جديد'
   btn_mine:       '🗓️ مواعيدي'
+
+  visit_header:     '📅 الموعد رقم {ref}'
+  visit_body:       'مع {stylist} — {time}. بنذكّرك قبلها بيوم.'
+  btn_cancel_visit: '❌ إلغاء الموعد'
 
   rate_header:    '⭐ قيّمي زيارتك'
   rate_body:      'كيف كانت تجربتك مع {stylist}؟'

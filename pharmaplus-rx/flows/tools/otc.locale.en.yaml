@@ -1,11 +1,11 @@
 flow_id: otc
 
 strings:
-  intro:           '🛒 We have {total} products available without a prescription — swipe and pick:'
+  intro:           '🛒 Available without a prescription ({total}) — swipe and pick:'
   btn_add:         '🛒 Add to basket'
   btn_basket:      '🧾 My basket'
   btn_browse:      '🛒 Browse the shelf'
-  btn_rx:          '📄 Send a prescription'
+  btn_rx:          '📄 Send prescription'
   btn_checkout:    '✅ Complete the order'
   btn_orders:      '📦 My orders'
   btn_confirm:     'Confirm the order ✅'
@@ -14,7 +14,7 @@ strings:
   basket_empty:    'Your basket is empty. Pick from the shelf, or send a prescription to the pharmacist.'
   # Was: "the branch will call you to confirm the order and payment" — a promise nothing kept,
   # because the basket created no order and notified nobody. Now it points at the real next step.
-  basket_footer:   'Tap "Complete the order" and we will take your delivery details.'
+  basket_footer:   'Tap "Complete the order" to give your delivery details.'
   subtotal:        '💰 Products total: {subtotal}'
   fee:             '🛵 Delivery: {fee}'
   total:           '📌 Total: {total}'
@@ -27,7 +27,7 @@ strings:
   label.area:      'Area'
   label.address:   'Address — street, building and flat'
   label.pin:       'Delivery point on the map'
-  skip_pin:        'The address is enough ⏭️'
+  skip_pin:        'Address is enough ⏭️'
   label.phone:     'Mobile number'
   label.payment:   'Payment method'
 

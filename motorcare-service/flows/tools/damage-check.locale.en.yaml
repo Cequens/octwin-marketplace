@@ -22,7 +22,7 @@ strings:
   area:             '🔧 Department: {area}'
   severity:         '📊 Severity: {severity}'
   no_quote:         'ℹ️ This is a first look from the photo, not a quote — the workshop will inspect the car and send you the final price.'
-  footer:           'Your job card has reached the workshop, and they have a set time to reply.'
+  footer:           'The workshop will reply within its set time.'
   no_findings:      'The photo is not clear enough for a first look — the workshop will inspect it themselves.'
 
   ar.mechanical:    'Mechanical'
@@ -33,5 +33,5 @@ strings:
   sev.major:        'Major'
   sev.unknown:      'Needs inspection'
 
-  btn_book:         '🗓️ Book an appointment'
+  btn_book:         '🗓️ Book a visit'
   btn_garage:       '🚗 My cars'

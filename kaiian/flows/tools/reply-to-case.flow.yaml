@@ -44,7 +44,7 @@ steps:
   # falls straight through to `record`.
   collect_reply:
     - collect:
-        gap_instructions: 'Ask the customer to type the exact info the team needs, one short question in friendly Saudi white dialect. Re-call reply-to-case with their message.'
+        gap_instructions: 'Ask the customer to type the exact info the team needs, one short question in the language the customer writes in (friendly Saudi white dialect when they write Arabic). Re-call reply-to-case with their message.'
         fields:
           - field: message
             label:    '$t("reply-to-case.label.message")'

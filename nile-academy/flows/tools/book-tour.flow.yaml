@@ -48,7 +48,7 @@ steps:
                      $campus_label != null ? $t("book-tour.progress.campus", { campus: $campus_label }) : null,
                      $state.slot_label != null ? $t("book-tour.progress.slot", { slot: $state.slot_label }) : null
                    ]), "\n")'
-        gap_instructions: 'Ask the guardian for the next detail ({$collect_field}) in one short line, in Egyptian Arabic. Re-call book-tour once they answer.'
+        gap_instructions: 'Ask the guardian for the next detail ({$collect_field}) in one short line, in the language the customer writes in (Egyptian dialect when they write Arabic). Re-call book-tour once they answer.'
         fields:
           - field: campus_id
             when: '$state.campus_id == null'
@@ -230,6 +230,6 @@ steps:
     - end: { status: aborted, body: '{$t("book-tour.no_slots")}' }
 
   # Reached from a picker's `on_empty:` — the list came back empty (e.g. before the catalog is
-  # filled). `aborted`: nothing was done. The AI Agent says it, in the customer's language.
+  # filled). `aborted`: nothing was done. The AI Agent says it, in the language the customer writes in.
   nothing_to_pick:
     - end: { status: aborted, instructions: 'There is nothing to choose from for this right now — the list came back empty. Say so in one short line, in the customer''s language, and offer another way to help. Do NOT invent options.' }

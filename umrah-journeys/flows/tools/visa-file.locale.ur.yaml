@@ -11,11 +11,11 @@ strings:
     Copy characters exactly. Never infer a nationality from a name or a number format.
   status_header:     '📂 ہمارے پاس آپ کی فائلیں'
   status_note:       'ℹ️ صورتحال ویزا ٹیم تازہ کرتی ہے، اور کسی بھی فیصلے کی اطلاع ہم فوراً دیتے ہیں۔'
-  btn_upload:        '📎 دستاویز اپ لوڈ کریں'
-  btn_query:         '💬 ہماری ٹیم سے پوچھیں'
-  btn_trip:          '🧾 میری بکنگ کی تفصیلات'
-  btn_status:        '📂 میری فائل کی صورتحال'
-  btn_more:          '📎 ایک اور پاسپورٹ اپ لوڈ کریں'
+  btn_upload:        '📎 دستاویز بھیجیں'
+  btn_query:         '💬 ٹیم سے پوچھیں'
+  btn_trip:          '🧾 میری بکنگ'
+  btn_status:        '📂 فائل کی صورتحال'
+  btn_more:          '📎 اگلا پاسپورٹ'
   btn_home:          '🏠 مرکزی مینو'
 
   label.name:        'مسافر کا نام'

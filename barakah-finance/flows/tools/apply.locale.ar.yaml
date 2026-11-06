@@ -46,6 +46,7 @@ strings:
   preview.employment:  '💼 جهة العمل: {employment}'
   preview.city:        '📍 المدينة: {city}'
   preview.income:      '💰 الدخل الشهري: {income}'
+  preview.obligations: '💳 الالتزامات الشهرية: {amount}'
   preview.consent:     'ℹ️ بالتأكيد أنت توافق على دراسة الطلب والاستعلام الائتماني.'
   approve_header:      '📝 تأكيد التقديم'
   approve_footer:      'اضغط تأكيد لإرسال الطلب للجنة التمويل.'

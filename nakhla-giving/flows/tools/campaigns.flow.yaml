@@ -112,5 +112,5 @@ steps:
         data: { asked_for: '$input.category' }
         instructions: >-
           There are no live appeals matching that right now. Say so in ONE short
-          line of Saudi Arabic, warmly, and offer to take a general donation
+          line, in the language the customer writes in (Saudi dialect when they write Arabic), warmly, and offer to take a general donation
           instead. Never invent a campaign.

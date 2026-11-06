@@ -94,7 +94,7 @@ steps:
                      $state.employment != null ? $t("apply.progress.employment") : null,
                      $state.city != null ? $t("apply.progress.city") : null
                    ]), "\n")'
-        gap_instructions: 'Ask for the next detail ({$collect_field}) in one short line, in Arabic. Re-call apply once they answer. NEVER comment on their chances, and never ask for a password, an OTP or a card number.'
+        gap_instructions: 'Ask for the next detail ({$collect_field}) in one short line, in the language the customer writes in. Re-call apply once they answer. NEVER comment on their chances, and never ask for a password, an OTP or a card number.'
         fields:
           - field: product_id
             when: '$state.product_id == null'
@@ -156,6 +156,7 @@ steps:
                     $t("apply.preview.employment", { employment: $enum_label($state.employment, "employment", $state.employment) }),
                     $t("apply.preview.city", { city: $enum_label($state.city, "city", $state.city) }),
                     $t("apply.preview.income", { income: $format_money($state.monthly_income, "SAR") }),
+                    $state.existing_obligations != null ? $t("apply.preview.obligations", { amount: $format_money($state.existing_obligations, "SAR") }) : null,
                     $t("apply.preview.consent")
                   ]), "\n")'
         header:        '{$t("apply.approve_header")}'
@@ -244,6 +245,6 @@ steps:
         instructions: 'The application could not be saved. Say so plainly in one line and give the branch line. Do NOT claim an application exists.'
 
   # Reached from a picker's `on_empty:` — the list came back empty (e.g. before the catalog is
-  # filled). `aborted`: nothing was done. The AI Agent says it, in the customer's language.
+  # filled). `aborted`: nothing was done. The AI Agent says it, in the language the customer writes in.
   nothing_to_pick:
     - end: { status: aborted, instructions: 'There is nothing to choose from for this right now — the list came back empty. Say so in one short line, in the customer''s language, and offer another way to help. Do NOT invent options.' }
