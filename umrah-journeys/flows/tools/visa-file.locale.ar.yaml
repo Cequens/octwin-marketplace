@@ -20,6 +20,7 @@ strings:
   btn_home:          '🏠 القائمة الرئيسية'
 
   label.name:        'اسم المسافر'
+  label.expiry:      'تاريخ انتهاء الجواز'
   label.passport:    'صورة صفحة بيانات الجواز'
   label.photo:       'الصورة الشخصية (اختياري)'
   skip:              'تخطَّ ⏭️'
@@ -28,6 +29,7 @@ strings:
   reply:             'رفع العميل صورة جواز {name}.'
   uploaded_header:   '✅ تم استلام المستند'
   uploaded_body:     'أُضيفت صورة جواز {name} إلى الملف رقم #{ref}.'
+  uploaded_expiry:   '🛂 الجواز ساري حتى {date}.'
   uploaded_next:     'ترسل جوازات باقي المسافرين واحداً واحداً، وفريق التأشيرات يبدأ المراجعة.'
 
   default_question:  'استفسار عن التأشيرة'

@@ -37,6 +37,7 @@ entities:
     fields:
       full_name:       { type: text, required: true, label: { en: 'Name', ar: 'الاسم' } }
       passport_number: { type: text, label: { en: 'Passport', ar: 'رقم الجواز' } }
+      passport_expiry: { type: date, label: { en: 'Passport expiry', ar: 'انتهاء الجواز' }, description: { en: 'The visa needs at least six months of validity left.', ar: 'تتطلب التأشيرة صلاحية لا تقل عن ستة أشهر.' } }
       nationality:     { type: text, label: { en: 'Nationality', ar: 'الجنسية' } }
       relation:        { type: text, label: { en: 'Relation', ar: 'صلة القرابة' } }
       passport_scan:   { type: image, label: { en: 'Passport scan', ar: 'صورة الجواز' } }

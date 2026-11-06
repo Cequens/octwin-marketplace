@@ -20,6 +20,7 @@ strings:
   btn_home:          '🏠 Main menu'
 
   label.name:        "Traveller's name"
+  label.expiry:      'Passport expiry date'
   label.passport:    'Photo of the passport data page'
   label.photo:       'Personal photo (optional)'
   skip:              'Skip ⏭️'
@@ -28,6 +29,7 @@ strings:
   reply:             "The customer uploaded a photo of {name}'s passport."
   uploaded_header:   '✅ Document received'
   uploaded_body:     "{name}'s passport photo has been added to file #{ref}."
+  uploaded_expiry:   '🛂 Passport valid until {date}.'
   uploaded_next:     'Send the other travellers’ passports one at a time, and the visa team will begin the review.'
 
   default_question:  'A question about the visa'

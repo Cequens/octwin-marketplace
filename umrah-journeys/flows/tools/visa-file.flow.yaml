@@ -103,6 +103,15 @@ steps:
           - field: traveller_name
             label:    '$t("visa-file.label.name")'
             describe: 'The traveller this passport belongs to, as printed.'
+          # A CALENDAR in a form (WhatsApp's CalendarPicker, the web's date input) and a typed
+          # date in the chat. The visa needs the passport valid for six months, so earlier days
+          # are not offered — and a typed earlier date is re-asked with the reason. Asked BEFORE
+          # the photos: a form's screens only go forward, text first and uploads after.
+          - field: passport_expiry
+            type: date
+            min:      '$date_add($date_of($now, "Asia/Riyadh"), 6, "months")'
+            label:    '$t("visa-file.label.expiry")'
+            describe: 'The passport expiry date, as printed on the data page.'
           # An UPLOAD field: its gap prompt asks for a photo, and on the next turn
           # the engine adopts the first unconsumed inbound image into the field
           # deterministically — no reliance on the agent passing the ref.
@@ -166,6 +175,7 @@ steps:
         fields:
           full_name:     '$state.traveller_name'
           passport_scan: '$state.passport_scan'
+          passport_expiry: '$state.passport_expiry'
           # Optional — a null here leaves the stored value alone rather than clearing it.
           personal_photo: '$state.personal_photo'
           # From the scan itself — the two fields this entity has always declared and never held.
@@ -216,6 +226,7 @@ steps:
         header: '{$t("visa-file.uploaded_header")}'
         body: '$lines($compact([
                  $t("visa-file.uploaded_body", { name: $state.traveller_name, ref: $first_case.case_number }),
+                 $state.passport_expiry != null ? $t("visa-file.uploaded_expiry", { date: $format_date($state.passport_expiry, "full") }) : null,
                  $state.personal_photo != null ? $t("visa-file.uploaded_photo") : null,
                  $t("visa-file.uploaded_next")
                ]), "\n")'
