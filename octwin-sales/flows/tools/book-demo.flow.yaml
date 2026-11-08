@@ -20,9 +20,15 @@ steps:
             label: '$t("book-demo.ask_name")'
           - field: company
             label: '$t("book-demo.ask_company")'
+          # Untyped on purpose, like `phone` below: a typed `email`/`phone` field cannot be drawn in a
+          # form, and ONE such field turns the form off for the WHOLE node (craft-collect, "One WhatsApp
+          # form instead of many turns"). This node's visitor is on the website, where one form beats
+          # seven questions — so the format is checked here instead. `when` is TRUE when it is WRONG.
           - field: email
-            type:  email
             label: '$t("book-demo.ask_email")'
+            validate:
+              when:  '!$matches($state.email, "^[^@ ]+@[^@ ]+[.][^@ ]+$")'
+              error: '{$t("book-demo.email_error")}'
           - field: industry
             type:  choice
             label: '$t("book-demo.ask_industry")'
@@ -37,11 +43,13 @@ steps:
               body:   '{$t("book-demo.ask_volume")}'
               enum:   volume
               values: [under_1k, k1_10k, k10_100k, over_100k]
-          # Optional: offered once after the required fields (a contact detail); "no thanks" declines.
+          # Optional, and untyped for the same reason as `email`: with the country code, checked here.
           - field: phone
-            type:  phone
             required: false
             label: '$t("book-demo.ask_phone")'
+            validate:
+              when:  '!$matches($state.phone, "^[+][0-9 ]{8,16}$")'
+              error: '{$t("book-demo.phone_error")}'
           # Optional: never asked on its own — filled when the visitor volunteers it.
           - field: notes
             required: false
