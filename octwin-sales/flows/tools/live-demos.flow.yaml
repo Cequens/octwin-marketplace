@@ -1,0 +1,27 @@
+# The marketplace's live demos — real AI Agents running now with sample businesses. Each opens on
+# the website's marketplace page, where "Try it live" starts the chat.
+flow_id:     live-demos
+version:     1
+description: Point the visitor to live demo AI Agents they can try right now. Call when they want to see it working, try it, or see an example in their industry.
+
+entry:
+  - else: true
+    goto: show
+
+steps:
+  show:
+    - render:
+        render_intent: detail_card
+        header: '{$t("live-demos.header")}'
+        body_lines:
+          - '{$t("live-demos.intro")}'
+          - '{$t("live-demos.clinic")}'
+          - '{$t("live-demos.boutique")}'
+          - '{$t("live-demos.realty")}'
+          - '{$t("live-demos.courier")}'
+        buttons:
+          - { title: '{$t("live-demos.btn_all")}', url: 'https://octwin.ai/packs' }
+          - { title: '{$t("live-demos.btn_book")}', on_select: { invoke: book-demo } }
+          - { title: '{$t("live-demos.btn_home")}', on_select: { invoke: home } }
+      memory_note: 'Pointed the visitor to the live demos in the marketplace.'
+    - end: applied

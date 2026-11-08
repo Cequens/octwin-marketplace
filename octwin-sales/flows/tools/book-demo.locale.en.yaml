@@ -1,0 +1,16 @@
+flow_id: book-demo
+strings:
+  ask_name:       '👋 Great — what is your name?'
+  ask_company:    '🏢 Which company are you with?'
+  ask_email:      '📧 Your work email, so we can send the invite?'
+  ask_industry:   '🧭 Which industry are you in?'
+  ask_volume:     '💬 About how many customer conversations do you have a month?'
+  ask_phone:      '📱 A phone or WhatsApp number, with the country code (+966…, +971…, +20…)? We can show you the AI Agent live on it.'
+  ask_notes:      'Anything you want us to cover — or a conversation your team handles every day?'
+  confirm_header: '📋 Please check your demo request'
+  preview:        "👤 {name}\n🏢 {company}\n📧 {email}\n🧭 {industry}\n💬 {volume}\n📱 {phone}"
+  not_sent:       'OK, nothing was sent. Ask me anything about Octwin.'
+  saved:          "✅ Thank you, {name}. Our team will email you to agree a time for your demo."
+  btn_person:     '🙋 Talk to a person'
+  btn_demos:      '▶️ Try a live demo'
+  btn_home:       '🏠 Menu'

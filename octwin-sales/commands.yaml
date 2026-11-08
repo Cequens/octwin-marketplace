@@ -1,0 +1,13 @@
+# Slash commands — matched BEFORE the AI Agent sees the message. Without this file a pack has none,
+# and `/clear` reaches the agent as ordinary text. Guide: `craft-ux` §7 (the escape hatch).
+#
+# action: `close_conversation` (start over) | `noop` (reply only) | `cancel_handoff` (a customer
+#         waiting for a person goes back to the AI Agent; takes no `reply:`).
+# `reply:` is one text per language this pack speaks; each customer reads theirs.
+
+- match:  '/clear'
+  action: close_conversation
+  reply:
+    ar: 'تم مسح المحادثة ✅ ماذا تريد أن تفعل؟'
+    en: 'Cleared ✅ — what would you like to do?'
+  source: '/clear'

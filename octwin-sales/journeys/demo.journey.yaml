@@ -1,0 +1,11 @@
+# The website chat's funnel: opened the menu → asked for a demo.
+id: demo
+label: { en: 'Booking a demo', ar: 'حجز عرض توضيحي' }
+lifecycle:
+  reentry:  after_exit
+  terminal: { goal: requested }
+stages:
+  - { id: menu,      order: 1, label: { en: 'Opened the menu',  ar: 'فتح القائمة' } }
+  - { id: requested, order: 2, label: { en: 'Asked for a demo', ar: 'طلب عرضًا توضيحيًا' } }
+goals:
+  - { id: requested, stage: requested, label: { en: 'Demo requested', ar: 'تم طلب عرض توضيحي' } }

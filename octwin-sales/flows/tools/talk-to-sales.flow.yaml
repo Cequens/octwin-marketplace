@@ -1,0 +1,60 @@
+# Hand the chat to a PERSON on the Octwin sales team (Live chat). The XPeng pattern: a
+# `handoff_request`, one line while they wait (with the way back), and a booked demo as the exit
+# that always exists when nobody can take the chat.
+flow_id:     talk-to-sales
+version:     1
+description: |-
+  Connect the visitor to a PERSON on the Octwin sales team, who holds the chat from the next message.
+  Call when they ask for a human, for sales, or for something no other tool covers — never say
+  "I'll connect you" without calling it. Pass a one-line English `summary` of what they need, for
+  the operator. After it returns, say nothing more: the person replies here.
+
+input:
+  reason:
+    type: enum
+    enum: [sales, demo, other]
+    optional: true
+    describe: 'sales = a buying or pricing question; demo = right after a demo request; other = anything else.'
+  summary:
+    type: string
+    optional: true
+    describe: 'ONE line for the operator: who the visitor is and what they need, in English.'
+
+entry:
+  - else: true
+    goto: request
+
+steps:
+  request:
+    - do: handoff_request
+      args:
+        reason:  '$coalesce($input.reason, "sales")'
+        summary: '$input.summary'
+      bind: handoff
+      outputs:
+        ok:     [{ goto: connecting }]
+        closed: [{ goto: offer_demo }]
+        failed: [{ goto: offer_demo }]
+
+  # The one line the visitor reads while they wait. The minutes come from `handoff_request`, never
+  # typed here — the window is tunable from the console, and the promise must move with it.
+  connecting:
+    - render:
+        render_intent: detail_card
+        body: '{$t("talk-to-sales.connecting", { minutes: $handoff.accept_within_minutes })}'
+        buttons:
+          - { title: '{$t("talk-to-sales.btn_back")}', on_select: { invoke: _platform.handoff_cancel } }
+      memory_note: 'Handoff #{$handoff.handoff_number} opened for the sales team (reason {$coalesce($input.reason, "sales")}). A person answers the visitor until the chat is handed back; you will be briefed then.'
+    - end: applied
+
+  # Nobody can take it now (outside working hours, or no Live chat on the plan). The exit that
+  # always exists: book a demo, and the team follows up by email.
+  offer_demo:
+    - render:
+        render_intent: detail_card
+        body: '{$t("talk-to-sales.unavailable")}'
+        buttons:
+          - { title: '{$t("talk-to-sales.btn_book")}', on_select: { invoke: book-demo } }
+          - { title: '{$t("talk-to-sales.btn_home")}', on_select: { invoke: home } }
+      memory_note: 'No one from sales could take the chat ({$coalesce($handoff.reason, "closed")}); offered to book a demo instead.'
+    - end: failed

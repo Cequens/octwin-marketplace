@@ -1,0 +1,19 @@
+# Words the PLATFORM says for this pack in Arabic — when something fails, or the AI Agent cannot
+# answer. Optional: the platform has its own; these replace them in your voice. Guide: `craft-language`.
+
+errors:
+  failed:
+    failure: { body: 'عذراً، حدث خطأ غير متوقع. حاول مرة أخرى.' }
+  unhandled_tool_error:
+    failure: { body: 'عذراً، حدث خطأ غير متوقع. حاول مرة أخرى بعد لحظة. 🙏' }
+
+# Keyed by the manifest agent id (`assistant`).
+agents:
+  assistant:
+    agentDisabled:    'الخدمة الذكية غير متاحة مؤقتاً. حاول مرة أخرى لاحقاً. 🙏'
+    transientError:   'عذراً، حدث خطأ مؤقت. حاول مرة أخرى بعد لحظة. 🙏'
+    workflowExpired:  'عذراً، انتهت الجلسة. ابدأ من جديد.'
+    workflowError:    'عذراً، حدث خطأ أثناء استكمال العملية. حاول مرة أخرى.'
+    workflowDisabled: 'هذه الميزة غير مفعّلة في الوقت الحالي.'
+    toolDisabled:     'هذه الميزة غير مفعّلة في الوقت الحالي.'
+    directTapError:   'عذراً، حدث خطأ. حاول مرة أخرى.'

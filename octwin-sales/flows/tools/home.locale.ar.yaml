@@ -1,0 +1,14 @@
+flow_id: home
+strings:
+  header:           '👋 أهلًا بك في Octwin'
+  greeting:         'أنا وكيل الذكاء الاصطناعي لدى Octwin. اسألني أي شيء عن المنصة — أو اختر:'
+  footer:           'يمكنك أيضًا كتابة سؤالك مباشرة.'
+  cta:              'اختر'
+  row_book:         '📅 احجز عرضًا توضيحيًا'
+  row_book_about:   'شاهدها على إحدى محادثاتك'
+  row_demos:        '▶️ جرّب وكيلًا مباشرًا'
+  row_demos_about:  'تحدث مع عرض يعمل الآن'
+  row_plans:        '💼 الخطط'
+  row_plans_about:  'ما تتضمنه كل خطة'
+  row_person:       '🙋 تحدث مع شخص'
+  row_person_about: 'فريق المبيعات'

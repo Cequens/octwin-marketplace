@@ -1,0 +1,16 @@
+# xrm.yaml — the sales leads the website's chat collects. Our own CRM, on our own platform:
+# the sales team works them in Records, stage by stage.
+entities:
+  lead:
+    title_field: company
+    fields:
+      name:     { type: text, required: true }
+      email:    { type: text, required: true }
+      company:  { type: text, required: true }
+      industry: { type: text, required: true }    # an `industry` enum value (the pack locale labels it)
+      volume:   { type: text, required: true }    # a `volume` enum value — conversations a month
+      phone:    { type: text }
+      notes:    { type: textarea }                # a conversation they handle every day, or anything else
+    pipeline:
+      stages:   [new, contacted, demo_booked, won, lost]
+      terminal: [won, lost]

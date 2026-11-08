@@ -1,0 +1,14 @@
+flow_id: home
+strings:
+  header:           '👋 Welcome to Octwin'
+  greeting:         'I am Octwin''s AI Agent. Ask me anything about the platform — or pick one:'
+  footer:           'You can also just type your question.'
+  cta:              'Choose'
+  row_book:         '📅 Book a demo'
+  row_book_about:   'See it on one of your own conversations'
+  row_demos:        '▶️ Try a live AI Agent'
+  row_demos_about:  'Chat with a demo running now'
+  row_plans:        '💼 Plans'
+  row_plans_about:  'What each plan includes'
+  row_person:       '🙋 Talk to a person'
+  row_person_about: 'Our sales team'

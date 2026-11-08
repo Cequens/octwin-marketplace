@@ -1,0 +1,11 @@
+flow_id: live-demos
+strings:
+  header:   '▶️ جرّب وكيل ذكاء اصطناعي مباشرًا'
+  intro:    'هذه تعمل الآن مع شركات تجريبية — افتح أحدها وتحدث معه:'
+  clinic:   '🩺 Clinic Appointments — الأطباء والمواعيد والتذكيرات'
+  boutique: '🛍️ Oud Atelier — متجر عطور: اختبار ذوق وعرض منتجات وسلة ودفع'
+  realty:   '🏢 Gulf Realty — مشاريع على الخريطة وخطط دفع وزيارات للموقع'
+  courier:  '🚚 SwiftShip Courier — تتبع الشحنات والمطالبات'
+  btn_all:  '▶️ العروض المباشرة'
+  btn_book: '📅 احجز عرضًا'
+  btn_home: '🏠 القائمة'

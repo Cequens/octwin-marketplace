@@ -1,0 +1,28 @@
+# What each plan includes — the octwin pricing guide's plans, with NO prices: Free is self sign-up,
+# every paid plan is priced for the customer's volume. The same lines the website's Pricing page shows.
+flow_id:     plans
+version:     1
+description: Show what each Octwin plan includes. Call when the visitor asks about plans, pricing, cost or what is included. There are no public prices — never state an amount.
+
+entry:
+  - else: true
+    goto: show
+
+steps:
+  show:
+    - render:
+        render_intent: detail_card
+        header: '{$t("plans.header")}'
+        body_lines:
+          - '{$t("plans.free")}'
+          - '{$t("plans.starter")}'
+          - '{$t("plans.growth")}'
+          - '{$t("plans.scale")}'
+          - '{$t("plans.enterprise")}'
+          - '{$t("plans.meta")}'
+        buttons:
+          - { title: '{$t("plans.btn_start")}', url: 'https://octwin.ai/signup' }
+          - { title: '{$t("plans.btn_book")}', on_select: { invoke: book-demo } }
+          - { title: '{$t("plans.btn_page")}', url: 'https://octwin.ai/pricing' }
+      memory_note: 'Showed the plans (no prices — paid plans are priced for the visitor''s volume).'
+    - end: applied

@@ -1,0 +1,12 @@
+flow_id: plans
+strings:
+  header:     '💼 Octwin plans'
+  free:       "🆓 Free — try it on real customers: WhatsApp, web chat and templates, the AI Agent, forms and menus, live chat. Start now, no call needed."
+  starter:    "🌱 Starter — answer questions and hand over to staff. Adds the Send API and campaigns."
+  growth:     "📈 Growth — sell, book and automate: catalog, cart and orders, bookings, reminders, integrations, in-app chat."
+  scale:      "🏗️ Scale — run the operation from the chat: casework, the work inbox, performance dashboards."
+  enterprise: "🏛️ Enterprise — limits and SLA set per contract, dedicated support."
+  meta:       "Paid plans are priced for your volume. Meta's WhatsApp fees are passed through at cost, with no markup; web and in-app chat carry none."
+  btn_start:  '🆓 Start free'
+  btn_book:   '📅 Book a demo'
+  btn_page:   '💼 See all plans'

@@ -1,0 +1,19 @@
+# Words the PLATFORM says for this pack in English — when something fails, or the AI Agent cannot
+# answer. Optional: the platform has its own; these replace them in your voice. Guide: `craft-language`.
+
+errors:
+  failed:
+    failure: { body: 'Sorry, something went wrong. Please try again.' }
+  unhandled_tool_error:
+    failure: { body: 'Sorry, something went wrong. Please try again in a moment. 🙏' }
+
+# Keyed by the manifest agent id (`assistant`).
+agents:
+  assistant:
+    agentDisabled:    'The assistant is not available right now. Please try again later. 🙏'
+    transientError:   'Sorry, a temporary error. Please try again in a moment. 🙏'
+    workflowExpired:  'Sorry, that session ended. Please start again.'
+    workflowError:    'Sorry, something went wrong finishing that. Please try again.'
+    workflowDisabled: 'This feature is not turned on right now.'
+    toolDisabled:     'This feature is not turned on right now.'
+    directTapError:   'Sorry, something went wrong. Please try again.'

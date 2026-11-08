@@ -1,0 +1,7 @@
+# automation.yaml — a lead saved from the chat completes the "Booked a demo" journey.
+rules:
+  - key: lead_saved
+    for: lead
+    on: created
+    do:
+      - track: { journey: demo, goal_reached: requested }

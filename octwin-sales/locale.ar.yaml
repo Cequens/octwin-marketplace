@@ -1,0 +1,17 @@
+# octwin-sales — pack-wide Arabic strings: the labels of the two `choice` fields.
+pack_id: octwin-sales
+strings:
+  industry.banks:      '🏦 البنوك والتقنية المالية'
+  industry.ecommerce:  '🛒 التجارة الإلكترونية والتوصيل'
+  industry.healthcare: '🩺 الرعاية الصحية'
+  industry.realestate: '🏢 العقارات'
+  industry.insurance:  '🛡️ التأمين'
+  industry.education:  '🎓 التعليم'
+  industry.logistics:  '🚚 الشحن والخدمات اللوجستية'
+  industry.retail:     '🛍️ التجزئة'
+  industry.government: '🏛️ الجهات الحكومية'
+  industry.other:      '✨ مجال آخر'
+  volume.under_1k:     'أقل من 1,000 شهريًا'
+  volume.k1_10k:       '1,000 – 10,000 شهريًا'
+  volume.k10_100k:     '10,000 – 100,000 شهريًا'
+  volume.over_100k:    'أكثر من 100,000 شهريًا'

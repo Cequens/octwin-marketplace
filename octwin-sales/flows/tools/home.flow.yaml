@@ -1,0 +1,31 @@
+# The front door — the menu the AI Agent opens on a greeting or an unclear message.
+flow_id:     home
+version:     1
+description: Main menu / welcome. Call on a greeting, an unclear or off-topic message, or "what can you do?".
+
+input:
+  message:
+    type:     string
+    optional: true
+    describe: 'Optional ONE short greeting line YOU compose for this visitor.'
+
+entry:
+  - else: true
+    goto: show
+
+steps:
+  show:
+    - track: { journey: demo, stage_enter: menu }
+    - render:
+        render_intent: list_picker
+        header: '{$t("home.header")}'
+        body:   '$coalesce($input.message, $t("home.greeting"))'
+        footer: '{$t("home.footer")}'
+        cta:    '{$t("home.cta")}'
+        items:
+          - { title: '{$t("home.row_book")}',   description: '{$t("home.row_book_about")}',   on_select: { invoke: book-demo } }
+          - { title: '{$t("home.row_demos")}',  description: '{$t("home.row_demos_about")}',  on_select: { invoke: live-demos } }
+          - { title: '{$t("home.row_plans")}',  description: '{$t("home.row_plans_about")}',  on_select: { invoke: plans } }
+          - { title: '{$t("home.row_person")}', description: '{$t("home.row_person_about")}', on_select: { invoke: talk-to-sales } }
+      memory_note: 'Showed the home menu.'
+    - end: applied

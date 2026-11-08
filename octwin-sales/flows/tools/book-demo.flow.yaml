@@ -1,0 +1,89 @@
+# Book a demo — collect the lead, confirm it, save it as a `lead` record, then offer a person now.
+# The craft-collect recipe: one `collect:`, `approve_apply` before committing, `record_save`.
+flow_id:     book-demo
+version:     1
+description: Book a demo with the Octwin team. Call when the visitor wants a demo, a call, a quote, or to talk business. Pass `industry` or `volume` only when they said it.
+
+input:
+  industry: { type: enum, optional: true, enum: [banks, ecommerce, healthcare, realestate, insurance, education, logistics, retail, government, other] }
+  volume:   { type: enum, optional: true, enum: [under_1k, k1_10k, k10_100k, over_100k] }
+
+entry:
+  - else: true
+    goto: intake
+
+steps:
+  intake:
+    - collect:
+        fields:
+          - field: name
+            label: '$t("book-demo.ask_name")'
+          - field: company
+            label: '$t("book-demo.ask_company")'
+          - field: email
+            type:  email
+            label: '$t("book-demo.ask_email")'
+          - field: industry
+            type:  choice
+            label: '$t("book-demo.ask_industry")'
+            options:
+              body:   '{$t("book-demo.ask_industry")}'
+              enum:   industry
+              values: [banks, ecommerce, healthcare, realestate, insurance, education, logistics, retail, government, other]
+          - field: volume
+            type:  choice
+            label: '$t("book-demo.ask_volume")'
+            options:
+              body:   '{$t("book-demo.ask_volume")}'
+              enum:   volume
+              values: [under_1k, k1_10k, k10_100k, over_100k]
+          # Optional: offered once after the required fields (a contact detail); "no thanks" declines.
+          - field: phone
+            type:  phone
+            required: false
+            label: '$t("book-demo.ask_phone")'
+          # Optional: never asked on its own — filled when the visitor volunteers it.
+          - field: notes
+            required: false
+            label: '$t("book-demo.ask_notes")'
+        complete: [{ goto: confirm }]
+
+  confirm:
+    - use: approve_apply
+      with:
+        header:       '{$t("book-demo.confirm_header")}'
+        preview:      '{$t("book-demo.preview", { name: $state.name, company: $state.company, email: $state.email, industry: $enum_label($state.industry, "industry"), volume: $enum_label($state.volume, "volume"), phone: $coalesce($state.phone, "—") })}'
+        apply:        save
+        abort_render: { render_intent: text_card, body: '{$t("book-demo.not_sent")}' }
+        on_other:     intake
+        memory_note:  'Asked the visitor to confirm their demo request.'
+
+  save:
+    - track: { journey: demo, stage_enter: requested }
+    - do: record_save
+      args:
+        entity: lead
+        fields:
+          name:     '$state.name'
+          company:  '$state.company'
+          email:    '$state.email'
+          industry: '$state.industry'
+          volume:   '$state.volume'
+          phone:    '$coalesce($state.phone, "")'
+          notes:    '$coalesce($state.notes, "")'
+      bind: saved
+      outputs:
+        ok:
+          - render:
+              render_intent: detail_card
+              body: '{$t("book-demo.saved", { name: $state.name })}'
+              buttons:
+                - { title: '{$t("book-demo.btn_person")}', on_select: { invoke: talk-to-sales, with: { reason: demo } } }
+                - { title: '{$t("book-demo.btn_demos")}', on_select: { invoke: live-demos } }
+                - { title: '{$t("book-demo.btn_home")}', on_select: { invoke: home } }
+            memory_note: 'Saved demo request #{$saved.record_number} for {$state.company} ({$state.industry}, {$state.volume}). The sales team will email {$state.email} to agree a time.'
+          - end: applied
+        invalid:
+          - assign: { state.email: null }
+          - goto: intake
+        failed: [{ end: failed }]
