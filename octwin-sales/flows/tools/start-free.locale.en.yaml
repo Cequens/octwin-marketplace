@@ -1,0 +1,6 @@
+flow_id: start-free
+strings:
+  header:     '🆓 Start free'
+  body:       "Sign up with your work email and you are in — WhatsApp, web chat and the AI Agent, on real customers. No call, no card."
+  btn_signup: '🚀 Sign up'
+  btn_book:   '📅 Book a demo'

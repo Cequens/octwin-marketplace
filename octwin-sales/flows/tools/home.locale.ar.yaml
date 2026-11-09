@@ -8,6 +8,8 @@ strings:
   row_book_about:   'شاهدها على إحدى محادثاتك'
   row_demos:        '▶️ جرّب وكيلًا مباشرًا'
   row_demos_about:  'تحدث مع عرض يعمل الآن'
+  row_industry:       '🏭 شاهد قطاعك'
+  row_industry_about: 'محادثات حقيقية في مجال عملك'
   row_plans:        '💼 الخطط'
   row_plans_about:  'ما تتضمنه كل خطة'
   row_quote:        '💰 اطلب عرض سعر'

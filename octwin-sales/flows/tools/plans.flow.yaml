@@ -1,8 +1,20 @@
-# What each plan includes — the octwin pricing guide's plans, with NO prices: Free is self sign-up,
-# every paid plan is priced for the customer's volume. The same lines the website's Pricing page shows.
+# What each plan includes — a CAROUSEL, one card per plan with its own picture, NO prices: Free is self
+# sign-up, every paid plan is priced for the customer's volume. The same plans the website's Plans page shows.
+#
+# A card's buttons cannot differ by plan, so the DATA does: button 1 is the card's own next step — "Get a
+# quotation" opens request-quote with that plan (the form then never asks which plan), and Free's opens
+# start-free (WhatsApp lets a card hold tap buttons OR one link, so the sign-up link lives one step on).
 flow_id:     plans
-version:     1
+version:     2
 description: Show what each Octwin plan includes. Call when the visitor asks about plans, pricing, cost or what is included. There are no public prices — never state an amount.
+
+config:
+  images:
+    free:       '$pack_asset:plan_free'
+    starter:    '$pack_asset:plan_starter'
+    growth:     '$pack_asset:plan_growth'
+    scale:      '$pack_asset:plan_scale'
+    enterprise: '$pack_asset:plan_enterprise'
 
 entry:
   - else: true
@@ -11,18 +23,16 @@ entry:
 steps:
   show:
     - render:
-        render_intent: detail_card
-        header: '{$t("plans.header")}'
-        body_lines:
-          - '{$t("plans.free")}'
-          - '{$t("plans.starter")}'
-          - '{$t("plans.growth")}'
-          - '{$t("plans.scale")}'
-          - '{$t("plans.enterprise")}'
-          - '{$t("plans.meta")}'
-        buttons:
-          - { title: '{$t("plans.btn_start")}', url: 'https://octwin.ai/signup' }
-          - { title: '{$t("plans.btn_book")}', on_select: { invoke: book-demo } }
-          - { title: '{$t("plans.btn_quote")}', on_select: { invoke: request-quote } }
-      memory_note: 'Showed the plans (no prices — paid plans are priced for the visitor''s volume).'
+        render_intent: carousel
+        body: '{$t("plans.intro")}'
+        # Each card carries its own button-1 target (`act`): a tap's verb is sent as written, so a destination
+        # that differs per card is the WHOLE `on_select`, taken from the card's data.
+        items: '[{ text: $t("plans.free"), b1: $t("plans.btn_start"), act: { invoke: "start-free" }, img: $config.images.free }, { text: $t("plans.starter"), b1: $t("plans.btn_quote"), act: { invoke: "request-quote", with: { plan: "starter" } }, img: $config.images.starter }, { text: $t("plans.growth"), b1: $t("plans.btn_quote"), act: { invoke: "request-quote", with: { plan: "growth" } }, img: $config.images.growth }, { text: $t("plans.scale"), b1: $t("plans.btn_quote"), act: { invoke: "request-quote", with: { plan: "scale" } }, img: $config.images.scale }, { text: $t("plans.enterprise"), b1: $t("plans.btn_quote"), act: { invoke: "request-quote", with: { plan: "enterprise" } }, img: $config.images.enterprise }]'
+        item_template:
+          image_url: '$item.img'
+          body: '$item.text'
+          buttons:
+            - { title: '$item.b1', on_select: '$item.act' }
+            - { title: '{$t("plans.btn_book")}', on_select: { invoke: book-demo } }
+      memory_note: 'Showed the plans as a carousel (no prices — paid plans are priced for the visitor''s volume).'
     - end: applied

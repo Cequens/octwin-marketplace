@@ -8,6 +8,8 @@ strings:
   row_book_about:   'See it on one of your own conversations'
   row_demos:        '▶️ Try a live AI Agent'
   row_demos_about:  'Chat with a demo running now'
+  row_industry:       '🏭 See your industry'
+  row_industry_about: 'Real conversations in your business'
   row_plans:        '💼 Plans'
   row_plans_about:  'What each plan includes'
   row_quote:        '💰 Get a quotation'

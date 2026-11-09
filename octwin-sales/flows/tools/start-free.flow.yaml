@@ -1,0 +1,25 @@
+# Start on the Free plan — the card the plans carousel's Free button opens. Free is self sign-up, with no
+# call: this hands over the sign-up link (a carousel card on WhatsApp can hold tap buttons OR one link, so
+# the link lives here, one step on).
+flow_id:     start-free
+version:     1
+description: Send the sign-up link for the Free plan. Call when the visitor wants to start free or sign up themselves.
+
+input:
+  plan: { type: string, optional: true }    # passed by the plans carousel; not needed here
+
+entry:
+  - else: true
+    goto: show
+
+steps:
+  show:
+    - render:
+        render_intent: detail_card
+        header: '{$t("start-free.header")}'
+        body:   '{$t("start-free.body")}'
+        buttons:
+          - { title: '{$t("start-free.btn_signup")}', url: 'https://octwin.ai/signup' }
+          - { title: '{$t("start-free.btn_book")}', on_select: { invoke: book-demo } }
+      memory_note: 'Sent the Free plan sign-up link.'
+    - end: applied

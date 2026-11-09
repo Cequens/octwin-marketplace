@@ -1,0 +1,127 @@
+# See your industry — a list of the industries, then that industry's real use cases as a CAROUSEL: a picture,
+# the use case, and what a customer actually writes, in Arabic. Each card opens that use case on the website
+# (`/use-cases#<id>`, which selects it), where the whole chat runs. The data is the website's own use-case
+# library (the first three of each industry); a carousel needs two cards, so an industry with one shows a card.
+flow_id:     industry-cases
+version:     1
+description: Show real AI Agent use cases for one industry. Call when the visitor names their industry or asks what Octwin does for a business like theirs. Pass `industry` when you know it.
+
+input:
+  industry: { type: enum, optional: true, enum: [banks, ecommerce, healthcare, realestate, insurance, education, logistics, retail, government] }
+
+config:
+  images:
+    uc_bk_faq: '$pack_asset:uc_bk_faq'
+    uc_bk_lead: '$pack_asset:uc_bk_lead'
+    uc_bk_dues: '$pack_asset:uc_bk_dues'
+    uc_mk_cod: '$pack_asset:uc_mk_cod'
+    uc_mk_wismo: '$pack_asset:uc_mk_wismo'
+    uc_mk_return: '$pack_asset:uc_mk_return'
+    uc_hs_preadmit: '$pack_asset:uc_hs_preadmit'
+    uc_hs_after: '$pack_asset:uc_hs_after'
+    uc_lb_home: '$pack_asset:uc_lb_home'
+    uc_re_lead: '$pack_asset:uc_re_lead'
+    uc_re_visit: '$pack_asset:uc_re_visit'
+    uc_re_eoi: '$pack_asset:uc_re_eoi'
+    uc_mi_approval: '$pack_asset:uc_mi_approval'
+    uc_mi_network: '$pack_asset:uc_mi_network'
+    uc_mi_cover: '$pack_asset:uc_mi_cover'
+    uc_un_adm: '$pack_asset:uc_un_adm'
+    uc_un_tour: '$pack_asset:uc_un_tour'
+    uc_un_app: '$pack_asset:uc_un_app'
+    uc_lg_day: '$pack_asset:uc_lg_day'
+    uc_lg_track: '$pack_asset:uc_lg_track'
+    uc_lg_shipper: '$pack_asset:uc_lg_shipper'
+    uc_rt_points: '$pack_asset:uc_rt_points'
+    uc_rt_offers: '$pack_asset:uc_rt_offers'
+    uc_rt_service: '$pack_asset:uc_rt_service'
+    uc_gv_complaint: '$pack_asset:uc_gv_complaint'
+  cases:
+    banks:
+      - { img: "uc_bk_faq", url: "https://octwin.ai/use-cases#bk-faq", quote: "وين أقرب صراف آلي لي؟", title: { en: "Product, branch and ATM answers", ar: "أسئلة المنتجات والفروع وأجهزة الصراف" } }
+      - { img: "uc_bk_lead", url: "https://octwin.ai/use-cases#bk-lead", quote: "أرغب في استخراج بطاقة ائتمانية، ما المطلوب؟", title: { en: "Card and loan lead capture", ar: "التقاط طلبات البطاقات والقروض" } }
+      - { img: "uc_bk_dues", url: "https://octwin.ai/use-cases#bk-dues", quote: "بسدد القسط يوم الخميس", title: { en: "Dues reminder that answers back", ar: "تذكير بالمستحقات يردّ على الأسئلة" } }
+    ecommerce:
+      - { img: "uc_mk_cod", url: "https://octwin.ai/use-cases#mk-cod", quote: "عدّل العنوان لو سمحت", title: { en: "Cash-on-delivery confirmation", ar: "تأكيد الدفع عند الاستلام" } }
+      - { img: "uc_mk_wismo", url: "https://octwin.ai/use-cases#mk-wismo", quote: "أين طلبي؟ مضى عليه أربعة أيام", title: { en: "Where is my order?", ar: "أين طلبي؟" } }
+      - { img: "uc_mk_return", url: "https://octwin.ai/use-cases#mk-return", quote: "المقاس طلع صغير، أبي أرجّعه", title: { en: "Returns and refunds", ar: "الإرجاع والاسترداد" } }
+    healthcare:
+      - { img: "uc_hs_preadmit", url: "https://octwin.ai/use-cases#hs-preadmit", quote: "عمليتي يوم الاثنين، وش أجيب معي؟", title: { en: "Pre-admission and surgery preparation", ar: "التحضير للدخول والعمليات" } }
+      - { img: "uc_hs_after", url: "https://octwin.ai/use-cases#hs-after", quote: "أحتاج التقرير الطبي", title: { en: "After-visit survey and medical report", ar: "استبيان ما بعد الزيارة والتقرير الطبي" } }
+      - { img: "uc_lb_home", url: "https://octwin.ai/use-cases#lb-home", quote: "أبي سحب دم في البيت بكرة الصبح", title: { en: "Home-visit booking", ar: "حجز زيارة منزلية" } }
+    realestate:
+      - { img: "uc_re_lead", url: "https://octwin.ai/use-cases#re-lead", quote: "بكم تبدأ الشقق في المشروع الجديد؟ وعلى كم سنة التقسيط؟", title: { en: "24/7 lead qualification from ads", ar: "تأهيل العملاء من الإعلانات على مدار الساعة" } }
+      - { img: "uc_re_visit", url: "https://octwin.ai/use-cases#re-visit", quote: "أقدر أزور الموقع يوم الجمعة؟", title: { en: "Site-visit booking", ar: "حجز زيارة الموقع" } }
+      - { img: "uc_re_eoi", url: "https://octwin.ai/use-cases#re-eoi", quote: "أرغب في حجز أولوية في الإطلاق الجديد", title: { en: "Launch-day expression of interest", ar: "إبداء الاهتمام يوم الإطلاق" } }
+    insurance:
+      - { img: "uc_mi_approval", url: "https://octwin.ai/use-cases#mi-approval", quote: "هذه وصفة الطبيب وبطاقة التأمين", title: { en: "Approval request and status", ar: "طلب الموافقة ومتابعتها" } }
+      - { img: "uc_mi_network", url: "https://octwin.ai/use-cases#mi-network", quote: "وين أقرب مختبر في الشبكة بالبرشاء؟", title: { en: "Network finder", ar: "البحث في الشبكة الطبية" } }
+      - { img: "uc_mi_cover", url: "https://octwin.ai/use-cases#mi-cover", quote: "هل العلاج الطبيعي مشمول في باقتي؟", title: { en: "Coverage and benefits questions", ar: "أسئلة التغطية والمزايا" } }
+    education:
+      - { img: "uc_un_adm", url: "https://octwin.ai/use-cases#un-adm", quote: "حصلت على ٨٧٪ في الثانوية العامة، هل يمكنني دراسة الهندسة؟", title: { en: "Admissions questions and lead capture", ar: "أسئلة القبول والتقاط الطلبات" } }
+      - { img: "uc_un_tour", url: "https://octwin.ai/use-cases#un-tour", quote: "أبي أحجز زيارة للجامعة مع أبوي", title: { en: "Campus tour and test booking", ar: "حجز جولة الحرم والاختبار" } }
+      - { img: "uc_un_app", url: "https://octwin.ai/use-cases#un-app", quote: "ما الأوراق الناقصة في ملفي؟", title: { en: "Application status and missing documents", ar: "حالة الطلب والمستندات الناقصة" } }
+    logistics:
+      - { img: "uc_lg_day", url: "https://octwin.ai/use-cases#lg-day", quote: "غيّروا الموعد من فضلكم", title: { en: "Delivery day: confirm, move or redirect", ar: "يوم التوصيل: تأكيد أو تأجيل أو تحويل" } }
+      - { img: "uc_lg_track", url: "https://octwin.ai/use-cases#lg-track", quote: "الشحنة لها ٣ أيام في المستودع", title: { en: "Where is my shipment?", ar: "أين شحنتي؟" } }
+      - { img: "uc_lg_shipper", url: "https://octwin.ai/use-cases#lg-shipper", quote: "أريد استلام شحنة من محلي غدًا", title: { en: "Merchant support and pickups", ar: "دعم التجار والاستلام" } }
+    retail:
+      - { img: "uc_rt_points", url: "https://octwin.ai/use-cases#rt-points", quote: "كم نقطة عندي؟", title: { en: "Points balance and rewards", ar: "رصيد النقاط والمكافآت" } }
+      - { img: "uc_rt_offers", url: "https://octwin.ai/use-cases#rt-offers", quote: "هل هذا العرض متوفر في فرع النخيل؟", title: { en: "Weekly offers to opted-in shoppers", ar: "العروض الأسبوعية للمشتركين" } }
+      - { img: "uc_rt_service", url: "https://octwin.ai/use-cases#rt-service", quote: "الكاشير حاسبني غلط", title: { en: "Store and app-order service", ar: "خدمة المتجر وطلبات التطبيق" } }
+    government:
+      - { img: "uc_gv_complaint", url: "https://octwin.ai/use-cases#gv-complaint", quote: "أرغب في تقديم شكوى", title: { en: "Service line and complaints", ar: "خط الخدمة والشكاوى" } }
+
+entry:
+  - if: '$input.industry != null'
+    goto: show
+  - else: true
+    goto: pick
+
+steps:
+  pick:
+    - render:
+        render_intent: list_picker
+        body:   '{$t("industry-cases.pick")}'
+        cta:    '{$t("industry-cases.cta")}'
+        items:
+          - { title: '{$t("industry-cases.banks")}', on_select: { invoke: industry-cases, with: { industry: banks } } }
+          - { title: '{$t("industry-cases.ecommerce")}', on_select: { invoke: industry-cases, with: { industry: ecommerce } } }
+          - { title: '{$t("industry-cases.healthcare")}', on_select: { invoke: industry-cases, with: { industry: healthcare } } }
+          - { title: '{$t("industry-cases.realestate")}', on_select: { invoke: industry-cases, with: { industry: realestate } } }
+          - { title: '{$t("industry-cases.insurance")}', on_select: { invoke: industry-cases, with: { industry: insurance } } }
+          - { title: '{$t("industry-cases.education")}', on_select: { invoke: industry-cases, with: { industry: education } } }
+          - { title: '{$t("industry-cases.logistics")}', on_select: { invoke: industry-cases, with: { industry: logistics } } }
+          - { title: '{$t("industry-cases.retail")}', on_select: { invoke: industry-cases, with: { industry: retail } } }
+          - { title: '{$t("industry-cases.government")}', on_select: { invoke: industry-cases, with: { industry: government } } }
+      memory_note: 'Asked which industry the visitor is in.'
+    - end: applied
+
+  show:
+    - if: '$length($config.cases[$input.industry]) < 2'
+      goto: one
+    - render:
+        render_intent: carousel
+        body: '{$t("industry-cases.intro")}'
+        items: '$config.cases[$input.industry]'
+        item_template:
+          image_url: '$config.images[$item.img]'
+          body_lines:
+            - '**{$loc($item.title)}**'
+            - '“{$item.quote}”'
+          buttons:
+            - { title: '{$t("industry-cases.btn_see")}', url: '$item.url' }
+      memory_note: 'Showed {$input.industry} use cases as a carousel; each card opens the use case on the website.'
+    - end: applied
+
+  one:
+    - assign: { state.case: '$config.cases[$input.industry][0]' }
+    - render:
+        render_intent: detail_card
+        header: '{$loc($state.case.title)}'
+        body:   '“{$state.case.quote}”'
+        buttons:
+          - { title: '{$t("industry-cases.btn_see")}', url: '$state.case.url' }
+          - { title: '{$t("industry-cases.btn_book")}', on_select: { invoke: book-demo } }
+      memory_note: 'Showed the {$input.industry} use case.'
+    - end: applied

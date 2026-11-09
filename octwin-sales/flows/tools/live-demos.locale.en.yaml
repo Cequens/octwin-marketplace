@@ -1,11 +1,8 @@
 flow_id: live-demos
 strings:
-  header:   '▶️ Try a live AI Agent'
-  intro:    'These run now, with sample businesses — open one and chat with it:'
-  clinic:   '🩺 Clinic Appointments — doctors, slots and reminders'
-  boutique: '🛍️ Oud Atelier — a perfume boutique: quiz, carousel, cart and checkout'
-  realty:   '🏢 Gulf Realty — off-plan tours, payment plans and site viewings'
-  courier:  '🚚 SwiftShip Courier — tracking and claims'
-  btn_all:  '▶️ All live demos'
-  btn_book: '📅 Book a demo'
-  btn_home: '🏠 Menu'
+  intro:    '▶️ These AI Agents run now, with sample businesses — swipe, open one and chat with it.'
+  clinic:   "**🩺 Clinic Appointments**\nDoctors, slots and reminders — in Arabic first."
+  boutique: "**🛍️ Oud Atelier**\nA perfume boutique: a scent quiz, a carousel, a cart and checkout."
+  realty:   "**🏢 Gulf Realty**\nOff-plan tours, payment plans and site viewings."
+  courier:  "**🚚 SwiftShip Courier**\nTracking, delivery changes and claims."
+  btn_try:  '▶️ Try it'

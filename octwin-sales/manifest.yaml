@@ -6,7 +6,7 @@
 # Installed into an ordinary project of the demo workspace; the website shows the chat only when
 # the platform settings `site_chat.tenant_slug` + `site_chat.project_slug` name that project.
 id:          octwin-sales
-version:     '1.6.1'
+version:     '1.7.0'
 description: 'Octwin''s own sales AI Agent for the octwin.ai website chat: product answers, plans, live demos, demo booking on the sales calendar, quotation requests and messages for the team.'
 
 listing:
@@ -35,6 +35,44 @@ widget:
     en: '👋 Hi, I am Octwin''s AI Agent.'
     ar: '👋 أهلًا، أنا وكيل الذكاء الاصطناعي لدى Octwin.'
 
+# The pictures the carousels show (plans, live demos, industry use cases) — AI-generated .jpg (WhatsApp drops
+# other image types), referenced as `$pack_asset:<key>` from each flow's `config:`.
+static_assets:
+  - { file: assets/demo-clinic.jpg, key: demo_clinic }
+  - { file: assets/demo-courier.jpg, key: demo_courier }
+  - { file: assets/demo-oud.jpg, key: demo_oud }
+  - { file: assets/demo-realty.jpg, key: demo_realty }
+  - { file: assets/plan-enterprise.jpg, key: plan_enterprise }
+  - { file: assets/plan-free.jpg, key: plan_free }
+  - { file: assets/plan-growth.jpg, key: plan_growth }
+  - { file: assets/plan-scale.jpg, key: plan_scale }
+  - { file: assets/plan-starter.jpg, key: plan_starter }
+  - { file: assets/uc-bk-dues.jpg, key: uc_bk_dues }
+  - { file: assets/uc-bk-faq.jpg, key: uc_bk_faq }
+  - { file: assets/uc-bk-lead.jpg, key: uc_bk_lead }
+  - { file: assets/uc-gv-complaint.jpg, key: uc_gv_complaint }
+  - { file: assets/uc-hs-after.jpg, key: uc_hs_after }
+  - { file: assets/uc-hs-preadmit.jpg, key: uc_hs_preadmit }
+  - { file: assets/uc-lb-home.jpg, key: uc_lb_home }
+  - { file: assets/uc-lg-day.jpg, key: uc_lg_day }
+  - { file: assets/uc-lg-shipper.jpg, key: uc_lg_shipper }
+  - { file: assets/uc-lg-track.jpg, key: uc_lg_track }
+  - { file: assets/uc-mi-approval.jpg, key: uc_mi_approval }
+  - { file: assets/uc-mi-cover.jpg, key: uc_mi_cover }
+  - { file: assets/uc-mi-network.jpg, key: uc_mi_network }
+  - { file: assets/uc-mk-cod.jpg, key: uc_mk_cod }
+  - { file: assets/uc-mk-return.jpg, key: uc_mk_return }
+  - { file: assets/uc-mk-wismo.jpg, key: uc_mk_wismo }
+  - { file: assets/uc-re-eoi.jpg, key: uc_re_eoi }
+  - { file: assets/uc-re-lead.jpg, key: uc_re_lead }
+  - { file: assets/uc-re-visit.jpg, key: uc_re_visit }
+  - { file: assets/uc-rt-offers.jpg, key: uc_rt_offers }
+  - { file: assets/uc-rt-points.jpg, key: uc_rt_points }
+  - { file: assets/uc-rt-service.jpg, key: uc_rt_service }
+  - { file: assets/uc-un-adm.jpg, key: uc_un_adm }
+  - { file: assets/uc-un-app.jpg, key: uc_un_app }
+  - { file: assets/uc-un-tour.jpg, key: uc_un_tour }
+
 supported_channels: [web, whatsapp]
 required_adapters:  [messaging]
 supported_languages: [en, ar]
@@ -51,7 +89,9 @@ flows:
   - book-demo      # collect the lead → pick a time → confirm → book it, save it, email it
   - request-quote  # what the price depends on → confirm → a quote_request record + an email
   - send-message   # a message for the team (the Contact page form) → confirm → a contact_message record + an email
-  - plans          # what each plan includes — no prices
+  - plans          # what each plan includes — a carousel, no prices
+  - start-free     # the Free plan's sign-up link (the plans carousel's Free button)
+  - industry-cases # an industry's real use cases — a carousel, each opening on the website
   - live-demos     # the marketplace's live demos
 
 agents:
@@ -63,6 +103,8 @@ agents:
       - request-quote
       - send-message
       - plans
+      - start-free
+      - industry-cases
       - live-demos
     include_platform_protocol: true
     instructions:

@@ -1,8 +1,16 @@
-# The marketplace's live demos — real AI Agents running now with sample businesses. Each opens on
-# the website's marketplace page, where "Try it live" starts the chat.
+# The marketplace's live demos — real AI Agents running now with sample businesses — as a CAROUSEL: one
+# card per demo, its picture, and one "Try it" link to the demo's page on the website, where "Try it live"
+# starts the chat. One LINK per card: on WhatsApp a card holds tap buttons OR a single link.
 flow_id:     live-demos
-version:     1
+version:     2
 description: Point the visitor to live demo AI Agents they can try right now. Call when they want to see it working, try it, or see an example in their industry.
+
+config:
+  images:
+    clinic:  '$pack_asset:demo_clinic'
+    oud:     '$pack_asset:demo_oud'
+    realty:  '$pack_asset:demo_realty'
+    courier: '$pack_asset:demo_courier'
 
 entry:
   - else: true
@@ -11,17 +19,13 @@ entry:
 steps:
   show:
     - render:
-        render_intent: detail_card
-        header: '{$t("live-demos.header")}'
-        body_lines:
-          - '{$t("live-demos.intro")}'
-          - '{$t("live-demos.clinic")}'
-          - '{$t("live-demos.boutique")}'
-          - '{$t("live-demos.realty")}'
-          - '{$t("live-demos.courier")}'
-        buttons:
-          - { title: '{$t("live-demos.btn_all")}', url: 'https://octwin.ai/packs' }
-          - { title: '{$t("live-demos.btn_book")}', on_select: { invoke: book-demo } }
-          - { title: '{$t("live-demos.btn_home")}', on_select: { invoke: home } }
-      memory_note: 'Pointed the visitor to the live demos in the marketplace.'
+        render_intent: carousel
+        body: '{$t("live-demos.intro")}'
+        items: '[{ text: $t("live-demos.clinic"), url: "https://octwin.ai/packs/octwin.clinic", img: $config.images.clinic }, { text: $t("live-demos.boutique"), url: "https://octwin.ai/packs/octwin.oud-atelier", img: $config.images.oud }, { text: $t("live-demos.realty"), url: "https://octwin.ai/packs/octwin.gulf-realty", img: $config.images.realty }, { text: $t("live-demos.courier"), url: "https://octwin.ai/packs/octwin.swiftship-courier", img: $config.images.courier }]'
+        item_template:
+          image_url: '$item.img'
+          body: '$item.text'
+          buttons:
+            - { title: '{$t("live-demos.btn_try")}', url: '$item.url' }
+      memory_note: 'Showed the live demos as a carousel; each card opens that demo on the website.'
     - end: applied

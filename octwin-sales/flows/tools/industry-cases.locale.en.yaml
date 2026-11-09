@@ -1,0 +1,16 @@
+flow_id: industry-cases
+strings:
+  pick: "🏭 Which industry are you in? Pick one and see real conversations an AI Agent runs there."
+  cta: "Industries"
+  intro: "🏭 Real requests in your industry — swipe, and open one to see the whole chat."
+  btn_see: "👀 See the chat"
+  btn_book: "📅 Book a demo"
+  banks: "🏦 Banks & fintech"
+  ecommerce: "🛒 E-commerce & delivery"
+  healthcare: "🩺 Healthcare"
+  realestate: "🏢 Real estate"
+  insurance: "🛡️ Insurance"
+  education: "🎓 Education"
+  logistics: "🚚 Logistics"
+  retail: "🛍️ Retail"
+  government: "🏛️ Government"
