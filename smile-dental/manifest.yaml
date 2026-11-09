@@ -7,7 +7,7 @@
 # No pack DB, no code — pure YAML.
 
 id:          smile-dental
-version: '1.12.3'
+version: '1.12.4'
 description: 'Dental clinic booking — treatment menu, dentist availability, appointment reminders and a post-visit rating that ranks the dentists.'
 
 listing:
@@ -26,6 +26,9 @@ widget:
   avatar: widget/avatar.png
   accent: '#0369a1'   # matches the avatar's gradient
   about:  'Book a check-up, see real availability, and get a reminder before your visit.'
+  # Open on the menu: an empty chat runs it by itself, so a visitor sees what they can do instead of
+  # "No messages yet — say hi" (the website's live demos open this chat).
+  start_flow: home
 
 supported_channels: [whatsapp, web]
 supported_languages: [ar, en]

@@ -10,7 +10,7 @@
 # projects (Kaiian + Waslini) with per-project branding; the logic is identical.
 
 id:          kaiian
-version: '1.14.1'
+version: '1.14.2'
 description: 'Kaiian/Waslini ride-hailing customer support — role-aware AI intake + mediated human casework.'
 
 # Marketplace presentation — how this pack appears in the console catalog a
@@ -31,6 +31,9 @@ widget:
   avatar: widget/avatar.png
   accent: '#0e7490'   # matches the avatar's gradient
   about:  'Get help with a ride, a payment or your driver account.'
+  # Open on the menu: an empty chat runs it by itself, so a visitor sees what they can do instead of
+  # "No messages yet — say hi" (the website's live demos open this chat).
+  start_flow: home
 
 supported_channels: [whatsapp, web]
 supported_languages: [ar, en, ur]

@@ -10,7 +10,7 @@
 # keys are rejected. Required: id, version (string), description.
 
 id:          clinic
-version: '2.10.2'
+version: '2.10.3'
 description: 'Outpatient appointment reservation for clinics & hospital outpatient clinics — Arabic-first, WhatsApp + web.'
 
 # Marketplace presentation — how this pack appears in the console catalog a
@@ -37,6 +37,9 @@ widget:
   avatar: widget/avatar.png
   accent: '#0369a1'   # matches the avatar's gradient
   about:  'Book an appointment, pick your doctor and time, and get a reminder.'
+  # Open on the menu: an empty chat runs it by itself, so a visitor sees what they can do instead of
+  # "No messages yet — say hi" (the website's live demos open this chat).
+  start_flow: clinic-home
 
 # Channels + platform capabilities. NO data-store: this pack owns no DB —
 # doctors/branches are XRM reference records, appointments the `booking` XRM

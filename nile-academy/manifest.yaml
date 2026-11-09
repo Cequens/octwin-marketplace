@@ -8,7 +8,7 @@
 # rates are real, with no reporting code. Campus tours ride the scheduling engine.
 
 id:          nile-academy
-version: '1.13.3'
+version: '1.13.4'
 description: 'Private academy admissions — programmes and fees, campus-tour booking, and an application funnel with real milestones from enquiry to enrolment.'
 
 listing:
@@ -27,6 +27,9 @@ widget:
   avatar: widget/avatar.png
   accent: '#3730a3'   # matches the avatar's gradient
   about:  'Ask about programmes, apply, and follow your application.'
+  # Open on the menu: an empty chat runs it by itself, so a visitor sees what they can do instead of
+  # "No messages yet — say hi" (the website's live demos open this chat).
+  start_flow: home
 
 supported_channels: [whatsapp, web]
 supported_languages: [ar, en]

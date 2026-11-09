@@ -7,7 +7,7 @@
 # priced from a live rate card. No pack DB, no code — pure YAML.
 
 id:          swiftship-courier
-version: '1.13.4'
+version: '1.13.5'
 description: 'Courier & last-mile — track a shipment, book a pickup priced from the live rate card, and raise a claim that a real claims officer decides.'
 
 listing:
@@ -26,6 +26,9 @@ widget:
   avatar: widget/avatar.png
   accent: '#0e7490'   # matches the avatar's gradient
   about:  'Track a shipment, book a pickup, and open a claim.'
+  # Open on the menu: an empty chat runs it by itself, so a visitor sees what they can do instead of
+  # "No messages yet — say hi" (the website's live demos open this chat).
+  start_flow: home
 
 supported_channels: [whatsapp, web]
 supported_languages: [ar, en]

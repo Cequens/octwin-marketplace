@@ -7,7 +7,7 @@
 # `approve_apply` confirm-before-commit. No pack DB, no code — pure YAML.
 
 id:          gulf-realty
-version: '1.16.3'
+version: '1.16.4'
 description: 'Off-plan & ready property brokerage for the Gulf — project carousels, mortgage estimates, and site-viewing bookings on WhatsApp.'
 
 listing:
@@ -26,6 +26,9 @@ widget:
   avatar: widget/avatar.png
   accent: '#334155'   # matches the avatar's gradient
   about:  'Browse properties, see payment plans, and book a viewing.'
+  # Open on the menu: an empty chat runs it by itself, so a visitor sees what they can do instead of
+  # "No messages yet — say hi" (the website's live demos open this chat).
+  start_flow: home
 
 supported_channels: [whatsapp, web]
 supported_languages: [ar, en, ur]

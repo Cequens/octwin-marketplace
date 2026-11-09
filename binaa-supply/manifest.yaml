@@ -17,7 +17,7 @@
 # No pack DB, no code — pure YAML.
 
 id:          binaa-supply
-version: '1.13.1'
+version: '1.13.2'
 description: 'Building-materials wholesaler — live prices from the company spreadsheet, RFQs written back into it, Slack alerts to the sales desk, and shipment updates pushed to the customer on WhatsApp.'
 
 listing:
@@ -36,6 +36,9 @@ widget:
   avatar: widget/avatar.png
   accent: '#6d28d9'   # matches the avatar's gradient
   about:  'Check prices, request a quote, and track your order.'
+  # Open on the menu: an empty chat runs it by itself, so a visitor sees what they can do instead of
+  # "No messages yet — say hi" (the website's live demos open this chat).
+  start_flow: home
 
 supported_channels: [whatsapp, web]
 supported_languages: [ar, en, ur]

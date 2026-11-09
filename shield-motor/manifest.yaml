@@ -8,7 +8,7 @@
 # liability or states a settlement.
 
 id:          shield-motor
-version: '1.12.3'
+version: '1.12.4'
 description: 'Motor insurance — indicative premium from published rating factors, policy enquiry intake, and first-notification-of-loss claims a real assessor handles.'
 
 listing:
@@ -27,6 +27,9 @@ widget:
   avatar: widget/avatar.png
   accent: '#047857'   # matches the avatar's gradient
   about:  'Get a quote, add cover, and open a claim.'
+  # Open on the menu: an empty chat runs it by itself, so a visitor sees what they can do instead of
+  # "No messages yet — say hi" (the website's live demos open this chat).
+  start_flow: home
 
 supported_channels: [whatsapp, web]
 supported_languages: [ar, en]

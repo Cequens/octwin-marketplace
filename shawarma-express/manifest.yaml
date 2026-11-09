@@ -7,7 +7,7 @@
 # with milestones, and per-branch fulfilment. No pack DB, no code — pure YAML.
 
 id:          shawarma-express
-version: '2.6.1'
+version: '2.6.2'
 description: 'Shawarma restaurant delivery — menu carousel, basket, checkout with delivery details, live order tracking, and an automated abandoned-basket nudge.'
 
 listing:
@@ -26,6 +26,9 @@ widget:
   avatar: widget/avatar.png
   accent: '#9d174d'   # matches the avatar's gradient
   about:  'Order from the menu and follow your delivery.'
+  # Open on the menu: an empty chat runs it by itself, so a visitor sees what they can do instead of
+  # "No messages yet — say hi" (the website's live demos open this chat).
+  start_flow: home
 
 supported_channels: [whatsapp, web]
 supported_languages: [ar, en]

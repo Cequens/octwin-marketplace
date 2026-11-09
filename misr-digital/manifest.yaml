@@ -2,7 +2,7 @@
 # Helps citizens browse Egypt's digital-government services, understand the
 # requirements/fees/timing for each, and get routed to start it on digital.gov.eg.
 id:          misr-digital
-version: '2.0.3'
+version: '2.0.4'
 description: 'مصر الرقمية: تصفّح الخدمات الحكومية الإلكترونية، اعرف المستندات والرسوم ومدة التنفيذ، وابدأ الخدمة على البوابة.'
 
 listing:
@@ -23,6 +23,9 @@ widget:
   avatar: widget/avatar.png
   accent: '#b45309'   # matches the avatar's gradient
   about:  'Find any government service — what to bring, what it costs, how long it takes.'
+  # Open on the menu: an empty chat runs it by itself, so a visitor sees what they can do instead of
+  # "No messages yet — say hi" (the website's live demos open this chat).
+  start_flow: home
 
 supported_channels: [whatsapp, web]
 supported_languages: [ar, en]

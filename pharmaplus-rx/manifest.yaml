@@ -7,7 +7,7 @@
 # never advises, substitutes, doses, or dispenses a prescription-only medicine on its own.
 
 id:          pharmaplus-rx
-version: '2.5.1'
+version: '2.5.2'
 description: 'Community pharmacy — send a prescription photo for pharmacist review, reorder a repeat, and shop over-the-counter items, with every clinical question routed to a human.'
 
 listing:
@@ -26,6 +26,9 @@ widget:
   avatar: widget/avatar.png
   accent: '#0369a1'   # matches the avatar's gradient
   about:  'Send your prescription, order a refill, and ask a pharmacist.'
+  # Open on the menu: an empty chat runs it by itself, so a visitor sees what they can do instead of
+  # "No messages yet — say hi" (the website's live demos open this chat).
+  start_flow: home
 
 supported_channels: [whatsapp, web]
 supported_languages: [ar, en]

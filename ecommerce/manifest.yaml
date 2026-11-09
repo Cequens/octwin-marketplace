@@ -12,7 +12,7 @@
 # byte-faithful widget simulation on web.
 
 id:          ecommerce
-version:     '1.6.0'
+version:     '1.6.1'
 description: 'Meta-commerce demo — catalog, product cards, cart, and checkout on WhatsApp + web.'
 
 # Marketplace presentation — how this pack appears in the console catalog a
@@ -35,6 +35,9 @@ widget:
   avatar: widget/avatar.png
   accent: '#6d28d9'   # matches the avatar's gradient
   about:  'Browse the catalogue, add to your cart, and check out here.'
+  # Open on the menu: an empty chat runs it by itself, so a visitor sees what they can do instead of
+  # "No messages yet — say hi" (the website's live demos open this chat).
+  start_flow: home
 
 supported_channels: [whatsapp, web]
 # English and Arabic. The customer's own words decide (detection), `/lang` overrides; every
