@@ -20,7 +20,7 @@ strings:
   preview:        "📅 {when} (Riyadh time), 30 minutes\n👤 {name}\n🏢 {company}\n📧 {email}\n🧭 {industry}\n💬 {volume}\n📱 {phone}"
   not_booked:     'OK, nothing was booked. Ask me anything about Octwin.'
   booked_header:  '✅ Your demo is booked'
-  booked:         "Thank you, {name}.\nBooking number: {number}\n📅 {when} (Riyadh time), 30 minutes\nOur team will send you the meeting link."
+  booked:         "Thank you, {name}.\nBooking number: {number}\n📅 {when} (Riyadh time), 30 minutes\nOur team will send you the meeting link.\n\n{email_line}"
   emailed:        'We emailed the details to {email}, and we will remind you by email before it starts.'
   not_emailed:    'Our confirmation email did not go out just now. Keep your booking number; to change the time, write to sales@octwin.ai.'
   email_subject:  'Your Octwin demo: {when} (Riyadh time)'

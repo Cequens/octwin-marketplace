@@ -97,13 +97,13 @@ steps:
         body:    '{$t("send-message.email_body", { name: $state.name, number: $saved.record_number, message: $state.message })}'
       outputs:
         sent:
-          - assign: { state.emailed: true }
+          - assign: { state.emailed: true, state.email_line: '$t("send-message.emailed", { email: $state.email })' }
           - goto: received
         suppressed:
-          - assign: { state.emailed: false }
+          - assign: { state.emailed: false, state.email_line: '$t("send-message.not_emailed")' }
           - goto: received
         failed:
-          - assign: { state.emailed: false }
+          - assign: { state.emailed: false, state.email_line: '$t("send-message.not_emailed")' }
           - goto: received
 
   # A Sales message also offers a demo — the quickest way to talk to the team.
@@ -113,8 +113,7 @@ steps:
     - render:
         render_intent: detail_card
         header: '{$t("send-message.received_header")}'
-        body:   '{$t("send-message.received", { name: $state.name, number: $saved.record_number })}'
-        footer: '$state.emailed == true ? $t("send-message.emailed", { email: $state.email }) : $t("send-message.not_emailed")'
+        body:   '{$t("send-message.received", { name: $state.name, number: $saved.record_number, email_line: $state.email_line })}'
         buttons:
           - { title: '{$t("send-message.btn_home")}', on_select: { invoke: home } }
       memory_note: 'Saved message #{$saved.record_number} from {$state.name} ({$state.topic}). The team replies to {$state.email} by email within 1 working day.'
@@ -124,8 +123,7 @@ steps:
     - render:
         render_intent: detail_card
         header: '{$t("send-message.received_header")}'
-        body:   '{$t("send-message.received", { name: $state.name, number: $saved.record_number })}'
-        footer: '$state.emailed == true ? $t("send-message.emailed", { email: $state.email }) : $t("send-message.not_emailed")'
+        body:   '{$t("send-message.received", { name: $state.name, number: $saved.record_number, email_line: $state.email_line })}'
         buttons:
           - { title: '{$t("send-message.btn_book")}', on_select: { invoke: book-demo } }
           - { title: '{$t("send-message.btn_home")}', on_select: { invoke: home } }

@@ -20,7 +20,7 @@ strings:
   preview:          "💼 {plan}\n👤 {name} · 🏢 {company}\n📧 {email}\n🌍 {country}\n💬 {channels}\n🤖 {ai}\n📣 {msgs}\n👥 {seats}\n🗓️ {go_live}\n🔌 {integrations}"
   not_sent:         'OK, nothing was sent. Ask me anything about the plans.'
   received_header:  '✅ Quotation request received'
-  received:         "Thank you, {name}.\nRequest number: {number} — {plan} plan\nOur team will send your quotation within 2 working days."
+  received:         "Thank you, {name}.\nRequest number: {number} — {plan} plan\nOur team will send your quotation within 2 working days.\n\n{email_line}"
   emailed:          'We emailed a confirmation to {email}; the quotation will come to the same address.'
   not_emailed:      'Our confirmation email did not go out just now — the quotation will still come to the address you gave. Questions: sales@octwin.ai.'
   email_subject:    'We received your Octwin quotation request ({plan})'

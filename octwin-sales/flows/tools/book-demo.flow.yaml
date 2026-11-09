@@ -208,21 +208,20 @@ steps:
         body:    '{$t("book-demo.email_body", { name: $state.name, when: $format_date($state.slot_start, "day_time", null, "Asia/Riyadh"), number: $booking.record_number })}'
       outputs:
         sent:
-          - assign: { state.emailed: true }
+          - assign: { state.emailed: true, state.email_line: '$t("book-demo.emailed", { email: $state.email })' }
           - goto: booked
         suppressed:
-          - assign: { state.emailed: false }
+          - assign: { state.emailed: false, state.email_line: '$t("book-demo.not_emailed")' }
           - goto: booked
         failed:
-          - assign: { state.emailed: false }
+          - assign: { state.emailed: false, state.email_line: '$t("book-demo.not_emailed")' }
           - goto: booked
 
   booked:
     - render:
         render_intent: detail_card
         header: '{$t("book-demo.booked_header")}'
-        body:   '{$t("book-demo.booked", { name: $state.name, number: $booking.record_number, when: $format_date($state.slot_start, "day_time", null, "Asia/Riyadh") })}'
-        footer: '$state.emailed == true ? $t("book-demo.emailed", { email: $state.email }) : $t("book-demo.not_emailed")'
+        body:   '{$t("book-demo.booked", { name: $state.name, number: $booking.record_number, when: $format_date($state.slot_start, "day_time", null, "Asia/Riyadh"), email_line: $state.email_line })}'
         buttons:
           - { title: '{$t("book-demo.btn_demos")}', on_select: { invoke: live-demos } }
           - { title: '{$t("book-demo.btn_home")}',  on_select: { invoke: home } }

@@ -20,7 +20,7 @@ strings:
   preview:        "📅 {when} (بتوقيت الرياض)، 30 دقيقة\n👤 {name}\n🏢 {company}\n📧 {email}\n🧭 {industry}\n💬 {volume}\n📱 {phone}"
   not_booked:     'حسنًا، لم نحجز شيئًا. اسألني أي شيء عن Octwin.'
   booked_header:  '✅ تم حجز العرض التوضيحي'
-  booked:         "شكرًا لك يا {name}.\nرقم الحجز: {number}\n📅 {when} (بتوقيت الرياض)، 30 دقيقة\nسيرسل لك فريقنا رابط الاجتماع."
+  booked:         "شكرًا لك يا {name}.\nرقم الحجز: {number}\n📅 {when} (بتوقيت الرياض)، 30 دقيقة\nسيرسل لك فريقنا رابط الاجتماع.\n\n{email_line}"
   emailed:        'أرسلنا التفاصيل إلى {email}، وسنذكّرك بالبريد الإلكتروني قبل الموعد.'
   not_emailed:    'لم تُرسل رسالة التأكيد الآن. احتفظ برقم الحجز، ولتغيير الموعد راسلنا على sales@octwin.ai.'
   email_subject:  'عرض Octwin التوضيحي: {when} (بتوقيت الرياض)'

@@ -20,7 +20,7 @@ strings:
   preview:          "💼 {plan}\n👤 {name} · 🏢 {company}\n📧 {email}\n🌍 {country}\n💬 {channels}\n🤖 {ai}\n📣 {msgs}\n👥 {seats}\n🗓️ {go_live}\n🔌 {integrations}"
   not_sent:         'حسنًا، لم نرسل شيئًا. اسألني أي شيء عن الباقات.'
   received_header:  '✅ وصلنا طلب عرض السعر'
-  received:         "شكرًا لك يا {name}.\nرقم الطلب: {number} — باقة {plan}\nسيرسل لك فريقنا عرض السعر خلال يومَي عمل."
+  received:         "شكرًا لك يا {name}.\nرقم الطلب: {number} — باقة {plan}\nسيرسل لك فريقنا عرض السعر خلال يومَي عمل.\n\n{email_line}"
   emailed:          'أرسلنا تأكيدًا إلى {email}، وسيصلك عرض السعر على العنوان نفسه.'
   not_emailed:      'لم تُرسل رسالة التأكيد الآن — سيصلك عرض السعر على العنوان الذي أعطيتنا إياه. للاستفسار: sales@octwin.ai.'
   email_subject:    'وصلنا طلب عرض السعر من Octwin ({plan})'

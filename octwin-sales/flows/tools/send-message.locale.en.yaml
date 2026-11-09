@@ -11,7 +11,7 @@ strings:
   preview:         "👤 {name}\n📧 {email}\n🗂️ {topic}\n\n{message}"
   not_sent:        'OK, nothing was sent. Ask me anything about Octwin.'
   received_header: '✅ Message received'
-  received:        "Thank you, {name}.\nMessage number: {number}\nOur team will reply by email within 1 working day."
+  received:        "Thank you, {name}.\nMessage number: {number}\nOur team will reply by email within 1 working day.\n\n{email_line}"
   emailed:         'We emailed a confirmation to {email}; our reply will come to the same address.'
   not_emailed:     'Our confirmation email did not go out just now — our reply will still come to the address you gave. You can also write to sales@octwin.ai.'
   email_subject:   'We received your message to Octwin'
