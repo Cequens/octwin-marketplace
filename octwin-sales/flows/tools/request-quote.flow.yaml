@@ -1,0 +1,177 @@
+# Request a quotation — ONE form with what our price depends on (AI conversations, business messages, console
+# users, the customers' country for Meta's rates, channels, systems to connect, timing), confirm, save a
+# `quote_request` record, keep the email on the contact, and email the visitor that the team will send the
+# quotation within 2 working days. A task opens for the sales team (automation.yaml).
+#
+# The website's Pricing page opens it with the plan its "Contact us" sat under (`widget.entry_flows`,
+# `with: { plan }`); the plan is then never asked.
+flow_id:     request-quote
+version:     1
+description: Request a quotation for a paid Octwin plan. Call when the visitor wants a price, a quote, a proposal or a plan for their volume. Pass `plan` only when they named one.
+
+input:
+  plan:    { type: enum, optional: true, enum: [starter, growth, scale, enterprise] }
+  name:    { type: string, optional: true }
+  company: { type: string, optional: true }
+  email:   { type: string, optional: true }
+
+entry:
+  - else: true
+    goto: start
+
+steps:
+  start:
+    - assign:
+        state.plan:    '$coalesce($state.plan, $input.plan)'
+        state.name:    '$coalesce($state.name, $input.name == "" ? null : $input.name)'
+        state.company: '$coalesce($state.company, $input.company == "" ? null : $input.company)'
+        state.email:   '$coalesce($state.email, $input.email == "" ? null : $input.email)'
+    - goto: intake
+
+  intake:
+    - collect:
+        form_body: '$state.plan != null ? $t("request-quote.form_body_plan", { plan: $enum_label($state.plan, "plan") }) : $t("request-quote.form_body")'
+        form_cta:  '$t("request-quote.form_cta")'
+        fields:
+          - field: name
+            label: '$t("request-quote.ask_name")'
+          - field: company
+            label: '$t("request-quote.ask_company")'
+          # Untyped, with a format check: a typed `email` field would turn the whole form off (craft-collect).
+          - field: email
+            label: '$t("request-quote.ask_email")'
+            validate:
+              when:  '!$matches($state.email, "^[^@ ]+@[^@ ]+[.][^@ ]+$")'
+              error: '{$t("request-quote.email_error")}'
+          # Asked only when no button passed it (the bottom "Contact us", or the agent).
+          - field: plan
+            type:  choice
+            label: '$t("request-quote.ask_plan")'
+            options:
+              body:   '{$t("request-quote.ask_plan")}'
+              enum:   plan
+              values: [starter, growth, scale, enterprise]
+          - field: country
+            type:  choice
+            label: '$t("request-quote.ask_country")'
+            options:
+              body:   '{$t("request-quote.ask_country")}'
+              enum:   country
+              values: [sa, ae, eg, qa, kw, bh, om, jo, other]
+          - field: channels
+            type:  choice
+            label: '$t("request-quote.ask_channels")'
+            options:
+              body:   '{$t("request-quote.ask_channels")}'
+              enum:   channels
+              values: [wa, wa_web, wa_web_app, no_wa]
+          - field: ai_volume
+            type:  choice
+            label: '$t("request-quote.ask_ai_volume")'
+            options:
+              body:   '{$t("request-quote.ask_ai_volume")}'
+              enum:   ai_volume
+              values: [under_1k, k1_5k, k5_20k, over_20k]
+          - field: msg_volume
+            type:  choice
+            label: '$t("request-quote.ask_msg_volume")'
+            options:
+              body:   '{$t("request-quote.ask_msg_volume")}'
+              enum:   msg_volume
+              values: [none, under_10k, k10_100k, over_100k]
+          - field: seats
+            type:  choice
+            label: '$t("request-quote.ask_seats")'
+            options:
+              body:   '{$t("request-quote.ask_seats")}'
+              enum:   seats
+              values: [s1_5, s6_10, s11_25, over_25]
+          - field: go_live
+            type:  choice
+            label: '$t("request-quote.ask_go_live")'
+            options:
+              body:   '{$t("request-quote.ask_go_live")}'
+              enum:   go_live
+              values: [this_month, m1_3, later]
+          - field: integrations
+            required: false
+            label: '$t("request-quote.ask_integrations")'
+          - field: notes
+            required: false
+            label: '$t("request-quote.ask_notes")'
+        complete: [{ goto: confirm }]
+
+  confirm:
+    - use: approve_apply
+      with:
+        header:       '{$t("request-quote.confirm_header")}'
+        preview:      '{$t("request-quote.preview", { plan: $enum_label($state.plan, "plan"), name: $state.name, company: $state.company, email: $state.email, country: $enum_label($state.country, "country"), channels: $enum_label($state.channels, "channels"), ai: $enum_label($state.ai_volume, "ai_volume"), msgs: $enum_label($state.msg_volume, "msg_volume"), seats: $enum_label($state.seats, "seats"), go_live: $enum_label($state.go_live, "go_live"), integrations: $coalesce($state.integrations, "—") })}'
+        apply:        save
+        abort_render: { render_intent: text_card, body: '{$t("request-quote.not_sent")}' }
+        on_other:     intake
+        memory_note:  'Asked the visitor to confirm their quotation request.'
+
+  save:
+    - do: record_save
+      args:
+        entity: quote_request
+        fields:
+          name:         '$state.name'
+          company:      '$state.company'
+          email:        '$state.email'
+          plan:         '$state.plan'
+          country:      '$state.country'
+          channels:     '$state.channels'
+          ai_volume:    '$state.ai_volume'
+          msg_volume:   '$state.msg_volume'
+          seats:        '$state.seats'
+          go_live:      '$state.go_live'
+          integrations: '$coalesce($state.integrations, "")'
+          notes:        '$coalesce($state.notes, "")'
+      bind: saved
+      outputs:
+        ok: [{ goto: keep_email }]
+        invalid:
+          - assign: { state.email: null }
+          - goto: intake
+        failed: [{ end: failed }]
+
+  # On the CONTACT too (craft-outreach rule 2): the quotation is sent to it later.
+  keep_email:
+    - do: upsert_platform_contact
+      args:
+        channel_contact_handle: '$contact.channel_contact_handle'
+        channel:                '$contact.channel'
+        email:                  '$state.email'
+      outputs:
+        ok:     [{ goto: email_received }]
+        failed: [{ goto: email_received }]
+
+  email_received:
+    - do: send_email
+      args:
+        to:      '$state.email'
+        subject: '{$t("request-quote.email_subject", { plan: $enum_label($state.plan, "plan") })}'
+        body:    '{$t("request-quote.email_body", { name: $state.name, plan: $enum_label($state.plan, "plan"), number: $saved.record_number })}'
+      outputs:
+        sent:
+          - assign: { state.emailed: true }
+          - goto: received
+        suppressed:
+          - assign: { state.emailed: false }
+          - goto: received
+        failed:
+          - assign: { state.emailed: false }
+          - goto: received
+
+  received:
+    - render:
+        render_intent: detail_card
+        header: '{$t("request-quote.received_header")}'
+        body:   '{$t("request-quote.received", { name: $state.name, plan: $enum_label($state.plan, "plan"), number: $saved.record_number })}'
+        footer: '$state.emailed == true ? $t("request-quote.emailed", { email: $state.email }) : $t("request-quote.not_emailed")'
+        buttons:
+          - { title: '{$t("request-quote.btn_book")}', on_select: { invoke: book-demo } }
+          - { title: '{$t("request-quote.btn_home")}', on_select: { invoke: home } }
+      memory_note: 'Saved quotation request #{$saved.record_number} for {$state.company}: {$state.plan} plan, {$state.ai_volume} AI conversations, {$state.msg_volume} business messages, {$state.seats} console users, customers in {$state.country}. The team sends the quotation to {$state.email} within 2 working days.'
+    - end: applied

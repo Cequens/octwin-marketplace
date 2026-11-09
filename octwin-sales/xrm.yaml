@@ -1,5 +1,6 @@
-# xrm.yaml — the sales leads the website's chat collects. Our own CRM, on our own platform:
-# the sales team works them in Records, stage by stage.
+# xrm.yaml — the sales leads the website's chat collects, and the calendar their demos are booked on.
+# Our own CRM, on our own platform: the sales team works leads in Records, stage by stage, and sees each
+# booked demo on the scheduling page.
 entities:
   lead:
     title_field: company
@@ -14,3 +15,55 @@ entities:
     pipeline:
       stages:   [new, contacted, demo_booked, won, lost]
       terminal: [won, lost]
+
+  # A quotation request from the website's Pricing page — what the price depends on, so the team can build the
+  # quotation. Each choice field stores the pack's enum key (locale `<field>.<key>` labels it).
+  quote_request:
+    title_field: company
+    fields:
+      name:         { type: text, required: true }
+      email:        { type: text, required: true }
+      company:      { type: text, required: true }
+      plan:         { type: text, required: true }    # starter · growth · scale · enterprise
+      country:      { type: text, required: true }    # where most customers are — Meta's rates are per country
+      channels:     { type: text, required: true }
+      ai_volume:    { type: text, required: true }    # AI conversations a month
+      msg_volume:   { type: text, required: true }    # business messages a month (campaigns + their systems)
+      seats:        { type: text, required: true }    # console users
+      go_live:      { type: text, required: true }
+      integrations: { type: textarea }
+      notes:        { type: textarea }
+    pipeline:
+      stages:   [new, in_review, quote_sent, accepted, declined]
+      terminal: [accepted, declined]
+
+  # A message from the website's Contact page form ("Write to us"). The team replies by email within one
+  # working day (the visitor's confirmation email says so). `topic` stores the pack's enum key.
+  contact_message:
+    title_field: name
+    fields:
+      name:    { type: text, required: true }
+      email:   { type: text, required: true }
+      topic:   { type: text, required: true }     # sales · partnership · security · press · other
+      message: { type: textarea, required: true }
+    pipeline:
+      stages:   [new, replied, closed]
+      terminal: [closed]
+
+  # The sales team's shared demo calendar — the one bookable resource (scheduling.yaml).
+  demo_calendar:
+    title_field: name
+    fields:
+      name: { type: text, required: true, unique: true }
+
+  # A booked demo: the platform's booking, with who it is for — what the team reads on the calendar.
+  booking:
+    extends: system
+    fields:
+      visitor_name: { type: text }
+      company:      { type: text }
+      email:        { type: text }
+
+demo:
+  - entity: demo_calendar
+    fields: { name: 'Octwin demos' }

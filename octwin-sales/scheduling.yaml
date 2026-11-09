@@ -1,0 +1,20 @@
+# scheduling.yaml — demos are booked on ONE shared calendar, the sales team's. A visitor picks a free
+# 30-minute slot in the chat; the booking lands in the console's scheduling page for the team.
+timezone: Asia/Riyadh        # the Gulf audience's clock — every slot and every email time is read in it
+booking:
+  entity: booking
+resources:
+  demo_calendar:
+    slot: { default_minutes: 30, window_days: 21 }
+# The weekly hours a seeded project opens with (Set up seeds them). Once someone edits the calendar's
+# hours in the console, the pack stops managing them.
+demo:
+  availability:
+    - resource_match: { entity: demo_calendar, field: name, value: 'Octwin demos' }
+      # dow: 0 = Sunday … 4 = Thursday — the Gulf working week.
+      rules:
+        - { dow: 0, start: '10:00', end: '17:00', slot_minutes: 30, capacity: 1 }
+        - { dow: 1, start: '10:00', end: '17:00', slot_minutes: 30, capacity: 1 }
+        - { dow: 2, start: '10:00', end: '17:00', slot_minutes: 30, capacity: 1 }
+        - { dow: 3, start: '10:00', end: '17:00', slot_minutes: 30, capacity: 1 }
+        - { dow: 4, start: '10:00', end: '17:00', slot_minutes: 30, capacity: 1 }

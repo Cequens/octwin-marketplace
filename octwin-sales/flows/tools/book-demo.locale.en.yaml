@@ -1,18 +1,30 @@
 flow_id: book-demo
 strings:
+  form_body:      'A few details, then pick a time for your demo.'
+  form_cta:       'Book your demo'
+  form_body_time: 'Thanks — now pick a time for your demo.'
+  form_cta_time:  'Pick a time'
   ask_name:       '👋 Great — what is your name?'
   ask_company:    '🏢 Which company are you with?'
-  ask_email:      '📧 Your work email, so we can send the invite?'
+  ask_email:      '📧 Your work email, for the confirmation and the invite?'
   ask_industry:   '🧭 Which industry are you in?'
   ask_volume:     '💬 About how many customer conversations do you have a month?'
   ask_phone:      '📱 Phone or WhatsApp, with the country code (+966…, +971…, +20…) — optional'
   email_error:    'That does not look like an email address — please check it.'
   phone_error:    'Please start with + and the country code, for example +966 50 123 4567.'
   ask_notes:      'Anything you want us to cover — or a conversation your team handles every day?'
-  confirm_header: '📋 Please check your demo request'
-  preview:        "👤 {name}\n🏢 {company}\n📧 {email}\n🧭 {industry}\n💬 {volume}\n📱 {phone}"
-  not_sent:       'OK, nothing was sent. Ask me anything about Octwin.'
-  saved:          "✅ Thank you, {name}. Our team will email you to agree a time for your demo."
-  btn_person:     '🙋 Talk to a person'
+  ask_day:        '📅 Pick a day for your 30-minute demo (Riyadh time):'
+  taken:          '😕 That time was just taken. Pick a day again:'
+  ask_time:       '🕐 Free times on {day} (Riyadh time):'
+  confirm_header: '📋 Please check your demo booking'
+  preview:        "📅 {when} (Riyadh time), 30 minutes\n👤 {name}\n🏢 {company}\n📧 {email}\n🧭 {industry}\n💬 {volume}\n📱 {phone}"
+  not_booked:     'OK, nothing was booked. Ask me anything about Octwin.'
+  booked_header:  '✅ Your demo is booked'
+  booked:         "Thank you, {name}.\nBooking number: {number}\n📅 {when} (Riyadh time), 30 minutes\nOur team will send you the meeting link."
+  emailed:        'We emailed the details to {email}, and we will remind you by email before it starts.'
+  not_emailed:    'Our confirmation email did not go out just now. Keep your booking number; to change the time, write to sales@octwin.ai.'
+  email_subject:  'Your Octwin demo: {when} (Riyadh time)'
+  email_body:     "Hello {name},\n\nYour Octwin demo is booked for {when} (Riyadh time), for 30 minutes. Booking number: {number}.\n\nOur team will send you the meeting link before it starts, and we will remind you by email.\n\nNeed another time? Reply to this email, or write to sales@octwin.ai."
+  no_slots:       'Sorry, there are no free demo times in the next three weeks. Write to sales@octwin.ai and we will find one with you.'
   btn_demos:      '▶️ Try a live demo'
   btn_home:       '🏠 Menu'

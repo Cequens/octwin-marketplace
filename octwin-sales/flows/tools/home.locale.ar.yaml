@@ -10,5 +10,5 @@ strings:
   row_demos_about:  'تحدث مع عرض يعمل الآن'
   row_plans:        '💼 الخطط'
   row_plans_about:  'ما تتضمنه كل خطة'
-  row_person:       '🙋 تحدث مع شخص'
-  row_person_about: 'فريق المبيعات'
+  row_quote:        '💰 اطلب عرض سعر'
+  row_quote_about:  'حسب حجم استخدامك، خلال يومَي عمل'

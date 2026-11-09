@@ -1,0 +1,133 @@
+# Send a message to the team — the website's Contact page form ("Write to us"). Collect what is missing, confirm,
+# save a `contact_message` record, keep the email on the contact, and email the visitor that the team replies
+# within 1 working day. A task opens for the team (automation.yaml).
+#
+# The Contact page opens it with every answer (`widget.entry_flows`, `with: { name, email, topic, message }`), so
+# the form asks nothing and the visitor only confirms.
+flow_id:     send-message
+version:     1
+description: Leave a message for the Octwin team — a partnership, press, the security pack, or anything that is not a demo or a quote. Pass what the visitor already said.
+
+input:
+  name:    { type: string, optional: true }
+  email:   { type: string, optional: true }
+  topic:   { type: enum, optional: true, enum: [sales, partnership, security, press, other] }
+  message: { type: string, optional: true }
+
+entry:
+  - else: true
+    goto: start
+
+steps:
+  start:
+    - assign:
+        state.name:    '$coalesce($state.name, $input.name == "" ? null : $input.name)'
+        state.email:   '$coalesce($state.email, $input.email == "" ? null : $input.email)'
+        state.topic:   '$coalesce($state.topic, $input.topic)'
+        state.message: '$coalesce($state.message, $input.message == "" ? null : $input.message)'
+    - goto: intake
+
+  intake:
+    - collect:
+        form_body: '$t("send-message.form_body")'
+        form_cta:  '$t("send-message.form_cta")'
+        fields:
+          - field: name
+            label: '$t("send-message.ask_name")'
+          # Untyped, with a format check: a typed `email` field would turn the whole form off (craft-collect).
+          - field: email
+            label: '$t("send-message.ask_email")'
+            validate:
+              when:  '!$matches($state.email, "^[^@ ]+@[^@ ]+[.][^@ ]+$")'
+              error: '{$t("send-message.email_error")}'
+          - field: topic
+            type:  choice
+            label: '$t("send-message.ask_topic")'
+            options:
+              body:   '{$t("send-message.ask_topic")}'
+              enum:   topic
+              values: [sales, partnership, security, press, other]
+          - field: message
+            label: '$t("send-message.ask_message")'
+        complete: [{ goto: confirm }]
+
+  confirm:
+    - use: approve_apply
+      with:
+        header:       '{$t("send-message.confirm_header")}'
+        preview:      '{$t("send-message.preview", { name: $state.name, email: $state.email, topic: $enum_label($state.topic, "topic"), message: $state.message })}'
+        apply:        save
+        abort_render: { render_intent: text_card, body: '{$t("send-message.not_sent")}' }
+        on_other:     intake
+        memory_note:  'Asked the visitor to confirm their message to the team.'
+
+  save:
+    - do: record_save
+      args:
+        entity: contact_message
+        fields:
+          name:    '$state.name'
+          email:   '$state.email'
+          topic:   '$state.topic'
+          message: '$state.message'
+      bind: saved
+      outputs:
+        ok: [{ goto: keep_email }]
+        invalid:
+          - assign: { state.email: null }
+          - goto: intake
+        failed: [{ end: failed }]
+
+  # On the CONTACT too (craft-outreach rule 2): the reply is sent to it later.
+  keep_email:
+    - do: upsert_platform_contact
+      args:
+        channel_contact_handle: '$contact.channel_contact_handle'
+        channel:                '$contact.channel'
+        email:                  '$state.email'
+      outputs:
+        ok:     [{ goto: email_received }]
+        failed: [{ goto: email_received }]
+
+  email_received:
+    - do: send_email
+      args:
+        to:      '$state.email'
+        subject: '{$t("send-message.email_subject")}'
+        body:    '{$t("send-message.email_body", { name: $state.name, number: $saved.record_number, message: $state.message })}'
+      outputs:
+        sent:
+          - assign: { state.emailed: true }
+          - goto: received
+        suppressed:
+          - assign: { state.emailed: false }
+          - goto: received
+        failed:
+          - assign: { state.emailed: false }
+          - goto: received
+
+  # A Sales message also offers a demo — the quickest way to talk to the team.
+  received:
+    - if: '$state.topic == "sales"'
+      goto: received_sales
+    - render:
+        render_intent: detail_card
+        header: '{$t("send-message.received_header")}'
+        body:   '{$t("send-message.received", { name: $state.name, number: $saved.record_number })}'
+        footer: '$state.emailed == true ? $t("send-message.emailed", { email: $state.email }) : $t("send-message.not_emailed")'
+        buttons:
+          - { title: '{$t("send-message.btn_home")}', on_select: { invoke: home } }
+      memory_note: 'Saved message #{$saved.record_number} from {$state.name} ({$state.topic}). The team replies to {$state.email} by email within 1 working day.'
+    - end: applied
+
+  received_sales:
+    - render:
+        render_intent: detail_card
+        header: '{$t("send-message.received_header")}'
+        body:   '{$t("send-message.received", { name: $state.name, number: $saved.record_number })}'
+        footer: '$state.emailed == true ? $t("send-message.emailed", { email: $state.email }) : $t("send-message.not_emailed")'
+        buttons:
+          - { title: '{$t("send-message.btn_book")}', on_select: { invoke: book-demo } }
+          - { title: '{$t("send-message.btn_home")}', on_select: { invoke: home } }
+      memory_note: 'Saved message #{$saved.record_number} from {$state.name} (sales). The team replies to {$state.email} by email within 1 working day; offered a demo.'
+    - end: applied

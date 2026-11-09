@@ -23,6 +23,6 @@ steps:
         buttons:
           - { title: '{$t("plans.btn_start")}', url: 'https://octwin.ai/signup' }
           - { title: '{$t("plans.btn_book")}', on_select: { invoke: book-demo } }
-          - { title: '{$t("plans.btn_page")}', url: 'https://octwin.ai/pricing' }
+          - { title: '{$t("plans.btn_quote")}', on_select: { invoke: request-quote } }
       memory_note: 'Showed the plans (no prices — paid plans are priced for the visitor''s volume).'
     - end: applied

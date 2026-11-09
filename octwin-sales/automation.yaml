@@ -1,7 +1,64 @@
-# automation.yaml — a lead saved from the chat completes the "Booked a demo" journey.
+# automation.yaml — a lead saved from the chat completes the "Booked a demo" journey, and every booked
+# demo gets an email reminder. By EMAIL, not in the chat: a website visitor is rarely still on the page
+# a day later. The address is the one they gave, saved on their contact by book-demo.
 rules:
   - key: lead_saved
     for: lead
     on: created
     do:
       - track: { journey: demo, goal_reached: requested }
+
+  # A quotation request lands in the sales team's work as a task, due when we promised the quotation
+  # (2 working days — the visitor's confirmation email says so).
+  - key: quote_requested
+    for: quote_request
+    on: created
+    do:
+      - open_task:
+          title:        'Send the quotation to {{ record.fields.company }} (request #{{ record.record_number }})'
+          body:         'Plan: {{ record.fields.plan }} · customers in {{ record.fields.country }} · AI conversations: {{ record.fields.ai_volume }} · business messages: {{ record.fields.msg_volume }} · console users: {{ record.fields.seats }} · channels: {{ record.fields.channels }} · go live: {{ record.fields.go_live }}. Email: {{ record.fields.email }}. We promised the quotation within 2 working days.'
+          due_in_hours: 48
+
+  # A message from the Contact page lands in the team's work as a task, due when we promised a reply
+  # (1 working day — the visitor's confirmation email says so).
+  - key: message_received
+    for: contact_message
+    on: created
+    do:
+      - open_task:
+          title:        'Reply to {{ record.fields.name }} ({{ record.fields.topic }}, message #{{ record.record_number }})'
+          body: |-
+            From {{ record.fields.name }} <{{ record.fields.email }}>, topic {{ record.fields.topic }}:
+
+            {{ record.fields.message }}
+
+            We promised a reply by email within 1 working day.
+          due_in_hours: 24
+
+  # A day before. A demo booked less than a day ahead gets only the hour-before one (a time already
+  # past is skipped, never sent late). `while:` drops it for a booking the team cancelled.
+  - key: demo_reminder_day_before
+    for: booking
+    at: slot_start - 24h
+    while: { stage: confirmed }
+    do:
+      - send_email:
+          subject:
+            en: 'Reminder: your Octwin demo, {{ record.fields.slot_start }}'
+            ar: 'تذكير: عرض Octwin التوضيحي، {{ record.fields.slot_start }}'
+          body:
+            en: "Hello {{ record.fields.visitor_name }},\n\nThis is a reminder of your Octwin demo: {{ record.fields.slot_start }} (30 minutes). Our team will send you the meeting link before it starts.\n\nNeed another time? Reply to this email, or write to sales@octwin.ai."
+            ar: "مرحبًا {{ record.fields.visitor_name }}،\n\nنذكّرك بالعرض التوضيحي لـ Octwin: {{ record.fields.slot_start }} (30 دقيقة). سيرسل لك فريقنا رابط الاجتماع قبل الموعد.\n\nتحتاج موعدًا آخر؟ ردّ على هذه الرسالة، أو راسلنا على sales@octwin.ai."
+
+  - key: demo_reminder_hour_before
+    for: booking
+    at: slot_start - 1h
+    while: { stage: confirmed }
+    do:
+      - send_email:
+          subject:
+            en: 'Your Octwin demo starts at {{ record.fields.slot_start.time }}'
+            ar: 'يبدأ عرض Octwin التوضيحي الساعة {{ record.fields.slot_start.time }}'
+          body:
+            en: "Hello {{ record.fields.visitor_name }},\n\nYour Octwin demo starts in an hour, at {{ record.fields.slot_start.time }}. Look out for the meeting link from our team.\n\nSee you soon."
+            ar: "مرحبًا {{ record.fields.visitor_name }}،\n\nيبدأ العرض التوضيحي لـ Octwin بعد ساعة، الساعة {{ record.fields.slot_start.time }}. سيصلك رابط الاجتماع من فريقنا.\n\nنراك قريبًا."

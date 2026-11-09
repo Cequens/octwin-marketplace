@@ -1,0 +1,20 @@
+flow_id: send-message
+strings:
+  form_body:       'Leave a message, and our team will reply by email.'
+  form_cta:        'Write my message'
+  ask_name:        '👋 What is your name?'
+  ask_email:       '📧 Your work email — we reply there'
+  email_error:     'That does not look like an email address — please check it.'
+  ask_topic:       '🗂️ What is it about?'
+  ask_message:     '✍️ Your message'
+  confirm_header:  '📋 Please check your message'
+  preview:         "👤 {name}\n📧 {email}\n🗂️ {topic}\n\n{message}"
+  not_sent:        'OK, nothing was sent. Ask me anything about Octwin.'
+  received_header: '✅ Message received'
+  received:        "Thank you, {name}.\nMessage number: {number}\nOur team will reply by email within 1 working day."
+  emailed:         'We emailed a confirmation to {email}; our reply will come to the same address.'
+  not_emailed:     'Our confirmation email did not go out just now — our reply will still come to the address you gave. You can also write to sales@octwin.ai.'
+  email_subject:   'We received your message to Octwin'
+  email_body:      "Hello {name},\n\nThank you for writing to Octwin. Your message number is {number}, and our team will reply to this address within 1 working day.\n\nYour message:\n{message}\n\nAnything to add? Reply to this email, or write to sales@octwin.ai."
+  btn_book:        '📅 Book a demo'
+  btn_home:        '🏠 Menu'

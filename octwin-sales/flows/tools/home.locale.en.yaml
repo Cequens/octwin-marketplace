@@ -10,5 +10,5 @@ strings:
   row_demos_about:  'Chat with a demo running now'
   row_plans:        '💼 Plans'
   row_plans_about:  'What each plan includes'
-  row_person:       '🙋 Talk to a person'
-  row_person_about: 'Our sales team'
+  row_quote:        '💰 Get a quotation'
+  row_quote_about:  'Priced for your volume, within 2 working days'

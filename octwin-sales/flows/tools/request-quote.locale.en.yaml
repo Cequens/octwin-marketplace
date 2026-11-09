@@ -1,0 +1,29 @@
+flow_id: request-quote
+strings:
+  form_body:        'A few questions about your volume, and our team will build your quotation.'
+  form_body_plan:   'A few questions about your volume, and our team will build your {plan} quotation.'
+  form_cta:         'Get my quotation'
+  ask_name:         '👋 What is your name?'
+  ask_company:      '🏢 Which company are you with?'
+  ask_email:        '📧 Your work email — the quotation goes there'
+  email_error:      'That does not look like an email address — please check it.'
+  ask_plan:         '💼 Which plan are you interested in?'
+  ask_country:      '🌍 Where are most of your customers?'
+  ask_channels:     '💬 Which channels do you need?'
+  ask_ai_volume:    '🤖 About how many customer conversations a month will the AI Agent handle?'
+  ask_msg_volume:   '📣 About how many business messages a month — campaigns, and messages your own systems send?'
+  ask_seats:        '👥 How many team members will use the console?'
+  ask_go_live:      '🗓️ When do you want to go live?'
+  ask_integrations: '🔌 Any systems to connect — a CRM, a booking or an ERP system? (optional)'
+  ask_notes:        'Anything else we should know? (optional)'
+  confirm_header:   '📋 Please check your quotation request'
+  preview:          "💼 {plan}\n👤 {name} · 🏢 {company}\n📧 {email}\n🌍 {country}\n💬 {channels}\n🤖 {ai}\n📣 {msgs}\n👥 {seats}\n🗓️ {go_live}\n🔌 {integrations}"
+  not_sent:         'OK, nothing was sent. Ask me anything about the plans.'
+  received_header:  '✅ Quotation request received'
+  received:         "Thank you, {name}.\nRequest number: {number} — {plan} plan\nOur team will send your quotation within 2 working days."
+  emailed:          'We emailed a confirmation to {email}; the quotation will come to the same address.'
+  not_emailed:      'Our confirmation email did not go out just now — the quotation will still come to the address you gave. Questions: sales@octwin.ai.'
+  email_subject:    'We received your Octwin quotation request ({plan})'
+  email_body:       "Hello {name},\n\nThank you for asking about the Octwin {plan} plan. Your request number is {number}.\n\nOur team will build your quotation from the details you gave and send it to this address within 2 working days. Prices exclude taxes; Meta's WhatsApp fees are passed through at cost, with no markup.\n\nQuestions in the meantime? Reply to this email, or write to sales@octwin.ai."
+  btn_book:         '📅 Book a demo too'
+  btn_home:         '🏠 Menu'

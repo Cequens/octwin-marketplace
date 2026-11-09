@@ -1,7 +1,0 @@
-flow_id: talk-to-sales
-strings:
-  connecting:  "🙋 Connecting you to our team. We hold your place for a person for up to {minutes} minutes — write your question here meanwhile."
-  btn_back:    '↩️ Back to AI Agent'
-  unavailable: "Our team can't join the chat right now. Book a demo and we'll email you to agree a time — or keep asking me."
-  btn_book:    '📅 Book a demo'
-  btn_home:    '🏠 Menu'

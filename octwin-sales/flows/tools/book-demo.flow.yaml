@@ -1,20 +1,78 @@
-# Book a demo — collect the lead, confirm it, save it as a `lead` record, then offer a person now.
-# The craft-collect recipe: one `collect:`, `approve_apply` before committing, `record_save`.
+# Book a demo — ONE form: the lead's details, then a day and a time from the sales calendar's free slots;
+# confirm; then reserve the slot, save the lead and email the confirmation. The free times are read
+# BEFORE the form, so the day and the time are two more screens of it rather than a second form (and a
+# calendar with nothing free says so before asking anything). The craft-booking recipe (slot_list →
+# picker → confirm → booking_reserve) inside the craft-collect form, and the craft-outreach email partner:
+# the address is saved on the CONTACT so the reminder rules (automation.yaml) can email it later.
 flow_id:     book-demo
 version:     1
-description: Book a demo with the Octwin team. Call when the visitor wants a demo, a call, a quote, or to talk business. Pass `industry` or `volume` only when they said it.
+description: Book a demo with the Octwin team — the visitor picks a day and time. Call when the visitor wants a demo, a call, a meeting, a quote, to talk to someone, or to talk business. Pass `industry`, `volume` or their details only when they said them.
 
 input:
   industry: { type: enum, optional: true, enum: [banks, ecommerce, healthcare, realestate, insurance, education, logistics, retail, government, other] }
   volume:   { type: enum, optional: true, enum: [under_1k, k1_10k, k10_100k, over_100k] }
+  # The visitor's details, when the website's own Book a demo form opened this flow with them
+  # (`PlatformChat.open({ flow: 'book-demo', with: {…} })`) — or the agent heard them. Hints only: the
+  # form still checks the email and the phone, and the visitor confirms everything before anything is booked.
+  name:     { type: string, optional: true }
+  company:  { type: string, optional: true }
+  email:    { type: string, optional: true }
+  phone:    { type: string, optional: true }
+  notes:    { type: string, optional: true }
 
 entry:
   - else: true
-    goto: intake
+    goto: start
 
 steps:
+  # The website may open this flow with answers already given (`widget.entry_flows`): a button with the
+  # industry chosen, or the Book a demo page's form with everything. The form then asks only what is
+  # missing — on the page form's path, just the day and the time. An empty value is not an answer.
+  start:
+    - assign:
+        state.industry: '$coalesce($state.industry, $input.industry)'
+        state.volume:   '$coalesce($state.volume, $input.volume)'
+        state.name:     '$coalesce($state.name, $input.name == "" ? null : $input.name)'
+        state.company:  '$coalesce($state.company, $input.company == "" ? null : $input.company)'
+        state.email:    '$coalesce($state.email, $input.email == "" ? null : $input.email)'
+        state.phone:    '$coalesce($state.phone, $input.phone == "" ? null : $input.phone)'
+        state.notes:    '$coalesce($state.notes, $input.notes == "" ? null : $input.notes)'
+    - goto: calendar
+
+  # The sales team's one shared calendar (xrm.yaml `demo_calendar`, seeded with its weekly hours).
+  calendar:
+    - do: record_list
+      args: { entity: demo_calendar, all: true, limit: 1 }
+      bind: cal
+      outputs:
+        ok:
+          - assign: { state.calendar_id: '$cal.rows[0].id' }
+          - goto: load_slots
+        empty:  [{ goto: no_slots }]
+        failed: [{ end: failed }]
+
+  # Read again after a lost race (`taken`): the form then asks only the day and the time.
+  load_slots:
+    - do: slot_list
+      args: { resource_record_id: '$state.calendar_id', days: 21, fits_minutes: 30 }
+      bind: slots
+      outputs:
+        ok:
+          - assign:
+              state.slots:      '$slots'
+              state.day_prompt: '$state.taken == true ? $t("book-demo.taken") : $t("book-demo.ask_day")'
+              state.day:        null
+              state.slot_start: null
+          - goto: intake
+        empty:  [{ goto: no_slots }]
+        failed: [{ end: failed }]
+
   intake:
     - collect:
+        # The card that opens the form, in our words — not the platform's "Tap below… · Open form". When the
+        # details came with the flow (the page form), the form is only the time, and the card says so.
+        form_body: '$state.name != null && $state.email != null ? $t("book-demo.form_body_time") : $t("book-demo.form_body")'
+        form_cta:  '$state.name != null && $state.email != null ? $t("book-demo.form_cta_time") : $t("book-demo.form_cta")'
         fields:
           - field: name
             label: '$t("book-demo.ask_name")'
@@ -43,6 +101,24 @@ steps:
               body:   '{$t("book-demo.ask_volume")}'
               enum:   volume
               values: [under_1k, k1_10k, k10_100k, over_100k]
+          # The day, then that day's free starts — two paged pickers over the list the flow HOLDS
+          # (craft-booking rule 1: page, never cut). `on_empty:` on both — a slot is an id.
+          - field: day
+            label: '$state.day_prompt'
+            options:
+              body:     '$state.day_prompt'
+              rows:     '$unique($state.slots, "local_date")'
+              map:      { value: '$item.local_date', label: '$format_date($item.local_date)' }
+              page:     true
+              on_empty: no_slots
+          - field: slot_start
+            label: '$t("book-demo.ask_time", { day: $format_date($state.day) })'
+            options:
+              body:     '{$t("book-demo.ask_time", { day: $format_date($state.day) })}'
+              rows:     '$filter($state.slots, { local_date: $state.day })'
+              map:      { value: '$item.slot_start', label: '$format_date($item.local_start, "time")' }
+              page:     true
+              on_empty: no_slots
           # Optional, and untyped for the same reason as `email`: with the country code, checked here.
           - field: phone
             required: false
@@ -54,23 +130,48 @@ steps:
           - field: notes
             required: false
             label: '$t("book-demo.ask_notes")'
+        # A correction typed at the summary comes back through here, and only what changed is asked.
         complete: [{ goto: confirm }]
 
   confirm:
     - use: approve_apply
       with:
         header:       '{$t("book-demo.confirm_header")}'
-        preview:      '{$t("book-demo.preview", { name: $state.name, company: $state.company, email: $state.email, industry: $enum_label($state.industry, "industry"), volume: $enum_label($state.volume, "volume"), phone: $coalesce($state.phone, "—") })}'
-        apply:        save
-        abort_render: { render_intent: text_card, body: '{$t("book-demo.not_sent")}' }
+        preview:      '{$t("book-demo.preview", { when: $format_date($state.slot_start, "day_time", null, "Asia/Riyadh"), name: $state.name, company: $state.company, email: $state.email, industry: $enum_label($state.industry, "industry"), volume: $enum_label($state.volume, "volume"), phone: $coalesce($state.phone, "—") })}'
+        apply:        reserve
+        abort_render: { render_intent: text_card, body: '{$t("book-demo.not_booked")}' }
         on_other:     intake
-        memory_note:  'Asked the visitor to confirm their demo request.'
+        memory_note:  'Asked the visitor to confirm their demo booking.'
+
+  # The seat is claimed HERE, race-free: a slot taken since the picker goes back to the times, saying why.
+  reserve:
+    - do: booking_reserve
+      args:
+        resource_record_id: '$state.calendar_id'
+        slot_start:         '$state.slot_start'      # FROM slot_list, never built
+        slot_minutes:       30
+        fields:
+          visitor_name: '$state.name'
+          company:      '$state.company'
+          email:        '$state.email'
+      bind: booking
+      outputs:
+        ok: [{ goto: save }]
+        full:
+          - assign: { state.taken: true }
+          - goto: load_slots
+        invalid_slot:
+          - assign: { state.taken: true }
+          - goto: load_slots
+        invalid: [{ goto: intake }]
+        failed:  [{ end: failed }]
 
   save:
     - track: { journey: demo, stage_enter: requested }
     - do: record_save
       args:
         entity: lead
+        stage:  demo_booked
         fields:
           name:     '$state.name'
           company:  '$state.company'
@@ -81,17 +182,59 @@ steps:
           notes:    '$coalesce($state.notes, "")'
       bind: saved
       outputs:
-        ok:
-          - render:
-              render_intent: detail_card
-              body: '{$t("book-demo.saved", { name: $state.name })}'
-              buttons:
-                - { title: '{$t("book-demo.btn_person")}', on_select: { invoke: talk-to-sales, with: { reason: demo } } }
-                - { title: '{$t("book-demo.btn_demos")}', on_select: { invoke: live-demos } }
-                - { title: '{$t("book-demo.btn_home")}', on_select: { invoke: home } }
-            memory_note: 'Saved demo request #{$saved.record_number} for {$state.company} ({$state.industry}, {$state.volume}). The sales team will email {$state.email} to agree a time.'
-          - end: applied
-        invalid:
-          - assign: { state.email: null }
-          - goto: intake
-        failed: [{ end: failed }]
+        ok:      [{ goto: keep_email }]
+        # The demo is booked either way; a lead that did not save must not hide that from the visitor.
+        invalid: [{ goto: keep_email }]
+        failed:  [{ goto: keep_email }]
+
+  # On the CONTACT, not only the lead: the reminder rules' `send_email` reads the contact's address
+  # (craft-outreach rule 2). The visitor typed it for exactly this.
+  keep_email:
+    - do: upsert_platform_contact
+      args:
+        channel_contact_handle: '$contact.channel_contact_handle'
+        channel:                '$contact.channel'
+        email:                  '$state.email'
+      outputs:
+        ok:     [{ goto: email_confirmation }]
+        failed: [{ goto: email_confirmation }]
+
+  # Sent while they are here (craft-outreach rule 3), so the card can say whether it went.
+  email_confirmation:
+    - do: send_email
+      args:
+        to:      '$state.email'
+        subject: '{$t("book-demo.email_subject", { when: $format_date($state.slot_start, "day_time", null, "Asia/Riyadh") })}'
+        body:    '{$t("book-demo.email_body", { name: $state.name, when: $format_date($state.slot_start, "day_time", null, "Asia/Riyadh"), number: $booking.record_number })}'
+      outputs:
+        sent:
+          - assign: { state.emailed: true }
+          - goto: booked
+        suppressed:
+          - assign: { state.emailed: false }
+          - goto: booked
+        failed:
+          - assign: { state.emailed: false }
+          - goto: booked
+
+  booked:
+    - render:
+        render_intent: detail_card
+        header: '{$t("book-demo.booked_header")}'
+        body:   '{$t("book-demo.booked", { name: $state.name, number: $booking.record_number, when: $format_date($state.slot_start, "day_time", null, "Asia/Riyadh") })}'
+        footer: '$state.emailed == true ? $t("book-demo.emailed", { email: $state.email }) : $t("book-demo.not_emailed")'
+        buttons:
+          - { title: '{$t("book-demo.btn_demos")}', on_select: { invoke: live-demos } }
+          - { title: '{$t("book-demo.btn_home")}',  on_select: { invoke: home } }
+      memory_note: 'Booked demo #{$booking.record_number} for {$state.company} at {$format_date($state.slot_start, "day_time", null, "Asia/Riyadh")} (Riyadh time); the confirmation email {$state.emailed == true ? "was sent" : "could not be sent"} to {$state.email}. Reminders go by email.'
+    - end: applied
+
+  no_slots:
+    - render:
+        render_intent: detail_card
+        body: '{$t("book-demo.no_slots")}'
+        buttons:
+          - { title: '{$t("book-demo.btn_demos")}', on_select: { invoke: live-demos } }
+          - { title: '{$t("book-demo.btn_home")}',  on_select: { invoke: home } }
+      memory_note: 'No free demo times in the next three weeks; pointed the visitor to sales@octwin.ai.'
+    - end: aborted

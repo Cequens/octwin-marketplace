@@ -26,6 +26,6 @@ steps:
           - { title: '{$t("home.row_book")}',   description: '{$t("home.row_book_about")}',   on_select: { invoke: book-demo } }
           - { title: '{$t("home.row_demos")}',  description: '{$t("home.row_demos_about")}',  on_select: { invoke: live-demos } }
           - { title: '{$t("home.row_plans")}',  description: '{$t("home.row_plans_about")}',  on_select: { invoke: plans } }
-          - { title: '{$t("home.row_person")}', description: '{$t("home.row_person_about")}', on_select: { invoke: talk-to-sales } }
+          - { title: '{$t("home.row_quote")}',  description: '{$t("home.row_quote_about")}',  on_select: { invoke: request-quote } }
       memory_note: 'Showed the home menu.'
     - end: applied

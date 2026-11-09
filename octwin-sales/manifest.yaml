@@ -1,13 +1,13 @@
 # manifest.yaml — Octwin Sales: Octwin's OWN AI Agent, answering the octwin.ai website's "Talk to us"
 # chat. It answers product questions from the same facts the website states, shows what each plan
 # includes (no prices — every paid plan is priced for the customer's volume), points to the live
-# demos, books a demo by collecting a lead, and hands the chat to the sales team in Live chat.
+# demos, and books a demo on the sales team's calendar (no live chat with a person — booking is the way in).
 #
 # Installed into an ordinary project of the demo workspace; the website shows the chat only when
 # the platform settings `site_chat.tenant_slug` + `site_chat.project_slug` name that project.
 id:          octwin-sales
-version:     '1.1.0'
-description: 'Octwin''s own sales AI Agent for the octwin.ai website chat: product answers, plans, live demos, demo booking and a hand-over to sales.'
+version:     '1.6.0'
+description: 'Octwin''s own sales AI Agent for the octwin.ai website chat: product answers, plans, live demos, demo booking on the sales calendar, quotation requests and messages for the team.'
 
 listing:
   title:    'Octwin Sales'
@@ -26,10 +26,14 @@ widget:
   # Open on the main menu: the web chat runs `home` by itself when a visitor opens an empty chat,
   # so the first thing they see is what they can do — not a blank "say hi".
   start_flow: home
-  # Shown in the empty chat for the moment before the menu arrives (the menu then replaces it).
+  # The flows a button on the website may open the chat on (`data-chat-flow="book-demo"`, `PlatformChat.open`) —
+  # "Book a demo" lands on the form. Anything else a page asks for is refused.
+  entry_flows: [book-demo, request-quote, send-message, live-demos, plans]
+  # Shown in the empty chat for the moment before the menu arrives (the menu then replaces it). It promises
+  # nothing the start flow does: a page button may open the chat on another flow instead.
   welcome:
-    en: '👋 Hi, I am Octwin''s AI Agent — opening the menu…'
-    ar: '👋 أهلًا، أنا وكيل الذكاء الاصطناعي لدى Octwin — أفتح القائمة…'
+    en: '👋 Hi, I am Octwin''s AI Agent.'
+    ar: '👋 أهلًا، أنا وكيل الذكاء الاصطناعي لدى Octwin.'
 
 supported_channels: [web, whatsapp]
 required_adapters:  [messaging]
@@ -44,10 +48,11 @@ inbound_preprocessing:
 
 flows:
   - home           # the menu
-  - book-demo      # collect a lead → confirm → save it → offer a person
+  - book-demo      # collect the lead → pick a time → confirm → book it, save it, email it
+  - request-quote  # what the price depends on → confirm → a quote_request record + an email
+  - send-message   # a message for the team (the Contact page form) → confirm → a contact_message record + an email
   - plans          # what each plan includes — no prices
   - live-demos     # the marketplace's live demos
-  - talk-to-sales  # hand the chat to the sales team in Live chat
 
 agents:
   - id:           assistant
@@ -55,9 +60,10 @@ agents:
     tools:
       - home
       - book-demo
+      - request-quote
+      - send-message
       - plans
       - live-demos
-      - talk-to-sales
     include_platform_protocol: true
     instructions:
       - file: prompts/identity.md
