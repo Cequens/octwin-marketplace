@@ -108,8 +108,8 @@ steps:
         header: '{$t("quick-answers.q_golive")}'
         body:   '{$t("quick-answers.a_golive")}'
         buttons:
-          - { title: '{$t("quick-answers.btn_book")}', on_select: { invoke: book-demo } }
           - { title: '{$t("quick-answers.btn_free")}', on_select: { invoke: start-free } }
+          - { title: '{$t("quick-answers.btn_book")}', on_select: { invoke: book-demo } }
           - { title: '{$t("quick-answers.btn_more")}', on_select: { invoke: quick-answers } }
       memory_note: 'Answered the quick question: golive.'
     - end: applied

@@ -6,7 +6,7 @@
 # Installed into an ordinary project of the demo workspace; the website shows the chat only when
 # the platform settings `site_chat.tenant_slug` + `site_chat.project_slug` name that project.
 id:          octwin-sales
-version:     '1.8.0'
+version:     '1.8.1'
 description: 'Octwin''s own sales AI Agent for the octwin.ai website chat: product answers, plans, live demos, demo booking on the sales calendar, quotation requests and messages for the team.'
 
 listing:
