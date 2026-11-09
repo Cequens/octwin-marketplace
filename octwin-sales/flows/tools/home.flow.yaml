@@ -28,5 +28,7 @@ steps:
           - { title: '{$t("home.row_industry")}', description: '{$t("home.row_industry_about")}', on_select: { invoke: industry-cases } }
           - { title: '{$t("home.row_plans")}',  description: '{$t("home.row_plans_about")}',  on_select: { invoke: plans } }
           - { title: '{$t("home.row_quote")}',  description: '{$t("home.row_quote_about")}',  on_select: { invoke: request-quote } }
+          - { title: '{$t("home.row_questions")}', description: '{$t("home.row_questions_about")}', on_select: { invoke: quick-answers } }
+          - { title: '{$t("home.row_message")}', description: '{$t("home.row_message_about")}', on_select: { invoke: send-message } }
       memory_note: 'Showed the home menu.'
     - end: applied

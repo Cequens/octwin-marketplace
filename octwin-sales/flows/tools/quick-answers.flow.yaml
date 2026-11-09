@@ -1,0 +1,127 @@
+# Quick answers — the questions visitors ask most, answered by a FIXED card, with no AI: a tap runs the flow
+# directly, so it costs no model call and says the same thing every time (security and pricing above all).
+# The facts are the ones the website and the AI Agent's prompt state. Anything not here, the agent answers itself.
+flow_id:     quick-answers
+version:     1
+description: Answer a common question with a fixed card — Arabic dialects, channels, security, connecting systems, pricing, time to go live, team takeover. Pass `q` when the question matches one; with none, the visitor picks from the list.
+
+input:
+  q: { type: enum, optional: true, enum: [arabic, channels, security, systems, pricing, golive, handover] }
+
+entry:
+  - if: '$input.q == "arabic"'
+    goto: a_arabic
+  - if: '$input.q == "channels"'
+    goto: a_channels
+  - if: '$input.q == "security"'
+    goto: a_security
+  - if: '$input.q == "systems"'
+    goto: a_systems
+  - if: '$input.q == "pricing"'
+    goto: a_pricing
+  - if: '$input.q == "golive"'
+    goto: a_golive
+  - if: '$input.q == "handover"'
+    goto: a_handover
+  - else: true
+    goto: pick
+
+steps:
+  pick:
+    - render:
+        render_intent: list_picker
+        body:   '{$t("quick-answers.pick")}'
+        cta:    '{$t("quick-answers.cta")}'
+        items:
+          - { title: '{$t("quick-answers.q_arabic")}', on_select: { invoke: quick-answers, with: { q: arabic } } }
+          - { title: '{$t("quick-answers.q_channels")}', on_select: { invoke: quick-answers, with: { q: channels } } }
+          - { title: '{$t("quick-answers.q_security")}', on_select: { invoke: quick-answers, with: { q: security } } }
+          - { title: '{$t("quick-answers.q_systems")}', on_select: { invoke: quick-answers, with: { q: systems } } }
+          - { title: '{$t("quick-answers.q_pricing")}', on_select: { invoke: quick-answers, with: { q: pricing } } }
+          - { title: '{$t("quick-answers.q_golive")}', on_select: { invoke: quick-answers, with: { q: golive } } }
+          - { title: '{$t("quick-answers.q_handover")}', on_select: { invoke: quick-answers, with: { q: handover } } }
+      memory_note: 'Showed the quick-answers list.'
+    - end: applied
+
+  a_arabic:
+    - render:
+        render_intent: detail_card
+        header: '{$t("quick-answers.q_arabic")}'
+        body:   '{$t("quick-answers.a_arabic")}'
+        buttons:
+          - { title: '{$t("quick-answers.btn_demos")}', on_select: { invoke: live-demos } }
+          - { title: '{$t("quick-answers.btn_industry")}', on_select: { invoke: industry-cases } }
+          - { title: '{$t("quick-answers.btn_more")}', on_select: { invoke: quick-answers } }
+      memory_note: 'Answered the quick question: arabic.'
+    - end: applied
+
+  a_channels:
+    - render:
+        render_intent: detail_card
+        header: '{$t("quick-answers.q_channels")}'
+        body:   '{$t("quick-answers.a_channels")}'
+        buttons:
+          - { title: '{$t("quick-answers.btn_plans")}', on_select: { invoke: plans } }
+          - { title: '{$t("quick-answers.btn_book")}', on_select: { invoke: book-demo } }
+          - { title: '{$t("quick-answers.btn_more")}', on_select: { invoke: quick-answers } }
+      memory_note: 'Answered the quick question: channels.'
+    - end: applied
+
+  a_security:
+    - render:
+        render_intent: detail_card
+        header: '{$t("quick-answers.q_security")}'
+        body:   '{$t("quick-answers.a_security")}'
+        buttons:
+          - { title: '{$t("quick-answers.btn_book")}', on_select: { invoke: book-demo } }
+          - { title: '{$t("quick-answers.btn_more")}', on_select: { invoke: quick-answers } }
+      memory_note: 'Answered the quick question: security.'
+    - end: applied
+
+  a_systems:
+    - render:
+        render_intent: detail_card
+        header: '{$t("quick-answers.q_systems")}'
+        body:   '{$t("quick-answers.a_systems")}'
+        buttons:
+          - { title: '{$t("quick-answers.btn_quote")}', on_select: { invoke: request-quote } }
+          - { title: '{$t("quick-answers.btn_book")}', on_select: { invoke: book-demo } }
+          - { title: '{$t("quick-answers.btn_more")}', on_select: { invoke: quick-answers } }
+      memory_note: 'Answered the quick question: systems.'
+    - end: applied
+
+  a_pricing:
+    - render:
+        render_intent: detail_card
+        header: '{$t("quick-answers.q_pricing")}'
+        body:   '{$t("quick-answers.a_pricing")}'
+        buttons:
+          - { title: '{$t("quick-answers.btn_plans")}', on_select: { invoke: plans } }
+          - { title: '{$t("quick-answers.btn_quote")}', on_select: { invoke: request-quote } }
+          - { title: '{$t("quick-answers.btn_more")}', on_select: { invoke: quick-answers } }
+      memory_note: 'Answered the quick question: pricing.'
+    - end: applied
+
+  a_golive:
+    - render:
+        render_intent: detail_card
+        header: '{$t("quick-answers.q_golive")}'
+        body:   '{$t("quick-answers.a_golive")}'
+        buttons:
+          - { title: '{$t("quick-answers.btn_book")}', on_select: { invoke: book-demo } }
+          - { title: '{$t("quick-answers.btn_free")}', on_select: { invoke: start-free } }
+          - { title: '{$t("quick-answers.btn_more")}', on_select: { invoke: quick-answers } }
+      memory_note: 'Answered the quick question: golive.'
+    - end: applied
+
+  a_handover:
+    - render:
+        render_intent: detail_card
+        header: '{$t("quick-answers.q_handover")}'
+        body:   '{$t("quick-answers.a_handover")}'
+        buttons:
+          - { title: '{$t("quick-answers.btn_demos")}', on_select: { invoke: live-demos } }
+          - { title: '{$t("quick-answers.btn_book")}', on_select: { invoke: book-demo } }
+          - { title: '{$t("quick-answers.btn_more")}', on_select: { invoke: quick-answers } }
+      memory_note: 'Answered the quick question: handover.'
+    - end: applied

@@ -14,3 +14,7 @@ strings:
   row_plans_about:  'ما تتضمنه كل خطة'
   row_quote:        '💰 اطلب عرض سعر'
   row_quote_about:  'حسب حجم استخدامك، خلال يومَي عمل'
+  row_questions:       '❓ إجابات سريعة'
+  row_questions_about: 'العربية والقنوات والأمان والتسعير وغيرها'
+  row_message:         '✉️ اترك رسالة'
+  row_message_about:   'نرد عليك بالبريد خلال يوم عمل واحد'

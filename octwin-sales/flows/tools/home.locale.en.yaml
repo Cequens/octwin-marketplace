@@ -14,3 +14,7 @@ strings:
   row_plans_about:  'What each plan includes'
   row_quote:        '💰 Get a quotation'
   row_quote_about:  'Priced for your volume, within 2 working days'
+  row_questions:       '❓ Quick answers'
+  row_questions_about: 'Arabic, channels, security, pricing and more'
+  row_message:         '✉️ Leave a message'
+  row_message_about:   'We reply by email within 1 working day'
