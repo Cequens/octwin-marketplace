@@ -1,5 +1,8 @@
 flow_id: reply-to-case
 strings:
+  # The card that opens the form (web sheet / WhatsApp form); form_cta is the button, 20 characters at most.
+  form_body: 'أضف ردك أو صورة إلى بلاغك المفتوح.'
+  form_cta: 'أرسل ردي'
   label.message:      'ردّك للفريق'
   label.attachment:   'صورة أو لقطة شاشة (اختياري)'
   skip_attachment:    'بدون مرفق'

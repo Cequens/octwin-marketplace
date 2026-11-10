@@ -1,6 +1,9 @@
 flow_id: fragrance-finder
 
 strings:
+  # The card that opens the form (web sheet / WhatsApp form); form_cta is the button, 20 characters at most.
+  form_body: 'Three quick choices and we will suggest your scent.'
+  form_cta: 'Find my scent'
   progress.header:   '🔎 Find your scent'
   progress.family:   '✅ Fragrance family'
   progress.occasion: '✅ Occasion'

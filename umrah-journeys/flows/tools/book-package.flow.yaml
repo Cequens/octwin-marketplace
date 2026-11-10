@@ -28,6 +28,8 @@ entry:
 steps:
   collect_party:
     - collect:
+        form_body: '$t("book-package.form_body")'
+        form_cta:  '$t("book-package.form_cta")'
         derive:
           # The pickers carry real numbers, so the pricing arithmetic never touches
           # free text. Room type is a multiplier the desk actually uses.

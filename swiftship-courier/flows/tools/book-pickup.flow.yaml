@@ -23,6 +23,8 @@ entry:
 steps:
   gather:
     - collect:
+        form_body: '$t("book-pickup.form_body")'
+        form_cta:  '$t("book-pickup.form_cta")'
         derive:
           # The weight band maps to the rate card's `up_to_kg` ceiling — a real number,
           # so the lookup never depends on parsing free text.

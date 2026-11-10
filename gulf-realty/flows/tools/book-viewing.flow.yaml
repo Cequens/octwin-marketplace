@@ -28,6 +28,8 @@ entry:
 steps:
   collect_fields:
     - collect:
+        form_body: '$t("book-viewing.form_body")'
+        form_cta:  '$t("book-viewing.form_cta")'
         before_each:
           - assign: { advisor_label: null, dev_label: null }
           - if: '$state.advisor_id != null'

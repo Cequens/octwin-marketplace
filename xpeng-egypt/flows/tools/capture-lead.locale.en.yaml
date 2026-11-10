@@ -1,6 +1,9 @@
 flow_id: capture-lead
 
 strings:
+  # The card that opens the form (web sheet / WhatsApp form); form_cta is the button, 20 characters at most.
+  form_body: 'Leave your details and our team will call you.'
+  form_cta: 'Call me back'
   gap: "Politely ask the customer for the requested detail in their language."
 
   it_header:     'How can we help?'

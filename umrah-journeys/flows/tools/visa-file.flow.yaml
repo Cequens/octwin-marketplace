@@ -99,6 +99,8 @@ steps:
 
   collect_docs:
     - collect:
+        form_body: '$t("visa-file.form_body")'
+        form_cta:  '$t("visa-file.form_cta")'
         fields:
           - field: traveller_name
             label:    '$t("visa-file.label.name")'

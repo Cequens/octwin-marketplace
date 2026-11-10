@@ -1,5 +1,8 @@
 flow_id: reply-to-case
 strings:
+  # The card that opens the form (web sheet / WhatsApp form); form_cta is the button, 20 characters at most.
+  form_body: 'Add your reply or a photo to your open case.'
+  form_cta: 'Send my reply'
   label.message:      'your reply to the team'
   label.attachment:   'a photo or screenshot (optional)'
   skip_attachment:    'No attachment'

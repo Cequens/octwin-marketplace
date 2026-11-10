@@ -74,6 +74,8 @@ steps:
 
   gather:
     - collect:
+        form_body: '$t("apply.form_body")'
+        form_cta:  '$t("apply.form_cta")'
         before_each:
           - assign: { p_label: null }
           - if: '$state.product_id != null'

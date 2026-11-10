@@ -1,6 +1,9 @@
 flow_id: estimate
 
 strings:
+  # The card that opens the form (web sheet / WhatsApp form); form_cta is the button, 20 characters at most.
+  form_body: 'Pick a product and amount, and we will show an indicative instalment.'
+  form_cta: 'See my estimate'
   label.product: 'Product'
   label.price:   'Property price'
   label.down:    'Down payment'

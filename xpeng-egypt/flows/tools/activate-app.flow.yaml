@@ -23,6 +23,8 @@ entry:
 steps:
   gather:
     - collect:
+        form_body: '$t("activate-app.form_body")'
+        form_cta:  '$t("activate-app.form_cta")'
         gap_instructions: '$t("activate-app.gap")'
         fields:
           # The app account is keyed on this number, so a typo is a failed activation

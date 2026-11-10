@@ -1,6 +1,9 @@
 flow_id: book-appointment
 
 strings:
+  # The card that opens the form (web sheet / WhatsApp form); form_cta is the button, 20 characters at most.
+  form_body: 'اختر الخدمة والمختص والموعد.'
+  form_cta: 'احجز موعدك'
   progress.header:     '📅 حجز موعد'
   progress.treatment:  '💅 الخدمة: {treatment}'
   progress.stylist:    '👩‍🎨 الأخصائية: {stylist}'

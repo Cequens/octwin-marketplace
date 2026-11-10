@@ -1,6 +1,9 @@
 flow_id: quote
 
 strings:
+  # The card that opens the form (web sheet / WhatsApp form); form_cta is the button, 20 characters at most.
+  form_body: 'اختر الخطة وقيمة سيارتك ونحسب لك القسط.'
+  form_cta: 'احسب السعر'
   label.plan:   'الباقة'
   label.value:  'قيمة المركبة'
   label.driver: 'عمر السائق'

@@ -1,6 +1,9 @@
 flow_id: book-viewing
 
 strings:
+  # The card that opens the form (web sheet / WhatsApp form); form_cta is the button, 20 characters at most.
+  form_body: 'Pick an advisor and a time to see the property.'
+  form_cta: 'Book a viewing'
   progress.header:   '🗓️ Booking a viewing'
   progress.project:  '🏙️ Project: {project}'
   progress.advisor:  '👤 Advisor: {advisor}'

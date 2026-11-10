@@ -33,6 +33,8 @@ entry:
 steps:
   gather:
     - collect:
+        form_body: '$t("estimate.form_body")'
+        form_cta:  '$t("estimate.form_cta")'
         derive:
           # Real numbers from the pickers — never parsed text.
           down_pct: '$enum_lookup($state.down_band, { d10: 10, d15: 15, d20: 20, d30: 30, d50: 50 }, 20)'

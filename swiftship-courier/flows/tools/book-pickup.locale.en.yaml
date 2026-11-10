@@ -1,6 +1,9 @@
 flow_id: book-pickup
 
 strings:
+  # The card that opens the form (web sheet / WhatsApp form); form_cta is the button, 20 characters at most.
+  form_body: 'Where, what and when, and we will price it from our live rates.'
+  form_cta: 'Book a pickup'
   label.service:    'Service type'
   label.from:       'Collect from'
   label.to:         'Deliver to'

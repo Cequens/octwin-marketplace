@@ -1,6 +1,9 @@
 flow_id: damage-check
 
 strings:
+  # The card that opens the form (web sheet / WhatsApp form); form_cta is the button, 20 characters at most.
+  form_body: 'Your plate, what happened and a photo, and we will open a job card.'
+  form_cta: 'Check my damage'
   label.plate:      'Plate number'
   label.complaint:  'Describe the problem'
   label.photo:      'Photos of the damage or the dashboard'

@@ -79,6 +79,8 @@ steps:
 
   gather:
     - collect:
+        form_body: '$t("request-quote.form_body")'
+        form_cta:  '$t("request-quote.form_cta")'
         derive:
           line_total: '$coalesce($state.unit_price, 0) * $coalesce($state.qty, 0)'
         gap_instructions: >-

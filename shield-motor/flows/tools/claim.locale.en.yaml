@@ -1,6 +1,9 @@
 flow_id: claim
 
 strings:
+  # The card that opens the form (web sheet / WhatsApp form); form_cta is the button, 20 characters at most.
+  form_body: 'Tell us what happened, and our claims team takes it from here.'
+  form_cta: 'Report a claim'
   # The flow's OWN prompt. English — it instructs the model, it does not speak to the customer,
   # so it stays byte-identical to the Arabic file. `visible_damage` is written into the claim an
   # Arabic-speaking assessor reads, so the STORED value must not change language with the customer.

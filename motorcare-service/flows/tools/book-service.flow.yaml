@@ -33,6 +33,8 @@ entry:
 steps:
   collect_fields:
     - collect:
+        form_body: '$t("book-service.form_body")'
+        form_cta:  '$t("book-service.form_cta")'
         before_each:
           - assign: { pkg_label: null, pkg_area: null, pkg_minutes: null, bay_label: null }
           - if: '$state.package_id != null'

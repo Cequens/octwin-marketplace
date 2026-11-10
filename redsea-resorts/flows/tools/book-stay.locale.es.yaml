@@ -1,6 +1,9 @@
 flow_id: book-stay
 
 strings:
+  # The card that opens the form (web sheet / WhatsApp form); form_cta is the button, 20 characters at most.
+  form_body: 'Elige habitación, fechas y huéspedes, y ve el total antes de confirmar.'
+  form_cta: 'Ver disponibilidad'
   progress.header:   '📅 Reservando una estancia'
   progress.room:     '🛏️ Habitación: {room}'
   progress.arrival:  '📆 Llegada: {arrival}'

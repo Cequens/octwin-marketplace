@@ -1,5 +1,8 @@
 flow_id: become-captain
 strings:
+  # The card that opens the form (web sheet / WhatsApp form); form_cta is the button, 20 characters at most.
+  form_body: 'لائسنس، شناخت اور چند تفصیلات، اور درخواست جمع ہو جائے گی۔'
+  form_cta: 'کیپٹن بنیں'
   # اب تک جمع شدہ معلومات کا خلاصہ
   progress.header:  '🚗 شمولیت کی درخواست اب تک:'
   progress.name:    '• نام: {name}'

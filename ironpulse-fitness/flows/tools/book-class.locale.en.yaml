@@ -1,6 +1,9 @@
 flow_id: book-class
 
 strings:
+  # The card that opens the form (web sheet / WhatsApp form); form_cta is the button, 20 characters at most.
+  form_body: 'Pick a class, trainer and a time with a free spot.'
+  form_cta: 'Book my spot'
   progress.header:   '📅 Booking a class'
   progress.class:    '🏋️ Class: {class}'
   progress.trainer:  '🧑‍🏫 Trainer: {trainer}'

@@ -75,6 +75,8 @@ entry:
 steps:
   gather:
     - collect:
+        form_body: '$t("damage-check.form_body")'
+        form_cta:  '$t("damage-check.form_cta")'
         gap_instructions: 'Ask the customer for the next item ({$collect_field}) in one short line. For the photo, ask for a clear shot of the damaged area or the dashboard. Re-call damage-check once they send it. NEVER estimate a cost yourself.'
         fields:
           - field: plate

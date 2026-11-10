@@ -71,6 +71,8 @@ steps:
 
   collect_fields:
     - collect:
+        form_body: '$t("book-visit.form_body")'
+        form_cta:  '$t("book-visit.form_cta")'
         before_each:
           - assign: { treat_label: null, dent_label: null, treat_minutes: null }
           - if: '$state.treatment_id != null'

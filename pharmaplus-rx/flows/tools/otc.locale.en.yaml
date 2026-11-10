@@ -1,6 +1,9 @@
 flow_id: otc
 
 strings:
+  # The card that opens the form (web sheet / WhatsApp form); form_cta is the button, 20 characters at most.
+  form_body: 'Your name and area, and we will prepare your order for delivery.'
+  form_cta: 'Order now'
   intro:           '🛒 Available without a prescription ({total}) — swipe and pick:'
   btn_add:         '🛒 Add to basket'
   btn_basket:      '🧾 My basket'

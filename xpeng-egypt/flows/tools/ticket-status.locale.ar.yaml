@@ -1,6 +1,11 @@
 flow_id: ticket-status
 
 strings:
+  # The card that opens the form (web sheet / WhatsApp form); form_cta is the button, 20 characters at most.
+  form_body_reply: 'أضف مستندًا أو رسالة إلى طلبك.'
+  form_cta_reply: 'حدّث الطلب'
+  form_body_message: 'اكتب رسالتك للفريق.'
+  form_cta_message: 'أرسل الرسالة'
   intro: 'هذه تذاكر ما بعد البيع الخاصة بك. اضغط على أي تذكرة لعرض آخر تحديث وما يمكنك فعله. 👇'
   intro_header: 'تذاكرك'
   # The list's own CTA button — required by list_picker (it opens the list).

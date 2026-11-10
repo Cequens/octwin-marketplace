@@ -1,6 +1,9 @@
 flow_id: list-branches
 
 strings:
+  # The card that opens the form (web sheet / WhatsApp form); form_cta is the button, 20 characters at most.
+  form_body: 'شارك موقعك ونعرض لك أقرب معرض.'
+  form_cta: 'أقرب معرض'
   mode_body:   'تحب تشوف فروع XPENG إزاي؟'
   mode_near:   '📍 الأقرب ليا'
   mode_all:    '🏢 كل الفروع'

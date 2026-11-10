@@ -1,6 +1,9 @@
 flow_id: open-support
 
 strings:
+  # The card that opens the form (web sheet / WhatsApp form); form_cta is the button, 20 characters at most.
+  form_body: 'Tell us what you need and our team will follow up.'
+  form_cta: 'Open a ticket'
   # Type picker (shown only when the agent didn't already classify the issue).
   pick_header:  '🛠️ After-sales support'
   pick_body:    'What kind of help do you need?'

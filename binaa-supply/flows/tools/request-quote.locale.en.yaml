@@ -1,6 +1,9 @@
 flow_id: request-quote
 
 strings:
+  # The card that opens the form (web sheet / WhatsApp form); form_cta is the button, 20 characters at most.
+  form_body: 'Tell us the material, quantity and site, and we will price it for you.'
+  form_cta: 'Request a quote'
   label.material:      'Item needed'
   label.qty:           'Quantity'
   label.site:          'Delivery site'

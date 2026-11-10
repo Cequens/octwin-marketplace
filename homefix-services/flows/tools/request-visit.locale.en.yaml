@@ -1,6 +1,9 @@
 flow_id: request-visit
 
 strings:
+  # The card that opens the form (web sheet / WhatsApp form); form_cta is the button, 20 characters at most.
+  form_body: 'Tell us what needs fixing and where, and we will send the right technician.'
+  form_cta: 'Request a visit'
   # The flow's OWN prompt. English — it instructs the model rather than speaking to the customer,
   # so it is byte-identical to the Arabic file rather than translated. `visible_issue` stays in
   # Egyptian Arabic ON PURPOSE even for an English conversation: it is written into the work order

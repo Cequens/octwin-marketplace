@@ -210,6 +210,8 @@ steps:
 
   gather_delivery:
     - collect:
+        form_body: '$t("otc.form_body")'
+        form_cta:  '$t("otc.form_cta")'
         before_each:
           - assign: { live: '$filter_gte($coalesce($lines.rows, []), "fields.qty", 1)' }
           - assign:

@@ -1,6 +1,9 @@
 flow_id: prescription
 
 strings:
+  # The card that opens the form (web sheet / WhatsApp form); form_cta is the button, 20 characters at most.
+  form_body: 'صورة الروشتة وبعض التفاصيل ويراجعها الصيدلي.'
+  form_cta: 'أرسل الروشتة'
   # The flow's OWN vision prompt. Narrower than a pack-wide one could be, because this one knows
   # it is looking at a prescription — and English, because it instructs the model rather than
   # speaking to the patient.

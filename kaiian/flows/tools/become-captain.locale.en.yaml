@@ -1,5 +1,8 @@
 flow_id: become-captain
 strings:
+  # The card that opens the form (web sheet / WhatsApp form); form_cta is the button, 20 characters at most.
+  form_body: 'Your licence, ID and a few details, and your application is filed.'
+  form_cta: 'Apply as captain'
   # Running progress preview (collected so far)
   progress.header:  '🚗 Captain application so far:'
   progress.name:    '• Name: {name}'

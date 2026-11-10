@@ -1,6 +1,9 @@
 flow_id: request-visit
 
 strings:
+  # The card that opens the form (web sheet / WhatsApp form); form_cta is the button, 20 characters at most.
+  form_body: 'أخبرنا بالمشكلة والمكان ونرسل لك الفني المناسب.'
+  form_cta: 'اطلب زيارة'
   # The flow's OWN prompt. English — it instructs the model rather than speaking to the customer.
   vision_prompt: >-
     A photograph of a household fault a technician has been asked to fix. Reply as JSON:

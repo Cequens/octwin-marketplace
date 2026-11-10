@@ -1,6 +1,9 @@
 flow_id: donate
 
 strings:
+  # The card that opens the form (web sheet / WhatsApp form); form_cta is the button, 20 characters at most.
+  form_body: 'اختر الحملة والمبلغ ونجهّز لك رابط دفع آمن.'
+  form_cta: 'تبرّع الآن'
   # Gap-card labels — one per collect field, read by `$collect_missing_labels`.
   f_appeal:        'الحملة'
   f_amount:        'المبلغ'

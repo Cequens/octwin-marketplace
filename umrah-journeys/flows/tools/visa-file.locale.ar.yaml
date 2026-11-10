@@ -1,6 +1,9 @@
 flow_id: visa-file
 
 strings:
+  # The card that opens the form (web sheet / WhatsApp form); form_cta is the button, 20 characters at most.
+  form_body: 'بيانات جوازك وصورتك ونبدأ ملف التأشيرة.'
+  form_cta: 'ابدأ ملف التأشيرة'
   # The flow's OWN prompt — it knows it is looking at a passport data page, where a pack-wide
   # image prompt has to serve receipts and vaccination cards too. English, because it instructs
   # the model rather than speaking to the pilgrim.

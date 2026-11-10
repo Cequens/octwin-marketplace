@@ -148,6 +148,8 @@ steps:
   # ── 2) Who are they? ──
   gather:
     - collect:
+        form_body: '$t("capture-lead.form_body")'
+        form_cta:  '$t("capture-lead.form_cta")'
         gap_instructions: '$t("capture-lead.gap")'
         fields:
           # `type: name` CONFIRMS rather than asks: WhatsApp sends the customer's

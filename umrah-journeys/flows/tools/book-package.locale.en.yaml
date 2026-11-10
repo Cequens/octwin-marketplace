@@ -1,6 +1,9 @@
 flow_id: book-package
 
 strings:
+  # The card that opens the form (web sheet / WhatsApp form); form_cta is the button, 20 characters at most.
+  form_body: 'Choose your package and travellers, and see the price before you confirm.'
+  form_cta: 'Book my package'
   progress.header:      '📝 Booking your package'
   progress.package:     '🕋 Package: {package}'
   progress.travellers:  '👥 Travellers: {count}'

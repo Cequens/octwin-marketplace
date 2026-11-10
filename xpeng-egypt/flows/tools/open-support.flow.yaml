@@ -27,6 +27,8 @@ entry:
 steps:
   gather:
     - collect:
+        form_body: '$t("open-support.form_body")'
+        form_cta:  '$t("open-support.form_cta")'
         gap_instructions: '$t("open-support.gap")'
         fields:
           - field: type                       # FIXED picker — only prompts when the agent didn't pass a type

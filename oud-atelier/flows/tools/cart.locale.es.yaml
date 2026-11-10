@@ -1,6 +1,9 @@
 flow_id: cart
 
 strings:
+  # The card that opens the form (web sheet / WhatsApp form); form_cta is the button, 20 characters at most.
+  form_body: '¿Dónde entregamos tu pedido?'
+  form_cta: 'Finalizar compra'
   header:          '🛒 Tu cesta'
   empty:           'Tu cesta está vacía por ahora. Explora la colección, o déjanos ayudarte a encontrar tu aroma ✨'
   subtotal:        'Total: {subtotal}'

@@ -1,6 +1,11 @@
 flow_id: book-test-drive
 
 strings:
+  # The card that opens the form (web sheet / WhatsApp form); form_cta is the button, 20 characters at most.
+  form_body_pin: 'Share your location and we will show the nearest showroom.'
+  form_cta_pin: 'Find a showroom'
+  form_body_contact: 'Your name and phone to confirm the test drive.'
+  form_cta_contact: 'Confirm test drive'
   gap: "Politely ask the customer for the requested detail in their language."
   choose: 'Choose ✅'
   min_label:   'min test drive'

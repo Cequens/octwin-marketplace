@@ -107,6 +107,8 @@ steps:
 
   gather:
     - collect:
+        form_body: '$t("claim.form_body")'
+        form_cta:  '$t("claim.form_cta")'
         gap_instructions: 'Ask for the next detail ({$collect_field}) in one short line, in the language the customer writes in. Re-call claim once they answer. NEVER say whether the incident is covered, never assign fault, and never estimate an amount.'
         fields:
           - field: incident_type

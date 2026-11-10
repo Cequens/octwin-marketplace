@@ -1,6 +1,9 @@
 flow_id: basket
 
 strings:
+  # The card that opens the form (web sheet / WhatsApp form); form_cta is the button, 20 characters at most.
+  form_body: 'اسمك ورقمك ومنطقتك وطلبك في الطريق.'
+  form_cta: 'اطلب الآن'
   header:          '🛒 سلتك'
   empty:           'السلة فاضية 🌯 اختار من المنيو ونجهّزه لك على طول.'
   subtotal:        '💰 إجمالي الأصناف: {subtotal}'

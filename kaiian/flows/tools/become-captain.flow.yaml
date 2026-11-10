@@ -53,6 +53,8 @@ steps:
     # Journey: the applicant began the intake → started stage.
     - track: { event: application_started, timeline: true }
     - collect:
+        form_body: '$t("become-captain.form_body")'
+        form_cta:  '$t("become-captain.form_cta")'
         # Running preview prepended to every prompt (collected so far — includes
         # anything the license OCR prefilled, so the applicant sees what we read).
         progress: '$lines($compact([$t("become-captain.progress.header"), $state.name != null ? $t("become-captain.progress.name", { name: $state.name }) : null, $state.mobile != null ? $t("become-captain.progress.mobile", { mobile: $state.mobile }) : null, $state.region != null ? $t("become-captain.progress.region", { region: $enum_label($state.region, "region", "") }) : null, $state.vehicle_type != null ? $t("become-captain.progress.vehicle", { vehicle: $enum_label($state.vehicle_type, "vehicle", "") }) : null, $state.id_number != null ? $t("become-captain.progress.license", { license: $state.id_number }) : null, $state.license_photo != null ? $t("become-captain.progress.license_photo") : null]), "\n")'

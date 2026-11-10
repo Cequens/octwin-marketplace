@@ -114,6 +114,8 @@ steps:
   # ── 📎 Add a document to an existing ticket (case_attach) ──
   gather_doc:
     - collect:
+        form_body: '$t("ticket-status.form_body_reply")'
+        form_cta:  '$t("ticket-status.form_cta_reply")'
         gap_instructions: '$t("ticket-status.docs_gap")'
         fields:
           - field: doc                        # 📷 upload — folds a MEDIA- ref into $state.doc
@@ -143,6 +145,8 @@ steps:
   # ── 💬 Reply / send info (case_reply — appends to timeline, awaiting_customer → in_progress) ──
   gather_msg:
     - collect:
+        form_body: '$t("ticket-status.form_body_message")'
+        form_cta:  '$t("ticket-status.form_cta_message")'
         gap_instructions: '$t("ticket-status.msg_gap")'
         fields:
           - field: message

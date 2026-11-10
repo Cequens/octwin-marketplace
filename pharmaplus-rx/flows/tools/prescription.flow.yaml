@@ -85,6 +85,8 @@ steps:
 
   gather:
     - collect:
+        form_body: '$t("prescription.form_body")'
+        form_cta:  '$t("prescription.form_cta")'
         gap_instructions: 'Ask the patient for the next item ({$collect_field}) in one short line, in the language the customer writes in (Egyptian dialect when they write Arabic). The photo of the page is a field like any other — the engine asks for it in turn, so do not chase it separately. NEVER read the prescription aloud, name a medicine, or say whether it can be filled.'
         fields:
           # THE PAGE ITSELF, asked for first — everything after it can be read off it.

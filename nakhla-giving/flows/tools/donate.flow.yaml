@@ -99,6 +99,8 @@ steps:
 
   gather:
     - collect:
+        form_body: '$t("donate.form_body")'
+        form_cta:  '$t("donate.form_cta")'
         # Fold any invoke-time args into the bag on every pass. `$coalesce` keeps
         # whatever the donor has already answered, so this is safe to re-run.
         derive:

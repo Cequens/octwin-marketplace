@@ -1,6 +1,9 @@
 flow_id: book-service
 
 strings:
+  # The card that opens the form (web sheet / WhatsApp form); form_cta is the button, 20 characters at most.
+  form_body: 'Choose a package, bay and time for your car.'
+  form_cta: 'Book a service'
   progress.header:   '🗓️ Book a service appointment'
   progress.package:  '🔧 Package: {package}'
   progress.bay:      '🏭 Bay: {bay}'

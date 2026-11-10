@@ -73,6 +73,8 @@ steps:
 
   collect_fields:
     - collect:
+        form_body: '$t("book-class.form_body")'
+        form_cta:  '$t("book-class.form_cta")'
         before_each:
           - assign: { class_label: null, class_discipline: null, trainer_label: null, plan_label: null }
           - if: '$state.class_id != null'

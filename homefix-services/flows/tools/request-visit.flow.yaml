@@ -79,6 +79,8 @@ steps:
 
   collect_fields:
     - collect:
+        form_body: '$t("request-visit.form_body")'
+        form_cta:  '$t("request-visit.form_cta")'
         before_each:
           - assign: { svc_label: null, svc_trade: null }
           - if: '$state.service_id != null'

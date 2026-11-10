@@ -111,6 +111,8 @@ steps:
 
   gather:
     - collect:
+        form_body: '$t("claim.form_body")'
+        form_cta:  '$t("claim.form_cta")'
         before_each:
           - assign: { region: null, ship_stage: null }
           - if: '$state.tracking_number != null'

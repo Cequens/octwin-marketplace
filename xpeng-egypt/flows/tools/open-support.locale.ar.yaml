@@ -1,6 +1,9 @@
 flow_id: open-support
 
 strings:
+  # The card that opens the form (web sheet / WhatsApp form); form_cta is the button, 20 characters at most.
+  form_body: 'أخبرنا بما تحتاجه وسيتابع فريقنا معك.'
+  form_cta: 'افتح طلب دعم'
   # اختيار نوع المشكلة (يظهر فقط لو الوكيل ما حددش النوع).
   pick_header:  '🛠️ دعم ما بعد البيع'
   pick_body:    'محتاج مساعدة في إيه؟'

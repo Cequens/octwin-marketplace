@@ -1,6 +1,9 @@
 flow_id: otc
 
 strings:
+  # The card that opens the form (web sheet / WhatsApp form); form_cta is the button, 20 characters at most.
+  form_body: 'اسمك ومنطقتك ونجهّز طلبك للتوصيل.'
+  form_cta: 'اطلب الآن'
   intro:           '🛒 متاح بدون روشتة ({total}) — اسحب واختار:'
   btn_add:         '🛒 ضيف للسلة'
   btn_basket:      '🧾 سلتي'

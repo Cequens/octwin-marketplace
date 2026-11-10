@@ -1,6 +1,9 @@
 flow_id: book-viewing
 
 strings:
+  # The card that opens the form (web sheet / WhatsApp form); form_cta is the button, 20 characters at most.
+  form_body: 'اختر المستشار والموعد لمعاينة العقار.'
+  form_cta: 'احجز معاينة'
   progress.header:   '🗓️ حجز معاينة'
   progress.project:  '🏙️ المشروع: {project}'
   progress.advisor:  '👤 المستشار: {advisor}'

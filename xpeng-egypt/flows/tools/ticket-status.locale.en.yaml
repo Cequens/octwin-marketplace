@@ -1,6 +1,11 @@
 flow_id: ticket-status
 
 strings:
+  # The card that opens the form (web sheet / WhatsApp form); form_cta is the button, 20 characters at most.
+  form_body_reply: 'Add a document or a message to your ticket.'
+  form_cta_reply: 'Update ticket'
+  form_body_message: 'Write your message to the team.'
+  form_cta_message: 'Send message'
   intro: 'Here are your after-sales tickets. Tap one to see its latest update and what you can do. 👇'
   intro_header: 'Your tickets'
   # The list's own CTA button — required by list_picker (it opens the list).

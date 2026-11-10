@@ -1,5 +1,8 @@
 flow_id: support
 strings:
+  # The card that opens the form (web sheet / WhatsApp form); form_cta is the button, 20 characters at most.
+  form_body: 'أخبرنا بما حدث وسيتابع فريقنا معك.'
+  form_cta: 'أبلغ عن مشكلة'
   # Field labels (progress + gap prompts)
   label.issue_type:    'نوع الطلب'
   label.mobile:        'رقم الجوال'

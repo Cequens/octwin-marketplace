@@ -1,6 +1,9 @@
 flow_id: book-service
 
 strings:
+  # The card that opens the form (web sheet / WhatsApp form); form_cta is the button, 20 characters at most.
+  form_body: 'اختر الباقة والمكان والموعد لسيارتك.'
+  form_cta: 'احجز الخدمة'
   progress.header:   '🗓️ حجز موعد صيانة'
   progress.package:  '🔧 الباقة: {package}'
   progress.bay:      '🏭 المنصة: {bay}'

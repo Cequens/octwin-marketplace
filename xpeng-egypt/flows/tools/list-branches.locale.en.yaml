@@ -1,6 +1,9 @@
 flow_id: list-branches
 
 strings:
+  # The card that opens the form (web sheet / WhatsApp form); form_cta is the button, 20 characters at most.
+  form_body: 'Share your location and we will show the nearest showroom.'
+  form_cta: 'Find nearest'
   mode_body:   'How would you like to see the XPENG showrooms?'
   mode_near:   '📍 Closest to me'
   mode_all:    '🏢 All showrooms'

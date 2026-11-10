@@ -1,5 +1,8 @@
 flow_id: reply-to-case
 strings:
+  # The card that opens the form (web sheet / WhatsApp form); form_cta is the button, 20 characters at most.
+  form_body: 'اپنا جواب یا تصویر اپنے کیس میں شامل کریں۔'
+  form_cta: 'جواب بھیجیں'
   label.message:      'ٹیم کے لیے آپ کا جواب'
   label.attachment:   'تصویر یا اسکرین شاٹ (اختیاری)'
   skip_attachment:    'کوئی منسلکہ نہیں'

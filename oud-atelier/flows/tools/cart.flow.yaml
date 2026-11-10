@@ -187,6 +187,8 @@ steps:
 
   gather:
     - collect:
+        form_body: '$t("cart.form_body")'
+        form_cta:  '$t("cart.form_cta")'
         before_each:
           - assign:
               live: '$filter_gte($coalesce($lines.rows, []), "fields.qty", 1)'

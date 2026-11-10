@@ -1,6 +1,9 @@
 flow_id: claim
 
 strings:
+  # The card that opens the form (web sheet / WhatsApp form); form_cta is the button, 20 characters at most.
+  form_body: 'أخبرنا بما حدث وفريق المطالبات يتابع معك.'
+  form_cta: 'قدّم مطالبة'
   # The flow's OWN prompt. English — it instructs the model, it does not speak to the customer.
   vision_prompt: >-
     A photograph of a damaged vehicle. Reply as JSON:

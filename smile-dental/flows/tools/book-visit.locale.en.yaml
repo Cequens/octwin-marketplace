@@ -1,6 +1,9 @@
 flow_id: book-visit
 
 strings:
+  # The card that opens the form (web sheet / WhatsApp form); form_cta is the button, 20 characters at most.
+  form_body: 'Choose your treatment, dentist and time.'
+  form_cta: 'Book my visit'
   # The flow's OWN vision prompt — it knows which document it is looking at, where a pack-wide
   # image prompt has to serve every picture a customer might send. English, because it instructs
   # the model rather than speaking to the customer — byte-identical to the Arabic file.

@@ -1,6 +1,9 @@
 flow_id: membership
 
 strings:
+  # The card that opens the form (web sheet / WhatsApp form); form_cta is the button, 20 characters at most.
+  form_body: 'Tell us your goal and we will match you with a plan.'
+  form_cta: 'Find my plan'
   label.goal:       'What you want from training'
   label.experience: 'Your previous experience'
   label.name:       'Name'

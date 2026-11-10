@@ -39,6 +39,8 @@ entry:
 steps:
   collect_fields:
     - collect:
+        form_body: '$t("support.form_body")'
+        form_cta:  '$t("support.form_cta")'
         # Running preview prepended to every prompt (collected so far). Region
         # line appears only once a region is set (captain track).
         progress: '$lines($compact([$t("support.progress.header"), $state.issue_type != null ? $t("support.progress.issue", { issue: $enum_label($state.issue_type, "cases", "") }) : null, $state.mobile != null ? $t("support.progress.mobile", { mobile: $state.mobile }) : null, $state.description != null ? $t("support.progress.description", { description: $state.description }) : null, $state.region != null ? $t("support.progress.region", { region: $enum_label($state.region, "region", "") }) : null]), "\n")'

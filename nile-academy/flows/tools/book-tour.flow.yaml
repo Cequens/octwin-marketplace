@@ -24,6 +24,8 @@ entry:
 steps:
   gather:
     - collect:
+        form_body: '$t("book-tour.form_body")'
+        form_cta:  '$t("book-tour.form_cta")'
         before_each:
           - assign: { campus_label: null, campus_address: null }
           - if: '$state.campus_id != null'

@@ -23,6 +23,8 @@ entry:
 steps:
   quiz:
     - collect:
+        form_body: '$t("fragrance-finder.form_body")'
+        form_cta:  '$t("fragrance-finder.form_cta")'
         derive:
           # The quiz answers become one natural-language brief; the semantic
           # search embeds it, so the match improves as the catalog copy improves.

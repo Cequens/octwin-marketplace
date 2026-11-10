@@ -1,6 +1,9 @@
 flow_id: activate-app
 
 strings:
+  # The card that opens the form (web sheet / WhatsApp form); form_cta is the button, 20 characters at most.
+  form_body: 'Your phone, car registration and ID, and we will activate your app.'
+  form_cta: 'Activate my app'
   gap:             'Politely ask the customer, in their language, for the item still needed to activate their XPeng App.'
   # The flow's OWN vision prompts — English, because they instruct the model rather than speaking
   # to the customer, and identical in every locale for the same reason. A registration card and a

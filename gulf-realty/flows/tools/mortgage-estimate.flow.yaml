@@ -68,6 +68,8 @@ steps:
 
   collect_inputs:
     - collect:
+        form_body: '$t("mortgage-estimate.form_body")'
+        form_cta:  '$t("mortgage-estimate.form_cta")'
         derive:
           # Resolved from the pickers' numeric selections — never from typed text.
           down_pct:  '$enum_lookup($state.down_payment, { p10: 0.1, p20: 0.2, p30: 0.3, p50: 0.5 }, 0.2)'

@@ -62,6 +62,8 @@ steps:
   # have got anyway.
   ask_where:
     - collect:
+        form_body: '$t("list-branches.form_body")'
+        form_cta:  '$t("list-branches.form_cta")'
         fields:
           - field: pin
             type: geo

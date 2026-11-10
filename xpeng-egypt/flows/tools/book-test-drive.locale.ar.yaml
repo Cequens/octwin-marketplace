@@ -1,6 +1,11 @@
 flow_id: book-test-drive
 
 strings:
+  # The card that opens the form (web sheet / WhatsApp form); form_cta is the button, 20 characters at most.
+  form_body_pin: 'شارك موقعك ونعرض لك أقرب معرض.'
+  form_cta_pin: 'أقرب معرض'
+  form_body_contact: 'اسمك ورقمك لتأكيد تجربة القيادة.'
+  form_cta_contact: 'أكّد التجربة'
   gap: 'اسأل العميل عن البيانات المطلوبة بلطف بلغته.'
   choose: 'اختَر ✅'
   min_label:   'دقيقة تجربة قيادة'

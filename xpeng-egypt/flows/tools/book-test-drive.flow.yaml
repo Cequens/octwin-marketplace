@@ -68,6 +68,8 @@ steps:
   # full list, which is what the browse path would have shown anyway.
   ask_branch_where:
     - collect:
+        form_body: '$t("book-test-drive.form_body_pin")'
+        form_cta:  '$t("book-test-drive.form_cta_pin")'
         fields:
           - field: branch_pin
             type: geo
@@ -261,6 +263,8 @@ steps:
   # ── 3) Contact details (free-text collect) ──
   ask_contact:
     - collect:
+        form_body: '$t("book-test-drive.form_body_contact")'
+        form_cta:  '$t("book-test-drive.form_cta_contact")'
         gap_instructions: '$t("book-test-drive.gap")'
         fields:
           # CONFIRMS the WhatsApp profile name rather than asking for it — one tap,

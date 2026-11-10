@@ -1,6 +1,9 @@
 flow_id: book-tour
 
 strings:
+  # The card that opens the form (web sheet / WhatsApp form); form_cta is the button, 20 characters at most.
+  form_body: 'Pick a campus and a time to visit us.'
+  form_cta: 'Book a tour'
   progress.header:  '🏫 Book a visit'
   progress.campus:  '🏫 Campus: {campus}'
   progress.slot:    '🕐 Time: {slot}'

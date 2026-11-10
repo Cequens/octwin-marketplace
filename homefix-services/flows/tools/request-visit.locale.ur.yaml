@@ -1,6 +1,9 @@
 flow_id: request-visit
 
 strings:
+  # The card that opens the form (web sheet / WhatsApp form); form_cta is the button, 20 characters at most.
+  form_body: 'مسئلہ اور جگہ بتائیں، ہم مناسب ٹیکنیشن بھیجیں گے۔'
+  form_cta: 'وزٹ کی درخواست'
   # The flow's OWN prompt. English — it instructs the model rather than speaking to the customer,
   # so it is byte-identical to the Arabic and English files. `visible_issue` stays in Egyptian
   # Arabic ON PURPOSE even for an Urdu conversation: it is written into the work order that a

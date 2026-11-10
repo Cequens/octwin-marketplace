@@ -1,6 +1,9 @@
 flow_id: capture-lead
 
 strings:
+  # The card that opens the form (web sheet / WhatsApp form); form_cta is the button, 20 characters at most.
+  form_body: 'اترك بياناتك وسيتواصل معك فريقنا.'
+  form_cta: 'اتصلوا بي'
   gap: 'اسأل العميل عن البيانات المطلوبة بلطف بلغته.'
 
   it_header:     'إزاي نقدر نساعدك؟'

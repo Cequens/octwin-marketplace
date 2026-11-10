@@ -1,6 +1,9 @@
 flow_id: damage-check
 
 strings:
+  # The card that opens the form (web sheet / WhatsApp form); form_cta is the button, 20 characters at most.
+  form_body: 'رقم اللوحة وما حدث وصورة، ونفتح لك أمر عمل.'
+  form_cta: 'افحص الضرر'
   label.plate:      'رقم اللوحة'
   label.complaint:  'وصف المشكلة'
   label.photo:      'صور للضرر أو للوحة العدادات'
