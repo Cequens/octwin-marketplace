@@ -37,6 +37,10 @@ strings:
   comment_saved: 'We got your feedback, thank you! 🙏'
   rate_first:    'Give the visit a star rating first, then write your comment.'
 
+  # The card that opens the change-the-time form
+  form_body:         'Pick a new time that suits you. Your old time goes back to the calendar.'
+  form_cta:          'Pick a new time'
+
   reschedule_header: '🗓️ Pick a new time'
   reschedule_body:   'Here are the next available times. Choose the one that suits you.'
   reschedule_cta:    'Available times'

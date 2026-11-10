@@ -37,6 +37,10 @@ strings:
   comment_saved: 'وصلنا رأيك، شكراً ليك! 🙏'
   rate_first:    'قيّم الزيارة بالنجوم الأول، وبعدها اكتب رأيك.'
 
+  # The card that opens the change-the-time form
+  form_body:         'اختار الميعاد الجديد اللي يناسبك، والقديم يرجع متاح لمريض تاني.'
+  form_cta:          'اختار ميعاد جديد'
+
   reschedule_header: '🗓️ اختر موعد جديد'
   reschedule_body:   'دي المواعيد المتاحة القريبة. اختر الوقت اللي يناسبك.'
   reschedule_cta:    'المواعيد المتاحة'

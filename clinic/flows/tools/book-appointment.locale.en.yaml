@@ -18,6 +18,10 @@ strings:
   progress.slot:      'Time: {slot}'
   progress.for_whom:  'Visit for: {who}'
 
+  # The card that opens the booking form
+  form_body:          'A few quick questions and your visit is booked 🩺'
+  form_cta:           'Book my visit'
+
   for_whom.self:      'Myself'
   for_whom.dependent: 'A family member'
 

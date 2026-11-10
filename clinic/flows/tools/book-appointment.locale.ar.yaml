@@ -15,6 +15,10 @@ strings:
   progress.slot:      'الموعد: {slot}'
   progress.for_whom:  'الكشف لـ: {who}'
 
+  # The card that opens the booking form
+  form_body:          'كام سؤال بسيط ونثبّت موعدك مع الدكتور 🩺'
+  form_cta:           'احجز موعدك'
+
   for_whom.self:      'نفسي'
   for_whom.dependent: 'فرد من العائلة'
 

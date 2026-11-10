@@ -290,6 +290,8 @@ steps:
   # do not fit — and `page:` pages a day that is still too long.
   pick_new_slot:
     - collect:
+        form_body: '$t("manage-appointments.form_body")'
+        form_cta:  '$t("manage-appointments.form_cta")'
         fields:
           - field: new_slot_start
             label: '$t("manage-appointments.label.slot")'

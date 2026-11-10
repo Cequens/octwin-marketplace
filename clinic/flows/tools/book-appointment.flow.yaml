@@ -72,6 +72,10 @@ steps:
                   empty:  []
                   failed: []
         progress: '$lines($compact([$t("book-appointment.progress.header"), $doctor_label != null ? $t("book-appointment.progress.doctor", { doctor: $doctor_label }) : null, $state.slot_label != null ? $t("book-appointment.progress.slot", { slot: $state.slot_label }) : null, $state.for_whom != null ? $t("book-appointment.progress.for_whom", { who: ($state.for_whom == "dependent" ? $coalesce($state.dependent_name, $t("book-appointment.for_whom.dependent")) : $t("book-appointment.for_whom.self")) }) : null]), "\n")'
+        # The card that opens the form (web sheet / WhatsApp form): the clinic's words, not the platform's
+        # "Open form". form_cta is also the web sheet's title; WhatsApp cuts the button at 20 characters.
+        form_body: '$t("book-appointment.form_body")'
+        form_cta:  '$t("book-appointment.form_cta")'
         gap_instructions: 'Ask the patient for the next missing detail ({$collect_field}), one at a time, in the patient''s language. Re-call book-appointment once they answer. Do NOT give medical advice.'
         fields:
           # Doctor picker — only when no doctor was pre-chosen. Browses top doctors
